@@ -1,0 +1,75 @@
+openapi: 3.1.0
+info:
+  title: 词元研究所 API
+  version: 0.1.0
+  description: >-
+    三周 MVP 的最小公共契约。业务接口须先在此评审，再进入实现。
+servers:
+  - url: http://localhost:8000
+    description: 本地开发
+paths:
+  /health:
+    get:
+      operationId: rootHealth
+      summary: 服务存活检查
+      responses:
+        "200":
+          description: 服务可用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/health:
+    get:
+      operationId: apiHealth
+      summary: 版本化服务健康检查
+      responses:
+        "200":
+          description: 服务可用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/capabilities:
+    get:
+      operationId: listCapabilities
+      summary: 返回 MVP 已规划的平台能力模块
+      responses:
+        "200":
+          description: 模块清单；scaffold 不代表业务功能已完成
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitiesResponse"
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+        version:
+          type: string
+    CapabilitiesResponse:
+      type: object
+      additionalProperties: false
+      required: [status, modules]
+      properties:
+        status:
+          type: string
+          const: scaffold
+        modules:
+          type: array
+          items:
+            type: string
+            enum:
+              - orchestration
+              - rag
+              - learner_profile
+              - practice
+              - model_adapters

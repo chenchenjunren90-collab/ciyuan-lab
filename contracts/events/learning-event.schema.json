@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://ciyuan.local/contracts/events/learning-event.schema.json",
+  "title": "LearningEvent",
+  "description": "模块间共享的最小学习事件信封；student_id 必须使用平台内部标识。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "event_id",
+    "event_type",
+    "occurred_at",
+    "student_id",
+    "course_id",
+    "payload"
+  ],
+  "properties": {
+    "schema_version": {
+      "type": "string",
+      "const": "0.1.0"
+    },
+    "event_id": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "assessment.completed",
+        "practice.submitted",
+        "code.verified",
+        "profile.updated",
+        "recommendation.generated"
+      ]
+    },
+    "occurred_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "student_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "平台内部不透明标识，不得填入姓名或明文学号。"
+    },
+    "course_id": {
+      "type": "string",
+      "enum": ["c", "python", "data_structures"]
+    },
+    "knowledge_point_id": {
+      "type": ["string", "null"]
+    },
+    "trace_id": {
+      "type": ["string", "null"]
+    },
+    "payload": {
+      "type": "object"
+    }
+  }
+}

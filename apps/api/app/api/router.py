@@ -1,0 +1,27 @@
+from fastapi import APIRouter
+
+from app import __version__
+from app.api.schemas import CapabilitiesResponse, HealthResponse
+from app.core.config import get_settings
+
+router = APIRouter(prefix="/api/v1")
+
+
+@router.get("/health", response_model=HealthResponse, tags=["system"])
+async def api_health() -> HealthResponse:
+    settings = get_settings()
+    return HealthResponse(status="ok", service=settings.app_name, version=__version__)
+
+
+@router.get("/capabilities", response_model=CapabilitiesResponse, tags=["system"])
+async def list_capabilities() -> CapabilitiesResponse:
+    return CapabilitiesResponse(
+        status="scaffold",
+        modules=[
+            "orchestration",
+            "rag",
+            "learner_profile",
+            "practice",
+            "model_adapters",
+        ]
+    )
