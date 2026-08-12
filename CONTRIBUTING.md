@@ -1,6 +1,6 @@
 # 贡献指南
 
-本项目采用“人对结果负责、AI辅助实现、契约先行、PR合并”的协作方式。所有成员在开发前应阅读 `README.md`、`AGENTS.md` 及本人负责模块的文档。
+本项目采用“人对结果负责、AI辅助实现、契约先行、PR合并”的协作方式。所有成员在开发前应阅读 `README.md`、`AGENTS.md`、`docs/responsibilities.md`、`docs/collaborator-issues.md` 及本人负责模块的文档。
 
 ## 1. 分支模型
 
@@ -9,6 +9,7 @@
 - `feat/<issue>-<topic>`：新功能；
 - `fix/<issue>-<topic>`：缺陷修复；
 - `content/<issue>-<course>`：课程知识点、练习、项目和来源；
+- `test/<issue>-<topic>`：测试夹具、黄金集和验收用例；
 - `docs/<issue>-<topic>`：纯文档修改；
 - `chore/<issue>-<topic>`：构建、工具和维护任务。
 
@@ -62,6 +63,8 @@ docs(architecture): 记录模型网关边界
 | 代码运行、安全或个人数据 | 架构负责人 + AI/RAG 与数据负责人 |
 
 同一人可以兼任角色，但不能自行提交后无评审直接合并。
+
+课程负责人完成本人课程的基础目录和交接包后，可以领取前端或 AI/RAG 的支援 Issue。支援 Issue 必须写明允许修改的具体文件；成员2或3仍是对应领域的必须评审人和集成验收人。没有支援 Issue 时，课程负责人通过课程数据、Mock、黄金问答和验收样例协作，不直接修改其他人的主责目录。
 
 ## 6. AI Coding 规则
 

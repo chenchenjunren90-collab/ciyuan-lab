@@ -1,6 +1,6 @@
 # MVP范围与验收边界
 
-本文件只定义当前版本要达到的结果和验收边界，具体工作全部以 [六人岗位分工与 Issue 清单](responsibilities.md) 中的 Gitee Issue 为准。
+本文件只定义当前版本要达到的结果和验收边界，岗位边界以 [六人岗位分工与协作者执行说明](responsibilities.md) 为准，具体任务以 [协作者 Issue 执行手册](collaborator-issues.md) 为准。
 
 ## 目标结果
 

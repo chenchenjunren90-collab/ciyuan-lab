@@ -82,7 +82,7 @@ docs/                      架构、范围、标准与决策记录
 4. 禁止直接向 `main`、`develop` 推送，功能分支从 `develop` 创建；
 5. 课程内容必须符合 [课程包标准](docs/course-package-standard.md)，数据和模型调用必须符合 [数据与安全边界](docs/data-and-security.md)。
 
-完整流程见 [协作与开发流程](docs/workflow.md)，成员分工和全部待办见 [六人岗位分工与 Issue 清单](docs/responsibilities.md)，当前版本边界见 [MVP 范围与验收边界](docs/mvp-scope.md)。
+完整流程见 [协作与开发流程](docs/workflow.md)，岗位边界见 [六人岗位分工与协作者执行说明](docs/responsibilities.md)，可以直接创建到 Gitee 的任务描述见 [协作者 Issue 执行手册](docs/collaborator-issues.md)，当前版本边界见 [MVP 范围与验收边界](docs/mvp-scope.md)。
 
 ## 本地启动
 
@@ -111,7 +111,8 @@ npm run dev
 
 - [系统架构](docs/architecture.md)
 - [协作与开发流程](docs/workflow.md)
-- [六人岗位分工与 Issue 清单](docs/responsibilities.md)
+- [六人岗位分工与协作者执行说明](docs/responsibilities.md)
+- [协作者 Issue 执行手册](docs/collaborator-issues.md)
 - [MVP 范围与验收边界](docs/mvp-scope.md)
 - [课程包统一标准](docs/course-package-standard.md)
 - [数据、模型与安全边界](docs/data-and-security.md)
