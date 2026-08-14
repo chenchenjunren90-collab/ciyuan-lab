@@ -1,0 +1,18 @@
+id: SRC-PY-OUTLINE-01
+title: Python课程函数教学提要
+course: python
+schema_version: "0.1.0"
+version: 1
+source_type: synthetic
+citation:
+  locator: 课程组自编函数章节提要
+rights:
+  basis: synthetic
+  note: 课程组根据培养目标自行编写，可用于教学与检索演示。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: 函数用于封装可复用逻辑，可以接收参数并通过 return 返回结果。
+status: draft

@@ -1,0 +1,22 @@
+id: PY-FUNC-01-S1
+title: 解释 return 与 print 的区别
+course: python
+schema_version: "0.1.0"
+version: 1
+type: short_answer
+difficulty: beginner
+estimated_minutes: 10
+concept_ids:
+  - PY-FUNC-01
+prompt: 说明 return 与 print 的作用差异，并给出一个适用场景。
+source_refs:
+  - SRC-PY-OUTLINE-01
+evaluation:
+  mode: rubric
+  max_score: 10
+  rubric:
+    - criterion: 正确说明 return 会向调用者返回值
+      points: 5
+    - criterion: 正确说明 print 只负责输出并给出示例
+      points: 5
+status: draft
