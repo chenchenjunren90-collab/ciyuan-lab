@@ -76,13 +76,17 @@ docs/                      架构、范围、标准与决策记录
 
 ## 协作原则
 
-1. 所有工作先有 Gitee Issue，再建短期分支和 Pull Request；
-2. 涉及多人模块时先冻结 `contracts/` 中的接口和数据结构；
-3. 每个 PR 只有一名明确的人类负责人，AI生成代码同样需要测试和人工评审；
-4. 禁止直接向 `main`、`develop` 推送，功能分支从 `develop` 创建；
-5. 课程内容必须符合 [课程包标准](docs/course-package-standard.md)，数据和模型调用必须符合 [数据与安全边界](docs/data-and-security.md)。
+> **普通成员开始开发前，必须先阅读：[普通成员开发与提交指南](docs/member-workflow.md)。**
 
-完整流程见 [协作与开发流程](docs/workflow.md)，岗位边界见 [六人岗位分工与协作者执行说明](docs/responsibilities.md)，可以直接创建到 Gitee 的任务描述见 [协作者 Issue 执行手册](docs/collaborator-issues.md)，当前版本边界见 [MVP 范围与验收边界](docs/mvp-scope.md)。
+1. 一人负责一个 Issue；一个 Issue 对应一个独立分支和一个 PR，Gitee“协作者”字段保持为空；
+2. 所有任务分支从最新 `develop` 创建，全体成员禁止直接向 `main`、`develop` 推送；
+3. 只修改 Issue 明确允许的目录；公共字段、跨目录修改和范围扩大必须先提出新 Issue；
+4. 提交前执行 `.\scripts\check.ps1`，PR 写明改动、测试、风险和可复现证据；
+5. 普通成员的 PR 统一由成员1·陈骏人审核、验收和合并，普通成员不得自审或自合并；
+6. 成员1自己的 PR，在全量检查通过并记录证据后可以自行审核合并；
+7. AI生成代码和课程内容仍由提交者负责，课程内容必须符合 [课程包标准](docs/course-package-standard.md)，数据和模型调用必须符合 [数据与安全边界](docs/data-and-security.md)。
+
+完整流程见 [协作与开发流程](docs/workflow.md)，岗位边界见 [六人岗位分工与独立交付说明](docs/responsibilities.md)，可直接创建到 Gitee 的任务描述见 [单人 Issue 执行手册](docs/collaborator-issues.md)，当前版本边界见 [MVP 范围与验收边界](docs/mvp-scope.md)。
 
 ## 本地启动
 
@@ -109,10 +113,11 @@ npm run dev
 
 ## 文档索引
 
+- [普通成员开发与提交指南（必读）](docs/member-workflow.md)
 - [系统架构](docs/architecture.md)
 - [协作与开发流程](docs/workflow.md)
-- [六人岗位分工与协作者执行说明](docs/responsibilities.md)
-- [协作者 Issue 执行手册](docs/collaborator-issues.md)
+- [六人岗位分工与独立交付说明](docs/responsibilities.md)
+- [单人 Issue 执行手册](docs/collaborator-issues.md)
 - [MVP 范围与验收边界](docs/mvp-scope.md)
 - [课程包统一标准](docs/course-package-standard.md)
 - [数据、模型与安全边界](docs/data-and-security.md)
