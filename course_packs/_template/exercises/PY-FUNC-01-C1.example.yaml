@@ -1,0 +1,34 @@
+id: PY-FUNC-01-C1
+title: 实现两数相加函数
+course: python
+schema_version: "0.1.0"
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+  - PY-FUNC-01
+prompt: 读取两个整数，调用 add 函数并输出它们的和。
+source_refs:
+  - SRC-PY-OUTLINE-01
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: "3.11"
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+    - id: public-01
+      visibility: public
+      input: "1 2\n"
+      expected_output: "3\n"
+    - id: hidden-negative
+      visibility: hidden
+      input: "-3 2\n"
+      expected_output: "-1\n"
+status: draft

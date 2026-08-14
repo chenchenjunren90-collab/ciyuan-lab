@@ -1,0 +1,28 @@
+id: PY-FUNC-01
+title: 函数定义与调用
+course: python
+schema_version: "0.1.0"
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+  - 能定义带参数和返回值的函数
+concepts:
+  - 参数
+  - 返回值
+  - 作用域
+lesson:
+  summary: 使用函数封装可复用逻辑，并通过参数接收输入、返回值输出结果。
+  key_points:
+    - 函数调用前必须完成定义或导入
+  examples:
+    - 使用 def add(a, b) 定义加法函数
+  common_mistakes:
+    - 忘记使用 return 返回结果
+assessment_ids:
+  - PY-FUNC-01-Q1
+  - PY-FUNC-01-C1
+source_refs:
+  - SRC-PY-OUTLINE-01
+status: draft

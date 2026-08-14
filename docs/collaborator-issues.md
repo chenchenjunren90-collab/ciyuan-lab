@@ -44,7 +44,7 @@ course_packs/<course>/
 
 课程 ID 固定为 `c`、`python`、`data_structures`；知识点前缀固定为 `C-`、`PY-`、`DS-`。知识点至少包含 `id`、`title`、`course`、`schema_version`、`version`、`difficulty`、`estimated_minutes`、`prerequisites`、`learning_objectives`、`concepts`、`lesson.summary`、`assessment_ids`、`source_refs` 和 `status`。
 
-校验器能检查字段、ID、前置关系、无环和计数，但目前不会确认每个 `assessment_ids`、`source_refs` 的目标文件一定存在，`exercises/`、`projects/`、`sources/` 也尚未具备完整机器 Schema。因此“脚本通过”不能替代来源、答案和题目测试的负责人证据核对及成员1的最终验收。
+校验器会检查 manifest、知识点、练习、项目、来源和 `handoff.yaml` 的结构，以及 ID、计数、前置关系、跨文件引用、运行声明和发布门禁。机器校验只能证明格式与引用一致，不能证明课程事实、答案、测试设计或授权声明真实正确；这些仍须由负责人提供证据并由成员1最终验收。
 
 ### 2.3 统一验收命令
 
@@ -120,10 +120,10 @@ course_packs/<course>/
 |---|---|---|---|---|---|
 | `PRACTICE-01 建立 C/Python 确定性验证链路` | 用编译、运行和测试判断代码，不让模型主观判题 | `apps/api/app/modules/practice/**`、受控执行适配、固定语言版本、测试；公共字段变化另走 ARCH | 现有 `CodeVerifier`；负责人在本 Issue 内提供最小 Python 正确/错误夹具 | 正确、编译错误、运行错误、答案错误都有固定测试；返回标准 `VerificationResult`；不在 API 进程执行 | 成员1唯一验收 |
 | `PRACTICE-02 完善隐藏测试与资源限制` | 限制不可信代码并给出可复现诊断 | 时间、内存、输出、网络、文件限制，隐藏测试保护和边界测试 | PRACTICE-01 | 超时、超限、非法访问被终止；隐藏输入不泄露；诊断脱敏、限长；限制不能因演示关闭 | 成员1唯一验收；交给 QA-02 与 WEB-05 |
-| `CONTENT-C-01 建立约40知识点目录与来源` | 完成 C 课程结构化基础层 | 仅 `course_packs/c/**`；manifest、约40个知识点、来源和测评映射 | ARCH-02 | `C-*` 唯一、前置无环；每点字段完整；脚本通过；负责人提交来源证据和表述依据 | 成员1唯一验收；交给 CONTENT-C-02、HANDOFF-C |
+| `CONTENT-C-01 建立约40知识点目录与来源` | 完成 C 课程结构化基础层 | 仅 `course_packs/c/**`；manifest、约40个知识点、来源和每个 `assessment_ids` 指向的最小练习实体 | ARCH-02 | `C-*` 唯一、前置无环；每点字段完整；所有练习/来源引用存在；脚本通过；负责人提交来源证据和表述依据 | 成员1唯一验收；交给 CONTENT-C-02 |
 | `CONTENT-C-02 完成8—12个重点实践` | 为高频重点制作可练、可 Debug、可判定的内容 | C 学习卡、分级练习、代码/Debug、提示、公开/隐藏测试 | CONTENT-C-01、PRACTICE-01 | 每项关联知识点和来源；正确/错误代码结果可复现；指针内存等内容不强行财经化 | 成员1唯一验收；交给 WEB-05、AGENT-02 |
 | `CONTENT-C-03 完成综合练习与演示路径` | 用多知识点任务证明 C 能力提升闭环 | C 综合练习、Rubric、代码测试、正确/错误演示路径 | CONTENT-C-02、DATA-02 | 覆盖多个知识点；验证结果影响画像和推荐；核心仍是语法、指针、内存与调试 | 成员1唯一验收 |
-| `HANDOFF-C 建立 C 课程统一交接包` | 把 C 课程转换为前端和 RAG 可验收的统一样例 | 默认写入 Gitee Issue 附件；模板冻结后按统一位置保存 | CONTENT-C-01 已验收；当前课程 Issue 无阻断返修 | 含3—5知识点、知识卡、题目、来源、黄金问题、依据不足、正确/错误代码和演示路径 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-C |
+| `HANDOFF-C 建立 C 课程统一交接包` | 把 C 课程转换为前端和 RAG 可验收的统一样例 | `course_packs/c/handoff.yaml`，严格使用统一模板 | CONTENT-C-03、PRACTICE-01 已验收；当前课程 Issue 无阻断返修 | 含3—5知识点、客观题、代码/Debug题、综合项目、来源、黄金问题、依据不足、正确/错误代码和演示路径；脚本通过 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-C |
 | `SUP-C-WEB 支援 C 前端夹具或测试` | 在不改变前端架构的前提下帮助成员2完成 C 验收 | 默认只提供 Mock 与验收用例；如改 `apps/web/**`，Issue 必须列出具体文件 | HANDOFF-C；成员2已拆出子Issue | 数据符合 OpenAPI；组件仍课程无关；测试覆盖正常和失败；无 C 内容硬编码 | 成员1最终验收；交给成员2 |
 | `SUP-C-RAG 支援 C 黄金集或检索测试` | 帮助成员3构建 C 的可核验检索验收材料 | 授权来源、黄金问题、预期引用、依据不足样例；如改 AI 测试文件须列明 | HANDOFF-C；成员3已拆出子Issue | 每个预期来源已登记；问题与片段相关；不修改通用检索策略或提示词 | 成员1最终验收；交给成员3 |
 
@@ -133,10 +133,10 @@ course_packs/<course>/
 
 | Issue | 目标 | 允许修改与具体产物 | 前置依赖 | 可验证验收 | 最终验收与交接 |
 |---|---|---|---|---|---|
-| `CONTENT-PY-01 建立约40知识点目录与来源` | 完成 Python 课程结构化基础层 | 仅 `course_packs/python/**`；manifest、约40知识点、来源和测评映射 | ARCH-02 | `PY-*` 唯一、前置无环；每点字段完整；脚本通过；来源和表述证据已核对 | 成员1唯一验收；交给 CONTENT-PY-02、HANDOFF-PY |
+| `CONTENT-PY-01 建立约40知识点目录与来源` | 完成 Python 课程结构化基础层 | 仅 `course_packs/python/**`；manifest、约40知识点、来源和每个 `assessment_ids` 指向的最小练习实体 | ARCH-02 | `PY-*` 唯一、前置无环；每点字段完整；所有练习/来源引用存在；脚本通过；来源和表述证据已核对 | 成员1唯一验收；交给 CONTENT-PY-02 |
 | `CONTENT-PY-02 完成8—12个重点实践` | 建设分级代码题、Debug与递进提示 | Python 学习卡、分级练习、公开/隐藏测试、提示和反馈要点 | CONTENT-PY-01、PRACTICE-01 | 正确/错误路径可复现；模型内容人工核验；模型评分不替代测试 | 成员1唯一验收；交给 WEB-05、AGENT-02 |
 | `CONTENT-PY-03 完成脱敏经管综合练习` | 在课程后用真实问题背景练 Python 数据处理 | `projects/**`、授权/合成数据、Rubric、代码测试、降级背景 | CONTENT-PY-02；数据授权确认；TUOLING 可选 | 评价核心为 Python；数据脱敏；驼灵关闭仍可完成；结果进入画像和推荐 | 成员1唯一验收 |
-| `HANDOFF-PY 建立 Python 课程统一交接包` | 给前端和 RAG 提供统一验收样例 | 默认附 Gitee Issue；模板冻结后按统一位置保存 | CONTENT-PY-01 已验收；当前课程 Issue 无阻断返修 | 含代表知识点、题目、来源、黄金问题、依据不足、正确/错误代码、综合练习和限制 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-PY |
+| `HANDOFF-PY 建立 Python 课程统一交接包` | 给前端和 RAG 提供统一验收样例 | `course_packs/python/handoff.yaml`，严格使用统一模板 | CONTENT-PY-03、PRACTICE-01 已验收；当前课程 Issue 无阻断返修 | 含代表知识点、客观题、代码/Debug题、综合项目、来源、黄金问题、依据不足、正确/错误代码和限制；脚本通过 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-PY |
 | `SUP-PY-WEB 支援 Python 前端夹具或测试` | 帮助成员2验证统一组件对 Python 的适配 | Mock、文案、状态与组件测试；跨目录文件必须在 Issue 列明 | HANDOFF-PY；成员2拆出子Issue | 仅由 `course_id` 和数据区分；正常、失败和降级状态通过；无 Python 专用页面 | 成员1最终验收；交给成员2 |
 | `SUP-PY-RAG 支援 Python 黄金集或检索测试` | 帮助成员3验证 Python 资料、代码概念和综合练习背景 | 授权来源、黄金问题、预期引用、拒答样例和测试数据 | HANDOFF-PY；成员3拆出子Issue | 来源可追溯；财经问题仅服务综合练习；无来源不要求模型作答 | 成员1最终验收；交给成员3 |
 
@@ -146,10 +146,10 @@ course_packs/<course>/
 
 | Issue | 目标 | 允许修改与具体产物 | 前置依赖 | 可验证验收 | 最终验收与交接 |
 |---|---|---|---|---|---|
-| `CONTENT-DS-01 建立约40知识点目录与来源` | 完成数据结构课程结构化基础层 | 仅 `course_packs/data_structures/**`；manifest、约40知识点、来源和测评映射 | ARCH-02 | `DS-*` 唯一、前置无环；覆盖核心结构与算法；字段与来源完整；脚本通过 | 成员1唯一验收；交给 CONTENT-DS-02、HANDOFF-DS |
+| `CONTENT-DS-01 建立约40知识点目录与来源` | 完成数据结构课程结构化基础层 | 仅 `course_packs/data_structures/**`；manifest、约40知识点、来源和每个 `assessment_ids` 指向的最小练习实体 | ARCH-02 | `DS-*` 唯一、前置无环；覆盖核心结构与算法；所有练习/来源引用存在；脚本通过 | 成员1唯一验收；交给 CONTENT-DS-02 |
 | `CONTENT-DS-02 完成8—12个重点实践` | 建设有边界、复杂度和确定性测试的算法题 | 算法题、Debug、公开/隐藏测试、边界用例、复杂度期望、提示 | CONTENT-DS-01、PRACTICE-01/02 | 正确、错误、边界和超时样例可复现；复杂度结论有依据；不只给最终答案 | 成员1唯一验收；交给 WEB-05、AGENT-02 |
 | `CONTENT-DS-03 完成综合练习与演示路径` | 用多种结构或算法完成综合任务 | 综合练习、Rubric、测试、复杂度反馈和演示路径 | CONTENT-DS-02、DATA-02 | 覆盖多个知识点；正确性与复杂度可展示；结果进入画像和下一任务 | 成员1唯一验收 |
-| `HANDOFF-DS 建立数据结构统一交接包` | 给前端和 RAG 提供算法事实与统一验收样例 | 默认附 Gitee Issue；模板冻结后按统一位置保存 | CONTENT-DS-01 已验收；当前课程 Issue 无阻断返修 | 含代表知识点、算法题、边界、复杂度、来源、黄金问题、错误样例和演示路径 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-DS |
+| `HANDOFF-DS 建立数据结构统一交接包` | 给前端和 RAG 提供算法事实与统一验收样例 | `course_packs/data_structures/handoff.yaml`，严格使用统一模板 | CONTENT-DS-03、PRACTICE-01 已验收；当前课程 Issue 无阻断返修 | 含代表知识点、客观题、代码/Debug题、综合项目、算法边界、来源、黄金问题、错误样例和演示路径；脚本通过 | 成员1唯一验收；交给 WEB/RAG-ACCEPT-DS |
 | `SUP-DS-WEB 支援数据结构前端夹具或测试` | 帮助成员2验证算法、边界和复杂度的统一展示 | Mock、状态、组件测试；跨目录文件必须在 Issue 列明 | HANDOFF-DS；成员2拆出子Issue | 统一组件正确展示边界与复杂度；无 DS 专用页面或前端判题 | 成员1最终验收；交给成员2 |
 | `SUP-DS-RAG 支援数据结构黄金集或检索测试` | 帮助成员3验证算法定义、复杂度和来源引用 | 授权来源、黄金问题、预期引用、错误复杂度与依据不足样例 | HANDOFF-DS；成员3拆出子Issue | 问题与来源可核验；错误引用和无来源被拒绝；不复制 DS 检索器 | 成员1最终验收；交给成员3 |
 
@@ -157,9 +157,8 @@ course_packs/<course>/
 
 课程负责人可以支援，但必须同时满足以下入口条件：
 
-- 本课程 `CONTENT-*-01` 已验收；
+- 本课程 `CONTENT-*-03` 和 `HANDOFF-*` 已验收；
 - 当前课程 PR 已合入或处于待验收且无阻断返修；
-- `HANDOFF-*` 已准备；
 - 已领取 `SUP-*-WEB` 或 `SUP-*-RAG`，或者成员2/3拆出的具体实现子 Issue；
 - Issue 已列出允许修改的具体文件、冻结接口、验收命令，并明确成员1为最终验收与合并人。
 

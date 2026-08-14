@@ -1,28 +1,12 @@
-# 知识点文件模板
+# 知识点文件
 
-复制下面的结构到新的 `.yaml` 文件后，替换所有示例值。不要把本说明文件改名后直接当作知识点提交。
+每个知识点使用一个 UTF-8 YAML 或 JSON 文件，文件名必须等于知识点 `id`。完整字段见 `PY-FUNC-01.example.yaml`。
 
-```yaml
-id: PY-FUNC-01
-title: 函数定义与调用
-course: python
-schema_version: 0.1.0
-version: 1
-difficulty: beginner
-estimated_minutes: 30
-prerequisites: []
-learning_objectives:
-  - 能定义带参数和返回值的函数
-concepts:
-  - 参数
-  - 返回值
-lesson:
-  summary: 使用函数封装可复用逻辑，并通过参数接收输入、返回值输出结果。
-assessment_ids:
-  - PY-FUNC-01-Q1
-source_refs:
-  - SRC-PY-TEXTBOOK-04
-status: draft
-```
+课程与 ID 前缀固定为：C语言使用 `c`/`C-`，Python 使用 `python`/`PY-`，数据结构使用 `data_structures`/`DS-`。
 
-课程与知识点 ID 前缀固定为：C语言使用 `c`/`C-`，Python使用 `python`/`PY-`，数据结构使用 `data_structures`/`DS-`。`prerequisites` 可以为空；其余列表不得为空。前置知识点必须已存在于同一课程包中，且不能形成循环依赖。
+- `prerequisites` 可以为空，其余列表不得为空；
+- 前置知识点必须存在于同一课程包，且不能形成循环依赖；
+- `assessment_ids` 必须指向 `exercises/` 中真实练习；
+- `source_refs` 必须指向 `sources/` 中真实来源；
+- 未完成人工审核的内容保持 `draft`；
+- 复制 `*.example.yaml` 时须改为真实 ID 文件名，保留全部必填字段并替换示例内容与占位引用。

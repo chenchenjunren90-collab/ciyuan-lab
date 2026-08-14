@@ -1,0 +1,64 @@
+schema_version: "0.1.0"
+course_id: python
+package_revision: develop@8b4e630 # 示例使用真实基线提交；复制后替换为课程内容已合入 develop 的提交号
+status: draft
+representative_content:
+  concept_ids:
+    - PY-FUNC-01
+    - PY-COLLECTION-01
+    - PY-FILE-01
+  objective_exercise_id: PY-FUNC-01-Q1
+  practice_exercise_id: PY-FUNC-01-C1
+  project_id: PY-PROJ-DATA-01
+source_refs:
+  - SRC-PY-OUTLINE-01
+golden_questions:
+  - id: GQ-01
+    question: Python 函数如何返回结果？
+    expected_source_refs: [SRC-PY-OUTLINE-01]
+  - id: GQ-02
+    question: 函数参数有什么作用？
+    expected_source_refs: [SRC-PY-OUTLINE-01]
+  - id: GQ-03
+    question: 如何把重复逻辑封装成函数？
+    expected_source_refs: [SRC-PY-OUTLINE-01]
+  - id: GQ-04
+    question: 函数用于封装什么类型的逻辑？
+    expected_source_refs: [SRC-PY-OUTLINE-01]
+  - id: GQ-05
+    question: 函数可以通过什么方式接收输入？
+    expected_source_refs: [SRC-PY-OUTLINE-01]
+insufficient_evidence_questions:
+  - id: IQ-01
+    question: 该课程提要没有说明的第三方框架内部实现是什么？
+wrong_citation_examples:
+  - id: WQ-01
+    question: 列表 append 操作的摊还时间复杂度是什么？
+    incorrect_source_ref: SRC-PY-OUTLINE-01
+    reason: 该来源仅讨论函数，不能支持列表操作复杂度结论。
+verification_samples:
+  - id: VS-ACCEPTED
+    exercise_id: PY-FUNC-01-C1
+    language: python
+    source_code: "a, b = map(int, input().split()); print(a + b)"
+    expected:
+      accepted: true
+      passed_tests: 2
+      total_tests: 2
+      diagnostics: []
+  - id: VS-REJECTED
+    exercise_id: PY-FUNC-01-C1
+    language: python
+    source_code: "a, b = map(int, input().split()); print(a - b)"
+    expected:
+      accepted: false
+      passed_tests: 0
+      total_tests: 2
+      diagnostics:
+        - wrong_answer
+demo_path:
+  - 进入 Python 课程
+  - 查看函数知识卡并完成客观题
+  - 提交代码并查看确定性验证结果
+known_limitations:
+  - 本交接示例仅展示字段，复制后必须替换所有占位引用。
