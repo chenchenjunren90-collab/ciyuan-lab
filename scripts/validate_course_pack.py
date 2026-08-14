@@ -15,6 +15,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import yaml  # type: ignore[import-untyped]
 
@@ -81,6 +82,7 @@ class HandoffRecord:
     practice_exercise_id: str
     project_id: str
     verification_samples: tuple[tuple[str, str, int | None], ...]
+    algorithm_exercise_refs: tuple[str, ...]
 
 
 @dataclass(frozen=True)
@@ -94,14 +96,51 @@ class PackValidation:
 RecordValidator = Callable[[Path], tuple[list[str], ContentRecord | None]]
 
 
+class UniqueKeyLoader(yaml.SafeLoader):  # type: ignore[misc]
+    """YAML loader that rejects duplicate mapping keys instead of overwriting them."""
+
+
+def construct_unique_yaml_mapping(
+    loader: UniqueKeyLoader, node: Any, deep: bool = False
+) -> dict[Any, Any]:
+    mapping: dict[Any, Any] = {}
+    seen: set[tuple[str, str]] = set()
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        marker = (type(key).__qualname__, repr(key))
+        if marker in seen:
+            raise ValueError(f"duplicate mapping key: {key!r}")
+        seen.add(marker)
+        try:
+            mapping[key] = loader.construct_object(value_node, deep=deep)
+        except TypeError as exc:
+            raise ValueError(f"mapping key must be hashable: {key!r}") from exc
+    return mapping
+
+
+def construct_unique_json_mapping(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    mapping: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in mapping:
+            raise ValueError(f"duplicate mapping key: {key!r}")
+        mapping[key] = value
+    return mapping
+
+
+UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    construct_unique_yaml_mapping,
+)
+
+
 def load_mapping(path: Path, description: str) -> dict[str, Any]:
     """Load a YAML/JSON file and require a mapping at its root."""
 
     with path.open(encoding="utf-8") as content_file:
         data = (
-            json.load(content_file)
+            json.load(content_file, object_pairs_hook=construct_unique_json_mapping)
             if path.suffix.lower() == ".json"
-            else yaml.safe_load(content_file)
+            else yaml.load(content_file, Loader=UniqueKeyLoader)
         )
     if not isinstance(data, dict):
         raise ValueError(f"{description} root must be a mapping")
@@ -110,6 +149,26 @@ def load_mapping(path: Path, description: str) -> dict[str, Any]:
 
 def is_non_empty_string(value: object) -> bool:
     return isinstance(value, str) and bool(value.strip())
+
+
+def contains_control_characters(value: str) -> bool:
+    """Return whether a stored path-like value contains unsafe control bytes."""
+
+    return any(ord(character) < 32 or ord(character) == 127 for character in value)
+
+
+def is_http_url(value: object) -> bool:
+    if not isinstance(value, str) or not value or any(character.isspace() for character in value):
+        return False
+    if contains_control_characters(value):
+        return False
+    try:
+        parsed = urlsplit(value)
+        hostname = parsed.hostname
+        _ = parsed.port
+    except ValueError:
+        return False
+    return parsed.scheme in {"http", "https"} and bool(hostname)
 
 
 def validate_trimmed_string(
@@ -193,7 +252,7 @@ def validate_bounded_int(
 
 
 def validate_enum(value: object, allowed: set[str], field_name: str, file_label: str) -> list[str]:
-    if value not in allowed:
+    if not isinstance(value, str) or value not in allowed:
         return [f"{file_label}: {field_name} must be one of: {', '.join(sorted(allowed))}"]
     return []
 
@@ -449,7 +508,7 @@ def validate_test_evaluation(
             )
         )
         language = runtime.get("language")
-        if language not in {"c", "python"}:
+        if not isinstance(language, str) or language not in {"c", "python"}:
             errors.append(f"{file_label}: runtime.language must be c or python")
         else:
             runtime_language = str(language)
@@ -457,7 +516,7 @@ def validate_test_evaluation(
                 "c": {"c"},
                 "python": {"python"},
                 "data_structures": {"c", "python"},
-            }[course_id]
+            }.get(course_id, {"c", "python"})
             if language not in allowed_languages:
                 allowed_text = " or ".join(sorted(allowed_languages))
                 errors.append(
@@ -478,7 +537,13 @@ def validate_test_evaluation(
         if entrypoint:
             entrypoint_path = Path(entrypoint)
             required_suffix = {"c": ".c", "python": ".py"}.get(str(language))
-            if entrypoint_path.name != entrypoint or entrypoint_path.is_absolute():
+            if (
+                contains_control_characters(entrypoint)
+                or "/" in entrypoint
+                or "\\" in entrypoint
+                or entrypoint_path.name != entrypoint
+                or entrypoint_path.is_absolute()
+            ):
                 errors.append(f"{file_label}: runtime.entrypoint must be a plain filename")
             if required_suffix is not None and entrypoint_path.suffix != required_suffix:
                 errors.append(f"{file_label}: runtime.entrypoint must end with {required_suffix}")
@@ -527,7 +592,7 @@ def validate_test_evaluation(
             if test_id:
                 test_ids.append(test_id)
             visibility = test_case.get("visibility")
-            if visibility not in {"public", "hidden"}:
+            if not isinstance(visibility, str) or visibility not in {"public", "hidden"}:
                 errors.append(f"{test_label}: visibility must be public or hidden")
             else:
                 visibilities.add(str(visibility))
@@ -615,7 +680,7 @@ def validate_exercise_file(
         if evaluation.get("mode") != "rubric":
             errors.append(f"{file_label}: short_answer evaluation.mode must be rubric")
         errors.extend(validate_rubric(evaluation, file_label))
-    elif exercise_type in {"code", "debug"}:
+    elif isinstance(exercise_type, str) and exercise_type in {"code", "debug"}:
         test_errors, runtime_language, test_count = validate_test_evaluation(
             evaluation,
             exercise_type=exercise_type,
@@ -642,11 +707,17 @@ def validate_exercise_file(
 def safe_source_content_path(pack_dir: Path, value: object) -> Path | None:
     if not is_non_empty_string(value):
         return None
-    relative_path = Path(str(value))
-    if relative_path.is_absolute() or ".." in relative_path.parts:
+    raw_path = str(value)
+    if raw_path != raw_path.strip() or contains_control_characters(raw_path) or "\\" in raw_path:
         return None
-    sources_root = (pack_dir / "sources").resolve()
-    candidate = (sources_root / relative_path).resolve()
+    try:
+        relative_path = Path(raw_path)
+        if relative_path.is_absolute() or ".." in relative_path.parts:
+            return None
+        sources_root = (pack_dir / "sources").resolve()
+        candidate = (sources_root / relative_path).resolve()
+    except (OSError, ValueError):
+        return None
     if not candidate.is_relative_to(sources_root):
         return None
     return candidate
@@ -717,9 +788,7 @@ def validate_source_file(
         if not is_non_empty_string(citation.get("locator")):
             errors.append(f"{file_label}: citation.locator must be a non-empty string")
         url = citation.get("url")
-        if url is not None and (
-            not is_non_empty_string(url) or not str(url).startswith(("https://", "http://"))
-        ):
+        if url is not None and not is_http_url(url):
             errors.append(f"{file_label}: citation.url must be an http(s) URL")
     rights = source.get("rights")
     rights_basis: object = None
@@ -928,7 +997,7 @@ def validate_project_file(
         validate_enum(classification, SAFE_DATA_CLASSIFICATIONS, "data_classification", file_label)
     )
     if scope == "post_course_finance_practice":
-        if provider not in {"tuoling", "fixed_synthetic"}:
+        if not isinstance(provider, str) or provider not in {"tuoling", "fixed_synthetic"}:
             errors.append(
                 f"{file_label}: finance practice requires tuoling or fixed_synthetic provider"
             )
@@ -1047,6 +1116,87 @@ def validate_question_list(
     return errors, tuple(source_refs)
 
 
+def validate_algorithm_expectations(
+    value: object, *, file_label: str, required: bool
+) -> tuple[list[str], tuple[str, ...], tuple[str, ...]]:
+    """Validate optional algorithm boundary and complexity expectations."""
+
+    if value is None and not required:
+        return [], (), ()
+    if not isinstance(value, list) or not value:
+        requirement = "a non-empty list" if required else "a list when provided"
+        return [f"{file_label}: algorithm_expectations must be {requirement}"], (), ()
+
+    errors: list[str] = []
+    expectation_ids: list[str] = []
+    exercise_refs: list[str] = []
+    source_refs: list[str] = []
+    for index, item in enumerate(value):
+        item_label = f"{file_label}.algorithm_expectations[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{item_label}: must be a mapping")
+            continue
+        errors.extend(
+            validate_keys(
+                item,
+                required={
+                    "id",
+                    "exercise_id",
+                    "boundary_cases",
+                    "expected_complexity",
+                    "rationale",
+                    "source_refs",
+                },
+                optional=None,
+                file_label=item_label,
+            )
+        )
+        expectation_errors, expectation_id = validate_trimmed_string(
+            item.get("id"), field_name="id", file_label=item_label
+        )
+        exercise_errors, exercise_id = validate_trimmed_string(
+            item.get("exercise_id"), field_name="exercise_id", file_label=item_label
+        )
+        complexity_errors, _ = validate_trimmed_string(
+            item.get("expected_complexity"),
+            field_name="expected_complexity",
+            file_label=item_label,
+        )
+        rationale_errors, _ = validate_trimmed_string(
+            item.get("rationale"), field_name="rationale", file_label=item_label
+        )
+        boundary_errors, _ = validate_string_list(
+            item.get("boundary_cases"),
+            field_name="boundary_cases",
+            file_label=item_label,
+            min_items=1,
+        )
+        source_errors, item_source_refs = validate_string_list(
+            item.get("source_refs"),
+            field_name="source_refs",
+            file_label=item_label,
+            min_items=1,
+        )
+        errors.extend(
+            (
+                *expectation_errors,
+                *exercise_errors,
+                *complexity_errors,
+                *rationale_errors,
+                *boundary_errors,
+                *source_errors,
+            )
+        )
+        if expectation_id:
+            expectation_ids.append(expectation_id)
+        if exercise_id:
+            exercise_refs.append(exercise_id)
+        source_refs.extend(item_source_refs)
+    if len(expectation_ids) != len(set(expectation_ids)):
+        errors.append(f"{file_label}: algorithm_expectations ids must be unique")
+    return errors, tuple(exercise_refs), tuple(source_refs)
+
+
 def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], HandoffRecord | None]:
     file_label = f"{course_id}/handoff.yaml"
     try:
@@ -1069,7 +1219,7 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
             "demo_path",
             "known_limitations",
         },
-        optional=None,
+        optional={"algorithm_expectations"},
         file_label=file_label,
     )
     if handoff.get("schema_version") != SCHEMA_VERSION:
@@ -1077,12 +1227,20 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
     if handoff.get("course_id") != course_id:
         errors.append(f"{file_label}: course_id must be {course_id}")
     package_revision = handoff.get("package_revision")
+    revision_match = (
+        re.fullmatch(r"develop@([0-9a-f]{7,40})", package_revision)
+        if isinstance(package_revision, str)
+        else None
+    )
+    revision_hash = revision_match.group(1) if revision_match is not None else ""
     if (
-        not isinstance(package_revision, str)
-        or re.fullmatch(r"develop@[0-9a-f]{7,40}", package_revision) is None
+        revision_match is None
+        or revision_hash == "0123456789abcdef"
+        or (revision_hash and len(set(revision_hash)) == 1)
     ):
         errors.append(
-            f"{file_label}: package_revision must match develop@<7-40 lowercase hex commit>"
+            f"{file_label}: package_revision must match a non-placeholder "
+            "develop@<7-40 lowercase hex commit>"
         )
     status_value = handoff.get("status")
     status = status_value if isinstance(status_value, str) else ""
@@ -1233,7 +1391,7 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
             errors.extend(
                 validate_keys(
                     expected,
-                    required={"accepted", "passed_tests", "total_tests"},
+                    required={"accepted", "passed_tests", "total_tests", "diagnostics"},
                     optional=None,
                     file_label=f"{item_label}.expected",
                 )
@@ -1245,6 +1403,14 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
                 errors.append(f"{item_label}: expected.accepted must be a boolean")
             else:
                 accepted_values.add(accepted)
+            diagnostic_errors, _ = validate_string_list(
+                expected.get("diagnostics"),
+                field_name="expected.diagnostics",
+                file_label=item_label,
+                min_items=1 if accepted is False else 0,
+                max_items=10,
+            )
+            errors.extend(diagnostic_errors)
             if isinstance(total, bool) or not isinstance(total, int) or total < 1:
                 errors.append(f"{item_label}: expected.total_tests must be a positive integer")
                 valid_total: int | None = None
@@ -1276,6 +1442,14 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
             errors.append(
                 f"{file_label}: verification_samples require accepted and rejected examples"
             )
+    algorithm_errors, algorithm_exercise_refs, algorithm_source_refs = (
+        validate_algorithm_expectations(
+            handoff.get("algorithm_expectations"),
+            file_label=file_label,
+            required=course_id == "data_structures",
+        )
+    )
+    errors.extend(algorithm_errors)
     for field_name, min_items in (("demo_path", 1), ("known_limitations", 0)):
         field_errors, _ = validate_string_list(
             handoff.get(field_name),
@@ -1284,7 +1458,9 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
             min_items=min_items,
         )
         errors.extend(field_errors)
-    all_source_refs = tuple(dict.fromkeys((*source_refs, *golden_refs, *wrong_refs)))
+    all_source_refs = tuple(
+        dict.fromkeys((*source_refs, *golden_refs, *wrong_refs, *algorithm_source_refs))
+    )
     return errors, HandoffRecord(
         status=status,
         concept_refs=concept_refs,
@@ -1294,6 +1470,7 @@ def validate_handoff_file(path: Path, *, course_id: str) -> tuple[list[str], Han
         practice_exercise_id=practice_exercise_id,
         project_id=project_id,
         verification_samples=tuple(verification_samples),
+        algorithm_exercise_refs=algorithm_exercise_refs,
     )
 
 
@@ -1418,9 +1595,12 @@ def validate_manifest(
                 file_label=f"{file_label}.review",
             )
         )
-        owner = review.get("content_owner")
-        if not is_non_empty_string(owner):
-            errors.append(f"{file_label}: review.content_owner must be a non-empty string")
+        owner_errors, owner = validate_trimmed_string(
+            review.get("content_owner"),
+            field_name="review.content_owner",
+            file_label=file_label,
+        )
+        errors.extend(owner_errors)
         if status != "scaffold" and owner == "unassigned":
             errors.append(f"{file_label}: non-scaffold courses require an assigned content_owner")
         reviewed_at = review.get("last_reviewed_at")
@@ -1551,6 +1731,16 @@ def validate_handoff_references(
                 f"{course_id}/handoff.yaml: verification sample expected.total_tests "
                 f"does not match {exercise_id} test count"
             )
+    for exercise_id in handoff.algorithm_exercise_refs:
+        exercise = exercises.get(exercise_id)
+        if exercise is None:
+            errors.append(
+                f"{course_id}/handoff.yaml: algorithm exercise {exercise_id} does not exist"
+            )
+        elif exercise.exercise_type not in {"code", "debug"}:
+            errors.append(
+                f"{course_id}/handoff.yaml: algorithm expectations require code/debug exercises"
+            )
     if handoff.status == "reviewed":
         referenced = [
             *(concepts.get(item) for item in handoff.concept_refs),
@@ -1559,6 +1749,7 @@ def validate_handoff_references(
             practice,
             projects.get(handoff.project_id),
             *(exercises.get(exercise_id) for exercise_id, _, _ in handoff.verification_samples),
+            *(exercises.get(exercise_id) for exercise_id in handoff.algorithm_exercise_refs),
         ]
         if any(record is not None and record.status != "reviewed" for record in referenced):
             errors.append(f"{course_id}/handoff.yaml: reviewed handoff references draft content")
@@ -1577,11 +1768,29 @@ def validate_pack_details(pack_dir: Path) -> PackValidation:
         manifest, pack_dir=pack_dir
     )
     errors.extend(manifest_errors)
+    if course_id not in COURSE_ID_PREFIXES:
+        course_id = pack_dir.name
+    content_roots = {pack_dir / directory for directory in CONTENT_DIRECTORIES.values()}
     for directory in CONTENT_DIRECTORIES.values():
-        if not (pack_dir / directory).is_dir():
+        content_root = pack_dir / directory
+        if not content_root.is_dir():
             errors.append(f"{pack_dir.name}: missing {directory}/")
-    expected_prefix = COURSE_ID_PREFIXES.get(course_id or pack_dir.name)
-    source_prefix = SOURCE_ID_PREFIXES.get(course_id or pack_dir.name)
+    allowed_root_files = {manifest_path, pack_dir / "handoff.yaml"}
+    for misplaced_record in sorted(
+        path
+        for path in pack_dir.rglob("*")
+        if path.is_file()
+        and path.suffix.lower() in CONTENT_SUFFIXES
+        and path not in allowed_root_files
+        and path.parent not in content_roots
+    ):
+        relative_path = misplaced_record.relative_to(pack_dir)
+        errors.append(
+            f"{pack_dir.name}: YAML/JSON records must use the canonical flat layout: "
+            f"{relative_path}"
+        )
+    expected_prefix = COURSE_ID_PREFIXES.get(course_id)
+    source_prefix = SOURCE_ID_PREFIXES.get(course_id)
     if expected_prefix is None or source_prefix is None:
         return PackValidation(errors, ())
     records: list[ContentRecord] = []
@@ -1725,6 +1934,11 @@ def validate_pack_details(pack_dir: Path) -> PackValidation:
         errors.append(f"{pack_dir.name}: prerequisite cycle detected: {cycle}")
     handoff: HandoffRecord | None = None
     handoff_path = pack_dir / "handoff.yaml"
+    for candidate in sorted(path for path in pack_dir.glob("handoff*") if path.is_file()):
+        if candidate.name != handoff_path.name:
+            errors.append(
+                f"{pack_dir.name}: handoff file must be named handoff.yaml, not {candidate.name}"
+            )
     if handoff_path.is_file():
         handoff_errors, handoff = validate_handoff_file(handoff_path, course_id=course_id)
         errors.extend(handoff_errors)

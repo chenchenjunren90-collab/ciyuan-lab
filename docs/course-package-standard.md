@@ -265,8 +265,20 @@ fallback:
 - 已登记来源；
 - 至少 5 个黄金问题及预期来源；
 - 至少 1 个依据不足问题和 1 个错误引用样例；
-- 至少一个预期通过和一个预期失败的代码样例及确定性结果；
+- 至少一个预期通过和一个预期失败的代码样例及完整确定性结果：`accepted`、`passed_tests`、`total_tests`、`diagnostics`；失败样例的 `diagnostics` 不得为空；
 - 演示路径和已知限制。
+
+数据结构课程还必须提供至少一条 `algorithm_expectations`，把算法练习与边界输入、预期复杂度、推导理由和依据来源绑定：
+
+```yaml
+algorithm_expectations:
+  - id: AE-01
+    exercise_id: DS-LIST-01-C1
+    boundary_cases: [空输入, 单元素, 重复元素]
+    expected_complexity: 时间 O(n)，额外空间 O(1)
+    rationale: 每个元素只处理一次，且未创建与输入规模同阶的额外结构。
+    source_refs: [SRC-DS-TEXTBOOK-01]
+```
 
 所有引用必须存在且类型正确；代码样例的 `language` 与 `total_tests` 必须分别匹配所引用练习的运行语言和测试数量；`reviewed` 交接文件只能引用 `reviewed` 内容，且黄金问题的预期来源必须已审核并标记为 `rag.eligible: true`。交接合入只代表课程事实和预期已准备好，不代表向量库已经写入；RAG 入库命令、实际提交号、成功/失败数量和黄金问题回归结果由 `RAG-01`/`RAG-ACCEPT-*` 另行记录。
 
@@ -295,6 +307,7 @@ python scripts/validate_course_pack.py
 - 不判断课程内容、算法答案、来源事实或法律授权是否真实正确；
 - 不运行学生代码，不证明沙箱、隐藏测试和资源限制已实现；
 - 不调用讯飞或驼灵，不执行 RAG 分块、向量化、入库或检索；
+- 不自动证明 `package_revision` 已合入 `develop`；校验器会拒绝格式错误和已知占位值，真实祖先关系仍由 PR 验收人核对；
 - 不自动证明 40 个知识点的教学覆盖合理；
 - 不替代课程负责人自检、来源证据和成员1最终验收。
 

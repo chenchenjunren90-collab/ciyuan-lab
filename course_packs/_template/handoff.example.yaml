@@ -1,6 +1,6 @@
 schema_version: "0.1.0"
 course_id: python
-package_revision: develop@0123456789abcdef # 示例值；复制后替换为已合入 develop 的内容提交号
+package_revision: develop@8b4e630 # 示例使用真实基线提交；复制后替换为课程内容已合入 develop 的提交号
 status: draft
 representative_content:
   concept_ids:
@@ -23,10 +23,10 @@ golden_questions:
     question: 如何把重复逻辑封装成函数？
     expected_source_refs: [SRC-PY-OUTLINE-01]
   - id: GQ-04
-    question: return 与 print 有什么区别？
+    question: 函数用于封装什么类型的逻辑？
     expected_source_refs: [SRC-PY-OUTLINE-01]
   - id: GQ-05
-    question: 函数调用需要满足哪些条件？
+    question: 函数可以通过什么方式接收输入？
     expected_source_refs: [SRC-PY-OUTLINE-01]
 insufficient_evidence_questions:
   - id: IQ-01
@@ -45,6 +45,7 @@ verification_samples:
       accepted: true
       passed_tests: 2
       total_tests: 2
+      diagnostics: []
   - id: VS-REJECTED
     exercise_id: PY-FUNC-01-C1
     language: python
@@ -53,6 +54,8 @@ verification_samples:
       accepted: false
       passed_tests: 0
       total_tests: 2
+      diagnostics:
+        - wrong_answer
 demo_path:
   - 进入 Python 课程
   - 查看函数知识卡并完成客观题

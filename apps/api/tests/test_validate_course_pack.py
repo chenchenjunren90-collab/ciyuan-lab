@@ -228,16 +228,33 @@ def make_project(
 def make_handoff(
     concept_ids: list[str],
     *,
-    source_id: str = "SRC-PY-TEST-01",
-    objective_exercise_id: str = "PY-BASE-01-Q1",
-    practice_exercise_id: str = "PY-BASE-01-C1",
-    project_id: str = "PY-PROJ-01",
+    course_id: str = "python",
+    source_id: str | None = None,
+    objective_exercise_id: str | None = None,
+    practice_exercise_id: str | None = None,
+    project_id: str | None = None,
     status: str = "draft",
 ) -> dict[str, Any]:
-    return {
+    prefix = course_prefix(course_id)
+    source_id = source_id or f"SRC-{prefix}-TEST-01"
+    objective_exercise_id = objective_exercise_id or f"{prefix}-BASE-01-Q1"
+    practice_exercise_id = practice_exercise_id or f"{prefix}-BASE-01-C1"
+    project_id = project_id or f"{prefix}-PROJ-01"
+    language = "c" if course_id == "c" else "python"
+    accepted_code = (
+        "#include <stdio.h>\n"
+        'int main(void){int a,b;scanf("%d%d",&a,&b);'
+        'printf("%d\\n",a+b);return 0;}'
+        if language == "c"
+        else "print(sum(map(int, input().split())))"
+    )
+    rejected_code = (
+        '#include <stdio.h>\nint main(void){puts("0");return 0;}' if language == "c" else "print(0)"
+    )
+    handoff: dict[str, Any] = {
         "schema_version": "0.1.0",
-        "course_id": "python",
-        "package_revision": "develop@0123456",
+        "course_id": course_id,
+        "package_revision": "develop@8b4e630",
         "status": status,
         "representative_content": {
             "concept_ids": concept_ids,
@@ -267,21 +284,43 @@ def make_handoff(
             {
                 "id": "VS-OK",
                 "exercise_id": practice_exercise_id,
-                "language": "python",
-                "source_code": "print(sum(map(int, input().split())))",
-                "expected": {"accepted": True, "passed_tests": 2, "total_tests": 2},
+                "language": language,
+                "source_code": accepted_code,
+                "expected": {
+                    "accepted": True,
+                    "passed_tests": 2,
+                    "total_tests": 2,
+                    "diagnostics": [],
+                },
             },
             {
                 "id": "VS-BAD",
                 "exercise_id": practice_exercise_id,
-                "language": "python",
-                "source_code": "print(0)",
-                "expected": {"accepted": False, "passed_tests": 0, "total_tests": 2},
+                "language": language,
+                "source_code": rejected_code,
+                "expected": {
+                    "accepted": False,
+                    "passed_tests": 0,
+                    "total_tests": 2,
+                    "diagnostics": ["wrong_answer"],
+                },
             },
         ],
         "demo_path": ["进入课程", "完成练习", "查看下一任务"],
         "known_limitations": ["测试交接夹具"],
     }
+    if course_id == "data_structures":
+        handoff["algorithm_expectations"] = [
+            {
+                "id": "AE-01",
+                "exercise_id": practice_exercise_id,
+                "boundary_cases": ["空输入", "单元素", "重复元素"],
+                "expected_complexity": "时间 O(n)，额外空间 O(1)",
+                "rationale": "每个元素只处理一次，未创建与输入规模同阶的额外结构。",
+                "source_refs": [source_id],
+            }
+        ]
+    return handoff
 
 
 def write_document(path: Path, document: dict[str, Any], file_format: str = "yaml") -> None:
@@ -483,6 +522,68 @@ def test_non_string_keys_and_surrounding_whitespace_are_rejected(tmp_path: Path)
     assert any("id must not have surrounding whitespace" in error for error in errors)
 
 
+def test_non_scalar_fields_and_invalid_manifest_return_errors(tmp_path: Path) -> None:
+    code = make_code_exercise("PY-BASE-01-C1", ["PY-BASE-01"])
+    code["difficulty"] = ["beginner"]
+    code["evaluation"]["runtime"]["language"] = ["python"]
+    code["evaluation"]["tests"][0]["visibility"] = {"value": "public"}
+    project = make_project("PY-PROJ-01", ["PY-BASE-01", "PY-NEXT-01"])
+    project["scenario_provider"] = ["none"]
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[
+            make_concept("PY-BASE-01", assessment_ids=["PY-BASE-01-C1"]),
+            make_concept("PY-NEXT-01"),
+        ],
+        exercises=[code, make_objective_exercise("PY-NEXT-01-Q1", ["PY-NEXT-01"])],
+        sources=[make_source()],
+        projects=[project],
+    )
+    manifest_path = pack_dir / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["course"]["id"] = ["python"]
+    write_document(manifest_path, manifest)
+
+    errors = validate_pack(pack_dir)
+
+    assert any("course.id must match" in error for error in errors)
+    assert any("difficulty must be one of" in error for error in errors)
+    assert any("runtime.language must be c or python" in error for error in errors)
+    assert any("visibility must be public or hidden" in error for error in errors)
+    assert any("scenario_provider must be one of" in error for error in errors)
+
+
+def test_duplicate_yaml_keys_are_rejected(tmp_path: Path) -> None:
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[make_concept("PY-BASE-01")],
+        exercises=[make_objective_exercise("PY-BASE-01-Q1", ["PY-BASE-01"])],
+        sources=[make_source()],
+    )
+    concept_path = pack_dir / "concepts" / "PY-BASE-01.yaml"
+    content = concept_path.read_text(encoding="utf-8")
+    concept_path.write_text(
+        content.replace("course: python\n", "course: c\ncourse: python\n", 1),
+        encoding="utf-8",
+    )
+    yaml_source_path = pack_dir / "sources" / "SRC-PY-TEST-01.yaml"
+    yaml_source_path.unlink()
+    json_source = json.dumps(make_source(), ensure_ascii=False, indent=2)
+    (pack_dir / "sources" / "SRC-PY-TEST-01.json").write_text(
+        json_source.replace(
+            '"course": "python",',
+            '"course": "c",\n  "course": "python",',
+            1,
+        ),
+        encoding="utf-8",
+    )
+
+    errors = validate_pack(pack_dir)
+
+    assert any("duplicate mapping key: 'course'" in error for error in errors)
+    assert sum("duplicate mapping key: 'course'" in error for error in errors) == 2
+
+
 def test_duplicate_missing_reference_and_cycle_are_rejected(tmp_path: Path) -> None:
     source = make_source()
     first = make_concept("PY-A-01", prerequisites=["PY-B-01"])
@@ -551,6 +652,32 @@ def test_unsafe_or_unrepeatable_runtime_declarations_are_rejected(tmp_path: Path
     assert any("runtime.memory_limit_mb must be between 16 and 512" in error for error in errors)
     assert any("runtime.output_limit_kb must be between 1 and 1024" in error for error in errors)
 
+    runtime["entrypoint"] = "sub\\main.py"
+    write_document(pack_dir / "exercises" / "PY-BASE-01-C1.yaml", code)
+    errors = validate_pack(pack_dir)
+    assert any("runtime.entrypoint must be a plain filename" in error for error in errors)
+
+
+def test_control_characters_in_runtime_and_source_paths_are_rejected(tmp_path: Path) -> None:
+    code = make_code_exercise("PY-BASE-01-C1", ["PY-BASE-01"])
+    code["evaluation"]["runtime"]["entrypoint"] = "main\n.py"
+    source = make_source()
+    source["rag"] = {
+        "eligible": False,
+        "content": {"mode": "file", "path": "\0.md"},
+    }
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[make_concept("PY-BASE-01", assessment_ids=["PY-BASE-01-C1"])],
+        exercises=[code],
+        sources=[source],
+    )
+
+    errors = validate_pack(pack_dir)
+
+    assert any("runtime.entrypoint must be a plain filename" in error for error in errors)
+    assert any("rag.content.path must stay inside sources/" in error for error in errors)
+
 
 def test_short_answer_and_debug_variants_pass(tmp_path: Path) -> None:
     concept = make_concept(
@@ -607,6 +734,17 @@ def test_c_and_data_structures_accept_only_their_supported_runtimes(tmp_path: Pa
     assert validate_pack(c_pack) == []
     assert validate_pack(ds_pack) == []
 
+    ds_code = make_code_exercise(
+        "DS-BASE-01-C1",
+        ["DS-BASE-01"],
+        course_id="data_structures",
+    )
+    ds_code["evaluation"]["runtime"].update(
+        {"language": "c", "version": "C17", "entrypoint": "main.c"}
+    )
+    write_document(ds_pack / "exercises" / "DS-BASE-01-C1.yaml", ds_code)
+    assert validate_pack(ds_pack) == []
+
 
 def test_c_and_python_reject_each_others_runtime(tmp_path: Path) -> None:
     python_code = make_code_exercise("PY-BASE-01-C1", ["PY-BASE-01"])
@@ -648,6 +786,7 @@ def test_source_rights_and_path_escape_are_rejected(tmp_path: Path) -> None:
     source = make_source()
     source["rights"] = {"basis": "open_license", "note": "不匹配的授权说明"}
     source["data_classification"] = "authorized_desensitized"
+    source["citation"]["url"] = "http://"
     source["rag"] = {"eligible": True, "content": {"mode": "file", "path": "../secret.txt"}}
     pack_dir = make_pack(
         tmp_path,
@@ -662,6 +801,28 @@ def test_source_rights_and_path_escape_are_rejected(tmp_path: Path) -> None:
         "authorized_desensitized sources require authorized rights" in error for error in errors
     )
     assert any("rag.content.path must stay inside sources/" in error for error in errors)
+    assert any("citation.url must be an http(s) URL" in error for error in errors)
+
+    source["rag"]["content"]["path"] = "..\\secret.md"
+    write_document(pack_dir / "sources" / "SRC-PY-TEST-01.yaml", source)
+    errors = validate_pack(pack_dir)
+    assert any("rag.content.path must stay inside sources/" in error for error in errors)
+
+
+def test_malformed_source_urls_return_errors_instead_of_crashing(tmp_path: Path) -> None:
+    for index, invalid_url in enumerate(("http://[", "http://example.com:bad", "http://:80")):
+        source = make_source()
+        source["citation"]["url"] = invalid_url
+        pack_dir = make_pack(
+            tmp_path / f"case-{index}",
+            concepts=[make_concept("PY-BASE-01")],
+            exercises=[make_objective_exercise("PY-BASE-01-Q1", ["PY-BASE-01"])],
+            sources=[source],
+        )
+
+        errors = validate_pack(pack_dir)
+
+        assert any("citation.url must be an http(s) URL" in error for error in errors)
 
 
 def test_synthetic_source_requires_consistent_rights_and_classification(tmp_path: Path) -> None:
@@ -842,10 +1003,157 @@ def test_complete_handoff_passes_and_broken_handoff_is_rejected(tmp_path: Path) 
     assert any("practice_exercise_id must reference code or debug" in error for error in errors)
 
 
+def test_reviewed_handoff_with_complete_verification_result_passes(tmp_path: Path) -> None:
+    concept_ids = ["PY-BASE-01", "PY-FUNC-01", "PY-FILE-01"]
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[
+            make_concept(
+                concept_id,
+                assessment_ids=["PY-BASE-01-Q1", "PY-BASE-01-C1"],
+                status="reviewed",
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("PY-BASE-01-Q1", concept_ids, status="reviewed"),
+            make_code_exercise("PY-BASE-01-C1", concept_ids, status="reviewed"),
+        ],
+        sources=[make_source(status="reviewed")],
+        projects=[make_project("PY-PROJ-01", concept_ids[:2], status="reviewed")],
+        handoff=make_handoff(concept_ids, status="reviewed"),
+        course_status="review",
+    )
+    manifest_path = pack_dir / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["review"]["last_reviewed_at"] = "2026-08-14T00:00:00+08:00"
+    write_document(manifest_path, manifest)
+
+    assert validate_pack(pack_dir) == []
+
+
+def test_rejected_verification_sample_requires_diagnostics(tmp_path: Path) -> None:
+    concept_ids = ["PY-BASE-01", "PY-FUNC-01", "PY-FILE-01"]
+    handoff = make_handoff(concept_ids)
+    handoff["verification_samples"][1]["expected"]["diagnostics"] = []
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[
+            make_concept(
+                concept_id,
+                assessment_ids=["PY-BASE-01-Q1", "PY-BASE-01-C1"],
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("PY-BASE-01-Q1", concept_ids),
+            make_code_exercise("PY-BASE-01-C1", concept_ids),
+        ],
+        sources=[make_source()],
+        projects=[make_project("PY-PROJ-01", concept_ids[:2])],
+        handoff=handoff,
+    )
+
+    errors = validate_pack(pack_dir)
+
+    assert any("expected.diagnostics must contain at least 1" in error for error in errors)
+
+
+def test_data_structures_handoff_requires_algorithm_expectations(tmp_path: Path) -> None:
+    course_id = "data_structures"
+    concept_ids = ["DS-BASE-01", "DS-LIST-01", "DS-SORT-01"]
+    handoff = make_handoff(concept_ids, course_id=course_id)
+    pack_dir = make_pack(
+        tmp_path,
+        course_id=course_id,
+        concepts=[
+            make_concept(
+                concept_id,
+                course_id=course_id,
+                assessment_ids=["DS-BASE-01-Q1", "DS-BASE-01-C1"],
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("DS-BASE-01-Q1", concept_ids, course_id=course_id),
+            make_code_exercise("DS-BASE-01-C1", concept_ids, course_id=course_id),
+        ],
+        sources=[make_source(course_id=course_id)],
+        projects=[make_project("DS-PROJ-01", concept_ids[:2], course_id=course_id)],
+        handoff=handoff,
+    )
+
+    assert validate_pack(pack_dir) == []
+
+    handoff.pop("algorithm_expectations")
+    write_document(pack_dir / "handoff.yaml", handoff)
+    errors = validate_pack(pack_dir)
+    assert any("algorithm_expectations must be a non-empty list" in error for error in errors)
+
+
+def test_c_handoff_with_c_verification_samples_passes(tmp_path: Path) -> None:
+    course_id = "c"
+    concept_ids = ["C-BASE-01", "C-FUNC-01", "C-FILE-01"]
+    pack_dir = make_pack(
+        tmp_path,
+        course_id=course_id,
+        concepts=[
+            make_concept(
+                concept_id,
+                course_id=course_id,
+                assessment_ids=["C-BASE-01-Q1", "C-BASE-01-C1"],
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("C-BASE-01-Q1", concept_ids, course_id=course_id),
+            make_code_exercise("C-BASE-01-C1", concept_ids, course_id=course_id),
+        ],
+        sources=[make_source(course_id=course_id)],
+        projects=[make_project("C-PROJ-01", concept_ids[:2], course_id=course_id)],
+        handoff=make_handoff(concept_ids, course_id=course_id),
+    )
+
+    assert validate_pack(pack_dir) == []
+
+
+def test_misnamed_handoff_and_nested_content_records_are_rejected(tmp_path: Path) -> None:
+    concept_ids = ["PY-BASE-01", "PY-FUNC-01", "PY-FILE-01"]
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[
+            make_concept(
+                concept_id,
+                assessment_ids=["PY-BASE-01-Q1", "PY-BASE-01-C1"],
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("PY-BASE-01-Q1", concept_ids),
+            make_code_exercise("PY-BASE-01-C1", concept_ids),
+        ],
+        sources=[make_source()],
+        projects=[make_project("PY-PROJ-01", concept_ids[:2])],
+        handoff=make_handoff(concept_ids),
+    )
+    (pack_dir / "handoff.yaml").rename(pack_dir / "handoff.example.yaml")
+    hidden_path = pack_dir / "concepts" / "archive" / "PY-HIDDEN-01.yaml"
+    write_document(hidden_path, make_concept("PY-HIDDEN-01"))
+
+    errors = validate_pack(pack_dir)
+
+    assert any("handoff file must be named handoff.yaml" in error for error in errors)
+    assert any("YAML/JSON records must use the canonical flat layout" in error for error in errors)
+
+    write_document(pack_dir / "PY-ROOT-HIDDEN-01.yaml", make_concept("PY-ROOT-HIDDEN-01"))
+    errors = validate_pack(pack_dir)
+    assert any("PY-ROOT-HIDDEN-01.yaml" in error for error in errors)
+
+
 def test_handoff_revision_language_and_test_count_must_match(tmp_path: Path) -> None:
     concept_ids = ["PY-BASE-01", "PY-FUNC-01", "PY-FILE-01"]
     handoff = make_handoff(concept_ids)
-    handoff["package_revision"] = "develop@placeholder"
+    handoff["package_revision"] = "develop@0123456789abcdef"
     handoff["verification_samples"][0]["language"] = "c"
     handoff["verification_samples"][1]["expected"]["total_tests"] = 99
     pack_dir = make_pack(
@@ -956,13 +1264,52 @@ def test_manifest_and_published_release_gates_are_enforced(tmp_path: Path) -> No
     manifest_path = pack_dir / "manifest.yaml"
     manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
     manifest["content"]["concepts_dir"] = "wrong"
+    manifest["review"]["content_owner"] = " unassigned "
     write_document(manifest_path, manifest)
 
     errors = validate_pack(pack_dir)
 
     assert any("content.concepts_dir must be concepts" in error for error in errors)
+    assert any(
+        "review.content_owner must not have surrounding whitespace" in error for error in errors
+    )
+    assert any(
+        "non-scaffold courses require an assigned content_owner" in error for error in errors
+    )
     assert any("review/published courses require last_reviewed_at" in error for error in errors)
     assert any("published courses must reach target_core_concepts" in error for error in errors)
     assert any("published courses require at least one project" in error for error in errors)
     assert any("published courses may contain only reviewed records" in error for error in errors)
     assert any("published courses require a reviewed handoff.yaml" in error for error in errors)
+
+
+def test_complete_published_pack_passes_all_release_gates(tmp_path: Path) -> None:
+    concept_ids = ["PY-BASE-01", "PY-FUNC-01", "PY-FILE-01"] + [
+        f"PY-TOPIC-{index:02d}" for index in range(1, 38)
+    ]
+    assessment_ids = ["PY-BASE-01-Q1", "PY-BASE-01-C1"]
+    pack_dir = make_pack(
+        tmp_path,
+        concepts=[
+            make_concept(
+                concept_id,
+                assessment_ids=assessment_ids,
+                status="reviewed",
+            )
+            for concept_id in concept_ids
+        ],
+        exercises=[
+            make_objective_exercise("PY-BASE-01-Q1", concept_ids, status="reviewed"),
+            make_code_exercise("PY-BASE-01-C1", concept_ids, status="reviewed"),
+        ],
+        sources=[make_source(status="reviewed")],
+        projects=[make_project("PY-PROJ-01", concept_ids[:2], status="reviewed")],
+        handoff=make_handoff(concept_ids[:3], status="reviewed"),
+        course_status="published",
+    )
+    manifest_path = pack_dir / "manifest.yaml"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    manifest["review"]["last_reviewed_at"] = "2026-08-14T00:00:00+08:00"
+    write_document(manifest_path, manifest)
+
+    assert validate_pack(pack_dir) == []
