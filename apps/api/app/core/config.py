@@ -33,6 +33,12 @@ class Settings(BaseSettings):
     tuoling_base_url: str = ""
     tuoling_api_key: SecretStr = SecretStr("")
 
+    # Xfyun adapter tuning (no secrets; used by model_adapters / AI-01)
+    xfyun_spark_model: str = "generalv3.5"
+    xfyun_spark_timeout_seconds: float = 30.0
+    xfyun_spark_max_retries: int = 2
+    xfyun_spark_mock_fallback: bool = True
+
     rag_top_k: int = Field(default=5, ge=1, le=20)
     code_execution_enabled: bool = False
 
