@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-06-Q1
+concept_id: PY-BASE-06
+difficulty: beginner
+question: 关于 while 循环，下列说法正确的是？
+options:
+- 至少执行一次
+- 条件为假时一次也不执行
+- 不能嵌套
+- 不需要条件
+answer: B
+explanation: while 先判断条件，条件一开始为假时循环体一次也不执行。

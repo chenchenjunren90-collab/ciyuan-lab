@@ -1,0 +1,58 @@
+type: code
+language: python
+id: PY-BASE-05-C1
+concept_id: PY-BASE-05
+title: 成绩等级判断
+difficulty: beginner
+function_name: grade
+signature: 'grade(score: int) -> str'
+statement: 实现函数 grade(score)：score 为 0—100 的整数，返回等级字符串——>=90 为"优秀"，>=80 为"良好"，>=60 为"及格"，否则为"不及格"。
+public_tests:
+- input:
+  - 90
+  expected: 优秀
+- input:
+  - 85
+  expected: 良好
+- input:
+  - 70
+  expected: 及格
+- input:
+  - 55
+  expected: 不及格
+hidden_tests:
+- input:
+  - 100
+  expected: 优秀
+- input:
+  - 89
+  expected: 良好
+- input:
+  - 60
+  expected: 及格
+- input:
+  - 59
+  expected: 不及格
+- input:
+  - 0
+  expected: 不及格
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 先用一个 if 判断 score >= 90 的最高档。
+- 再用 elif 依次判断 >= 80、>= 60 两个中间档。
+- 最后用 else 兜底，返回"不及格"。
+feedback:
+- 注意判断顺序：应从高分向低分依次判断，否则会错判。
+- 边界值（90、80、60）应分别落到"优秀/良好/及格"档。
+reference_solution: |
+  def grade(score):
+      if score >= 90:
+          return "优秀"
+      elif score >= 80:
+          return "良好"
+      elif score >= 60:
+          return "及格"
+      else:
+          return "不及格"

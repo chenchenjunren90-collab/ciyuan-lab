@@ -1,0 +1,25 @@
+id: PY-CONTAINER-01
+title: 容器嵌套与选择
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-LIST-02
+- PY-DICT-02
+- PY-SET-01
+learning_objectives:
+- 能构造嵌套容器（列表套字典等）
+- 能根据场景选择合适的容器类型
+concepts:
+- 嵌套结构
+- 容器选择
+- 数据结构
+lesson:
+  summary: 综合运用列表、字典、集合等容器构造嵌套结构，并能根据数据特点选择合适的容器。
+assessment_ids:
+- PY-CONTAINER-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

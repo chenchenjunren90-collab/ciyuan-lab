@@ -1,0 +1,55 @@
+type: code
+language: python
+id: PY-DATA-01-C1
+concept_id: PY-DATA-01
+title: 分数清洗
+difficulty: intermediate
+function_name: clean_scores
+signature: 'clean_scores(records: list[dict]) -> list[int]'
+statement: 实现函数 clean_scores(records)：records 是若干含 "score" 字段的记录（可能为缺失、空串、非数字或越界值）。返回清洗后的整数列表：仅保留能转成整数且在
+  0—100（含边界）之间的分数。
+public_tests:
+- input:
+  - - score: '85'
+    - score: ''
+    - score: abc
+    - score: '101'
+    - score: '72'
+  expected:
+  - 85
+  - 72
+hidden_tests:
+- input:
+  - - score: '0'
+    - score: '100'
+    - score: '-1'
+  expected:
+  - 0
+  - 100
+- input:
+  - - score: ''
+  expected: []
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 先对 raw 字符串 strip() 去空白，空串直接跳过。
+- 用 try/except ValueError 捕获非数字字符串。
+- 用 0 <= value <= 100 过滤越界值。
+feedback:
+- 不要用模型判断数据是否合法，清洗规则应完全确定。
+- 0 和 100 是合法边界，必须保留。
+reference_solution: |
+  def clean_scores(records):
+      result = []
+      for r in records:
+          raw = str(r.get("score", "")).strip()
+          if raw == "":
+              continue
+          try:
+              value = int(raw)
+          except ValueError:
+              continue
+          if 0 <= value <= 100:
+              result.append(value)
+      return result

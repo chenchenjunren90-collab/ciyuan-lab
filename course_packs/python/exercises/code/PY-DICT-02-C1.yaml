@@ -1,0 +1,40 @@
+type: code
+language: python
+id: PY-DICT-02-C1
+concept_id: PY-DICT-02
+title: 词频统计
+difficulty: intermediate
+function_name: word_count
+signature: 'word_count(text: str) -> dict[str, int]'
+statement: 实现函数 word_count(text)：返回一个字典，键为 text 中以空白分隔的单词，值为该单词出现的次数。
+public_tests:
+- input:
+  - a a b
+  expected:
+    a: 2
+    b: 1
+hidden_tests:
+- input:
+  - hello world hello
+  expected:
+    hello: 2
+    world: 1
+- input:
+  - ''
+  expected: {}
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 用 text.split() 把字符串拆成单词列表。
+- 遍历单词，用字典记录每个单词出现的次数。
+- 可用 counts.get(word, 0) + 1 累加次数。
+feedback:
+- 空字符串 split() 后得到空列表，应返回空字典。
+- 注意区分大小写：本任务视为大小写敏感。
+reference_solution: |
+  def word_count(text):
+      counts = {}
+      for word in text.split():
+          counts[word] = counts.get(word, 0) + 1
+      return counts

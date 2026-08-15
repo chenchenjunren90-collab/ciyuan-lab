@@ -1,0 +1,25 @@
+id: PY-BASE-03
+title: 运算符与表达式
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用算术、比较与逻辑运算符构造表达式
+- 能解释运算符的优先级与结合性
+concepts:
+- 算术运算
+- 比较运算
+- 逻辑运算
+- 优先级
+lesson:
+  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。
+assessment_ids:
+- PY-BASE-03-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-OFFICIAL-REF
+status: draft

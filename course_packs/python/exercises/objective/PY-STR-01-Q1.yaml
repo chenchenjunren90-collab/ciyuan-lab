@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-STR-01-Q1
+concept_id: PY-STR-01
+difficulty: beginner
+question: 表达式 "a" + "b" 的结果是？
+options:
+- '"ab"'
+- '"a b"'
+- '"a""b"'
+- 报错
+answer: A
+explanation: 字符串用 + 进行拼接，结果是不含空格的 "ab"。

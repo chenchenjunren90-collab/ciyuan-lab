@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-FUNC-03-Q1
+concept_id: PY-FUNC-03
+difficulty: intermediate
+question: 在函数定义中使用 *args 的作用是？
+options:
+- 接收任意数量的位置参数
+- 接收任意关键字参数
+- 强制只传一个参数
+- 声明默认值
+answer: A
+explanation: '*args 把任意数量的位置参数打包为元组；接收关键字参数用 **kwargs。'

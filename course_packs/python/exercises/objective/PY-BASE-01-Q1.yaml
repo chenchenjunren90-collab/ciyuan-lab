@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-01-Q1
+concept_id: PY-BASE-01
+difficulty: beginner
+question: 运行一个扩展名为 .py 的 Python 源文件时，实际执行它的是？
+options:
+- 操作系统直接执行
+- Python 解释器
+- C 语言编译器
+- 浏览器引擎
+answer: B
+explanation: Python 是解释型语言，.py 文件由 Python 解释器执行，无需单独编译。

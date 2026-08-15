@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-MOD-02-Q1
+concept_id: PY-MOD-02
+difficulty: intermediate
+question: 要生成 1 到 10 之间的随机整数，应使用？
+options:
+- random.random()
+- random.randint(1, 10)
+- math.random()
+- datetime.randint()
+answer: B
+explanation: random.randint(a, b) 生成 [a, b] 内的随机整数。

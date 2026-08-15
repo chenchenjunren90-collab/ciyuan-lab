@@ -1,0 +1,26 @@
+id: PY-COMP-01
+title: 综合项目实践
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 90
+prerequisites:
+- PY-DATA-02
+- PY-EXC-01
+- PY-ALGO-01
+learning_objectives:
+- 能规划并实现一个多模块小项目
+- 能对项目进行基本测试与异常处理
+concepts:
+- 项目规划
+- 模块化
+- 测试
+- 健壮性
+lesson:
+  summary: 综合运用函数、容器、文件、异常处理等能力实现一个完整的小型项目。
+assessment_ids:
+- PY-COMP-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

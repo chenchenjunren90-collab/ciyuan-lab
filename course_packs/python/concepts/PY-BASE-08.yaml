@@ -1,0 +1,26 @@
+id: PY-BASE-08
+title: break、continue 与循环 else
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-06
+- PY-BASE-07
+learning_objectives:
+- 能使用 break 提前终止循环
+- 能使用 continue 跳过本次迭代
+- 能理解循环 else 的执行时机
+concepts:
+- break
+- continue
+- else
+- 循环控制
+lesson:
+  summary: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。
+assessment_ids:
+- PY-BASE-08-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

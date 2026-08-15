@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-ALGO-01-Q1
+concept_id: PY-ALGO-01
+difficulty: intermediate
+question: 二分查找的前提条件是？
+options:
+- 序列已有序
+- 序列为字符串
+- 序列长度固定为 2
+- 序列不含重复值
+answer: A
+explanation: 二分查找要求序列已按关键字有序，否则无法折半缩小范围。

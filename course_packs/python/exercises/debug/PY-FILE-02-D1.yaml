@@ -1,0 +1,39 @@
+type: debug
+id: PY-FILE-02-D1
+concept_id: PY-FILE-02
+title: 修复文件未用 with 关闭
+difficulty: beginner
+language: python
+function_name: read_first_line
+buggy_code: |
+  def read_first_line(path):
+      f = open(path, "r", encoding="utf-8")
+      line = f.readline()
+      return line.strip()
+description: 该函数读取文件首行，但手动 open 后没有显式关闭文件：一旦后续逻辑抛异常，文件句柄会泄漏；且对不存在的文件会直接抛 FileNotFoundError。请改用 with 语句管理文件，并对文件不存在返回
+  None。
+expected_behavior: 对存在的文件返回去除换行后的首行内容；对不存在的路径返回 None；无论是否异常文件句柄均被关闭。
+public_tests:
+- input:
+  - |-
+    fixtures/read_first_line.txt
+  expected: hello
+hidden_tests:
+- input:
+  - __missing_file__.txt
+  expected: null
+limits:
+  time_ms: 1000
+  memory_mb: 64
+error_tag: resource_not_closed
+hints:
+- 'with open(...) as f: 会在代码块结束时自动关闭文件。'
+- 用 try/except FileNotFoundError 兜底不存在的文件。
+- 首行可能带换行符，记得 strip()。
+reference_solution: |
+  def read_first_line(path):
+      try:
+          with open(path, "r", encoding="utf-8") as f:
+              return f.readline().strip()
+      except FileNotFoundError:
+          return None

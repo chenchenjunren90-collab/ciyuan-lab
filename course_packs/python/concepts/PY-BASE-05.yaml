@@ -1,0 +1,25 @@
+id: PY-BASE-05
+title: 条件语句
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-03
+learning_objectives:
+- 能使用 if/elif/else 实现分支逻辑
+- 能构造多分支与嵌套判断
+concepts:
+- if
+- elif
+- else
+- 嵌套
+- 布尔表达式
+lesson:
+  summary: 使用 if/elif/else 根据条件选择执行路径，理解缩进对代码块的作用，并能构造多分支与嵌套判断。
+assessment_ids:
+- PY-BASE-05-C1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

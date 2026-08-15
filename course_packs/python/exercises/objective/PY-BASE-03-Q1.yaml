@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-03-Q1
+concept_id: PY-BASE-03
+difficulty: beginner
+question: 表达式 7 // 2 的结果是？
+options:
+- '3.5'
+- '3'
+- '4'
+- '1'
+answer: B
+explanation: // 是整除运算，7 // 2 向下取整得到 3。

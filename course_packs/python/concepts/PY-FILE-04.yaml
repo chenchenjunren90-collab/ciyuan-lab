@@ -1,0 +1,25 @@
+id: PY-FILE-04
+title: JSON 序列化
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-DICT-02
+- PY-FILE-02
+learning_objectives:
+- 能使用 json 模块序列化与反序列化
+- 能处理字典与 JSON 的互转
+concepts:
+- json
+- dumps
+- loads
+- 序列化
+lesson:
+  summary: 使用 json 模块实现字典与 JSON 字符串的相互转换及文件读写。
+assessment_ids:
+- PY-FILE-04-Q1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

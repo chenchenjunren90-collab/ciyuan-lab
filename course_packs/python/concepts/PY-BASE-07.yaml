@@ -1,0 +1,24 @@
+id: PY-BASE-07
+title: for 循环与 range
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-BASE-06
+learning_objectives:
+- 能使用 for 遍历序列
+- 能使用 range 生成整数序列
+concepts:
+- for
+- range
+- 遍历
+- 步长
+lesson:
+  summary: 使用 for 循环遍历序列，借助 range 生成指定范围的整数序列，理解 range 的起止与步长参数。
+assessment_ids:
+- PY-BASE-07-C1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

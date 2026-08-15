@@ -1,0 +1,23 @@
+id: PY-FILE-02
+title: 上下文管理器 with
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-FILE-01
+learning_objectives:
+- 能使用 with 语句安全打开文件
+- 能解释 with 自动关闭资源的原理
+concepts:
+- with
+- 上下文管理器
+- 自动关闭
+lesson:
+  summary: 使用 with 语句管理文件资源，理解上下文管理器自动关闭文件的优势。
+assessment_ids:
+- PY-FILE-02-D1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

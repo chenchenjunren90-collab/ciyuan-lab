@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-FILE-01-Q1
+concept_id: PY-FILE-01
+difficulty: beginner
+question: open("data.txt") 默认以什么模式打开文件？
+options:
+- 只写 w
+- 只读 r
+- 追加 a
+- 二进制 b
+answer: B
+explanation: open 默认模式为只读 r；写入需显式指定 w 或 a。

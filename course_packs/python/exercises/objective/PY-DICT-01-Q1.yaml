@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-DICT-01-Q1
+concept_id: PY-DICT-01
+difficulty: beginner
+question: 关于字典的键，下列说法正确的是？
+options:
+- 键可重复
+- 键必须唯一且可哈希
+- 键只能是整数
+- 键必须有序
+answer: B
+explanation: 字典的键必须唯一且可哈希；重复赋值会覆盖旧值。

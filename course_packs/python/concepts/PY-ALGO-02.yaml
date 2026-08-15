@@ -1,0 +1,24 @@
+id: PY-ALGO-02
+title: 递归初步
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 50
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能理解递归的基本思想
+- 能实现阶乘、斐波那契等简单递归函数
+concepts:
+- 递归
+- 基线条件
+- 递归条件
+- 栈
+lesson:
+  summary: 理解递归的基线条件与递归条件，实现阶乘、斐波那契等简单递归函数。
+assessment_ids:
+- PY-ALGO-02-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

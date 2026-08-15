@@ -1,0 +1,25 @@
+id: PY-FILE-03
+title: CSV 文件处理
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 55
+prerequisites:
+- PY-FILE-02
+- PY-LIST-02
+learning_objectives:
+- 能使用 csv 模块读写 CSV 数据
+- 能按行处理表格数据
+concepts:
+- csv
+- reader
+- writer
+- DictReader
+lesson:
+  summary: 使用 csv 模块读写表格数据，掌握 reader/writer 与 DictReader 的用法。
+assessment_ids:
+- PY-FILE-03-C1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-MOD-01-Q1
+concept_id: PY-MOD-01
+difficulty: beginner
+question: 导入数学模块的正确写法是？
+options:
+- include math
+- import math
+- using math
+- load math
+answer: B
+explanation: Python 使用 import 关键字导入模块，如 import math。

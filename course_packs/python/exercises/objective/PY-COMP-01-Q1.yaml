@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-COMP-01-Q1
+concept_id: PY-COMP-01
+difficulty: advanced
+question: 小型项目采用模块化设计的主要好处是？
+options:
+- 代码更短
+- 可复用、可测试、易维护
+- 运行更快
+- 不需要变量
+answer: B
+explanation: 模块化把职责拆分到独立函数/模块，便于复用、测试与维护。

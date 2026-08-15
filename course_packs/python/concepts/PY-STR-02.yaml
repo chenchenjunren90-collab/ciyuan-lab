@@ -1,0 +1,24 @@
+id: PY-STR-02
+title: 字符串索引与切片
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-STR-01
+learning_objectives:
+- 能通过索引访问单个字符
+- 能使用切片提取子串
+concepts:
+- 索引
+- 切片
+- 负索引
+- 步长
+lesson:
+  summary: 掌握字符串索引（含负索引）与切片操作，理解切片起止与步长的含义。
+assessment_ids:
+- PY-STR-02-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

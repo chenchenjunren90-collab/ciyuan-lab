@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-02-Q1
+concept_id: PY-BASE-02
+difficulty: beginner
+question: 下列哪个是 Python 中合法的变量名？
+options:
+- 2name
+- student_name
+- class
+- name-1
+answer: B
+explanation: 变量名不能以数字开头、不能含连字符、不能是关键字；class 是关键字。

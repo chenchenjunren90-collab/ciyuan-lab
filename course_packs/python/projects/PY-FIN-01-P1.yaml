@@ -1,0 +1,68 @@
+id: PY-FIN-01-P1
+concept_id: PY-FIN-01
+type: project
+title: 脱敏经营数据的清洗与统计分析
+language: python
+difficulty: advanced
+estimated_minutes: 90
+scenario_scope: post_course_finance_practice
+scenario_provider: synthetic
+data_classification: authorized_desensitized
+computer_science_objectives:
+- 使用 Python 读取 CSV 数据
+- 完成缺失值、异常值与类型规范化清洗
+- 进行分组统计与汇总计算
+- 基于统计结果给出受控的业务解释
+business_context_objective:
+- 理解销售记录各字段的业务含义（日期、品类、数量、单价、评分）
+- 在数据脱敏前提下解释统计结果及其局限
+tasks:
+- 读取 projects/sales_sample.csv 中的销售记录
+- 清洗数据：去除数量或单价缺失/非法的记录，评分统一为浮点，无法解析的评分置空
+- 按品类统计：各品类的销售记录数、总数量、总金额（数量×单价）
+- 计算全部有效记录的顾客平均评分
+- 输出一个结构化结果字典，并对结果写出 2—3 句受控的业务解释
+rubric:
+- 能正确读取 CSV 并解析表头（20 分）
+- 清洗规则正确且可复现：缺失/非法值被去除或置空（30 分）
+- 分组统计与金额、平均分计算正确（30 分）
+- 结论解释客观、不夸大，注明数据为脱敏合成数据（20 分）
+sample_data: sales_sample.csv
+limits:
+  time_ms: 3000
+  memory_mb: 128
+reference_solution: |
+  import csv
+  import io
+  from collections import defaultdict
+
+
+  def analyze_sales(csv_text):
+      rows = list(csv.DictReader(io.StringIO(csv_text)))
+      cleaned = []
+      for r in rows:
+          try:
+              qty = int(r["quantity"])
+              price = float(r["unit_price"])
+          except (KeyError, ValueError):
+              continue
+          try:
+              rating = float(r["customer_rating"])
+          except (ValueError, KeyError):
+              rating = None
+          cleaned.append((r["category"], qty, price, rating))
+
+      by_cat = defaultdict(lambda: {"records": 0, "quantity": 0, "amount": 0.0})
+      ratings = []
+      for cat, qty, price, rating in cleaned:
+          by_cat[cat]["records"] += 1
+          by_cat[cat]["quantity"] += qty
+          by_cat[cat]["amount"] += qty * price
+          if rating is not None:
+              ratings.append(rating)
+
+      return {
+          "by_category": dict(by_cat),
+          "avg_rating": round(sum(ratings) / len(ratings), 2) if ratings else None,
+          "note": "数据为脱敏合成数据，结论仅用于练习。",
+      }

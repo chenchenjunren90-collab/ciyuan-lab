@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-09-Q1
+concept_id: PY-BASE-09
+difficulty: beginner
+question: int("42") 的结果及其类型是？
+options:
+- '"42"，字符串'
+- 42，整数
+- 42.0，浮点数
+- 报错
+answer: B
+explanation: int() 将合法的数字字符串转换为整数 42。

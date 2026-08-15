@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-LIST-01-Q1
+concept_id: PY-LIST-01
+difficulty: beginner
+question: 列表 lst = [10, 20, 30]，lst[0] 的值是？
+options:
+- '10'
+- '20'
+- '30'
+- 报错
+answer: A
+explanation: 列表索引从 0 开始，lst[0] 取第一个元素 10。

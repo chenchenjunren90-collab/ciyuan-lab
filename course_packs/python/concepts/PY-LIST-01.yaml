@@ -1,0 +1,24 @@
+id: PY-LIST-01
+title: 列表创建与访问
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-07
+learning_objectives:
+- 能创建列表并访问元素
+- 能对列表进行索引与切片
+concepts:
+- 列表
+- 索引
+- 切片
+- 可变性
+lesson:
+  summary: 掌握列表的创建、索引访问、切片以及列表可变的基本特性。
+assessment_ids:
+- PY-LIST-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

@@ -1,0 +1,24 @@
+id: PY-STR-01
+title: 字符串基础
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能创建字符串并使用转义字符
+- 能进行字符串拼接与重复
+concepts:
+- 字符串
+- 转义
+- 拼接
+- 重复
+lesson:
+  summary: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。
+assessment_ids:
+- PY-STR-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

@@ -1,0 +1,25 @@
+id: PY-BASE-02
+title: 变量与基本数据类型
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-01
+learning_objectives:
+- 能声明变量并赋值
+- 能区分整型、浮点型、字符串与布尔型
+concepts:
+- 变量
+- int
+- float
+- str
+- bool
+lesson:
+  summary: 学习变量的命名与赋值规则，认识整数、浮点数、字符串与布尔值等基本数据类型及其相互区别。
+assessment_ids:
+- PY-BASE-02-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

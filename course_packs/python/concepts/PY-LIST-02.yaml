@@ -1,0 +1,25 @@
+id: PY-LIST-02
+title: 列表常用方法
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能使用 append/insert/remove/pop 修改列表
+- 能使用 sort/reverse 排序列表
+concepts:
+- append
+- insert
+- remove
+- pop
+- sort
+lesson:
+  summary: 掌握列表的增删改查方法（append、insert、remove、pop、sort 等）及其返回值。
+assessment_ids:
+- PY-LIST-02-Q1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

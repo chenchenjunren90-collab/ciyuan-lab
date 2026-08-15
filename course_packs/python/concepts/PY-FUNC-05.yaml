@@ -1,0 +1,25 @@
+id: PY-FUNC-05
+title: lambda 与高阶函数
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-FUNC-01
+- PY-LIST-01
+learning_objectives:
+- 能使用 lambda 定义匿名函数
+- 能使用 map/filter 处理序列
+concepts:
+- lambda
+- map
+- filter
+- 高阶函数
+lesson:
+  summary: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。
+assessment_ids:
+- PY-FUNC-05-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

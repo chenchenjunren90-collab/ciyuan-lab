@@ -1,0 +1,25 @@
+id: PY-DATA-02
+title: 综合数据处理
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 70
+prerequisites:
+- PY-DATA-01
+- PY-FUNC-03
+learning_objectives:
+- 能综合运用容器与函数处理结构化数据
+- 能对处理结果进行统计汇总
+concepts:
+- 结构化数据
+- 统计汇总
+- 聚合
+- 综合处理
+lesson:
+  summary: 综合运用容器、函数与文件操作处理结构化数据，并完成统计与汇总。
+assessment_ids:
+- PY-DATA-02-Q1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

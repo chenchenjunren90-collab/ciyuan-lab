@@ -1,0 +1,25 @@
+id: PY-STR-03
+title: 字符串方法与格式化
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-STR-01
+learning_objectives:
+- 能使用常见字符串方法处理文本
+- 能使用 f-string 格式化输出
+concepts:
+- 字符串方法
+- strip
+- split
+- join
+- f-string
+lesson:
+  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。
+assessment_ids:
+- PY-STR-03-Q1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-FUNC-05-Q1
+concept_id: PY-FUNC-05
+difficulty: intermediate
+question: map(f, seq) 函数的作用是？
+options:
+- 对 seq 每个元素应用函数 f
+- 把 f 插入 seq 开头
+- 过滤 seq
+- 对 seq 求和
+answer: A
+explanation: map 对可迭代对象的每个元素应用函数 f，返回一个可迭代结果。

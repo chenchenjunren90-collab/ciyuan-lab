@@ -1,0 +1,24 @@
+id: PY-EXC-01
+title: 异常处理
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-10
+learning_objectives:
+- 能使用 try/except 捕获异常
+- 能使用 finally 执行收尾操作
+concepts:
+- try
+- except
+- finally
+- 异常类型
+lesson:
+  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。
+assessment_ids:
+- PY-EXC-01-D1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

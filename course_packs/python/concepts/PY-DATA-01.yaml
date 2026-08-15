@@ -1,0 +1,25 @@
+id: PY-DATA-01
+title: 数据清洗基础
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 60
+prerequisites:
+- PY-FILE-03
+- PY-DICT-02
+learning_objectives:
+- 能识别并处理缺失值与异常值
+- 能进行去重与类型规范化
+concepts:
+- 缺失值
+- 异常值
+- 去重
+- 数据清洗
+lesson:
+  summary: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。
+assessment_ids:
+- PY-DATA-01-C1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-BASE-10-Q1
+concept_id: PY-BASE-10
+difficulty: intermediate
+question: 结构化程序设计提倡的三种基本控制结构是？
+options:
+- 顺序、选择、循环
+- 顺序、跳转、递归
+- 顺序、选择、goto
+- 选择、循环、goto
+answer: A
+explanation: 结构化程序设计以顺序、选择、循环三种结构为基础，避免滥用 goto。

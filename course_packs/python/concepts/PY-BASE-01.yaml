@@ -1,0 +1,23 @@
+id: PY-BASE-01
+title: 开发环境与第一个程序
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+- 能搭建 Python 本地运行环境
+- 能编写并运行输出一行文本的 Python 程序
+concepts:
+- 解释器
+- 源文件
+- print
+- 运行方式
+lesson:
+  summary: 了解 Python 解释器的安装与使用，掌握运行 .py 源文件的基本方式，并编写第一个输出文本的程序。
+assessment_ids:
+- PY-BASE-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

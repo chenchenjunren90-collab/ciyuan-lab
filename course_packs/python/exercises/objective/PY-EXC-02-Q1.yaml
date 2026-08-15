@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-EXC-02-Q1
+concept_id: PY-EXC-02
+difficulty: advanced
+question: 自定义异常类通常继承自哪个内置类？
+options:
+- int
+- list
+- Exception
+- print
+answer: C
+explanation: 自定义异常通常继承 Exception 及其子类，以便被 except 捕获。

@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-STR-03-Q1
+concept_id: PY-STR-03
+difficulty: intermediate
+question: '"  a b  ".strip() 的结果是？'
+options:
+- '"a b"'
+- '"  a b  "'
+- '"ab"'
+- '" a b"'
+answer: A
+explanation: strip() 去除首尾空白字符，中间空格保留，得到 "a b"。

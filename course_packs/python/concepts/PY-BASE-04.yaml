@@ -1,0 +1,24 @@
+id: PY-BASE-04
+title: 输入与输出
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用 input 读取用户输入
+- 能使用 print 输出结果
+concepts:
+- input
+- print
+- 格式化输出
+- 类型转换
+lesson:
+  summary: 掌握 input 读取输入与 print 输出结果的方法，理解输入默认是字符串、必要时需进行类型转换。
+assessment_ids:
+- PY-BASE-04-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

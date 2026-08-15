@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-LIST-02-Q1
+concept_id: PY-LIST-02
+difficulty: beginner
+question: list.append(x) 的作用是？
+options:
+- 在开头插入 x
+- 在末尾添加一个元素 x
+- 删除 x
+- 返回 x
+answer: B
+explanation: append 在列表末尾追加一个元素；在开头插入应使用 insert。

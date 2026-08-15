@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-FILE-04-Q1
+concept_id: PY-FILE-04
+difficulty: intermediate
+question: json.dumps(obj) 的作用是？
+options:
+- 把 JSON 字符串转为对象
+- 把对象序列化为 JSON 字符串
+- 把对象写入 CSV
+- 解析 XML
+answer: B
+explanation: json.dumps 把 Python 对象序列化为 JSON 字符串；loads 是反方向。

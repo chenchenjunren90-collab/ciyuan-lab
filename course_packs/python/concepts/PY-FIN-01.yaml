@@ -1,0 +1,26 @@
+id: PY-FIN-01
+title: 脱敏经管综合练习
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 90
+prerequisites:
+- PY-DATA-02
+- PY-FILE-03
+learning_objectives:
+- 能对脱敏业务数据进行清洗与统计
+- 能基于业务字段给出受控的结论解释
+concepts:
+- 数据处理
+- 统计分析
+- 业务字段
+- 结果解释
+lesson:
+  summary: 在脱敏的经管业务数据上完成清洗、统计与分析，评价核心为 Python 数据处理能力。
+assessment_ids:
+- PY-FIN-01-P1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-SYNTHETIC
+status: draft

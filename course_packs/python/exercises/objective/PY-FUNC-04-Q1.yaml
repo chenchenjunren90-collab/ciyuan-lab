@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-FUNC-04-Q1
+concept_id: PY-FUNC-04
+difficulty: intermediate
+question: 要在函数内部修改全局变量，通常需要？
+options:
+- 直接赋值即可
+- 先用 global 声明
+- 用 return 不行
+- 把变量改为元组
+answer: B
+explanation: 函数内给全局变量赋值需先 global 声明；只读访问则无需声明。

@@ -1,0 +1,22 @@
+- source_id: SRC-PY-OFFICIAL-TUTORIAL
+  title: Python 官方教程（The Python Tutorial）
+  type: official_documentation
+  url: https://docs.python.org/zh-cn/3/tutorial/
+  license: PSF License
+  data_classification: D0
+  authorization_status: authorized
+  description: Python 官方随发行版提供的入门教程，覆盖基本语法、数据结构、控制流、函数、模块、异常与输入输出等内容。
+- source_id: SRC-PY-OFFICIAL-REF
+  title: Python 标准库参考（The Python Standard Library）
+  type: official_documentation
+  url: https://docs.python.org/zh-cn/3/library/
+  license: PSF License
+  data_classification: D0
+  authorization_status: authorized
+  description: Python 标准库官方参考，覆盖内置函数、常用数据类型以及 csv/json 等文件与数据处理模块。
+- source_id: SRC-PY-SYNTHETIC
+  title: 脱敏经营样例数据（项目合成）
+  type: synthetic_data
+  data_classification: D0
+  authorization_status: authorized
+  description: 项目自建的、无真实主体的合成经营数据，仅用于课后综合练习的数据处理演示。

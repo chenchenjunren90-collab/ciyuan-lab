@@ -1,0 +1,25 @@
+id: PY-BASE-10
+title: 基础语法综合
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 60
+prerequisites:
+- PY-BASE-05
+- PY-BASE-07
+- PY-BASE-08
+learning_objectives:
+- 能综合运用条件与循环解决简单编程问题
+- 能编写可读、可运行的小程序
+concepts:
+- 综合运用
+- 流程控制
+- 程序设计
+lesson:
+  summary: 综合运用变量、条件、循环与输入输出解决简单计算问题，形成结构化程序设计的基本思路。
+assessment_ids:
+- PY-BASE-10-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

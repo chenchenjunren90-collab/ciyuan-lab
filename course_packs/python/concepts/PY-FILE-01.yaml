@@ -1,0 +1,24 @@
+id: PY-FILE-01
+title: 文件读写基础
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-STR-03
+learning_objectives:
+- 能使用 open 打开文件
+- 能进行文本文件的读取与写入
+concepts:
+- open
+- read
+- write
+- 读写模式
+lesson:
+  summary: 使用 open 打开文件，掌握文本文件的读取与写入以及读写模式的区别。
+assessment_ids:
+- PY-FILE-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

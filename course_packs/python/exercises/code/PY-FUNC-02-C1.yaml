@@ -1,0 +1,47 @@
+type: code
+language: python
+id: PY-FUNC-02-C1
+concept_id: PY-FUNC-02
+title: 统计量计算
+difficulty: intermediate
+function_name: statistics
+signature: 'statistics(numbers: list[float]) -> tuple[float, float, float]'
+statement: 实现函数 statistics(numbers)：numbers 为非空数值列表，返回三元组 (平均值, 最大值, 最小值)。
+public_tests:
+- input:
+  - - 1
+    - 2
+    - 3
+  expected:
+  - 2.0
+  - 3
+  - 1
+hidden_tests:
+- input:
+  - - 5
+  expected:
+  - 5.0
+  - 5
+  - 5
+- input:
+  - - 10
+    - 20
+    - 30
+    - 40
+  expected:
+  - 25.0
+  - 40
+  - 10
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 平均值 = sum(numbers) / len(numbers)。
+- 最大值与最小值分别用内置 max、min 求得。
+- 用逗号分隔返回值即可一次返回多个值，构成元组。
+feedback:
+- 返回的是元组，顺序必须是 (平均值, 最大值, 最小值)。
+- 单元素列表的平均值等于该元素本身。
+reference_solution: |
+  def statistics(numbers):
+      return (sum(numbers) / len(numbers), max(numbers), min(numbers))

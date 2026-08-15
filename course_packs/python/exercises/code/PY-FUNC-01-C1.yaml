@@ -1,0 +1,42 @@
+type: code
+language: python
+id: PY-FUNC-01-C1
+concept_id: PY-FUNC-01
+title: 阶乘计算
+difficulty: beginner
+function_name: factorial
+signature: 'factorial(n: int) -> int'
+statement: 实现函数 factorial(n)：返回 n 的阶乘（n!）。约定 0! = 1。
+public_tests:
+- input:
+  - 0
+  expected: 1
+- input:
+  - 5
+  expected: 120
+hidden_tests:
+- input:
+  - 1
+  expected: 1
+- input:
+  - 7
+  expected: 5040
+- input:
+  - 10
+  expected: 3628800
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 用一个变量 result 初始化为 1。
+- 用 for i in range(1, n + 1) 逐项累乘。
+- n 为 0 时循环不执行，直接返回 1，正好满足 0! = 1。
+feedback:
+- 阶乘增长很快，n 较大时结果是很大的整数，Python 自动支持大整数。
+- 边界 0! = 1 是约定，务必返回 1 而非 0。
+reference_solution: |
+  def factorial(n):
+      result = 1
+      for i in range(1, n + 1):
+          result *= i
+      return result

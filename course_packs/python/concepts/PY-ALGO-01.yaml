@@ -1,0 +1,24 @@
+id: PY-ALGO-01
+title: 排序与查找
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-LIST-02
+learning_objectives:
+- 能使用内置与自定义方式排序
+- 能实现线性查找与二分查找
+concepts:
+- 排序
+- sorted
+- 线性查找
+- 二分查找
+lesson:
+  summary: 掌握 sorted 与自定义排序，理解线性查找与二分查找的适用条件与复杂度。
+assessment_ids:
+- PY-ALGO-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

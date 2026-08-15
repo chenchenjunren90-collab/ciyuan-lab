@@ -1,0 +1,24 @@
+id: PY-TUPLE-01
+title: 元组
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能创建与访问元组
+- 能解释元组与列表的不可变区别
+concepts:
+- 元组
+- 不可变
+- 打包
+- 解包
+lesson:
+  summary: 掌握元组的创建与访问，理解其不可变性，并学会元组打包与解包。
+assessment_ids:
+- PY-TUPLE-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

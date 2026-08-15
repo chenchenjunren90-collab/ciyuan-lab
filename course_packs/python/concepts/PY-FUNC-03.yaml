@@ -1,0 +1,23 @@
+id: PY-FUNC-03
+title: 可变参数
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 40
+prerequisites:
+- PY-FUNC-02
+learning_objectives:
+- 能使用 *args 接收任意数量位置参数
+- 能使用 **kwargs 接收关键字参数
+concepts:
+- '*args'
+- '**kwargs'
+- 参数解包
+lesson:
+  summary: 使用 *args 与 **kwargs 接收可变数量的参数，理解参数解包的用法。
+assessment_ids:
+- PY-FUNC-03-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

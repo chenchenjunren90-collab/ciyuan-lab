@@ -1,0 +1,25 @@
+id: PY-SET-01
+title: 集合
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 35
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能创建集合并利用其去重特性
+- 能进行并集、交集、差集运算
+concepts:
+- 集合
+- 去重
+- 并集
+- 交集
+- 差集
+lesson:
+  summary: 掌握集合的创建、去重特性以及并集、交集、差集等运算。
+assessment_ids:
+- PY-SET-01-Q1
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

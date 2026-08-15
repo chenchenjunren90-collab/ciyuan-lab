@@ -1,0 +1,25 @@
+id: PY-BASE-09
+title: 类型转换与常用内置函数
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 35
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用 int/str/float 进行类型转换
+- 能使用 len/type/abs/round 等常用内置函数
+concepts:
+- 类型转换
+- int
+- str
+- len
+- type
+lesson:
+  summary: 掌握常见类型转换函数与常用内置函数（len、type、abs、round 等）的用法。
+assessment_ids:
+- PY-BASE-09-Q1
+source_refs:
+- SRC-PY-OFFICIAL-REF
+status: draft

@@ -1,0 +1,54 @@
+type: code
+language: python
+id: PY-FILE-03-C1
+concept_id: PY-FILE-03
+title: CSV 解析
+difficulty: intermediate
+function_name: parse_csv
+signature: 'parse_csv(csv_text: str) -> list[dict[str, str]]'
+statement: 实现函数 parse_csv(csv_text)：csv_text 为带表头的 CSV 文本，使用 csv.DictReader 返回由每行字段组成的字典列表（仅表头、无数据行时返回空列表）。
+public_tests:
+- input:
+  - 'a,b
+
+    1,2
+
+    3,4
+
+    '
+  expected:
+  - a: '1'
+    b: '2'
+  - a: '3'
+    b: '4'
+hidden_tests:
+- input:
+  - 'name
+
+    x
+
+    '
+  expected:
+  - name: x
+- input:
+  - 'a,b
+
+    '
+  expected: []
+limits:
+  time_ms: 1000
+  memory_mb: 64
+hints:
+- 用 io.StringIO(csv_text) 把字符串包装成文件对象。
+- 用 csv.DictReader 读取并自动把表头作为键。
+- 把每一行 dict(row) 收集到列表中返回。
+feedback:
+- DictReader 依赖第一行作为表头，别把表头当作数据行。
+- 返回值的值都是字符串类型，后续需要时可再转换。
+reference_solution: |
+  import csv
+  import io
+
+  def parse_csv(csv_text):
+      reader = csv.DictReader(io.StringIO(csv_text))
+      return [dict(row) for row in reader]

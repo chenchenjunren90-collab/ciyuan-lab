@@ -1,0 +1,12 @@
+type: multiple_choice
+id: PY-CONTAINER-01-Q1
+concept_id: PY-CONTAINER-01
+difficulty: intermediate
+question: 需要按键快速查找值时，最合适的容器是？
+options:
+- 列表
+- 元组
+- 字典
+- 集合
+answer: C
+explanation: 字典基于哈希实现按键查找，是按键取值最合适的选择。
