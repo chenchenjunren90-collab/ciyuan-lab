@@ -54,7 +54,7 @@ git switch -c <Issue 中指定的分支名>
 | 阴怡彤 | 模型适配、RAG与智能体 | `apps/api/app/modules/model_adapters/**`、`rag/**`、`orchestration/**` |
 | 王维庸 | C语言内容与代码验证 | `course_packs/c/**`、`apps/api/app/modules/practice/**` |
 | 王梓豪 | Python课程 | `course_packs/python/**` |
-| 曾毅杨 | 数据结构与算法课程 | `course_packs/data_structures/**` |
+| 曾毅扬 | 数据结构与算法课程 | `course_packs/data_structures/**` |
 | 陈骏人 | 架构、公共契约、工程底座和集成 | `contracts/**`、共享模板、核心配置和集成目录 |
 
 具体任务仍以 Issue 中的“允许修改”范围为准；主责目录不等于可以绕过 Issue 随意修改。
