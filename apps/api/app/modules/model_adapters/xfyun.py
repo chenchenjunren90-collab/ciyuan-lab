@@ -26,9 +26,18 @@ class XfyunSparkAdapter(ModelAdapter):
     """Calls the Xfyun Spark OpenAI-compatible HTTP API.
 
     Authentication uses ``Authorization: Bearer {api_key}:{api_secret}``,
-    one of the officially supported credential styles (the HTTP API also
-    accepts a single APIPassword; the key/secret pair is what the shared
-    ``config.py`` already exposes).
+    the officially documented credential style for the OpenAI-compatible
+    HTTP endpoint:
+
+    * Agent04-API 接入文档: https://www.xfyun.cn/doc/spark/Agent04-API%E6%8E%A5%E5%85%A5.html
+      ("鉴权码组成：``Bearer {API_KEY}:{API_SECRET}``")
+    * X2-Flash 文档: https://www.xfyun.cn/doc/spark/X2-Flash.html
+      (OpenAI SDK 兼容, ``api_key="AK:SK"`` 即 key/secret 拼接)
+
+    ``XFYUN_SPARK_APP_ID`` does NOT participate in this HTTP signature:
+    the app_id + api_key + api_secret triple is only used to build the
+    WebSocket handshake URLs of the older streaming protocol. The shared
+    ``config.py`` exposes exactly the key/secret pair this adapter needs.
 
     Retry policy: only timeouts, connection errors and HTTP 5xx statuses
     are retried, at most ``max_retries`` extra attempts. 4xx errors
