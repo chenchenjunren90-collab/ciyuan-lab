@@ -1,9 +1,14 @@
 openapi: 3.1.0
 info:
   title: 词元研究所 API
-  version: 0.1.0
+  version: 0.2.0
   description: >-
-    三周 MVP 的最小公共契约。业务接口须先在此评审，再进入实现。
+    三周 MVP 的最小学习闭环公共契约（ARCH-01 已冻结）。
+
+    覆盖「初始测评 → 学习画像 → 学习计划 → 知识点/问答 → 练习与确定性验证 → 画像更新 → 下一任务推荐」的完整闭环。
+
+    身份说明：本阶段无真实认证，`student_id` 为平台内部不透明标识（随机 ID），
+    不得使用姓名或明文学号；每个学习接口都显式携带 `student_id`，后续身份/认证边界单独记录为已知限制。
 servers:
   - url: http://localhost:8000
     description: 本地开发
@@ -41,7 +46,149 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CapabilitiesResponse"
+  /api/v1/courses/{course_id}/knowledge-points:
+    get:
+      operationId: listKnowledgePoints
+      summary: 课程知识点目录（学习入口与知识卡来源）
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 该课程的知识点目录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgePointList"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/assessments:
+    post:
+      operationId: submitAssessment
+      summary: 提交测评并生成初始画像与阶段计划
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentRequest"
+      responses:
+        "200":
+          description: 测评结果，含画像快照与学情规划阶段计划
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/qa:
+    post:
+      operationId: askQuestion
+      summary: 基于课程知识库的问答（RAG，带可核验来源）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QaRequest"
+      responses:
+        "200":
+          description: 回答；依据不足时 status=insufficient_evidence 且 answer 为空
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/exercises/{exercise_id}/submissions:
+    post:
+      operationId: submitExercise
+      summary: 提交练习（客观题/简答/代码/Debug），返回确定性验证与反馈
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: 练习 ID（如 PY-FUNC-01-C1）
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionRequest"
+      responses:
+        "200":
+          description: 验证结果、课程辅导反馈、画像更新与下一任务推荐
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/profile:
+    get:
+      operationId: getProfile
+      summary: 查询学习画像与掌握度
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 学习画像
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerProfile"
+  /api/v1/next-activity:
+    get:
+      operationId: getNextActivity
+      summary: 获取下一任务推荐
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 下一活动（只引用已存在的知识点/练习 ID）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextActivity"
 components:
+  responses:
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: 请求校验失败
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
   schemas:
     HealthResponse:
       type: object
@@ -73,3 +220,254 @@ components:
               - learner_profile
               - practice
               - model_adapters
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: 稳定的机器可读错误码（如 MODEL_TIMEOUT、NOT_FOUND、VALIDATION_ERROR）
+        message:
+          type: string
+          description: 面向学生的友好提示，不含堆栈或敏感原文
+    CourseId:
+      type: string
+      enum: [c, python, data_structures]
+    KnowledgePointSummary:
+      type: object
+      additionalProperties: false
+      required: [id, title, difficulty, prerequisites]
+      properties:
+        id:
+          type: string
+          description: 稳定且全局唯一，如 C-PTR-01、PY-FUNC-01、DS-TREE-01
+        title:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        prerequisites:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          description: 该知识点的来源 ID（可核验）
+          items:
+            type: string
+    KnowledgePointList:
+      type: object
+      additionalProperties: false
+      required: [course_id, items]
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgePointSummary"
+    MasteryState:
+      type: object
+      additionalProperties: false
+      required: [knowledge_point_id, score, evidence_count, updated_at]
+      properties:
+        knowledge_point_id:
+          type: string
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        evidence_count:
+          type: integer
+          minimum: 0
+        updated_at:
+          type: string
+          format: date-time
+    LearnerProfile:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, mastery]
+      properties:
+        student_id:
+          type: string
+          description: 平台内部不透明标识
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        mastery:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasteryState"
+    AssessmentAnswer:
+      type: object
+      additionalProperties: false
+      required: [knowledge_point_id, is_correct]
+      properties:
+        knowledge_point_id:
+          type: string
+        is_correct:
+          type: boolean
+          description: 该知识点的基线测评是否答对（仅用于确定初始掌握度）
+    AssessmentRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, answers]
+      properties:
+        student_id:
+          type: string
+          description: 平台内部不透明标识
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssessmentAnswer"
+    PlanStage:
+      type: object
+      additionalProperties: false
+      required: [stage, objective, knowledge_point_ids, reason]
+      properties:
+        stage:
+          type: string
+          description: 阶段名称或序号
+        objective:
+          type: string
+        knowledge_point_ids:
+          type: array
+          description: 只引用当前课程已存在的知识点 ID
+          items:
+            type: string
+        reason:
+          type: string
+          description: 学情规划智能体的推荐理由
+    NextActivity:
+      type: object
+      additionalProperties: false
+      required: [activity_id, activity_type, reason]
+      properties:
+        activity_id:
+          type: string
+          description: 已存在的知识点或练习 ID
+        activity_type:
+          type: string
+          enum: [concept, objective, short_answer, code, debug, project]
+        reason:
+          type: string
+    Plan:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, stages, next_activity]
+      properties:
+        student_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanStage"
+        next_activity:
+          $ref: "#/components/schemas/NextActivity"
+    AssessmentResult:
+      type: object
+      additionalProperties: false
+      required: [profile, plan]
+      properties:
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        plan:
+          $ref: "#/components/schemas/Plan"
+    Citation:
+      type: object
+      additionalProperties: false
+      required: [source_id, chunk_id, score]
+      properties:
+        source_id:
+          type: string
+          description: 已登记的课程来源 ID（SRC-*）
+        chunk_id:
+          type: string
+        score:
+          type: number
+    QaRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, question]
+      properties:
+        student_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        question:
+          type: string
+    QaResponse:
+      type: object
+      additionalProperties: false
+      required: [status, answer, citations]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence]
+          description: insufficient_evidence 表示检索不足或冲突，answer 为空、不编造
+        answer:
+          type: string
+        citations:
+          type: array
+          description: 有依据回答必须携带可核验来源
+          items:
+            $ref: "#/components/schemas/Citation"
+    SubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id]
+      properties:
+        student_id:
+          type: string
+        response:
+          type: string
+          description: 客观题选项 ID 或简答题文本
+        language:
+          type: string
+          enum: [c, python]
+          description: 代码题/Debug 题的运行语言
+        source_code:
+          type: string
+          description: 代码题/Debug 题提交的源代码
+    VerificationResult:
+      type: object
+      additionalProperties: false
+      required: [accepted, passed_tests, total_tests, diagnostics]
+      properties:
+        accepted:
+          type: boolean
+        passed_tests:
+          type: integer
+        total_tests:
+          type: integer
+        diagnostics:
+          type: array
+          description: 脱敏、限长、可复现的诊断（隐藏测试不得泄露）
+          items:
+            type: string
+    SubmissionResult:
+      type: object
+      additionalProperties: false
+      required: [feedback, citations, mastery_updated, next_activity]
+      properties:
+        verification:
+          $ref: "#/components/schemas/VerificationResult"
+          description: 代码题/Debug 题的确定性验证结果；客观题/简答题为空
+        feedback:
+          type: string
+          description: 课程辅导智能体基于测试事实与检索片段的引导式反馈
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        mastery_updated:
+          type: array
+          description: 按证据规则更新后的掌握度（含依据与时间）
+          items:
+            $ref: "#/components/schemas/MasteryState"
+        next_activity:
+          $ref: "#/components/schemas/NextActivity"
