@@ -29,5 +29,5 @@ class MockAdapter(ModelAdapter):
             content=self._reply,
             provider="mock",
             model=self._model,
-            usage={"prompt_tokens": 0, "completion_tokens": 0},
+            usage={"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
         )
