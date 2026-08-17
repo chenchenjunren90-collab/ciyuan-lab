@@ -241,7 +241,7 @@ def test_mock_adapter_returns_fixed_response() -> None:
     assert result.provider == "mock"
     assert result.model == "mock"
     assert result.content == "固定回复"
-    assert result.usage == {"prompt_tokens": 0, "completion_tokens": 0}
+    assert result.usage == {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0}
 
 
 def test_factory_builds_xfyun_adapter_when_configured() -> None:
