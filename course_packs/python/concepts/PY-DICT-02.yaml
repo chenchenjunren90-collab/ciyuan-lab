@@ -17,8 +17,17 @@ concepts:
 - 遍历
 lesson:
   summary: 掌握字典的遍历方式与 items/keys/values 方法，能够按需遍历键值对。
+  key_points:
+  - keys() 返回键，values() 返回值，items() 返回键值对
+  - for k, v in d.items() 同时遍历键和值
+  - Python 3.7+ 字典保持插入顺序
+  examples:
+  - 'for word, cnt in counts.items(): print(word, cnt)'
+  common_mistakes:
+  - 遍历时边遍历边增删字典导致运行时错误
 assessment_ids:
 - PY-DICT-02-C1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

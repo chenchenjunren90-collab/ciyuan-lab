@@ -1,0 +1,28 @@
+id: PY-ITER-01-Q1
+title: 生成器函数关键字
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-ITER-01
+prompt: 下列哪个关键字用于定义生成器函数？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: return
+  - id: B
+    text: yield
+  - id: C
+    text: await
+  - id: D
+    text: pass
+  accepted_answers:
+  - B
+status: draft

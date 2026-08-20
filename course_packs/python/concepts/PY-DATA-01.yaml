@@ -18,8 +18,17 @@ concepts:
 - 数据清洗
 lesson:
   summary: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。
+  key_points:
+  - 清洗规则应完全确定、可复现，而非靠主观判断
+  - 缺失值、空串、非数字与越界值分别处理
+  - 去重与类型转换是清洗的常见环节
+  examples:
+  - 'if raw == "": skip；try int(raw) except ValueError'
+  common_mistakes:
+  - 清洗规则不明确，导致边界值处理不一致
 assessment_ids:
 - PY-DATA-01-C1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

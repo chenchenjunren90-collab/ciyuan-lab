@@ -1,0 +1,28 @@
+id: PY-ALGO-02-Q1
+title: 递归基线条件
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- PY-ALGO-02
+prompt: 一个能终止的递归函数必须包含？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 至少两个 for 循环
+  - id: B
+    text: 基线条件（base case）
+  - id: C
+    text: global 声明
+  - id: D
+    text: 异常处理
+  accepted_answers:
+  - B
+status: draft

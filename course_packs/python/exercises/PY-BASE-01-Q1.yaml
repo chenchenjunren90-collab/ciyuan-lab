@@ -1,0 +1,28 @@
+id: PY-BASE-01-Q1
+title: Python 源文件的执行方式
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-BASE-01
+prompt: 运行一个扩展名为 .py 的 Python 源文件时，实际执行它的是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 操作系统直接执行
+  - id: B
+    text: Python 解释器
+  - id: C
+    text: C 语言编译器
+  - id: D
+    text: 浏览器引擎
+  accepted_answers:
+  - B
+status: draft

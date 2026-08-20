@@ -1,0 +1,28 @@
+id: PY-STR-01-Q1
+title: 字符串拼接
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-STR-01
+prompt: 表达式 "a" + "b" 的结果是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: '"ab"'
+  - id: B
+    text: '"a b"'
+  - id: C
+    text: '"a""b"'
+  - id: D
+    text: 报错
+  accepted_answers:
+  - A
+status: draft

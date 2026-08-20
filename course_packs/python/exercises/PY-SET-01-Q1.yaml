@@ -1,0 +1,28 @@
+id: PY-SET-01-Q1
+title: 集合特性
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-SET-01
+prompt: 集合（set）的主要特性是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 元素有序
+  - id: B
+    text: 元素唯一且无序
+  - id: C
+    text: 元素可重复
+  - id: D
+    text: 按键访问
+  accepted_answers:
+  - B
+status: draft

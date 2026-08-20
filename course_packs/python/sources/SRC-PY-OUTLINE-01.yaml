@@ -1,0 +1,18 @@
+id: SRC-PY-OUTLINE-01
+title: Python程序设计课程教学提要
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 课程组自编 Python 课程教学提要
+rights:
+  basis: synthetic
+  note: 课程组根据培养方案自行编写，可用于教学与检索演示。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: 本课程覆盖 Python 基础语法与控制、容器与字符串、函数/模块/异常、文件与数据处理、类与对象、迭代器与生成器等主题，面向计算机基础教学。
+status: draft

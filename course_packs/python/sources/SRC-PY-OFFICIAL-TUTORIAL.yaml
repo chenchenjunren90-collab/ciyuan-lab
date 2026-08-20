@@ -1,0 +1,20 @@
+id: SRC-PY-OFFICIAL-TUTORIAL
+title: Python 官方教程（The Python Tutorial）
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: official_documentation
+citation:
+  locator: https://docs.python.org/zh-cn/3/tutorial/
+  url: https://docs.python.org/zh-cn/3/tutorial/
+  publisher: Python Software Foundation
+rights:
+  basis: open_license
+  license: PSF License
+  note: Python 官方文档采用 PSF License 开放许可，可用于教学引用。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: draft

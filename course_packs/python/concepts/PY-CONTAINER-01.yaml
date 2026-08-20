@@ -18,8 +18,17 @@ concepts:
 - 数据结构
 lesson:
   summary: 综合运用列表、字典、集合等容器构造嵌套结构，并能根据数据特点选择合适的容器。
+  key_points:
+  - 列表保持顺序，字典按键取值，集合去重
+  - 可构造列表套字典等嵌套结构表达复杂数据
+  - 按键快速查找应选择字典
+  examples:
+  - 'records = [{"name": "a", "score": 90}, ...]'
+  common_mistakes:
+  - 需要按键查找却选择了列表
 assessment_ids:
 - PY-CONTAINER-01-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

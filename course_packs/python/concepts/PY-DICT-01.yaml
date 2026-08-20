@@ -17,8 +17,17 @@ concepts:
 - get
 lesson:
   summary: 掌握字典的创建、按键访问、增删改查，理解键的唯一性与 get 方法的容错用法。
+  key_points:
+  - 字典以 键:值 对存储，键必须唯一且可哈希
+  - d[key] 按键取值，赋值 d[key] = value 增加或覆盖
+  - d.get(key, 默认值) 在键不存在时返回默认值而不报错
+  examples:
+  - 'd = {"a": 1, "b": 2}；d["a"] 为 1'
+  common_mistakes:
+  - 用不存在的键直接 d[key] 导致 KeyError
 assessment_ids:
 - PY-DICT-01-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

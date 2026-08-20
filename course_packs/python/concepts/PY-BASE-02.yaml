@@ -18,8 +18,17 @@ concepts:
 - bool
 lesson:
   summary: 学习变量的命名与赋值规则，认识整数、浮点数、字符串与布尔值等基本数据类型及其相互区别。
+  key_points:
+  - 变量名不能以数字开头、不能含连字符、不能是关键字
+  - int 表示整数，float 表示浮点数，str 表示字符串，bool 表示布尔值
+  - 用 = 给变量赋值，变量名区分大小写
+  examples:
+  - student_name = "张三"
+  common_mistakes:
+  - 使用 2name、class 等非法变量名
 assessment_ids:
 - PY-BASE-02-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

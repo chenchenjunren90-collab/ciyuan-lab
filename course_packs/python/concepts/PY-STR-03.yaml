@@ -18,8 +18,17 @@ concepts:
 - f-string
 lesson:
   summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。
+  key_points:
+  - strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列
+  - f-string 用 f"{变量}" 内插变量值
+  - replace() 替换子串，返回新字符串
+  examples:
+  - '"  a b  ".strip() 为 "a b"'
+  common_mistakes:
+  - 误以为字符串方法会原地修改原字符串
 assessment_ids:
 - PY-STR-03-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

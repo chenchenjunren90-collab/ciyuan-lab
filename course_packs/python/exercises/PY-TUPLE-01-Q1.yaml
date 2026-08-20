@@ -1,0 +1,28 @@
+id: PY-TUPLE-01-Q1
+title: 元组与列表区别
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-TUPLE-01
+prompt: 元组与列表最主要的区别是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 元组不可变
+  - id: B
+    text: 元组不能索引
+  - id: C
+    text: 元组元素类型相同
+  - id: D
+    text: 元组没有长度
+  accepted_answers:
+  - A
+status: draft

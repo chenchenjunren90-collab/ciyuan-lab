@@ -19,8 +19,17 @@ concepts:
 - 循环控制
 lesson:
   summary: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。
+  key_points:
+  - break 立即终止整个循环
+  - continue 跳过本次迭代，继续下一次
+  - 循环的 else 子句在没有被 break 中断时执行
+  examples:
+  - "for i in range(10):\n    if i == 3:\n        break"
+  common_mistakes:
+  - 把 break 与 continue 的作用搞反
 assessment_ids:
 - PY-BASE-08-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

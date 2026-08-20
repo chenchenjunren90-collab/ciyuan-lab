@@ -17,8 +17,17 @@ concepts:
 - 栈
 lesson:
   summary: 理解递归的基线条件与递归条件，实现阶乘、斐波那契等简单递归函数。
+  key_points:
+  - 递归函数直接或间接调用自身
+  - 基线条件是递归停止、不再调用自身的分支
+  - 缺少基线条件会导致无限递归与栈溢出
+  examples:
+  - 'def fact(n): return 1 if n <= 1 else n * fact(n - 1)'
+  common_mistakes:
+  - 递归没有基线条件导致 RecursionError
 assessment_ids:
 - PY-ALGO-02-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

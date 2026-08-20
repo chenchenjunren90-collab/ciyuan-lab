@@ -18,8 +18,17 @@ concepts:
 - 高阶函数
 lesson:
   summary: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。
+  key_points:
+  - lambda 用于定义简单的匿名函数，无需 def
+  - map(f, seq) 对每个元素应用 f
+  - filter(f, seq) 保留使 f 为真的元素
+  examples:
+  - 'map(lambda x: x * x, [1, 2, 3])'
+  common_mistakes:
+  - 把 map/filter 的结果当作列表，需 list() 转换
 assessment_ids:
 - PY-FUNC-05-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

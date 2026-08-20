@@ -18,8 +18,17 @@ concepts:
 - type
 lesson:
   summary: 掌握常见类型转换函数与常用内置函数（len、type、abs、round 等）的用法。
+  key_points:
+  - int()/float()/str() 用于类型之间的转换
+  - len() 求长度，type() 查看类型，abs() 求绝对值
+  - round() 按四舍五入保留指定位数
+  examples:
+  - int("42") 的结果为整数 42
+  common_mistakes:
+  - 对无法转换的字符串直接调用 int() 导致 ValueError
 assessment_ids:
 - PY-BASE-09-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

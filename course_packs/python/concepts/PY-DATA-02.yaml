@@ -18,8 +18,17 @@ concepts:
 - 综合处理
 lesson:
   summary: 综合运用容器、函数与文件操作处理结构化数据，并完成统计与汇总。
+  key_points:
+  - 聚合是对数据做求和、平均、分组等汇总
+  - 用函数拆分清洗、统计、输出等职责
+  - 字典配合 defaultdict 便于分组累加
+  examples:
+  - by_cat[cat]["amount"] += qty * price
+  common_mistakes:
+  - 把清洗与统计逻辑混在一起难以维护
 assessment_ids:
 - PY-DATA-02-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

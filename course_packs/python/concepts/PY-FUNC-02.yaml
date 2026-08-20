@@ -17,8 +17,17 @@ concepts:
 - 多返回值
 lesson:
   summary: 掌握位置参数、关键字参数、默认参数与多返回值的用法与调用规则。
+  key_points:
+  - 位置参数按顺序传入，关键字参数按名字传入
+  - 默认参数在定义时给出默认值，调用时可省略
+  - return a, b 可一次返回多个值，构成元组
+  examples:
+  - 'def f(a, b=2): return a + b'
+  common_mistakes:
+  - 把默认参数与位置参数、关键字参数顺序搞乱
 assessment_ids:
 - PY-FUNC-02-C1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

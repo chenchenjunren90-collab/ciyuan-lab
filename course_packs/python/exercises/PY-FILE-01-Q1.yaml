@@ -1,0 +1,28 @@
+id: PY-FILE-01-Q1
+title: open 默认模式
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-FILE-01
+prompt: open("data.txt") 默认以什么模式打开文件？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 只写 w
+  - id: B
+    text: 只读 r
+  - id: C
+    text: 追加 a
+  - id: D
+    text: 二进制 b
+  accepted_answers:
+  - B
+status: draft

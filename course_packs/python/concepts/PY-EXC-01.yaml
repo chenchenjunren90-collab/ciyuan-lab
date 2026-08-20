@@ -17,8 +17,17 @@ concepts:
 - 异常类型
 lesson:
   summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。
+  key_points:
+  - try 包裹可能出错的代码，except 捕获并处理异常
+  - except 可指定异常类型，如 ValueError、ZeroDivisionError
+  - finally 中的代码无论是否异常都会执行
+  examples:
+  - "try:\n    x = 1 / 0\nexcept ZeroDivisionError:\n    x = None"
+  common_mistakes:
+  - 用裸 except 捕获所有异常掩盖真正的错误
 assessment_ids:
 - PY-EXC-01-D1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

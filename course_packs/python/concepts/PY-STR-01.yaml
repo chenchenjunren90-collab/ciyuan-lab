@@ -17,8 +17,17 @@ concepts:
 - 重复
 lesson:
   summary: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。
+  key_points:
+  - 字符串用单引号或双引号包裹
+  - + 拼接字符串，* 重复字符串
+  - \n、\t 等转义字符表示特殊字符
+  examples:
+  - '"a" + "b" 的结果为 "ab"'
+  common_mistakes:
+  - 把数字和字符串直接相加导致 TypeError
 assessment_ids:
 - PY-STR-01-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

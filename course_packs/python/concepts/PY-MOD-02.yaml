@@ -17,8 +17,17 @@ concepts:
 - 标准库
 lesson:
   summary: 熟悉 math、random、datetime 等常用标准库的典型用法。
+  key_points:
+  - math 提供数学函数，如 sqrt、floor
+  - random.randint(a, b) 生成 [a, b] 内的随机整数
+  - datetime 处理日期时间对象
+  examples:
+  - random.randint(1, 10)
+  common_mistakes:
+  - 把 math 与 random 的函数混用
 assessment_ids:
 - PY-MOD-02-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
 status: draft

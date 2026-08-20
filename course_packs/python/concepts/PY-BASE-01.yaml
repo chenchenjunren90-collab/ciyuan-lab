@@ -16,8 +16,17 @@ concepts:
 - 运行方式
 lesson:
   summary: 了解 Python 解释器的安装与使用，掌握运行 .py 源文件的基本方式，并编写第一个输出文本的程序。
+  key_points:
+  - Python 是解释型语言，.py 文件由解释器执行，无需单独编译
+  - print() 将内容输出到标准输出
+  - 源文件以 UTF-8 编码保存，扩展名为 .py
+  examples:
+  - print("Hello, world!")
+  common_mistakes:
+  - 把文件名或路径当作代码交给解释器执行
 assessment_ids:
 - PY-BASE-01-Q1
 source_refs:
+- SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 status: draft

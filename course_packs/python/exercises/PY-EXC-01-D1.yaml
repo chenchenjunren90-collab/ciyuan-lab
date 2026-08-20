@@ -1,0 +1,71 @@
+id: PY-EXC-01-D1
+title: 修复除法缺少异常处理
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: intermediate
+estimated_minutes: 15
+concept_ids:
+- PY-EXC-01
+prompt: 修复程序：程序读取两个整数 a、b 并输出 a/b 的结果；当 b 为 0 或输入无法转换为整数时，应输出 None 而不是崩溃。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  starter_code: |
+    a = int(input())
+    b = int(input())
+    print(a / b)
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-01
+    visibility: public
+    input: '10
+
+      2
+
+      '
+    expected_output: '5.0
+
+      '
+  - id: public-02
+    visibility: public
+    input: '1
+
+      0
+
+      '
+    expected_output: 'None
+
+      '
+  - id: hidden-01
+    visibility: hidden
+    input: 'a
+
+      2
+
+      '
+    expected_output: 'None
+
+      '
+  - id: hidden-02
+    visibility: hidden
+    input: '9
+
+      3
+
+      '
+    expected_output: '3.0
+
+      '
+status: draft
