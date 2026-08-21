@@ -1,0 +1,20 @@
+id: SRC-PY-OFFICIAL-TUTORIAL
+title: Python 官方教程（The Python Tutorial）
+course: python
+schema_version: 0.1.0
+version: 2
+source_type: official_documentation
+citation:
+  locator: Python 3.11 教程，第 2—10 章（解释器、控制流、数据结构、模块、输入输出、异常、类与标准库简介）
+  url: https://docs.python.org/zh-cn/3.11/tutorial/
+  publisher: Python Software Foundation
+rights:
+  basis: open_license
+  license: PSF License
+  note: Python 3.11 文档采用 PSF License Version 2；许可依据见 https://docs.python.org/zh-cn/3.11/license.html 。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: draft

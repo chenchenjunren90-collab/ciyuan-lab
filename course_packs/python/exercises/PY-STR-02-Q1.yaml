@@ -1,0 +1,28 @@
+id: PY-STR-02-Q1
+title: 字符串切片
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-STR-02
+prompt: 字符串 s = "hello"，s[1:3] 的结果是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: '"he"'
+  - id: B
+    text: '"el"'
+  - id: C
+    text: '"ell"'
+  - id: D
+    text: '"llo"'
+  accepted_answers:
+  - B
+status: draft

@@ -1,0 +1,57 @@
+id: PY-DICT-02-C1
+title: 词频统计
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: intermediate
+estimated_minutes: 15
+concept_ids:
+- PY-DICT-02
+prompt: 从标准输入读取一行文本，按空白字符分词，统计每个单词出现的次数，并按单词首次出现的顺序，每行输出一个“单词:次数”。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-01
+    visibility: public
+    input: 'a a b
+
+      '
+    expected_output: 'a:2
+
+      b:1
+
+      '
+  - id: public-02
+    visibility: public
+    input: 'hello world
+
+      '
+    expected_output: 'hello:1
+
+      world:1
+
+      '
+  - id: hidden-01
+    visibility: hidden
+    input: 'hello world hello
+
+      '
+    expected_output: 'hello:2
+
+      world:1
+
+      '
+status: draft

@@ -1,0 +1,34 @@
+id: PY-ALGO-01
+title: 排序与查找
+course: python
+schema_version: 0.1.0
+version: 2
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-LIST-02
+- PY-BASE-05
+learning_objectives:
+- 能使用内置与自定义方式排序
+- 能解释线性查找与二分查找的适用条件与复杂度差异
+concepts:
+- 排序
+- sorted
+- 线性查找
+- 二分查找
+lesson:
+  summary: 掌握 sorted 与自定义排序，理解线性查找与二分查找的适用条件与复杂度。
+  key_points:
+  - sorted() 返回排序后新列表，list.sort() 原地排序
+  - 线性查找逐个比较，适用于无序序列
+  - 二分查找要求序列有序，复杂度更低
+  examples:
+  - sorted(nums, reverse=True)
+  common_mistakes:
+  - 对无序序列直接使用二分查找
+assessment_ids:
+- PY-ALGO-01-Q1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

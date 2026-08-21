@@ -1,0 +1,28 @@
+id: PY-CONTAINER-01-Q1
+title: 按键查找的容器选择
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-CONTAINER-01
+prompt: 需要按键快速查找值时，最合适的容器是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 列表
+  - id: B
+    text: 元组
+  - id: C
+    text: 字典
+  - id: D
+    text: 集合
+  accepted_answers:
+  - C
+status: draft

@@ -1,0 +1,67 @@
+id: PY-BASE-07-C1
+title: 偶数求和
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-BASE-07
+prompt: 从标准输入读取一个非负整数 n，输出 1 到 n（含）之间所有偶数的和。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-10
+    visibility: public
+    input: '10
+
+      '
+    expected_output: '30
+
+      '
+  - id: public-1
+    visibility: public
+    input: '1
+
+      '
+    expected_output: '0
+
+      '
+  - id: hidden-2
+    visibility: hidden
+    input: '2
+
+      '
+    expected_output: '2
+
+      '
+  - id: hidden-100
+    visibility: hidden
+    input: '100
+
+      '
+    expected_output: '2550
+
+      '
+  - id: hidden-0
+    visibility: hidden
+    input: '0
+
+      '
+    expected_output: '0
+
+      '
+status: draft

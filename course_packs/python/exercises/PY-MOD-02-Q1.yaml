@@ -1,0 +1,28 @@
+id: PY-MOD-02-Q1
+title: 生成随机整数
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-MOD-02
+prompt: 要生成 1 到 10 之间的随机整数，应使用？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: random.random()
+  - id: B
+    text: random.randint(1, 10)
+  - id: C
+    text: math.random()
+  - id: D
+    text: datetime.randint()
+  accepted_answers:
+  - B
+status: draft

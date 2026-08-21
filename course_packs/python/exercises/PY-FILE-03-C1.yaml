@@ -1,0 +1,57 @@
+id: PY-FILE-03-C1
+title: CSV 解析
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: intermediate
+estimated_minutes: 15
+concept_ids:
+- PY-FILE-03
+prompt: 从标准输入读取一段带表头的 CSV 文本（表头为 name,score），使用 csv.DictReader 解析，按行输出每行的 score 值（每行一个）；若只有表头没有数据行则无输出。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-01
+    visibility: public
+    input: 'name,score
+
+      alice,90
+
+      bob,85
+
+      '
+    expected_output: '90
+
+      85
+
+      '
+  - id: hidden-empty
+    visibility: hidden
+    input: 'name,score
+
+      '
+    expected_output: ''
+  - id: hidden-02
+    visibility: hidden
+    input: 'name,score
+
+      carol,100
+
+      '
+    expected_output: '100
+
+      '
+status: draft

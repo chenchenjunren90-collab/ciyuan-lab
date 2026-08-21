@@ -1,0 +1,28 @@
+id: PY-MOD-01-Q1
+title: 导入模块写法
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-MOD-01
+prompt: 导入数学模块的正确写法是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: include math
+  - id: B
+    text: import math
+  - id: C
+    text: using math
+  - id: D
+    text: load math
+  accepted_answers:
+  - B
+status: draft

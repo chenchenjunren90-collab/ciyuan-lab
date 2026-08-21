@@ -1,0 +1,32 @@
+id: PY-EXC-02
+title: 自定义异常
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 40
+prerequisites:
+- PY-EXC-01
+learning_objectives:
+- 能定义自定义异常类
+- 能使用 raise 主动抛出异常
+concepts:
+- raise
+- 自定义异常
+- 异常继承
+lesson:
+  summary: 通过继承 Exception 定义自定义异常，并使用 raise 主动抛出。
+  key_points:
+  - 自定义异常类通常继承 Exception
+  - raise 主动抛出异常实例
+  - 抛出的自定义异常可被 except 捕获
+  examples:
+  - 'class MyError(Exception): pass'
+  common_mistakes:
+  - 自定义异常类未继承 Exception 导致无法被常规捕获
+assessment_ids:
+- PY-EXC-02-Q1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

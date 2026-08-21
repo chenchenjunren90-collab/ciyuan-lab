@@ -1,10 +1,10 @@
-schema_version: "0.1.0"
+schema_version: 0.1.0
 course:
   id: python
   title: Python程序设计
-  status: scaffold
+  status: draft
   target_core_concepts: 40
-  implemented_core_concepts: 0
+  implemented_core_concepts: 40
 content:
   concepts_dir: concepts
   exercises_dir: exercises
@@ -16,5 +16,5 @@ features:
   debug_tasks: planned
   comprehensive_project: planned
 review:
-  content_owner: unassigned
+  content_owner: 王梓豪
   last_reviewed_at: null
