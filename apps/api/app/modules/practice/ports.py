@@ -1,6 +1,17 @@
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import Literal, Protocol
+
+SupportedLanguage = Literal["c", "python"]
+TestVisibility = Literal["public", "hidden"]
+
+
+@dataclass(frozen=True, slots=True)
+class CodeTestCase:
+    id: str
+    visibility: TestVisibility
+    input: str
+    expected_output: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -16,7 +27,8 @@ class CodeVerifier(Protocol):
 
     async def verify(
         self,
-        language: str,
+        language: SupportedLanguage,
         source_code: str,
+        tests: Sequence[CodeTestCase],
         limits: Mapping[str, int],
     ) -> VerificationResult: ...
