@@ -21,13 +21,15 @@
 
 | 项目 | 唯一依据 | 当前事实 | 协作规则 |
 |---|---|---|---|
-| HTTP API | `contracts/openapi.yaml` | 目前只有 `/health`、`/api/v1/health`、`/api/v1/capabilities` | 测评、计划、问答、练习、画像和推荐接口必须先补 OpenAPI 并评审，再实现 |
+| HTTP API | `contracts/openapi.yaml` | 已冻结学习闭环 9 个接口（ARCH-01） | 测评、计划、问答、练习、画像和推荐接口已定义，运行时按契约子集推进实现 |
 | 学习事件 | `contracts/events/learning-event.schema.json` | 已定义事件信封；`payload` 仍是无约束对象 | `student_id` 只能用平台内部不透明标识；事件载荷字段未冻结前不得口头约定 |
 | 课程包 | `course_packs/_template/` 与 `docs/course-package-standard.md` | 三门课程均为 `0/40` 骨架 | 三门课程保持同一目录、字段、版本和状态规则 |
 | RAG 端口 | `apps/api/app/modules/rag/ports.py` | `search` 返回 `SearchHit` | 这是内部 Python 端口，不是前端接口 |
 | 模型端口 | `apps/api/app/modules/model_adapters/ports.py` | `complete` 返回 `ModelResponse` | 讯飞、驼灵和 Mock 都从适配层进入 |
 | 编排端口 | `apps/api/app/modules/orchestration/ports.py` | `PlannedActivity` 只有 `activity_id`、`activity_type`、`reason` | 需要完整计划结构时先提契约变更，不能假装字段已经存在 |
 | 代码验证端口 | `apps/api/app/modules/practice/ports.py` | `VerificationResult` 只有 `accepted`、`passed_tests`、`total_tests`、`diagnostics` | 新增耗时、内存、退出码等字段时另建契约 Issue，由成员1根据测试证据最终验收 |
+
+> **基线进度更新（2026-08-17）**：`ARCH-02` 已合入（统一课程包 Schema 已冻结），`ARCH-01` 已冻结（学习闭环 OpenAPI 9 个接口）。`CONTENT-C-01 / CONTENT-PY-01 / CONTENT-DS-01 / WEB-01 / PRACTICE-01 / AI-01` 的契约前置均已满足，可并行开工。下一关键依赖是 `DATA-01`（数据模型）与 `RAG-01 / AGENT-01/02/03` 的运行时实现。
 
 ### 2.2 课程包统一格式
 
