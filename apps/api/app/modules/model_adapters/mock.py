@@ -7,7 +7,7 @@ from collections.abc import Sequence
 from app.modules.model_adapters.ports import ChatMessage, ModelAdapter, ModelResponse
 
 _DEFAULT_REPLY = (
-    "Mock 适配器：模型服务未配置或暂不可用，已降级为固定回复。"
+    "Mock 适配器：模型服务未配置，已降级为固定回复。"
     "配置 XFYUN_SPARK_API_KEY / XFYUN_SPARK_API_SECRET 后即可使用真实模型。"
 )
 
@@ -15,8 +15,9 @@ _DEFAULT_REPLY = (
 class MockAdapter(ModelAdapter):
     """Deterministic adapter that always returns a fixed response.
 
-    Keeps the core learning flow demonstrable end-to-end without any model
-    credentials, and acts as the fallback when the real model is down.
+    Keeps the core learning flow demonstrable end-to-end when credentials are
+    intentionally absent. Runtime failures from a configured real provider are
+    surfaced as errors instead of being disguised as successful Mock replies.
     """
 
     def __init__(self, *, model: str = "mock", reply: str = _DEFAULT_REPLY) -> None:

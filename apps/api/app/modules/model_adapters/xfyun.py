@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from collections.abc import Sequence
 from typing import Any
+from urllib.parse import urlsplit
 
 import httpx
 
@@ -18,8 +19,9 @@ from app.modules.model_adapters.ports import ChatMessage, ModelAdapter, ModelRes
 
 logger = logging.getLogger(__name__)
 
-_CHAT_COMPLETIONS_PATH = "/v1/chat/completions"
+_CHAT_COMPLETIONS_PATH = "/chat/completions"
 _RETRYABLE_STATUS_CODES = frozenset({500, 502, 503, 504})
+_RATE_LIMIT_CODES = frozenset({10007, 11201, 11202, 11203})
 
 
 class XfyunSparkAdapter(ModelAdapter):
@@ -29,17 +31,16 @@ class XfyunSparkAdapter(ModelAdapter):
     the officially documented credential style for the OpenAI-compatible
     HTTP endpoint:
 
-    * Agent04-API 接入文档: https://www.xfyun.cn/doc/spark/Agent04-API%E6%8E%A5%E5%85%A5.html
-      ("鉴权码组成：``Bearer {API_KEY}:{API_SECRET}``")
-    * X2-Flash 文档: https://www.xfyun.cn/doc/spark/X2-Flash.html
-      (OpenAI SDK 兼容, ``api_key="AK:SK"`` 即 key/secret 拼接)
+    The default endpoint and model follow the X2-Flash OpenAI-compatible
+    protocol documented at https://www.xfyun.cn/doc/spark/X2-Flash.html:
+    ``/agent/v1/chat/completions``, model ``spark-x``, and an ``AK:SK`` token.
 
     ``XFYUN_SPARK_APP_ID`` does NOT participate in this HTTP signature:
     the app_id + api_key + api_secret triple is only used to build the
     WebSocket handshake URLs of the older streaming protocol. The shared
     ``config.py`` exposes exactly the key/secret pair this adapter needs.
 
-    Retry policy: only timeouts, connection errors and HTTP 5xx statuses
+    Retry policy: only timeouts, request transport errors and HTTP 5xx statuses
     are retried, at most ``max_retries`` extra attempts. 4xx errors
     (including 429 rate limits) are surfaced immediately and never retried.
     Secrets are never written to logs.
@@ -56,18 +57,31 @@ class XfyunSparkAdapter(ModelAdapter):
         max_retries: int = 2,
         client: httpx.AsyncClient | None = None,
     ) -> None:
-        if not base_url.strip():
+        normalized_base_url = base_url.strip().rstrip("/")
+        if not normalized_base_url:
             raise ModelConfigurationError("XFYUN_SPARK_BASE_URL is not configured")
-        if not api_key.strip() or not api_secret.strip():
+        parsed_url = urlsplit(normalized_base_url)
+        if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
+            raise ModelConfigurationError("XFYUN_SPARK_BASE_URL must be an HTTP(S) URL")
+        normalized_api_key = api_key.strip()
+        normalized_api_secret = api_secret.strip()
+        if not normalized_api_key or not normalized_api_secret:
             raise ModelConfigurationError(
                 "XFYUN_SPARK_API_KEY / XFYUN_SPARK_API_SECRET is not configured"
             )
 
-        self._base_url = base_url.rstrip("/")
-        self._token = f"{api_key}:{api_secret}"
-        self._model = model
-        self._timeout_seconds = max(0.1, timeout_seconds)
-        self._max_retries = max(0, int(max_retries))
+        if not model.strip():
+            raise ModelConfigurationError("XFYUN_SPARK_MODEL is not configured")
+        if timeout_seconds <= 0:
+            raise ModelConfigurationError("timeout_seconds must be greater than zero")
+        if max_retries < 0:
+            raise ModelConfigurationError("max_retries must not be negative")
+
+        self._base_url = normalized_base_url
+        self._token = f"{normalized_api_key}:{normalized_api_secret}"
+        self._model = model.strip()
+        self._timeout_seconds = timeout_seconds
+        self._max_retries = int(max_retries)
         self._client = client
 
     async def complete(self, messages: Sequence[ChatMessage]) -> ModelResponse:
@@ -92,11 +106,11 @@ class XfyunSparkAdapter(ModelAdapter):
                     "xfyun spark request timed out (attempt %d/%d)", attempt, attempts
                 )
                 continue
-            except httpx.ConnectError:
+            except httpx.RequestError:
                 if attempt == attempts:
-                    raise ModelUpstreamError("Xfyun Spark connection failed") from None
+                    raise ModelUpstreamError("Xfyun Spark network request failed") from None
                 logger.warning(
-                    "xfyun spark connection failed (attempt %d/%d)", attempt, attempts
+                    "xfyun spark network request failed (attempt %d/%d)", attempt, attempts
                 )
                 continue
 
@@ -156,6 +170,19 @@ class XfyunSparkAdapter(ModelAdapter):
         if not isinstance(data, dict):
             raise ModelUpstreamError("Xfyun Spark returned unexpected payload shape")
 
+        response_code = data.get("code", 0)
+        if isinstance(response_code, int) and not isinstance(response_code, bool):
+            if response_code in _RATE_LIMIT_CODES:
+                raise ModelRateLimitError(
+                    f"Xfyun Spark rate limited (provider code {response_code})"
+                )
+            if response_code != 0:
+                raise ModelUpstreamError(
+                    f"Xfyun Spark rejected the request (provider code {response_code})"
+                )
+        elif response_code is not None:
+            raise ModelUpstreamError("Xfyun Spark returned an invalid provider code")
+
         choices = data.get("choices")
         if not isinstance(choices, list) or not choices:
             raise ModelUpstreamError("Xfyun Spark response is missing choices")
@@ -165,14 +192,14 @@ class XfyunSparkAdapter(ModelAdapter):
         content = ""
         if isinstance(message, dict):
             content = message.get("content", "")
-        if not isinstance(content, str):
-            content = str(content)
+        if not isinstance(content, str) or not content:
+            raise ModelUpstreamError("Xfyun Spark response is missing assistant content")
 
         usage: dict[str, int] = {}
         raw_usage = data.get("usage")
         if isinstance(raw_usage, dict):
             for key, value in raw_usage.items():
-                if isinstance(value, int):
+                if isinstance(value, int) and not isinstance(value, bool):
                     usage[key] = value
 
         model_name = data.get("model")
