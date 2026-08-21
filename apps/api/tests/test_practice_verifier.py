@@ -209,6 +209,7 @@ def test_docker_command_declares_minimum_isolation_controls(tmp_path: Path) -> N
     )
 
     joined = " ".join(str(part) for part in command)
+    assert "-i" in command
     assert "--network none" in joined
     assert "--pull never" in joined
     assert "--read-only" in command
@@ -216,6 +217,7 @@ def test_docker_command_declares_minimum_isolation_controls(tmp_path: Path) -> N
     assert "--security-opt no-new-privileges" in joined
     assert "--memory 128m" in joined
     assert "--user 65534:65534" in joined
+    assert "/tmp:rw,noexec,nosuid,nodev,size=64m" in command
     assert "python:3.11.15-alpine3.24" in command
     assert "python -I -B /workspace/main.py" in command[-1]
 
@@ -238,4 +240,5 @@ def test_c_docker_command_compiles_as_c17(tmp_path: Path) -> None:
     )
 
     assert "gcc:13.4.0-bookworm" in command
+    assert "/tmp:rw,exec,nosuid,nodev,size=64m" in command
     assert "cc -std=c17" in command[-1]

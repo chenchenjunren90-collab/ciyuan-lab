@@ -98,9 +98,11 @@ class DockerSandboxRunner:
         container_name: str,
     ) -> list[str]:
         script = self._container_script(request.language)
+        tmpfs_execute_option = "exec" if request.language == "c" else "noexec"
         return [
             self._docker_binary,
             "run",
+            "-i",
             "--rm",
             "--pull",
             "never",
@@ -122,7 +124,7 @@ class DockerSandboxRunner:
             "--user",
             "65534:65534",
             "--tmpfs",
-            "/tmp:rw,nosuid,nodev,size=64m",
+            f"/tmp:rw,{tmpfs_execute_option},nosuid,nodev,size=64m",
             "--workdir",
             "/workspace",
             "--mount",
