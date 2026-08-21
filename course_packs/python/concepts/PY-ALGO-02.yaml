@@ -2,7 +2,7 @@ id: PY-ALGO-02
 title: 递归初步
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: advanced
 estimated_minutes: 50
 prerequisites:
@@ -22,9 +22,10 @@ lesson:
   - 基线条件是递归停止、不再调用自身的分支
   - 缺少基线条件会导致无限递归与栈溢出
   examples:
-  - 'def fact(n): return 1 if n <= 1 else n * fact(n - 1)'
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 前置条件：n 为非负整数'
   common_mistakes:
   - 递归没有基线条件导致 RecursionError
+  - 未声明输入范围，使负数等非法输入无法到达基线条件
 assessment_ids:
 - PY-ALGO-02-Q1
 source_refs:

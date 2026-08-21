@@ -2,11 +2,11 @@ id: PY-LIST-01
 title: 列表创建与访问
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
-- PY-BASE-07
+- PY-BASE-02
 learning_objectives:
 - 能创建列表并访问元素
 - 能对列表进行索引与切片

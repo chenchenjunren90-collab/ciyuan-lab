@@ -2,14 +2,14 @@ id: PY-FUNC-04
 title: 作用域
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 40
 prerequisites:
 - PY-FUNC-01
 learning_objectives:
 - 能区分局部变量与全局变量
-- 能使用 global/nonlocal 修改外层变量
+- 能使用 global/nonlocal 重新绑定外层作用域中的名称
 concepts:
 - 作用域
 - 局部变量
@@ -20,7 +20,7 @@ lesson:
   key_points:
   - 函数内赋值的变量默认为局部变量
   - 函数内只读访问全局变量无需声明
-  - 函数内修改全局变量需先 global 声明
+  - 函数内重新绑定全局名称需先 global 声明；仅修改可变对象内部状态不属于名称重新绑定
   examples:
   - "def f():\n    global x\n    x = 1"
   common_mistakes:

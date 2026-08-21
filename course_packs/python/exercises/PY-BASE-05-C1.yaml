@@ -2,7 +2,7 @@ id: PY-BASE-05-C1
 title: 成绩等级判断
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: beginner
 estimated_minutes: 15
@@ -51,6 +51,14 @@ evaluation:
   - id: hidden-89
     visibility: hidden
     input: '89
+
+      '
+    expected_output: '良好
+
+      '
+  - id: hidden-80
+    visibility: hidden
+    input: '80
 
       '
     expected_output: '良好

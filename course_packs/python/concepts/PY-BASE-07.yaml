@@ -2,11 +2,11 @@ id: PY-BASE-07
 title: for 循环与 range
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
-- PY-BASE-06
+- PY-BASE-02
 learning_objectives:
 - 能使用 for 遍历序列
 - 能使用 range 生成整数序列

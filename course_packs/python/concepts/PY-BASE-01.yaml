@@ -2,7 +2,7 @@ id: PY-BASE-01
 title: 开发环境与第一个程序
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites: []
@@ -17,7 +17,7 @@ concepts:
 lesson:
   summary: 了解 Python 解释器的安装与使用，掌握运行 .py 源文件的基本方式，并编写第一个输出文本的程序。
   key_points:
-  - Python 是解释型语言，.py 文件由解释器执行，无需单独编译
+  - 入门阶段通常直接由 Python 解释器运行 .py 文件；CPython 执行时会先编译为字节码，因此不能简单理解为“完全不编译”
   - print() 将内容输出到标准输出
   - 源文件以 UTF-8 编码保存，扩展名为 .py
   examples:

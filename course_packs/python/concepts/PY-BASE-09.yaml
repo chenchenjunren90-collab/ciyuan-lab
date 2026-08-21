@@ -2,7 +2,7 @@ id: PY-BASE-09
 title: 类型转换与常用内置函数
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 35
 prerequisites:
@@ -21,11 +21,12 @@ lesson:
   key_points:
   - int()/float()/str() 用于类型之间的转换
   - len() 求长度，type() 查看类型，abs() 求绝对值
-  - round() 按四舍五入保留指定位数
+  - round() 对精确的中间值采用“最接近且偶数优先”的规则；二进制浮点表示还可能影响直觉结果
   examples:
   - int("42") 的结果为整数 42
   common_mistakes:
   - 对无法转换的字符串直接调用 int() 导致 ValueError
+  - 把 round() 误认为所有情况下都按传统“四舍五入”处理
 assessment_ids:
 - PY-BASE-09-Q1
 source_refs:
