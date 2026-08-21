@@ -1,0 +1,83 @@
+id: PY-BASE-05-C1
+title: 成绩等级判断
+course: python
+schema_version: 0.1.0
+version: 2
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-BASE-05
+prompt: 从标准输入读取一个 0—100 的整数分数，输出对应的等级：≥90 为“优秀”，≥80 为“良好”，≥60 为“及格”，否则为“不及格”。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-90
+    visibility: public
+    input: '90
+
+      '
+    expected_output: '优秀
+
+      '
+  - id: public-70
+    visibility: public
+    input: '70
+
+      '
+    expected_output: '及格
+
+      '
+  - id: hidden-100
+    visibility: hidden
+    input: '100
+
+      '
+    expected_output: '优秀
+
+      '
+  - id: hidden-89
+    visibility: hidden
+    input: '89
+
+      '
+    expected_output: '良好
+
+      '
+  - id: hidden-80
+    visibility: hidden
+    input: '80
+
+      '
+    expected_output: '良好
+
+      '
+  - id: hidden-59
+    visibility: hidden
+    input: '59
+
+      '
+    expected_output: '不及格
+
+      '
+  - id: hidden-0
+    visibility: hidden
+    input: '0
+
+      '
+    expected_output: '不及格
+
+      '
+status: draft

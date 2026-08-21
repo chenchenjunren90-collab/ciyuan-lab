@@ -1,0 +1,33 @@
+id: PY-FUNC-01
+title: 函数定义与调用
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-10
+learning_objectives:
+- 能使用 def 定义函数
+- 能调用函数并接收返回值
+concepts:
+- def
+- 调用
+- 返回值
+- 参数
+lesson:
+  summary: 使用 def 定义带参数和返回值的函数，理解函数封装可复用逻辑的意义。
+  key_points:
+  - def 定义函数，函数名后跟参数列表与冒号
+  - return 返回结果，未写 return 时返回 None
+  - 函数通过 函数名(实参) 调用
+  examples:
+  - 'def add(a, b): return a + b'
+  common_mistakes:
+  - 忘记 return 导致函数返回 None
+assessment_ids:
+- PY-FUNC-01-C1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

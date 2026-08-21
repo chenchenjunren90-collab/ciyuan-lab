@@ -26,12 +26,18 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://ciyuan:replace-me@localhost:5432/ciyuan"
     redis_url: str = "redis://localhost:6379/0"
 
-    xfyun_spark_base_url: str = "https://spark-api-open.xf-yun.com"
+    xfyun_spark_base_url: str = "https://spark-api-open.xf-yun.com/agent/v1"
     xfyun_spark_app_id: SecretStr = SecretStr("")
     xfyun_spark_api_key: SecretStr = SecretStr("")
     xfyun_spark_api_secret: SecretStr = SecretStr("")
     tuoling_base_url: str = ""
     tuoling_api_key: SecretStr = SecretStr("")
+
+    # Xfyun adapter tuning (no secrets; used by model_adapters / AI-01)
+    xfyun_spark_model: str = "spark-x"
+    xfyun_spark_timeout_seconds: float = Field(default=30.0, gt=0, le=120)
+    xfyun_spark_max_retries: int = Field(default=2, ge=0, le=5)
+    xfyun_spark_mock_fallback: bool = True
 
     rag_top_k: int = Field(default=5, ge=1, le=20)
     code_execution_enabled: bool = False

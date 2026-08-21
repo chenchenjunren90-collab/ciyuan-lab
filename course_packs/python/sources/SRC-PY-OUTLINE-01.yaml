@@ -1,0 +1,18 @@
+id: SRC-PY-OUTLINE-01
+title: 词元研究所 Python MVP 课程框架草案
+course: python
+schema_version: 0.1.0
+version: 2
+source_type: synthetic
+citation:
+  locator: 项目组自编 Python MVP 课程框架（待学院正式培养方案与课程大纲复核）
+rights:
+  basis: synthetic
+  note: 项目组依据 MVP 范围自行编写，仅作结构草案；不得冒充学院正式课程大纲。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: 本草案覆盖 Python 基础语法与控制、容器与字符串、函数、模块、异常、文件与数据处理、类与对象、迭代器与生成器等主题。知识范围须在发布前由项目组依据获授权的学院培养方案和课程大纲复核。
+status: draft

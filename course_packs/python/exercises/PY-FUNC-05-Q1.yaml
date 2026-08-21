@@ -1,0 +1,28 @@
+id: PY-FUNC-05-Q1
+title: map 函数作用
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-FUNC-05
+prompt: map(f, seq) 函数的作用是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 对 seq 每个元素应用函数 f
+  - id: B
+    text: 把 f 插入 seq 开头
+  - id: C
+    text: 过滤 seq
+  - id: D
+    text: 对 seq 求和
+  accepted_answers:
+  - A
+status: draft

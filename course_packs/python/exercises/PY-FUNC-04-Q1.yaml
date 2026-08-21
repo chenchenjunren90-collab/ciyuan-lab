@@ -1,0 +1,28 @@
+id: PY-FUNC-04-Q1
+title: 修改全局变量
+course: python
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-FUNC-04
+prompt: 要在函数内部为全局名称重新赋值（重新绑定），通常需要？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 直接赋值，不需要任何声明
+  - id: B
+    text: 先用 global 声明
+  - id: C
+    text: 只能使用 return，不能重新绑定
+  - id: D
+    text: 把变量改为元组
+  accepted_answers:
+  - B
+status: draft

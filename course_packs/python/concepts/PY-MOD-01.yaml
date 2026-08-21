@@ -1,0 +1,33 @@
+id: PY-MOD-01
+title: 模块与 import
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能使用 import 导入模块
+- 能使用 from...import 导入成员
+concepts:
+- import
+- from import
+- 模块
+- 命名空间
+lesson:
+  summary: 掌握 import 与 from...import 的导入方式，理解模块的命名空间。
+  key_points:
+  - import 模块名 导入整个模块
+  - from 模块 import 成员 导入指定成员
+  - 模块拥有独立命名空间，避免命名冲突
+  examples:
+  - import math
+  common_mistakes:
+  - 使用 include、using 等非 Python 语法导入模块
+assessment_ids:
+- PY-MOD-01-Q1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft

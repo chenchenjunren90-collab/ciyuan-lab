@@ -1,0 +1,35 @@
+id: PY-ITER-01
+title: 迭代器与生成器
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-FUNC-01
+- PY-LIST-01
+learning_objectives:
+- 能区分可迭代对象与迭代器
+- 能使用 yield 定义生成器函数
+concepts:
+- 迭代器
+- iter
+- next
+- 生成器
+- yield
+lesson:
+  summary: 理解可迭代对象与迭代器的关系，使用 iter/next 遍历，并通过 yield 定义生成器按需产出值。
+  key_points:
+  - iter() 获取迭代器，next() 逐个取出元素，耗尽抛出 StopIteration
+  - 含 yield 的函数是生成器函数，调用返回生成器对象
+  - 生成器按需惰性产出值，节省内存
+  examples:
+  - "def gen():\n    yield 1\n    yield 2"
+  common_mistakes:
+  - 误以为调用生成器函数会立即执行函数体
+assessment_ids:
+- PY-ITER-01-Q1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+status: draft
