@@ -98,6 +98,8 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 docker compose --env-file .env -f infra/compose.yaml up -d
+python -m alembic upgrade head
+python scripts/seed_demo_data.py
 python -m uvicorn app.main:app --app-dir apps/api --reload
 ```
 
@@ -121,6 +123,7 @@ npm run dev
 - [MVP 范围与验收边界](docs/mvp-scope.md)
 - [课程包统一标准](docs/course-package-standard.md)
 - [数据、模型与安全边界](docs/data-and-security.md)
+- [DATA-01 最小数据模型与迁移](docs/data-model.md)
 - [贡献指南](CONTRIBUTING.md)
 - [AI 编码代理约束](AGENTS.md)
 
