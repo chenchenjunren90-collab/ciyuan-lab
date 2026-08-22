@@ -15,7 +15,12 @@ from alembic.config import Config
 
 from app.core.config import Settings
 from app.core.database import create_database_engine, create_session_factory
-from app.modules.learner_profile import CourseVersion, LearningEvent, LearningRepository
+from app.modules.learner_profile import (
+    CourseVersion,
+    LearnerProfileService,
+    LearningEvent,
+    LearningRepository,
+)
 from app.modules.learner_profile.records import CourseId
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
@@ -44,6 +49,7 @@ def seed(database_url: str) -> None:
 
     engine = create_database_engine(database_url)
     repository = LearningRepository(create_session_factory(engine))
+    profile_service = LearnerProfileService(repository)
     try:
         for course_id in COURSE_IDS:
             repository.register_course_version(_load_course(course_id))
@@ -53,17 +59,10 @@ def seed(database_url: str) -> None:
             course_id="python",
             course_version="0.1.0",
         )
-        repository.store_mastery_snapshot(
-            student_id=DEMO_STUDENT_ID,
-            course_id="python",
-            knowledge_point_id="PY-BASE-01",
-            score=0.25,
-            evidence_count=1,
-            revision=1,
-        )
+        demo_event_id = UUID("00000000-0000-4000-8000-000000000101")
         repository.append_event(
             LearningEvent(
-                event_id=UUID("00000000-0000-4000-8000-000000000101"),
+                event_id=demo_event_id,
                 schema_version="0.1.0",
                 event_type="assessment.completed",
                 occurred_at=datetime(2026, 8, 22, tzinfo=UTC),
@@ -72,10 +71,11 @@ def seed(database_url: str) -> None:
                 course_version="0.1.0",
                 knowledge_point_id="PY-BASE-01",
                 trace_id="demo-assessment-001",
-                payload={"correct": False, "source": "synthetic_demo"},
+                payload={"is_correct": False, "source": "synthetic_demo"},
                 evidence_summary="固定合成基线测评事件，不含真实个人信息",
             )
         )
+        profile_service.process_event(demo_event_id)
     finally:
         engine.dispose()
 

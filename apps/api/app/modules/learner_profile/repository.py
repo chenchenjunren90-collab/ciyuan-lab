@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from decimal import Decimal
 from typing import cast
+from uuid import UUID
 
 from sqlalchemy import select
 from sqlalchemy.dialects.postgresql import insert
@@ -15,13 +16,21 @@ from app.modules.learner_profile.db_models import (
     LearnerProfileRow,
     LearningEventRow,
     MasteryStateRow,
+    MasteryUpdateAuditRow,
 )
 from app.modules.learner_profile.models import LearnerProfile, MasteryState
+from app.modules.learner_profile.policy import MasteryPolicy
 from app.modules.learner_profile.records import (
     CourseId,
     CourseVersion,
     LearningEvent,
     LearningEventType,
+    MasteryAuditRecord,
+    MasteryDecision,
+    MasteryReasonCode,
+    MasteryRejection,
+    MasterySnapshot,
+    MasteryUpdateResult,
 )
 
 
@@ -223,6 +232,215 @@ class LearningRepository:
                 )
                 for row in rows
             )
+
+    def project_event(
+        self,
+        *,
+        event_id: UUID,
+        policy: MasteryPolicy,
+    ) -> MasteryUpdateResult:
+        """Atomically apply one stored event, serializing updates per learner/course."""
+
+        with self._session_factory.begin() as session:
+            event_row = session.scalar(
+                select(LearningEventRow)
+                .where(LearningEventRow.event_id == event_id)
+                .with_for_update()
+            )
+            if event_row is None:
+                raise LookupError(f"learning event not found: {event_id}")
+
+            existing_audit = session.get(MasteryUpdateAuditRow, event_row.event_id)
+            if existing_audit is not None:
+                return self._audit_result(existing_audit, applied=False, duplicate=True)
+
+            event = self._event_from_row(event_row)
+            if not event.knowledge_point_id:
+                return MasteryUpdateResult(
+                    event_id=event.event_id,
+                    applied=False,
+                    duplicate=False,
+                    reason_code="insufficient_evidence",
+                )
+
+            # The profile row is the serialization point for concurrent events that
+            # may target a mastery row which does not exist yet.
+            profile_row = session.scalar(
+                select(LearnerProfileRow)
+                .where(
+                    LearnerProfileRow.student_id == event.student_id,
+                    LearnerProfileRow.course_id == event.course_id,
+                )
+                .with_for_update()
+            )
+            if profile_row is None:
+                raise LookupError("learner profile referenced by event was not found")
+
+            mastery_row = session.scalar(
+                select(MasteryStateRow)
+                .where(
+                    MasteryStateRow.student_id == event.student_id,
+                    MasteryStateRow.course_id == event.course_id,
+                    MasteryStateRow.knowledge_point_id == event.knowledge_point_id,
+                )
+                .with_for_update()
+            )
+            current = MasterySnapshot(
+                score=float(mastery_row.score) if mastery_row is not None else policy.initial_score,
+                evidence_count=mastery_row.evidence_count if mastery_row is not None else 0,
+                revision=mastery_row.revision if mastery_row is not None else 0,
+            )
+            evaluation = policy.evaluate(event, current)
+            if isinstance(evaluation, MasteryRejection):
+                return MasteryUpdateResult(
+                    event_id=event.event_id,
+                    applied=False,
+                    duplicate=False,
+                    reason_code=evaluation.reason_code,
+                    knowledge_point_id=event.knowledge_point_id,
+                    previous_score=float(mastery_row.score) if mastery_row is not None else None,
+                    new_score=float(mastery_row.score) if mastery_row is not None else None,
+                    previous_evidence_count=current.evidence_count,
+                    new_evidence_count=current.evidence_count,
+                    revision=current.revision or None,
+                    policy_version=policy.version,
+                )
+
+            self._validate_decision(event, current, evaluation)
+            previous_score = float(mastery_row.score) if mastery_row is not None else None
+            if mastery_row is None:
+                mastery_row = MasteryStateRow(
+                    student_id=event.student_id,
+                    course_id=event.course_id,
+                    knowledge_point_id=event.knowledge_point_id,
+                    score=Decimal(str(evaluation.score)),
+                    evidence_count=evaluation.evidence_count,
+                    revision=evaluation.revision,
+                )
+                session.add(mastery_row)
+            else:
+                mastery_row.score = Decimal(str(evaluation.score))
+                mastery_row.evidence_count = evaluation.evidence_count
+                mastery_row.revision = evaluation.revision
+            session.flush()
+
+            audit = MasteryUpdateAuditRow(
+                event_id=event.event_id,
+                student_id=event.student_id,
+                course_id=event.course_id,
+                knowledge_point_id=event.knowledge_point_id,
+                previous_score=Decimal(str(previous_score)) if previous_score is not None else None,
+                new_score=Decimal(str(evaluation.score)),
+                previous_evidence_count=current.evidence_count,
+                new_evidence_count=evaluation.evidence_count,
+                revision=evaluation.revision,
+                evidence_value=Decimal(str(evaluation.evidence_value)),
+                evidence_weight=Decimal(str(evaluation.evidence_weight)),
+                policy_version=evaluation.policy_version,
+                reason_code=evaluation.reason_code,
+            )
+            session.add(audit)
+            session.flush()
+            return self._audit_result(audit, applied=True, duplicate=False)
+
+    def list_mastery_audit(
+        self,
+        *,
+        student_id: str,
+        course_id: CourseId,
+        limit: int = 100,
+    ) -> Sequence[MasteryAuditRecord]:
+        if not 1 <= limit <= 500:
+            raise ValueError("limit must be between 1 and 500")
+        with self._session_factory() as session:
+            rows = session.scalars(
+                select(MasteryUpdateAuditRow)
+                .where(
+                    MasteryUpdateAuditRow.student_id == student_id,
+                    MasteryUpdateAuditRow.course_id == course_id,
+                )
+                .order_by(
+                    MasteryUpdateAuditRow.created_at,
+                    MasteryUpdateAuditRow.event_id,
+                )
+                .limit(limit)
+            ).all()
+            return tuple(self._audit_record(row) for row in rows)
+
+    @staticmethod
+    def _event_from_row(row: LearningEventRow) -> LearningEvent:
+        return LearningEvent(
+            event_id=row.event_id,
+            schema_version=row.schema_version,
+            event_type=cast(LearningEventType, row.event_type),
+            occurred_at=row.occurred_at,
+            student_id=row.student_id,
+            course_id=cast(CourseId, row.course_id),
+            course_version=row.course_version,
+            knowledge_point_id=row.knowledge_point_id,
+            trace_id=row.trace_id,
+            payload=dict(row.payload),
+            evidence_summary=row.evidence_summary,
+        )
+
+    @staticmethod
+    def _validate_decision(
+        event: LearningEvent,
+        current: MasterySnapshot,
+        decision: MasteryDecision,
+    ) -> None:
+        if decision.knowledge_point_id != event.knowledge_point_id:
+            raise ValueError("policy cannot redirect evidence to another knowledge point")
+        if not 0 <= decision.score <= 1:
+            raise ValueError("policy score must be between 0 and 1")
+        if decision.evidence_count != current.evidence_count + 1:
+            raise ValueError("policy must increment evidence_count exactly once")
+        if decision.revision != current.revision + 1:
+            raise ValueError("policy must increment revision exactly once")
+        if not 0 <= decision.evidence_value <= 1:
+            raise ValueError("policy evidence_value must be between 0 and 1")
+        if not 0 < decision.evidence_weight <= 1:
+            raise ValueError("policy evidence_weight must be in (0, 1]")
+
+    @staticmethod
+    def _audit_result(
+        row: MasteryUpdateAuditRow,
+        *,
+        applied: bool,
+        duplicate: bool,
+    ) -> MasteryUpdateResult:
+        return MasteryUpdateResult(
+            event_id=row.event_id,
+            applied=applied,
+            duplicate=duplicate,
+            reason_code=cast(MasteryReasonCode, row.reason_code),
+            knowledge_point_id=row.knowledge_point_id,
+            previous_score=float(row.previous_score) if row.previous_score is not None else None,
+            new_score=float(row.new_score),
+            previous_evidence_count=row.previous_evidence_count,
+            new_evidence_count=row.new_evidence_count,
+            revision=row.revision,
+            policy_version=row.policy_version,
+        )
+
+    @staticmethod
+    def _audit_record(row: MasteryUpdateAuditRow) -> MasteryAuditRecord:
+        return MasteryAuditRecord(
+            event_id=row.event_id,
+            student_id=row.student_id,
+            course_id=cast(CourseId, row.course_id),
+            knowledge_point_id=row.knowledge_point_id,
+            previous_score=float(row.previous_score) if row.previous_score is not None else None,
+            new_score=float(row.new_score),
+            previous_evidence_count=row.previous_evidence_count,
+            new_evidence_count=row.new_evidence_count,
+            revision=row.revision,
+            evidence_value=float(row.evidence_value),
+            evidence_weight=float(row.evidence_weight),
+            policy_version=row.policy_version,
+            reason_code=cast(MasteryReasonCode, row.reason_code),
+            created_at=row.created_at,
+        )
 
     @staticmethod
     def _validate_student_id(student_id: str) -> None:

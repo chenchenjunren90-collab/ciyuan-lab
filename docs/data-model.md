@@ -10,6 +10,8 @@ DATA-01 只负责保存和查询事实，不决定掌握度如何变化，也不
 - `mastery_states`：保存已经由确定性规则计算出的掌握度快照、证据数和修订号；
 - `learning_events`：按 `event_id` 追加学习事件，保存契约版本、事件类型、课程版本、
   证据摘要和 JSON 载荷。
+- `mastery_update_audits`：由 DATA-02 增加，以 `event_id` 为主键，保存一次证据投影的
+  更新前后分数、证据数、修订号、权重、策略版本、原因码和服务端时间。
 
 仓库不保存姓名、明文学号、手机号等身份信息。演示种子只使用固定随机 ID 和合成事件。
 
@@ -36,3 +38,6 @@ python -m pytest apps/api/tests/test_learning_persistence.py -rs
 ```
 
 测试会执行 `base → head → base → head`，证明从零迁移、读写、重复事件幂等和回退均可复现。
+
+画像更新与推荐数据规则见
+[`mastery-evidence-policy.md`](mastery-evidence-policy.md)。
