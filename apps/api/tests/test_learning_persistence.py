@@ -90,7 +90,7 @@ def test_migrations_queries_idempotency_and_rollback() -> None:
             course_version="0.2.0",
             knowledge_point_id="PY-BASE-01",
             trace_id="test-trace",
-            payload={"correct": True},
+            payload={"is_correct": True},
             evidence_summary="synthetic test evidence",
         )
         assert repository.append_event(event) is True

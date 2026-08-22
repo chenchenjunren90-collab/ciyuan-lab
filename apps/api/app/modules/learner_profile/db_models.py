@@ -147,3 +147,66 @@ class LearningEventRow(Base):
         DateTime(timezone=True), server_default=func.now()
     )
     evidence_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+
+class MasteryUpdateAuditRow(Base):
+    """One immutable audit record for each event applied to mastery."""
+
+    __tablename__ = "mastery_update_audits"
+    __table_args__ = (
+        CheckConstraint("new_score >= 0 AND new_score <= 1", name="new_score_range"),
+        CheckConstraint(
+            "previous_score IS NULL OR (previous_score >= 0 AND previous_score <= 1)",
+            name="previous_score_range",
+        ),
+        CheckConstraint(
+            "evidence_value >= 0 AND evidence_value <= 1",
+            name="evidence_value_range",
+        ),
+        CheckConstraint(
+            "evidence_weight > 0 AND evidence_weight <= 1",
+            name="evidence_weight_range",
+        ),
+        CheckConstraint(
+            "previous_evidence_count >= 0 AND new_evidence_count = previous_evidence_count + 1",
+            name="evidence_count_step",
+        ),
+        CheckConstraint("revision >= 1", name="revision_positive"),
+        ForeignKeyConstraint(
+            ["event_id"],
+            ["learning_events.event_id"],
+            ondelete="RESTRICT",
+        ),
+        ForeignKeyConstraint(
+            ["student_id", "course_id", "knowledge_point_id"],
+            [
+                "mastery_states.student_id",
+                "mastery_states.course_id",
+                "mastery_states.knowledge_point_id",
+            ],
+            ondelete="RESTRICT",
+        ),
+        Index(
+            "ix_mastery_audits_student_course_time",
+            "student_id",
+            "course_id",
+            "created_at",
+        ),
+    )
+
+    event_id: Mapped[UUID] = mapped_column(PostgreSQLUUID(as_uuid=True), primary_key=True)
+    student_id: Mapped[str] = mapped_column(String(128))
+    course_id: Mapped[str] = mapped_column(String(32))
+    knowledge_point_id: Mapped[str] = mapped_column(String(80))
+    previous_score: Mapped[Decimal | None] = mapped_column(Numeric(5, 4), nullable=True)
+    new_score: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    previous_evidence_count: Mapped[int] = mapped_column(Integer)
+    new_evidence_count: Mapped[int] = mapped_column(Integer)
+    revision: Mapped[int] = mapped_column(Integer)
+    evidence_value: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    evidence_weight: Mapped[Decimal] = mapped_column(Numeric(5, 4))
+    policy_version: Mapped[str] = mapped_column(String(64))
+    reason_code: Mapped[str] = mapped_column(String(48))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
