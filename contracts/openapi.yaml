@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: 词元研究所 API
-  version: 0.2.0
+  version: 0.3.0
   description: >-
     三周 MVP 的最小学习闭环公共契约（ARCH-01 已冻结）。
 
@@ -46,6 +46,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CapabilitiesResponse"
+  /api/v1/courses:
+    get:
+      operationId: listCourses
+      summary: 返回三门课程及其真实建设状态
+      responses:
+        "200":
+          description: 课程清单
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseSummary"
   /api/v1/courses/{course_id}/knowledge-points:
     get:
       operationId: listKnowledgePoints
@@ -63,6 +76,121 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/KnowledgePointList"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/knowledge-points/{knowledge_point_id}:
+    get:
+      operationId: getKnowledgePoint
+      summary: 返回学生可见的完整知识卡
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: knowledge_point_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 知识点详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgePointDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/activities:
+    get:
+      operationId: listActivities
+      summary: 返回练习、Debug与综合项目目录
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: knowledge_point_id
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 学习活动目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivitySummary"
+  /api/v1/courses/{course_id}/activities/{activity_id}:
+    get:
+      operationId: getActivity
+      summary: 返回学生可见活动内容，不包含答案和隐藏测试
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: activity_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 学习活动详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/sources:
+    get:
+      operationId: listSources
+      summary: 返回课程已登记来源及RAG资格
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 来源目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SourceDetail"
+  /api/v1/courses/{course_id}/sources/{source_id}:
+    get:
+      operationId: getSource
+      summary: 返回一个可核验来源
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 来源详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SourceDetail"
         "404":
           $ref: "#/components/responses/NotFound"
   /api/v1/assessments:
@@ -190,6 +318,33 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    HTTPValidationError:
+      type: object
+      required: []
+      additionalProperties: null
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      type: object
+      required: [loc, msg, type]
+      additionalProperties: null
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          type: string
+        type:
+          type: string
+        input: {}
+        ctx:
+          type: object
     HealthResponse:
       type: object
       additionalProperties: false
@@ -234,10 +389,37 @@ components:
     CourseId:
       type: string
       enum: [c, python, data_structures]
+    CourseSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - status
+        - target_core_concepts
+        - implemented_core_concepts
+        - features
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseId"
+        title:
+          type: string
+        status:
+          type: string
+        target_core_concepts:
+          type: integer
+          minimum: 0
+        implemented_core_concepts:
+          type: integer
+          minimum: 0
+        features:
+          type: object
+          additionalProperties:
+            type: string
     KnowledgePointSummary:
       type: object
       additionalProperties: false
-      required: [id, title, difficulty, prerequisites]
+      required: [id, title, difficulty, prerequisites, source_refs]
       properties:
         id:
           type: string
@@ -256,6 +438,59 @@ components:
           description: 该知识点的来源 ID（可核验）
           items:
             type: string
+    KnowledgePointDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - difficulty
+        - estimated_minutes
+        - prerequisites
+        - learning_objectives
+        - concepts
+        - lesson
+        - assessment_ids
+        - source_refs
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        prerequisites:
+          type: array
+          items:
+            type: string
+        learning_objectives:
+          type: array
+          items:
+            type: string
+        concepts:
+          type: array
+          items:
+            type: string
+        lesson:
+          type: object
+        assessment_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
     KnowledgePointList:
       type: object
       additionalProperties: false
@@ -267,6 +502,143 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/KnowledgePointSummary"
+    ActivitySummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - type
+        - difficulty
+        - estimated_minutes
+        - concept_ids
+        - source_refs
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        type:
+          type: string
+          enum: [objective, short_answer, code, debug, project]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+    ActivityDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - type
+        - difficulty
+        - estimated_minutes
+        - concept_ids
+        - source_refs
+        - evaluation
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        type:
+          type: string
+          enum: [objective, short_answer, code, debug, project]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        prompt:
+          type: [string, "null"]
+        summary:
+          type: [string, "null"]
+        requirements:
+          type: array
+          items:
+            type: string
+        deliverables:
+          type: array
+          items:
+            type: string
+        evaluation:
+          type: object
+          description: 学生可见判定说明，不包含答案、参考答案和隐藏测试
+        scenario_scope:
+          type: [string, "null"]
+        scenario_provider:
+          type: [string, "null"]
+        data_classification:
+          type: [string, "null"]
+        computer_science_objectives:
+          type: array
+          items:
+            type: string
+        business_context_objectives:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+    SourceDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - source_type
+        - citation
+        - rights
+        - data_classification
+        - rag_eligible
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        source_type:
+          type: string
+        citation:
+          type: object
+        rights:
+          type: object
+        data_classification:
+          type: string
+        rag_eligible:
+          type: boolean
+        status:
+          type: string
     MasteryState:
       type: object
       additionalProperties: false
