@@ -1,0 +1,29 @@
+id: C-CTRL-03
+title: while 与 do-while
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-01
+learning_objectives:
+- 能够解释while 与 do-while的核心规则
+- 能够运用while 与 do-while解决边界明确的问题
+concepts:
+- while 与 do-while
+- 边界条件
+- 可验证性
+lesson:
+  summary: 根据先判断或后判断语义选择循环。
+  key_points:
+  - 根据先判断或后判断语义选择循环。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-CTRL-03-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

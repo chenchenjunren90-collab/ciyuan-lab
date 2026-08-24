@@ -1,0 +1,29 @@
+id: DS-QUEUE-02
+title: 循环队列
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-QUEUE-01
+learning_objectives:
+- 能够解释循环队列的核心规则
+- 能够运用循环队列解决边界明确的问题
+concepts:
+- 循环队列
+- 边界条件
+- 可验证性
+lesson:
+  summary: 通过模运算复用数组空间并区分空与满。
+  key_points:
+  - 通过模运算复用数组空间并区分空与满。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-QUEUE-02-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

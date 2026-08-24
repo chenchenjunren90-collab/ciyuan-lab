@@ -1,0 +1,29 @@
+id: C-PTR-01
+title: 指针、地址与解引用
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-03
+learning_objectives:
+- 能够解释指针、地址与解引用的核心规则
+- 能够运用指针、地址与解引用解决边界明确的问题
+concepts:
+- 指针、地址与解引用
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解指针保存地址以及解引用访问对象的含义。
+  key_points:
+  - 理解指针保存地址以及解引用访问对象的含义。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-PTR-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

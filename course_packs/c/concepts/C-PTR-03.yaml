@@ -1,0 +1,29 @@
+id: C-PTR-03
+title: 指针参数与输出参数
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-02
+learning_objectives:
+- 能够解释指针参数与输出参数的核心规则
+- 能够运用指针参数与输出参数解决边界明确的问题
+concepts:
+- 指针参数与输出参数
+- 边界条件
+- 可验证性
+lesson:
+  summary: 通过指针参数修改调用方对象并检查空指针。
+  key_points:
+  - 通过指针参数修改调用方对象并检查空指针。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-PTR-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

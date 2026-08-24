@@ -1,0 +1,48 @@
+id: C-PROJ-RECORD-01
+title: 命令行记录管理器
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 180
+concept_ids:
+- C-TYPE-01
+- C-PTR-03
+- C-MEM-01
+- C-IO-01
+- C-DEBUG-01
+- C-TEST-01
+summary: 使用 C17 实现可从文本文件读取、查询、排序并保存记录的命令行程序。
+requirements:
+- 使用结构体表达记录
+- 动态管理记录集合
+- 检查输入、内存和文件错误
+- 覆盖空文件、单条记录和重复键
+deliverables:
+- 可编译的多文件 C 源码
+- 构建与运行说明
+- 边界测试清单
+source_refs:
+- SRC-C-GUIDE-MEMORY
+- SRC-C-GUIDE-ENGINEERING
+verification_exercise_ids:
+- C-IO-01-C1
+- C-DEBUG-01-C1
+scenario_scope: none
+scenario_provider: none
+data_classification: synthetic
+computer_science_objectives:
+- 综合运用结构体、指针、动态内存和文件处理
+- 通过确定性测试验证边界与错误路径
+business_context_objectives: []
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 功能与确定性测试
+    points: 55
+  - criterion: 内存和错误处理
+    points: 25
+  - criterion: 模块化与说明
+    points: 20
+status: draft

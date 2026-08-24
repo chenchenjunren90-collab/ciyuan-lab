@@ -1,0 +1,29 @@
+id: C-CTRL-01
+title: if 条件分支
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-05
+learning_objectives:
+- 能够解释if 条件分支的核心规则
+- 能够运用if 条件分支解决边界明确的问题
+concepts:
+- if 条件分支
+- 边界条件
+- 可验证性
+lesson:
+  summary: 把互斥业务规则表达为边界清晰的条件分支。
+  key_points:
+  - 把互斥业务规则表达为边界清晰的条件分支。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-CTRL-01-C1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

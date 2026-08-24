@@ -1,0 +1,29 @@
+id: C-BASE-03
+title: 变量、常量与初始化
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-02
+learning_objectives:
+- 能够解释变量、常量与初始化的核心规则
+- 能够运用变量、常量与初始化解决边界明确的问题
+concepts:
+- 变量、常量与初始化
+- 边界条件
+- 可验证性
+lesson:
+  summary: 正确声明、初始化和更新变量，避免读取未初始化对象。
+  key_points:
+  - 正确声明、初始化和更新变量，避免读取未初始化对象。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-BASE-03-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

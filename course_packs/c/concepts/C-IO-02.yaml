@@ -1,0 +1,29 @@
+id: C-IO-02
+title: 二进制文件与序列化边界
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- C-IO-01
+learning_objectives:
+- 能够解释二进制文件与序列化边界的核心规则
+- 能够运用二进制文件与序列化边界解决边界明确的问题
+concepts:
+- 二进制文件与序列化边界
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解二进制布局的可移植性限制并检查读写数量。
+  key_points:
+  - 理解二进制布局的可移植性限制并检查读写数量。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-IO-02-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

@@ -1,0 +1,29 @@
+id: DS-QUEUE-01
+title: 队列及其不变量
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-01
+learning_objectives:
+- 能够解释队列及其不变量的核心规则
+- 能够运用队列及其不变量解决边界明确的问题
+concepts:
+- 队列及其不变量
+- 边界条件
+- 可验证性
+lesson:
+  summary: 实现先进先出操作并维护队首队尾。
+  key_points:
+  - 实现先进先出操作并维护队首队尾。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-QUEUE-01-C1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

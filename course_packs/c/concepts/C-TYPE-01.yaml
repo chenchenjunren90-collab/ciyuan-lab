@@ -1,0 +1,29 @@
+id: C-TYPE-01
+title: 结构体定义与成员访问
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-ARRAY-01
+learning_objectives:
+- 能够解释结构体定义与成员访问的核心规则
+- 能够运用结构体定义与成员访问解决边界明确的问题
+concepts:
+- 结构体定义与成员访问
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用结构体组合相关字段并通过点运算符访问。
+  key_points:
+  - 使用结构体组合相关字段并通过点运算符访问。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-TYPE-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

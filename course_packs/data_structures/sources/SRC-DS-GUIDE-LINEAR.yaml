@@ -1,0 +1,18 @@
+id: SRC-DS-GUIDE-LINEAR
+title: 数据结构与算法 MVP 教学提要：LINEAR
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 数据结构与算法 LINEAR 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 顺序表支持常数时间随机访问，但中间插入常需移动元素；链表通过链接换取局部插入灵活性。栈保持后进先出，队列保持先进先出。每种结构都应明确空、满、头尾和结点连接等不变量，并在操作后继续保持。
+status: reviewed

@@ -1,0 +1,29 @@
+id: DS-GRAPH-05
+title: Dijkstra 最短路径
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-HEAP-02
+learning_objectives:
+- 能够解释Dijkstra 最短路径的核心规则
+- 能够运用Dijkstra 最短路径解决边界明确的问题
+concepts:
+- Dijkstra 最短路径
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在非负权图上通过松弛和优先队列求最短路。
+  key_points:
+  - 在非负权图上通过松弛和优先队列求最短路。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-GRAPH-05-C1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

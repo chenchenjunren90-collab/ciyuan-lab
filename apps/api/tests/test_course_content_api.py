@@ -18,7 +18,8 @@ def test_lists_three_courses_with_real_progress() -> None:
     courses = {item["id"]: item for item in response.json()}
     assert set(courses) == {"c", "python", "data_structures"}
     assert courses["python"]["implemented_core_concepts"] == 40
-    assert courses["c"]["implemented_core_concepts"] == 0
+    assert courses["c"]["implemented_core_concepts"] == 40
+    assert courses["data_structures"]["implemented_core_concepts"] == 40
 
 
 def test_lists_real_python_knowledge_points() -> None:
@@ -77,12 +78,19 @@ def test_lists_registered_sources_with_rag_eligibility() -> None:
     response = client.get("/api/v1/courses/python/sources")
 
     assert response.status_code == 200
-    assert {item["id"] for item in response.json()} == {
+    sources = {item["id"]: item for item in response.json()}
+    assert {
         "SRC-PY-OFFICIAL-REF",
         "SRC-PY-OFFICIAL-TUTORIAL",
         "SRC-PY-OUTLINE-01",
-    }
-    assert all(item["rag_eligible"] is False for item in response.json())
+        "SRC-PY-GUIDE-BASE",
+        "SRC-PY-GUIDE-FUNCTIONS",
+        "SRC-PY-GUIDE-DATA",
+        "SRC-PY-GUIDE-ENGINEERING",
+        "SRC-PY-GUIDE-CASE-FALLBACK",
+    }.issubset(sources)
+    assert sources["SRC-PY-OUTLINE-01"]["rag_eligible"] is False
+    assert sources["SRC-PY-GUIDE-DATA"]["rag_eligible"] is True
 
 
 def test_repository_rejects_record_path_traversal() -> None:

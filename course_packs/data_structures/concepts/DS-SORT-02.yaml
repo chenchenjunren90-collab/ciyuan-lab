@@ -1,0 +1,29 @@
+id: DS-SORT-02
+title: 插入排序
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-SORT-01
+learning_objectives:
+- 能够解释插入排序的核心规则
+- 能够运用插入排序解决边界明确的问题
+concepts:
+- 插入排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 维护已排序前缀并分析近乎有序输入。
+  key_points:
+  - 维护已排序前缀并分析近乎有序输入。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-SORT-02-C1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

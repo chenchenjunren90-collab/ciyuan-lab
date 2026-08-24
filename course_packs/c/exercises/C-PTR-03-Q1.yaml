@@ -1,0 +1,27 @@
+id: C-PTR-03-Q1
+title: 检查理解：指针参数与输出参数
+course: c
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-PTR-03
+prompt: 关于“指针参数与输出参数”，下列哪项最符合本节应掌握的原则？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 通过指针参数修改调用方对象并检查空指针。
+  - id: B
+    text: 只需记住语法形式，不必验证边界或前置条件。
+  - id: C
+    text: 任何实现方式的时间、空间和错误行为都完全相同。
+  - id: D
+    text: 模型生成的结论可以替代编译、运行和确定性测试。
+  accepted_answers:
+  - A
+status: draft

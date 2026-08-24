@@ -1,0 +1,29 @@
+id: C-DEBUG-01
+title: 编译警告、调试与缺陷定位
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-ERR-01
+learning_objectives:
+- 能够解释编译警告、调试与缺陷定位的核心规则
+- 能够运用编译警告、调试与缺陷定位解决边界明确的问题
+concepts:
+- 编译警告、调试与缺陷定位
+- 边界条件
+- 可验证性
+lesson:
+  summary: 从警告、最小复现和运行状态系统定位缺陷。
+  key_points:
+  - 从警告、最小复现和运行状态系统定位缺陷。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-DEBUG-01-C1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

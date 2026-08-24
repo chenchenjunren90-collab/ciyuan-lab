@@ -1,0 +1,18 @@
+id: SRC-DS-GUIDE-TREEGRAPH
+title: 数据结构与算法 MVP 教学提要：TREEGRAPH
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 数据结构与算法 TREEGRAPH 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 树以层次关系组织结点，搜索树和堆维护不同不变量。图可用邻接表或矩阵表示；BFS 使用队列按层扩展，DFS 沿路径深入。最短路、生成树和拓扑排序各自依赖特定输入条件，不能只记模板而忽略前提与复杂度。
+status: reviewed

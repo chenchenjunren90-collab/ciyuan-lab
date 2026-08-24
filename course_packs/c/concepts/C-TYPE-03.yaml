@@ -1,0 +1,29 @@
+id: C-TYPE-03
+title: 枚举与联合
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-TYPE-01
+learning_objectives:
+- 能够解释枚举与联合的核心规则
+- 能够运用枚举与联合解决边界明确的问题
+concepts:
+- 枚举与联合
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用枚举表达有限状态，理解联合共享存储。
+  key_points:
+  - 使用枚举表达有限状态，理解联合共享存储。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-TYPE-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

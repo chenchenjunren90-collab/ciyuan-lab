@@ -1,0 +1,28 @@
+id: DS-FOUND-01
+title: 抽象数据类型与实现
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+- 能够解释抽象数据类型与实现的核心规则
+- 能够运用抽象数据类型与实现解决边界明确的问题
+concepts:
+- 抽象数据类型与实现
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分接口语义、数据表示和具体实现。
+  key_points:
+  - 区分接口语义、数据表示和具体实现。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-FOUND-01-Q1
+source_refs:
+- SRC-DS-GUIDE-FOUND
+status: draft

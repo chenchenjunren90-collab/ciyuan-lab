@@ -1,0 +1,29 @@
+id: C-ARRAY-01
+title: 一维数组
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-04
+learning_objectives:
+- 能够解释一维数组的核心规则
+- 能够运用一维数组解决边界明确的问题
+concepts:
+- 一维数组
+- 边界条件
+- 可验证性
+lesson:
+  summary: 按连续同类型元素建模并安全控制下标范围。
+  key_points:
+  - 按连续同类型元素建模并安全控制下标范围。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-ARRAY-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

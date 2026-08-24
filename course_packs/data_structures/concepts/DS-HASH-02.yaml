@@ -1,0 +1,29 @@
+id: DS-HASH-02
+title: 冲突处理与扩容
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-HASH-01
+learning_objectives:
+- 能够解释冲突处理与扩容的核心规则
+- 能够运用冲突处理与扩容解决边界明确的问题
+concepts:
+- 冲突处理与扩容
+- 边界条件
+- 可验证性
+lesson:
+  summary: 比较链地址和开放寻址并设计扩容策略。
+  key_points:
+  - 比较链地址和开放寻址并设计扩容策略。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-HASH-02-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

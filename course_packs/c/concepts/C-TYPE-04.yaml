@@ -1,0 +1,29 @@
+id: C-TYPE-04
+title: typedef 与接口可读性
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-TYPE-01
+learning_objectives:
+- 能够解释typedef 与接口可读性的核心规则
+- 能够运用typedef 与接口可读性解决边界明确的问题
+concepts:
+- typedef 与接口可读性
+- 边界条件
+- 可验证性
+lesson:
+  summary: 为复杂类型提供稳定、清晰的接口名称。
+  key_points:
+  - 为复杂类型提供稳定、清晰的接口名称。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-TYPE-04-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

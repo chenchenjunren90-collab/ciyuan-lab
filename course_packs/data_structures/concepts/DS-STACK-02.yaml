@@ -1,0 +1,29 @@
+id: DS-STACK-02
+title: 栈的表达式与括号应用
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-STACK-01
+learning_objectives:
+- 能够解释栈的表达式与括号应用的核心规则
+- 能够运用栈的表达式与括号应用解决边界明确的问题
+concepts:
+- 栈的表达式与括号应用
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用栈处理嵌套结构和表达式求值。
+  key_points:
+  - 使用栈处理嵌套结构和表达式求值。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-STACK-02-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

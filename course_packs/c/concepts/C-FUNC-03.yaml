@@ -1,0 +1,29 @@
+id: C-FUNC-03
+title: 作用域、生命周期与存储期
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-01
+learning_objectives:
+- 能够解释作用域、生命周期与存储期的核心规则
+- 能够运用作用域、生命周期与存储期解决边界明确的问题
+concepts:
+- 作用域、生命周期与存储期
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分块作用域、文件作用域和对象存储期。
+  key_points:
+  - 区分块作用域、文件作用域和对象存储期。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-FUNC-03-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

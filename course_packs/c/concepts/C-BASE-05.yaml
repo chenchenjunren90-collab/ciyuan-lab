@@ -1,0 +1,29 @@
+id: C-BASE-05
+title: 算术、关系与逻辑运算
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-03
+learning_objectives:
+- 能够解释算术、关系与逻辑运算的核心规则
+- 能够运用算术、关系与逻辑运算解决边界明确的问题
+concepts:
+- 算术、关系与逻辑运算
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解常用运算符、优先级和短路求值。
+  key_points:
+  - 理解常用运算符、优先级和短路求值。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-BASE-05-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

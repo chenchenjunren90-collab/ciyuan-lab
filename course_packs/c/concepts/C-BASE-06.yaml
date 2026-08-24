@@ -1,0 +1,29 @@
+id: C-BASE-06
+title: 类型转换与表达式求值
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-05
+learning_objectives:
+- 能够解释类型转换与表达式求值的核心规则
+- 能够运用类型转换与表达式求值解决边界明确的问题
+concepts:
+- 类型转换与表达式求值
+- 边界条件
+- 可验证性
+lesson:
+  summary: 识别整数除法、提升规则和显式转换的影响。
+  key_points:
+  - 识别整数除法、提升规则和显式转换的影响。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-BASE-06-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

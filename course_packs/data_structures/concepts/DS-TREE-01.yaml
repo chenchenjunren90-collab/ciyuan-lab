@@ -1,0 +1,29 @@
+id: DS-TREE-01
+title: 树、结点关系与基本术语
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-01
+learning_objectives:
+- 能够解释树、结点关系与基本术语的核心规则
+- 能够运用树、结点关系与基本术语解决边界明确的问题
+concepts:
+- 树、结点关系与基本术语
+- 边界条件
+- 可验证性
+lesson:
+  summary: 描述根、父子、深度、高度和子树。
+  key_points:
+  - 描述根、父子、深度、高度和子树。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- DS-TREE-01-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

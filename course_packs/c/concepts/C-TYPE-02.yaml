@@ -1,0 +1,29 @@
+id: C-TYPE-02
+title: 结构体数组、嵌套与指针
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-TYPE-01
+learning_objectives:
+- 能够解释结构体数组、嵌套与指针的核心规则
+- 能够运用结构体数组、嵌套与指针解决边界明确的问题
+concepts:
+- 结构体数组、嵌套与指针
+- 边界条件
+- 可验证性
+lesson:
+  summary: 组织记录集合并正确使用箭头运算符。
+  key_points:
+  - 组织记录集合并正确使用箭头运算符。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-TYPE-02-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

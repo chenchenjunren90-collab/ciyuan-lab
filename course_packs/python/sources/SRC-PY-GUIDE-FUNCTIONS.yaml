@@ -1,0 +1,18 @@
+id: SRC-PY-GUIDE-FUNCTIONS
+title: Python MVP 教学提要：FUNCTIONS
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 Python FUNCTIONS 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 函数设计应让输入、输出和副作用清晰。默认参数在定义时求值，作用域遵循局部、闭包、全局和内置名称查找。迭代器按需产生元素，生成器用暂停与恢复表达数据流，适合避免一次性加载全部数据。
+status: reviewed

@@ -1,0 +1,29 @@
+id: C-CTRL-04
+title: for 循环与计数模式
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-03
+learning_objectives:
+- 能够解释for 循环与计数模式的核心规则
+- 能够运用for 循环与计数模式解决边界明确的问题
+concepts:
+- for 循环与计数模式
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用初始化、条件和更新表达确定次数的迭代。
+  key_points:
+  - 用初始化、条件和更新表达确定次数的迭代。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-CTRL-04-C1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

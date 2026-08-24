@@ -1,0 +1,29 @@
+id: C-MEM-03
+title: 越界、未定义行为与内存诊断
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- C-MEM-02
+learning_objectives:
+- 能够解释越界、未定义行为与内存诊断的核心规则
+- 能够运用越界、未定义行为与内存诊断解决边界明确的问题
+concepts:
+- 越界、未定义行为与内存诊断
+- 边界条件
+- 可验证性
+lesson:
+  summary: 识别越界和失效对象访问，借助工具定位问题。
+  key_points:
+  - 识别越界和失效对象访问，借助工具定位问题。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-MEM-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

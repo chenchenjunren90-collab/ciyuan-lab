@@ -1,0 +1,29 @@
+id: C-MOD-01
+title: 头文件与模块化编程
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-PP-01
+learning_objectives:
+- 能够解释头文件与模块化编程的核心规则
+- 能够运用头文件与模块化编程解决边界明确的问题
+concepts:
+- 头文件与模块化编程
+- 边界条件
+- 可验证性
+lesson:
+  summary: 分离声明和实现，使用包含保护组织多文件程序。
+  key_points:
+  - 分离声明和实现，使用包含保护组织多文件程序。
+  - 先说明适用前提，再通过示例或测试验证结论。
+  common_mistakes:
+  - 忽略输入边界或算法前置条件
+  - 只观察单个样例就判断实现正确
+assessment_ids:
+- C-MOD-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft
