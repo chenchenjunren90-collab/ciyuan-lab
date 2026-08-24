@@ -21,9 +21,7 @@ CourseIdQuery = Annotated[CourseId, Query()]
 async def submit_exercise(
     exercise_id: str,
     request: SubmissionRequest,
-    service: Annotated[
-        PracticeSubmissionService, Depends(get_practice_submission_service)
-    ],
+    service: Annotated[PracticeSubmissionService, Depends(get_practice_submission_service)],
     course_id: CourseIdQuery,
 ) -> SubmissionResult:
     try:

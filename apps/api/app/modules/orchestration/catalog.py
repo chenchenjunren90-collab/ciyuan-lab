@@ -19,9 +19,7 @@ CODE = "code"
 DEBUG = "debug"
 PROJECT = "project"
 
-ACTIVITY_TYPES: frozenset[str] = frozenset(
-    {CONCEPT, OBJECTIVE, SHORT_ANSWER, CODE, DEBUG, PROJECT}
-)
+ACTIVITY_TYPES: frozenset[str] = frozenset({CONCEPT, OBJECTIVE, SHORT_ANSWER, CODE, DEBUG, PROJECT})
 
 EXERCISE_TYPE_PREFERENCE: tuple[str, ...] = (CODE, DEBUG, OBJECTIVE, SHORT_ANSWER)
 
@@ -76,10 +74,7 @@ class CourseCatalog:
         return tuple(
             item
             for item in self.activities
-            if (
-                item.activity_type == CONCEPT
-                and item.activity_id == knowledge_point_id
-            )
+            if (item.activity_type == CONCEPT and item.activity_id == knowledge_point_id)
             or knowledge_point_id in item.concept_ids
         )
 
@@ -109,9 +104,7 @@ def default_packs_root() -> Path:
     return Path(__file__).resolve().parents[5] / _COURSE_PACK_DIRECTORY
 
 
-def load_course_catalog(
-    course_id: str, *, packs_root: Path | str | None = None
-) -> CourseCatalog:
+def load_course_catalog(course_id: str, *, packs_root: Path | str | None = None) -> CourseCatalog:
     """Load one course pack into an in-memory, immutable activity directory."""
     root = Path(packs_root) if packs_root else default_packs_root()
     pack_dir = root / course_id
@@ -151,9 +144,7 @@ def load_course_catalog(
             )
         )
 
-    prerequisites_by_kp = {
-        item.knowledge_point_id: item.prerequisites for item in knowledge_points
-    }
+    prerequisites_by_kp = {item.knowledge_point_id: item.prerequisites for item in knowledge_points}
 
     for path in _yaml_files(pack_dir / exercises_dir):
         document = _load_mapping(path)
@@ -176,9 +167,7 @@ def load_course_catalog(
                 activity_type=exercise_type,
                 title=_title(document, exercise_id),
                 concept_ids=concept_ids,
-                prerequisites=_combined_prerequisites(
-                    concept_ids, prerequisites_by_kp
-                ),
+                prerequisites=_combined_prerequisites(concept_ids, prerequisites_by_kp),
             )
         )
 
@@ -261,9 +250,7 @@ def _validate_concept_ids(
         raise CourseCatalogError(f"{course_id}/{record_id}: concept_ids must not be empty")
     unknown = sorted(set(concept_ids) - set(prerequisites_by_kp))
     if unknown:
-        raise CourseCatalogError(
-            f"{course_id}/{record_id}: unknown concept_ids: {unknown}"
-        )
+        raise CourseCatalogError(f"{course_id}/{record_id}: unknown concept_ids: {unknown}")
 
 
 def _combined_prerequisites(

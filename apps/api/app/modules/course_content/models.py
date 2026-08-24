@@ -107,6 +107,7 @@ class ActivityDetail(ActivitySummary):
     data_classification: str | None = None
     computer_science_objectives: list[str] = Field(default_factory=list)
     business_context_objectives: list[str] = Field(default_factory=list)
+    fallback_source_refs: list[str] = Field(default_factory=list)
     status: str
 
 

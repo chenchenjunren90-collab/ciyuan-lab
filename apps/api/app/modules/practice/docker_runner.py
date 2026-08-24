@@ -73,9 +73,7 @@ class DockerSandboxRunner:
 
         output_limit_bytes = request.output_limit_kb * 1024
         if process.returncode == 125:
-            raise SandboxUnavailableError(
-                "Docker could not start the isolated container or image"
-            )
+            raise SandboxUnavailableError("Docker could not start the isolated container or image")
         combined_size = len(stdout_bytes) + len(stderr_bytes)
         output_limit_exceeded = combined_size > output_limit_bytes
         stdout_slice = stdout_bytes[:output_limit_bytes]

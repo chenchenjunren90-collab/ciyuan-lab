@@ -53,9 +53,7 @@ class CourseTutor:
             }
             for hit in evidence
         ]
-        user = json.dumps(
-            {"question": question, "evidence": evidence_payload}, ensure_ascii=False
-        )
+        user = json.dumps({"question": question, "evidence": evidence_payload}, ensure_ascii=False)
         return (ChatMessage(role="system", content=system), ChatMessage(role="user", content=user))
 
     @staticmethod
@@ -84,9 +82,7 @@ class CourseTutor:
     @staticmethod
     def _fallback(evidence: Sequence[SearchHit]) -> TutorDraft:
         selected = tuple(evidence[:2])
-        body = "\n".join(
-            f"{index}. {hit.content}" for index, hit in enumerate(selected, start=1)
-        )
+        body = "\n".join(f"{index}. {hit.content}" for index, hit in enumerate(selected, start=1))
         return TutorDraft(
             answer=f"根据已审核课程资料，可先从以下要点理解：\n{body}",
             citation_chunk_ids=tuple(hit.chunk_id for hit in selected),

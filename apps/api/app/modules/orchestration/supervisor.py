@@ -28,9 +28,7 @@ class SupervisionResult:
 class QualitySupervisor:
     """Checks facts and safety without calling a model or changing learner state."""
 
-    def inspect(
-        self, *, draft: TutorDraft, evidence: Sequence[SearchHit]
-    ) -> SupervisionResult:
+    def inspect(self, *, draft: TutorDraft, evidence: Sequence[SearchHit]) -> SupervisionResult:
         answer = draft.answer.strip()
         if not answer or len(answer) > 2000:
             return self._reject("invalid_answer")

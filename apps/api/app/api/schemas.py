@@ -7,9 +7,7 @@ class NextActivity(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     activity_id: str
-    activity_type: Literal[
-        "concept", "objective", "short_answer", "code", "debug", "project"
-    ]
+    activity_type: Literal["concept", "objective", "short_answer", "code", "debug", "project"]
     reason: str
 
 

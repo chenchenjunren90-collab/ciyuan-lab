@@ -80,9 +80,7 @@ class LearningPlanner:
         self._validate_course_id(course_id)
         profile = self._load_profile(student_id, course_id)
         candidates = self._build_candidates(profile)
-        whitelist = build_whitelist(
-            candidates=candidates, catalog=self._catalog, profile=profile
-        )
+        whitelist = build_whitelist(candidates=candidates, catalog=self._catalog, profile=profile)
         model_choice = await self._try_model_choice(course_id, candidates, whitelist)
         if model_choice is not None:
             activity = validate_model_choice(
@@ -98,15 +96,11 @@ class LearningPlanner:
                     activity_type=activity.activity_type,
                     reason=build_reason(activity, candidate),
                 )
-        return select_by_rules(
-            candidates=candidates, catalog=self._catalog, profile=profile
-        )
+        return select_by_rules(candidates=candidates, catalog=self._catalog, profile=profile)
 
     def _validate_course_id(self, course_id: str) -> None:
         if self._catalog.course_id != course_id:
-            raise CourseNotFoundError(
-                f"course not supported by this planner: {course_id}"
-            )
+            raise CourseNotFoundError(f"course not supported by this planner: {course_id}")
 
     def _load_profile(self, student_id: str, course_id: str) -> LearnerProfile:
         profile = self._profile_loader(student_id, course_id)
@@ -118,13 +112,9 @@ class LearningPlanner:
             raise ValueError("profile course_id does not match the request")
         return profile
 
-    def _build_candidates(
-        self, profile: LearnerProfile
-    ) -> Sequence[RecommendationCandidate]:
+    def _build_candidates(self, profile: LearnerProfile) -> Sequence[RecommendationCandidate]:
         course_knowledge_point_ids = [
-            item.activity_id
-            for item in self._catalog.activities
-            if item.activity_type == "concept"
+            item.activity_id for item in self._catalog.activities if item.activity_type == "concept"
         ]
         return LearnerProfileService.build_recommendation_data(
             profile=profile,

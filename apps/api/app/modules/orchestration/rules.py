@@ -41,9 +41,7 @@ def mastered_knowledge_point_ids(profile: LearnerProfile) -> frozenset[str]:
     )
 
 
-def prerequisites_satisfied(
-    activity: CourseActivity, mastered: frozenset[str]
-) -> bool:
+def prerequisites_satisfied(activity: CourseActivity, mastered: frozenset[str]) -> bool:
     return all(prerequisite in mastered for prerequisite in activity.prerequisites)
 
 
@@ -169,40 +167,30 @@ def validate_model_choice(
     return activity
 
 
-def build_reason(
-    activity: CourseActivity, candidate: RecommendationCandidate | None
-) -> str:
+def build_reason(activity: CourseActivity, candidate: RecommendationCandidate | None) -> str:
     """Explainable reason built only from verifiable facts."""
     label = _ACTIVITY_LABELS.get(activity.activity_type, activity.activity_type)
     knowledge_point_id = activity.knowledge_point_id or activity.concept_ids[0]
     if candidate is None:
-        return (
-            f"基于当前画像选择{label}：{activity.title}（知识点 {knowledge_point_id}）"
-        )
+        return f"基于当前画像选择{label}：{activity.title}（知识点 {knowledge_point_id}）"
     if candidate.reason_code == "needs_reinforcement":
         return (
             f"知识点 {knowledge_point_id} 掌握度 {candidate.score:.2f} 低于巩固阈值，"
             f"安排{label}以巩固掌握"
         )
     if candidate.reason_code == "insufficient_evidence":
-        return (
-            f"知识点 {knowledge_point_id} 尚无学习证据，"
-            f"从{label}开始建立学习记录"
-        )
+        return f"知识点 {knowledge_point_id} 尚无学习证据，从{label}开始建立学习记录"
     if candidate.reason_code == "continue_practice":
         return (
             f"知识点 {knowledge_point_id} 已有部分掌握（证据 {candidate.evidence_count} 条），"
             f"继续{label}以加深理解"
         )
     return (
-        f"知识点 {knowledge_point_id} 掌握度 {candidate.score:.2f} 且证据充分，"
-        f"进入{label}推进学习"
+        f"知识点 {knowledge_point_id} 掌握度 {candidate.score:.2f} 且证据充分，进入{label}推进学习"
     )
 
 
-def _plan(
-    activity: CourseActivity, candidate: RecommendationCandidate
-) -> PlannedActivity:
+def _plan(activity: CourseActivity, candidate: RecommendationCandidate) -> PlannedActivity:
     return PlannedActivity(
         activity_id=activity.activity_id,
         activity_type=activity.activity_type,
@@ -251,9 +239,7 @@ def _first_eligible_project(
     return None
 
 
-def _first_legal_concept(
-    catalog: CourseCatalog, mastered: frozenset[str]
-) -> CourseActivity | None:
+def _first_legal_concept(catalog: CourseCatalog, mastered: frozenset[str]) -> CourseActivity | None:
     for activity in catalog.activities:
         if activity.activity_type != CONCEPT:
             continue
@@ -264,9 +250,7 @@ def _first_legal_concept(
     return None
 
 
-def _first_legal_review(
-    catalog: CourseCatalog, mastered: frozenset[str]
-) -> CourseActivity | None:
+def _first_legal_review(catalog: CourseCatalog, mastered: frozenset[str]) -> CourseActivity | None:
     for activity in catalog.activities:
         if activity.activity_type not in {"objective", "short_answer", "code", "debug"}:
             continue

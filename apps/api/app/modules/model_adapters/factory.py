@@ -6,6 +6,7 @@ from app.core.config import Settings
 from app.modules.model_adapters.errors import ModelConfigurationError
 from app.modules.model_adapters.mock import MockAdapter
 from app.modules.model_adapters.ports import ModelAdapter
+from app.modules.model_adapters.tuoling import TuolingScenarioAdapter
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
 
 
@@ -32,6 +33,20 @@ def build_model_adapter(settings: Settings) -> ModelAdapter:
     if settings.xfyun_spark_mock_fallback:
         return MockAdapter()
 
-    raise ModelConfigurationError(
-        "Model adapter is not configured and Mock fallback is disabled"
+    raise ModelConfigurationError("Model adapter is not configured and Mock fallback is disabled")
+
+
+def build_tuoling_scenario_adapter(
+    settings: Settings,
+) -> TuolingScenarioAdapter | None:
+    """Build the restricted scenario adapter only when explicitly enabled."""
+
+    if not settings.tuoling_enabled:
+        return None
+    return TuolingScenarioAdapter(
+        base_url=settings.tuoling_base_url,
+        api_key=settings.tuoling_api_key.get_secret_value(),
+        context_path=settings.tuoling_context_path,
+        timeout_seconds=settings.tuoling_timeout_seconds,
+        max_retries=settings.tuoling_max_retries,
     )

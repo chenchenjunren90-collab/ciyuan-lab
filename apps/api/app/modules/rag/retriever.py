@@ -42,9 +42,7 @@ def split_source(source: RagSourceRecord, *, max_chars: int = 360) -> Iterable[s
     paragraphs = [part.strip() for part in re.split(r"\n\s*\n", source.text) if part.strip()]
     for paragraph in paragraphs:
         sentences = [
-            part.strip()
-            for part in re.split(r"(?<=[。！？；])", paragraph)
-            if part.strip()
+            part.strip() for part in re.split(r"(?<=[。！？；])", paragraph) if part.strip()
         ]
         buffer = ""
         for sentence in sentences:

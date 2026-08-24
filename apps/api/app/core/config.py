@@ -23,7 +23,9 @@ class Settings(BaseSettings):
     api_port: int = 8000
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
-    database_url: str = "postgresql+psycopg://ciyuan:replace-me@localhost:5432/ciyuan"
+    database_url: str = (
+        "postgresql+psycopg://ciyuan:replace-before-use@127.0.0.1:5432/ciyuan?connect_timeout=3"
+    )
     redis_url: str = "redis://localhost:6379/0"
 
     xfyun_spark_base_url: str = "https://spark-api-open.xf-yun.com/agent/v1"
@@ -32,6 +34,10 @@ class Settings(BaseSettings):
     xfyun_spark_api_secret: SecretStr = SecretStr("")
     tuoling_base_url: str = ""
     tuoling_api_key: SecretStr = SecretStr("")
+    tuoling_context_path: str = "/v1/scenarios/context"
+    tuoling_timeout_seconds: float = Field(default=15.0, gt=0, le=60)
+    tuoling_max_retries: int = Field(default=1, ge=0, le=3)
+    tuoling_enabled: bool = False
 
     # Xfyun adapter tuning (no secrets; used by model_adapters / AI-01)
     xfyun_spark_model: str = "spark-x"

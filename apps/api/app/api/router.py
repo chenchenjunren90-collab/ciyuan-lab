@@ -4,6 +4,7 @@ from app import __version__
 from app.api.courses import router as courses_router
 from app.api.learning import router as learning_router
 from app.api.qa import router as qa_router
+from app.api.scenarios import router as scenarios_router
 from app.api.schemas import CapabilitiesResponse, HealthResponse
 from app.api.submissions import router as submissions_router
 from app.core.config import get_settings
@@ -12,6 +13,7 @@ router = APIRouter(prefix="/api/v1")
 router.include_router(courses_router)
 router.include_router(learning_router)
 router.include_router(qa_router)
+router.include_router(scenarios_router)
 router.include_router(submissions_router)
 
 
@@ -31,5 +33,5 @@ async def list_capabilities() -> CapabilitiesResponse:
             "learner_profile",
             "practice",
             "model_adapters",
-        ]
+        ],
     )

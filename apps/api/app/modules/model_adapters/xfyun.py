@@ -102,9 +102,7 @@ class XfyunSparkAdapter(ModelAdapter):
             except httpx.TimeoutException:
                 if attempt == attempts:
                     raise ModelTimeoutError("Xfyun Spark request timed out") from None
-                logger.warning(
-                    "xfyun spark request timed out (attempt %d/%d)", attempt, attempts
-                )
+                logger.warning("xfyun spark request timed out (attempt %d/%d)", attempt, attempts)
                 continue
             except httpx.RequestError:
                 if attempt == attempts:
@@ -119,9 +117,7 @@ class XfyunSparkAdapter(ModelAdapter):
 
             if response.status_code in _RETRYABLE_STATUS_CODES:
                 if attempt == attempts:
-                    raise ModelUpstreamError(
-                        f"Xfyun Spark returned HTTP {response.status_code}"
-                    )
+                    raise ModelUpstreamError(f"Xfyun Spark returned HTTP {response.status_code}")
                 logger.warning(
                     "xfyun spark returned HTTP %d (attempt %d/%d)",
                     response.status_code,
@@ -131,9 +127,7 @@ class XfyunSparkAdapter(ModelAdapter):
                 continue
 
             if response.status_code != 200:
-                raise ModelUpstreamError(
-                    f"Xfyun Spark returned HTTP {response.status_code}"
-                )
+                raise ModelUpstreamError(f"Xfyun Spark returned HTTP {response.status_code}")
 
             return self._parse_response(response)
 
@@ -155,8 +149,7 @@ class XfyunSparkAdapter(ModelAdapter):
         return {
             "model": self._model,
             "messages": [
-                {"role": message.role, "content": message.content}
-                for message in messages
+                {"role": message.role, "content": message.content} for message in messages
             ],
             "stream": False,
         }

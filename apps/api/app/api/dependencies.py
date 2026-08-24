@@ -7,7 +7,10 @@ from app.core.database import create_database_engine, create_session_factory
 from app.modules.course_content import CoursePackRepository
 from app.modules.learner_profile.repository import LearningRepository
 from app.modules.learning_flow import LearningFlowService
-from app.modules.model_adapters.factory import build_model_adapter
+from app.modules.model_adapters.factory import (
+    build_model_adapter,
+    build_tuoling_scenario_adapter,
+)
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
 from app.modules.practice import (
@@ -17,6 +20,7 @@ from app.modules.practice import (
 )
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 from app.modules.rag.service import RagQaService
+from app.modules.scenarios import ScenarioContextService
 
 
 @lru_cache
@@ -62,4 +66,13 @@ def get_practice_submission_service() -> PracticeSubmissionService:
         courses=get_course_repository(),
         verifier=DeterministicCodeVerifier(DockerSandboxRunner()),
         learning_flow=get_learning_flow_service(),
+    )
+
+
+@lru_cache
+def get_scenario_context_service() -> ScenarioContextService:
+    settings = get_settings()
+    return ScenarioContextService(
+        courses=get_course_repository(),
+        tuoling=build_tuoling_scenario_adapter(settings),
     )

@@ -204,7 +204,5 @@ class PracticeSubmissionService:
         if accepted:
             return f"{activity.id} 已通过确定性判定。请回顾关键边界，并继续下一项活动。"
         if verification and verification.diagnostics:
-            return "尚未通过。先根据验证事实逐项定位：" + "；".join(
-                verification.diagnostics[:3]
-            )
+            return "尚未通过。先根据验证事实逐项定位：" + "；".join(verification.diagnostics[:3])
         return "答案尚未通过。请重新核对题意、适用条件和边界，再提交一次。"

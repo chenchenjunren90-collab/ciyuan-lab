@@ -14,9 +14,7 @@ from app.modules.learner_profile.models import LearnerProfile
 from app.modules.learning_flow import LearningFlowService
 
 router = APIRouter(tags=["learning"])
-LearningFlowDependency = Annotated[
-    LearningFlowService, Depends(get_learning_flow_service)
-]
+LearningFlowDependency = Annotated[LearningFlowService, Depends(get_learning_flow_service)]
 StudentIdQuery = Annotated[str, Query(min_length=1, max_length=128)]
 CourseIdQuery = Annotated[CourseId, Query()]
 
@@ -70,10 +68,7 @@ async def submit_assessment(
         result = await service.submit_assessment(
             student_id=request.student_id,
             course_id=request.course_id,
-            answers=[
-                (answer.knowledge_point_id, answer.is_correct)
-                for answer in request.answers
-            ],
+            answers=[(answer.knowledge_point_id, answer.is_correct) for answer in request.answers],
         )
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc)) from exc
@@ -119,9 +114,7 @@ async def get_next_activity(
     course_id: CourseIdQuery,
 ) -> NextActivity:
     try:
-        result = await service.next_activity(
-            student_id=student_id, course_id=course_id
-        )
+        result = await service.next_activity(student_id=student_id, course_id=course_id)
     except LookupError as exc:
         raise HTTPException(status_code=404, detail="learner profile not found") from exc
     return NextActivity(

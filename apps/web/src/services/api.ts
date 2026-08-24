@@ -24,6 +24,15 @@ export interface ActivityDetail extends ActivitySummary {
     tests?: Array<{ id: string; visibility: "public"; input: string; expected_output: string }>;
   };
   computer_science_objectives: string[]; business_context_objectives: string[];
+  scenario_scope: string | null; scenario_provider: string | null;
+  data_classification: string | null; fallback_source_refs: string[];
+}
+export interface ScenarioContext {
+  project_id: string; course_id: CourseId;
+  mode: "tuoling" | "fixed_synthetic";
+  provider_status: "live" | "disabled" | "fallback";
+  context: string; constraints: string[]; source_refs: string[];
+  data_classification: string; notice: string;
 }
 export interface MasteryState {
   knowledge_point_id: string; score: number; evidence_count: number; updated_at: string | null;
@@ -88,6 +97,8 @@ export const api = {
   activities: (courseId: CourseId) => request<ActivitySummary[]>(`/api/v1/courses/${courseId}/activities`),
   activity: (courseId: CourseId, activityId: string) =>
     request<ActivityDetail>(`/api/v1/courses/${courseId}/activities/${activityId}`),
+  scenario: (courseId: CourseId, projectId: string) =>
+    request<ScenarioContext>(`/api/v1/courses/${courseId}/projects/${projectId}/scenario`),
   profile: (studentId: string, courseId: CourseId) =>
     request<LearnerProfile>(`/api/v1/profile?student_id=${encodeURIComponent(studentId)}&course_id=${courseId}`),
   nextActivity: (studentId: string, courseId: CourseId) =>

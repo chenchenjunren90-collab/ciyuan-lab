@@ -5,7 +5,7 @@ import {
   ApiError, api, fetchApiHealth,
   type ActivityDetail, type ActivitySummary, type CourseId, type CourseSummary,
   type KnowledgePoint, type LearnerProfile, type NextActivity, type PlanStage,
-  type QaResponse, type SubmissionResult
+  type QaResponse, type ScenarioContext, type SubmissionResult
 } from "./services/api";
 
 type Tab = "overview" | "path" | "tutor" | "practice";
@@ -29,6 +29,7 @@ const qaLoading = ref(false);
 const answer = ref("");
 const code = ref("");
 const submission = ref<SubmissionResult | null>(null);
+const scenario = ref<ScenarioContext | null>(null);
 
 const selectedCourse = computed(() => courses.value.find((item) => item.id === courseId.value));
 const baselineItems = computed(() => knowledge.value.slice(0, 8));
@@ -62,6 +63,7 @@ async function loadCourse(id: CourseId): Promise<void> {
   notice.value = "";
   qa.value = null;
   activity.value = null;
+  scenario.value = null;
   submission.value = null;
   try {
     const [kpResult, activityResult] = await Promise.all([api.knowledgePoints(id), api.activities(id)]);
@@ -101,7 +103,10 @@ async function ask(): Promise<void> {
 async function openActivity(id: string): Promise<void> {
   try {
     activity.value = await api.activity(courseId.value, id);
-    answer.value = ""; submission.value = null;
+    answer.value = ""; submission.value = null; scenario.value = null;
+    if (activity.value.type === "project" && activity.value.scenario_scope) {
+      scenario.value = await api.scenario(courseId.value, activity.value.id);
+    }
     const language = activity.value.evaluation.runtime?.language;
     code.value = language === "c"
       ? "#include <stdio.h>\n\nint main(void) {\n    // 在这里完成程序\n    return 0;\n}\n"
@@ -214,6 +219,8 @@ onMounted(async () => {
         <section class="practice-layout">
           <aside class="panel activity-list"><header><div><p class="eyebrow">ACTIVITIES</p><h2>练习工坊</h2></div></header><button v-for="item in activities" :key="item.id" :class="{ active: activity?.id === item.id }" @click="openActivity(item.id)"><span>{{ activityType(item.type) }}</span><strong>{{ item.title }}</strong><small>{{ item.id }} · {{ item.estimated_minutes }} 分钟</small></button></aside>
           <div class="panel activity-workspace"><template v-if="activity"><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
+            <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>{{ scenario.mode === "tuoling" ? "驼灵授权场景" : "固定合成场景" }}</span><strong>经管背景只服务课程综合实践</strong></div><b>{{ scenario.provider_status === "live" ? "API 在线" : "安全降级" }}</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span v-for="source in scenario.source_refs" :key="source">{{ source }}</span><small>{{ scenario.notice }}</small></footer></section>
+            <section v-if="activity.type === 'project'" class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
             <div v-if="activity.evaluation.options" class="options"><label v-for="option in activity.evaluation.options" :key="option.id" :class="{ selected: answer === option.id }"><input v-model="answer" type="radio" :value="option.id" /><b>{{ option.id }}</b><span>{{ option.text }}</span></label></div>
             <div v-else-if="activity.type === 'code' || activity.type === 'debug'" class="editor"><header><i></i><i></i><i></i><b>{{ activity.evaluation.runtime?.language }} · isolated sandbox</b></header><textarea v-model="code" spellcheck="false"></textarea></div>
             <textarea v-else v-model="answer" class="answer-box" rows="7" placeholder="输入你的回答…"></textarea><button v-if="activity.type !== 'project'" class="primary" @click="submit">提交并验证</button>

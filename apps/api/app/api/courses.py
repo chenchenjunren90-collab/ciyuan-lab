@@ -36,13 +36,9 @@ async def list_knowledge_points(course_id: CourseId) -> KnowledgePointList:
     "/{course_id}/knowledge-points/{knowledge_point_id}",
     response_model=KnowledgePointDetail,
 )
-async def get_knowledge_point(
-    course_id: CourseId, knowledge_point_id: str
-) -> KnowledgePointDetail:
+async def get_knowledge_point(course_id: CourseId, knowledge_point_id: str) -> KnowledgePointDetail:
     try:
-        return get_course_repository().get_knowledge_point(
-            course_id, knowledge_point_id
-        )
+        return get_course_repository().get_knowledge_point(course_id, knowledge_point_id)
     except CourseRecordNotFoundError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -55,9 +51,7 @@ async def list_activities(
     activities = get_course_repository().list_activities(course_id)
     if knowledge_point_id is not None:
         activities = tuple(
-            activity
-            for activity in activities
-            if knowledge_point_id in activity.concept_ids
+            activity for activity in activities if knowledge_point_id in activity.concept_ids
         )
     return list(activities)
 

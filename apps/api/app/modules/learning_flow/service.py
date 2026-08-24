@@ -33,13 +33,9 @@ class LearningStore(Protocol):
 
     def append_event(self, event: LearningEvent) -> bool: ...
 
-    def project_event(
-        self, *, event_id: UUID, policy: MasteryPolicy
-    ) -> MasteryUpdateResult: ...
+    def project_event(self, *, event_id: UUID, policy: MasteryPolicy) -> MasteryUpdateResult: ...
 
-    def get_profile(
-        self, *, student_id: str, course_id: CourseId
-    ) -> LearnerProfile | None: ...
+    def get_profile(self, *, student_id: str, course_id: CourseId) -> LearnerProfile | None: ...
 
 
 class LearningFlowService:
@@ -116,9 +112,7 @@ class LearningFlowService:
                 self._repository.project_event(event_id=event.event_id, policy=self._policy)
 
         profile = self._require_profile(student_id=student_id, course_id=course_id)
-        next_activity = await self._next_activity(
-            student_id=student_id, course_id=course_id
-        )
+        next_activity = await self._next_activity(student_id=student_id, course_id=course_id)
         stages = self._build_stages(
             profile=profile,
             course_id=course_id,
@@ -135,35 +129,25 @@ class LearningFlowService:
         self._validate_student_id(student_id)
         return self._require_profile(student_id=student_id, course_id=course_id)
 
-    async def next_activity(
-        self, *, student_id: str, course_id: CourseId
-    ) -> PlannedActivity:
+    async def next_activity(self, *, student_id: str, course_id: CourseId) -> PlannedActivity:
         self._validate_student_id(student_id)
         self._require_profile(student_id=student_id, course_id=course_id)
         return await self._next_activity(student_id=student_id, course_id=course_id)
 
-    async def _next_activity(
-        self, *, student_id: str, course_id: CourseId
-    ) -> PlannedActivity:
+    async def _next_activity(self, *, student_id: str, course_id: CourseId) -> PlannedActivity:
         planner = build_learning_planner(
             course_id=course_id,
-            profile_provider=lambda student_id, requested_course_id: (
-                self._repository.get_profile(
-                    student_id=student_id,
-                    course_id=cast(CourseId, requested_course_id),
-                )
+            profile_provider=lambda student_id, requested_course_id: self._repository.get_profile(
+                student_id=student_id,
+                course_id=cast(CourseId, requested_course_id),
             ),
             model_adapter=self._model_adapter,
             top_k=12,
         )
         return await planner.next_activity(student_id, course_id)
 
-    def _require_profile(
-        self, *, student_id: str, course_id: CourseId
-    ) -> LearnerProfile:
-        profile = self._repository.get_profile(
-            student_id=student_id, course_id=course_id
-        )
+    def _require_profile(self, *, student_id: str, course_id: CourseId) -> LearnerProfile:
+        profile = self._repository.get_profile(student_id=student_id, course_id=course_id)
         if profile is None:
             raise LookupError("learner profile not found")
         return profile
@@ -187,9 +171,7 @@ class LearningFlowService:
             course_knowledge_point_ids=knowledge_point_ids,
             top_k=top_k,
         )
-        candidates_by_id = {
-            candidate.knowledge_point_id: candidate for candidate in candidates
-        }
+        candidates_by_id = {candidate.knowledge_point_id: candidate for candidate in candidates}
         ordered_ids = list(candidates_by_id)
         if next_activity.activity_type == "concept" and next_activity.activity_id in ordered_ids:
             ordered_ids.remove(next_activity.activity_id)
@@ -206,8 +188,7 @@ class LearningFlowService:
             if not stage_ids:
                 continue
             stage_candidates = tuple(
-                candidates_by_id[knowledge_point_id]
-                for knowledge_point_id in stage_ids
+                candidates_by_id[knowledge_point_id] for knowledge_point_id in stage_ids
             )
             reason = LearningFlowService._stage_reason(stage_candidates, course_id)
             stages.append(
@@ -221,9 +202,7 @@ class LearningFlowService:
         return tuple(stages)
 
     @staticmethod
-    def _stage_reason(
-        candidates: Sequence[RecommendationCandidate], course_id: CourseId
-    ) -> str:
+    def _stage_reason(candidates: Sequence[RecommendationCandidate], course_id: CourseId) -> str:
         counts: dict[str, int] = {}
         for candidate in candidates:
             counts[candidate.reason_code] = counts.get(candidate.reason_code, 0) + 1

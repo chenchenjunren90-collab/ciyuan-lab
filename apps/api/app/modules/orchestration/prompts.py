@@ -116,9 +116,7 @@ def _extract_json(content: str) -> dict[str, object] | None:
     return data
 
 
-def planned_activity_from_choice(
-    activity: CourseActivity, reason: str
-) -> PlannedActivity:
+def planned_activity_from_choice(activity: CourseActivity, reason: str) -> PlannedActivity:
     return PlannedActivity(
         activity_id=activity.activity_id,
         activity_type=activity.activity_type,

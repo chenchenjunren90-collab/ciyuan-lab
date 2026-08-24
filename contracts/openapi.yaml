@@ -150,6 +150,32 @@ paths:
                 $ref: "#/components/schemas/ActivityDetail"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/projects/{project_id}/scenario:
+    get:
+      operationId: getProjectScenario
+      summary: 返回受限课后项目的驼灵或固定合成场景背景
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 已授权的项目场景上下文
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioContext"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: 活动不是允许调用场景服务的课后综合项目
   /api/v1/courses/{course_id}/sources:
     get:
       operationId: listSources
@@ -610,7 +636,50 @@ components:
           type: array
           items:
             type: string
+        fallback_source_refs:
+          type: array
+          items:
+            type: string
         status:
+          type: string
+    ScenarioContext:
+      type: object
+      additionalProperties: false
+      required:
+        - project_id
+        - course_id
+        - mode
+        - provider_status
+        - context
+        - constraints
+        - source_refs
+        - data_classification
+        - notice
+      properties:
+        project_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        mode:
+          type: string
+          enum: [tuoling, fixed_synthetic]
+        provider_status:
+          type: string
+          enum: [live, disabled, fallback]
+        context:
+          type: string
+          minLength: 1
+        constraints:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        data_classification:
+          type: string
+        notice:
           type: string
     SourceDetail:
       type: object

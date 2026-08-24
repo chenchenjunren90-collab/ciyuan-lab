@@ -56,9 +56,7 @@ class CoursePackRepository:
             title=self._required_string(course, "title"),
             status=self._required_string(course, "status"),
             target_core_concepts=self._required_int(course, "target_core_concepts"),
-            implemented_core_concepts=self._required_int(
-                course, "implemented_core_concepts"
-            ),
+            implemented_core_concepts=self._required_int(course, "implemented_core_concepts"),
             features={str(key): str(value) for key, value in features.items()},
         )
 
@@ -82,13 +80,9 @@ class CoursePackRepository:
             manifest_hash=hashlib.sha256(manifest_bytes).hexdigest(),
         )
 
-    def list_knowledge_points(
-        self, course_id: CourseId
-    ) -> tuple[KnowledgePointSummary, ...]:
+    def list_knowledge_points(self, course_id: CourseId) -> tuple[KnowledgePointSummary, ...]:
         return tuple(
-            self._knowledge_point_summary(
-                self._knowledge_point(course_id, self._load_path(path))
-            )
+            self._knowledge_point_summary(self._knowledge_point(course_id, self._load_path(path)))
             for path in self._record_paths(course_id, "concepts")
         )
 
@@ -105,21 +99,15 @@ class CoursePackRepository:
         for directory, activity_type in (("exercises", None), ("projects", "project")):
             for path in self._record_paths(course_id, directory):
                 document = self._load_path(path)
-                activities.append(
-                    self._activity_summary(course_id, document, activity_type)
-                )
+                activities.append(self._activity_summary(course_id, document, activity_type))
         return tuple(activities)
 
     def get_activity(self, course_id: CourseId, activity_id: str) -> ActivityDetail:
         for directory, forced_type in (("exercises", None), ("projects", "project")):
             path = self._record_path(course_id, directory, activity_id)
             if path.is_file():
-                return self._activity_detail(
-                    course_id, self._load_path(path), forced_type
-                )
-        raise CourseRecordNotFoundError(
-            f"activity not found in course {course_id}: {activity_id}"
-        )
+                return self._activity_detail(course_id, self._load_path(path), forced_type)
+        raise CourseRecordNotFoundError(f"activity not found in course {course_id}: {activity_id}")
 
     def get_practice_activity(
         self, course_id: CourseId, activity_id: str
@@ -147,9 +135,7 @@ class CoursePackRepository:
             self._load_named_record(course_id, "sources", source_id),
         )
 
-    def list_rag_source_records(
-        self, course_id: CourseId
-    ) -> tuple[RagSourceRecord, ...]:
+    def list_rag_source_records(self, course_id: CourseId) -> tuple[RagSourceRecord, ...]:
         """Load only reviewed, explicitly eligible bodies for server-side retrieval."""
 
         records: list[RagSourceRecord] = []
@@ -233,6 +219,8 @@ class CoursePackRepository:
         evaluation = self._student_evaluation(
             self._mapping(document.get("evaluation"), "evaluation")
         )
+        fallback_value = document.get("fallback")
+        fallback = fallback_value if isinstance(fallback_value, dict) else {}
         return ActivityDetail(
             **summary.model_dump(),
             prompt=self._optional_string(document.get("prompt")),
@@ -249,6 +237,7 @@ class CoursePackRepository:
             business_context_objectives=self._string_list(
                 document.get("business_context_objectives")
             ),
+            fallback_source_refs=self._string_list(fallback.get("source_refs")),
             status=self._required_string(document, "status"),
         )
 

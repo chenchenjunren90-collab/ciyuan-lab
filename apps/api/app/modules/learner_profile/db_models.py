@@ -62,9 +62,7 @@ class CourseVersionRow(Base):
     status: Mapped[str] = mapped_column(String(32))
     manifest_hash: Mapped[str] = mapped_column(String(64))
     is_active: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
 
 class LearnerProfileRow(Base):
@@ -81,9 +79,7 @@ class LearnerProfileRow(Base):
     student_id: Mapped[str] = mapped_column(String(128), primary_key=True)
     course_id: Mapped[str] = mapped_column(String(32), primary_key=True)
     course_version: Mapped[str] = mapped_column(String(32))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -207,6 +203,4 @@ class MasteryUpdateAuditRow(Base):
     evidence_weight: Mapped[Decimal] = mapped_column(Numeric(5, 4))
     policy_version: Mapped[str] = mapped_column(String(64))
     reason_code: Mapped[str] = mapped_column(String(48))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
