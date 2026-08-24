@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-from functools import lru_cache
-
 from fastapi import APIRouter, HTTPException, Query
 
+from app.api.dependencies import get_course_repository
 from app.modules.course_content import (
     ActivityDetail,
     ActivitySummary,
-    CoursePackRepository,
     CourseRecordNotFoundError,
     CourseSummary,
     KnowledgePointDetail,
@@ -19,11 +17,6 @@ from app.modules.course_content import (
 from app.modules.course_content.models import CourseId
 
 router = APIRouter(prefix="/courses", tags=["courses"])
-
-
-@lru_cache
-def get_course_repository() -> CoursePackRepository:
-    return CoursePackRepository()
 
 
 @router.get("", response_model=list[CourseSummary])

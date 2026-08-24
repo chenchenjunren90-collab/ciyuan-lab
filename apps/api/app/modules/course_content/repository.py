@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
@@ -13,6 +14,7 @@ from app.modules.course_content.models import (
     ActivitySummary,
     CourseId,
     CourseSummary,
+    CourseVersionMetadata,
     KnowledgePointDetail,
     KnowledgePointSummary,
     SourceDetail,
@@ -56,6 +58,26 @@ class CoursePackRepository:
                 course, "implemented_core_concepts"
             ),
             features={str(key): str(value) for key, value in features.items()},
+        )
+
+    @lru_cache(maxsize=3)  # noqa: B019 - repository instance has process lifetime
+    def get_version_metadata(self, course_id: CourseId) -> CourseVersionMetadata:
+        path = self._course_dir(course_id) / "manifest.yaml"
+        try:
+            manifest_bytes = path.read_bytes()
+        except OSError as exc:
+            raise CourseContentError(f"cannot read manifest for {course_id}: {exc}") from exc
+        document = self._load_path(path)
+        course = self._mapping(document.get("course"), "manifest.course")
+        version = document.get("schema_version")
+        if not isinstance(version, (str, int, float)) or isinstance(version, bool):
+            raise CourseContentError("manifest.schema_version must be a scalar")
+        return CourseVersionMetadata(
+            course_id=course_id,
+            version=str(version),
+            title=self._required_string(course, "title"),
+            status=self._required_string(course, "status"),
+            manifest_hash=hashlib.sha256(manifest_bytes).hexdigest(),
         )
 
     def list_knowledge_points(

@@ -24,6 +24,14 @@ class CourseSummary(StrictModel):
     features: dict[str, str]
 
 
+class CourseVersionMetadata(StrictModel):
+    course_id: CourseId
+    version: str
+    title: str
+    status: str
+    manifest_hash: str
+
+
 class KnowledgePointDetail(StrictModel):
     id: str
     title: str

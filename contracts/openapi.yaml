@@ -642,7 +642,7 @@ components:
     MasteryState:
       type: object
       additionalProperties: false
-      required: [knowledge_point_id, score, evidence_count, updated_at]
+      required: [knowledge_point_id, score]
       properties:
         knowledge_point_id:
           type: string
@@ -659,7 +659,7 @@ components:
     LearnerProfile:
       type: object
       additionalProperties: false
-      required: [student_id, course_id, mastery]
+      required: [student_id, course_id]
       properties:
         student_id:
           type: string
