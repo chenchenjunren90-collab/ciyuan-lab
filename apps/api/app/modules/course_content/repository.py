@@ -17,6 +17,7 @@ from app.modules.course_content.models import (
     CourseVersionMetadata,
     KnowledgePointDetail,
     KnowledgePointSummary,
+    PracticeActivityRecord,
     RagSourceRecord,
     SourceDetail,
 )
@@ -118,6 +119,20 @@ class CoursePackRepository:
                 )
         raise CourseRecordNotFoundError(
             f"activity not found in course {course_id}: {activity_id}"
+        )
+
+    def get_practice_activity(
+        self, course_id: CourseId, activity_id: str
+    ) -> PracticeActivityRecord:
+        document = self._load_named_record(course_id, "exercises", activity_id)
+        return PracticeActivityRecord(
+            id=self._required_string(document, "id"),
+            course=course_id,
+            type=cast(Any, self._required_string(document, "type")),
+            concept_ids=tuple(self._string_list(document.get("concept_ids"))),
+            prompt=self._required_string(document, "prompt"),
+            source_refs=tuple(self._string_list(document.get("source_refs"))),
+            evaluation=dict(self._mapping(document.get("evaluation"), "evaluation")),
         )
 
     def list_sources(self, course_id: CourseId) -> tuple[SourceDetail, ...]:

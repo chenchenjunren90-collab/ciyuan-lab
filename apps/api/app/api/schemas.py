@@ -3,6 +3,16 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict
 
 
+class NextActivity(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    activity_id: str
+    activity_type: Literal[
+        "concept", "objective", "short_answer", "code", "debug", "project"
+    ]
+    reason: str
+
+
 class HealthResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

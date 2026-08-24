@@ -5,12 +5,14 @@ from app.api.courses import router as courses_router
 from app.api.learning import router as learning_router
 from app.api.qa import router as qa_router
 from app.api.schemas import CapabilitiesResponse, HealthResponse
+from app.api.submissions import router as submissions_router
 from app.core.config import get_settings
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(courses_router)
 router.include_router(learning_router)
 router.include_router(qa_router)
+router.include_router(submissions_router)
 
 
 @router.get("/health", response_model=HealthResponse, tags=["system"])

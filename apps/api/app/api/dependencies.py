@@ -10,6 +10,11 @@ from app.modules.learning_flow import LearningFlowService
 from app.modules.model_adapters.factory import build_model_adapter
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
+from app.modules.practice import (
+    DeterministicCodeVerifier,
+    DockerSandboxRunner,
+    PracticeSubmissionService,
+)
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 from app.modules.rag.service import RagQaService
 
@@ -47,4 +52,14 @@ def get_learning_flow_service() -> LearningFlowService:
         repository=get_learning_repository(),
         courses=get_course_repository(),
         model_adapter=get_model_adapter(),
+    )
+
+
+@lru_cache
+def get_practice_submission_service() -> PracticeSubmissionService:
+    return PracticeSubmissionService(
+        repository=get_learning_repository(),
+        courses=get_course_repository(),
+        verifier=DeterministicCodeVerifier(DockerSandboxRunner()),
+        learning_flow=get_learning_flow_service(),
     )

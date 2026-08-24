@@ -23,6 +23,19 @@ class RagSourceRecord:
     text: str
 
 
+@dataclass(frozen=True, slots=True)
+class PracticeActivityRecord:
+    """Internal exercise facts including answer keys and hidden tests."""
+
+    id: str
+    course: CourseId
+    type: ActivityType
+    concept_ids: tuple[str, ...]
+    prompt: str
+    source_refs: tuple[str, ...]
+    evaluation: dict[str, Any]
+
+
 class StrictModel(BaseModel):
     model_config = ConfigDict(extra="forbid")
 

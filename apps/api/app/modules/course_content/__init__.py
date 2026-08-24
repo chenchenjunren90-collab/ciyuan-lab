@@ -9,6 +9,7 @@ from app.modules.course_content.models import (
     KnowledgePointDetail,
     KnowledgePointList,
     KnowledgePointSummary,
+    PracticeActivityRecord,
     RagSourceRecord,
     SourceDetail,
 )
@@ -30,6 +31,7 @@ __all__ = [
     "KnowledgePointDetail",
     "KnowledgePointList",
     "KnowledgePointSummary",
+    "PracticeActivityRecord",
     "RagSourceRecord",
     "SourceDetail",
 ]

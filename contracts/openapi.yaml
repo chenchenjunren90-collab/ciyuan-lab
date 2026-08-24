@@ -242,6 +242,11 @@ paths:
           description: 练习 ID（如 PY-FUNC-01-C1）
           schema:
             type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
       requestBody:
         required: true
         content:

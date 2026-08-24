@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Any, Literal, cast
+from typing import Annotated, Any, cast
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.api.dependencies import get_learning_flow_service
+from app.api.schemas import NextActivity
 from app.modules.course_content.models import CourseId
 from app.modules.learner_profile.models import LearnerProfile
 from app.modules.learning_flow import LearningFlowService
@@ -46,14 +47,6 @@ class PlanStage(StrictModel):
     stage: str
     objective: str
     knowledge_point_ids: list[str]
-    reason: str
-
-
-class NextActivity(StrictModel):
-    activity_id: str
-    activity_type: Literal[
-        "concept", "objective", "short_answer", "code", "debug", "project"
-    ]
     reason: str
 
 
