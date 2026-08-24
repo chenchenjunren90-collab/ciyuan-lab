@@ -17,6 +17,7 @@ from app.modules.course_content.models import (
     CourseVersionMetadata,
     KnowledgePointDetail,
     KnowledgePointSummary,
+    RagSourceRecord,
     SourceDetail,
 )
 
@@ -131,6 +132,32 @@ class CoursePackRepository:
             self._load_named_record(course_id, "sources", source_id),
         )
 
+    def list_rag_source_records(
+        self, course_id: CourseId
+    ) -> tuple[RagSourceRecord, ...]:
+        """Load only reviewed, explicitly eligible bodies for server-side retrieval."""
+
+        records: list[RagSourceRecord] = []
+        for path in self._record_paths(course_id, "sources"):
+            document = self._load_path(path)
+            rag = self._mapping(document.get("rag"), "rag")
+            if document.get("status") != "reviewed" or rag.get("eligible") is not True:
+                continue
+            content = self._mapping(rag.get("content"), "rag.content")
+            text = self._rag_text(course_id, content)
+            if not text.strip():
+                continue
+            records.append(
+                RagSourceRecord(
+                    id=self._required_string(document, "id"),
+                    title=self._required_string(document, "title"),
+                    course=course_id,
+                    citation=dict(self._mapping(document.get("citation"), "citation")),
+                    text=text,
+                )
+            )
+        return tuple(records)
+
     def _knowledge_point(
         self, course_id: CourseId, document: dict[str, Any]
     ) -> KnowledgePointDetail:
@@ -223,6 +250,25 @@ class CoursePackRepository:
             rag_eligible=rag.get("eligible") is True,
             status=self._required_string(document, "status"),
         )
+
+    def _rag_text(self, course_id: CourseId, content: dict[str, Any]) -> str:
+        mode = content.get("mode")
+        if mode == "inline":
+            return self._required_string(content, "text")
+        if mode == "file":
+            relative = self._required_string(content, "path")
+            candidate = (self._course_dir(course_id) / "sources" / relative).resolve()
+            sources_root = (self._course_dir(course_id) / "sources").resolve()
+            if not candidate.is_relative_to(sources_root) or candidate.suffix not in {
+                ".md",
+                ".txt",
+            }:
+                raise CourseContentError("rag source path must stay inside sources")
+            try:
+                return candidate.read_text(encoding="utf-8")
+            except OSError as exc:
+                raise CourseContentError(f"cannot read RAG source body: {exc}") from exc
+        raise CourseContentError("eligible RAG source must provide inline or file content")
 
     @staticmethod
     def _student_evaluation(evaluation: dict[str, Any]) -> dict[str, Any]:

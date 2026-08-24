@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -9,6 +10,17 @@ from pydantic import BaseModel, ConfigDict, Field
 CourseId = Literal["c", "python", "data_structures"]
 Difficulty = Literal["beginner", "intermediate", "advanced"]
 ActivityType = Literal["objective", "short_answer", "code", "debug", "project"]
+
+
+@dataclass(frozen=True, slots=True)
+class RagSourceRecord:
+    """Internal reviewed source body; never returned by course-content APIs."""
+
+    id: str
+    title: str
+    course: CourseId
+    citation: dict[str, Any]
+    text: str
 
 
 class StrictModel(BaseModel):

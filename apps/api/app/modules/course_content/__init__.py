@@ -3,11 +3,13 @@
 from app.modules.course_content.models import (
     ActivityDetail,
     ActivitySummary,
+    CourseId,
     CourseSummary,
     CourseVersionMetadata,
     KnowledgePointDetail,
     KnowledgePointList,
     KnowledgePointSummary,
+    RagSourceRecord,
     SourceDetail,
 )
 from app.modules.course_content.repository import (
@@ -20,6 +22,7 @@ __all__ = [
     "ActivityDetail",
     "ActivitySummary",
     "CourseContentError",
+    "CourseId",
     "CoursePackRepository",
     "CourseRecordNotFoundError",
     "CourseSummary",
@@ -27,5 +30,6 @@ __all__ = [
     "KnowledgePointDetail",
     "KnowledgePointList",
     "KnowledgePointSummary",
+    "RagSourceRecord",
     "SourceDetail",
 ]

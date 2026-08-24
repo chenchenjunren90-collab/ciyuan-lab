@@ -1,0 +1,29 @@
+"""Public RAG question-answering models."""
+
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.modules.course_content import CourseId
+
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class QaRequest(StrictModel):
+    student_id: str = Field(min_length=1, max_length=128)
+    course_id: CourseId
+    question: str = Field(min_length=2, max_length=1000)
+
+
+class Citation(StrictModel):
+    source_id: str
+    chunk_id: str
+    score: float = Field(ge=0, le=1)
+
+
+class QaResponse(StrictModel):
+    status: Literal["answered", "insufficient_evidence"]
+    answer: str
+    citations: list[Citation]
