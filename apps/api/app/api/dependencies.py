@@ -15,6 +15,7 @@ from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
 from app.modules.practice import (
     DeterministicCodeVerifier,
+    DisabledSandboxRunner,
     DockerSandboxRunner,
     PracticeSubmissionService,
 )
@@ -61,10 +62,16 @@ def get_learning_flow_service() -> LearningFlowService:
 
 @lru_cache
 def get_practice_submission_service() -> PracticeSubmissionService:
+    settings = get_settings()
+    runner = (
+        DockerSandboxRunner()
+        if settings.code_execution_enabled
+        else DisabledSandboxRunner()
+    )
     return PracticeSubmissionService(
         repository=get_learning_repository(),
         courses=get_course_repository(),
-        verifier=DeterministicCodeVerifier(DockerSandboxRunner()),
+        verifier=DeterministicCodeVerifier(runner),
         learning_flow=get_learning_flow_service(),
     )
 

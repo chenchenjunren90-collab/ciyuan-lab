@@ -25,8 +25,11 @@ async def api_health() -> HealthResponse:
 
 @router.get("/capabilities", response_model=CapabilitiesResponse, tags=["system"])
 async def list_capabilities() -> CapabilitiesResponse:
+    settings = get_settings()
     return CapabilitiesResponse(
-        status="scaffold",
+        status="mvp",
+        code_execution_enabled=settings.code_execution_enabled,
+        tuoling_enabled=settings.tuoling_enabled,
         modules=[
             "orchestration",
             "rag",

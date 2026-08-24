@@ -22,7 +22,9 @@ class HealthResponse(BaseModel):
 class CapabilitiesResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
-    status: Literal["scaffold"]
+    status: Literal["mvp"]
+    code_execution_enabled: bool
+    tuoling_enabled: bool
     modules: list[
         Literal[
             "orchestration",

@@ -74,6 +74,23 @@ docs/                      架构、范围、标准与决策记录
 .gitee/                    Issue 与 PR 模板
 ```
 
+## 快速启动初步版本
+
+Windows + Docker Desktop 环境下：
+
+```powershell
+.\scripts\setup_demo.ps1 -PullSandboxImages
+.\scripts\run_demo.ps1 -EnableCodeExecution
+```
+
+打开 `http://localhost:3000`。服务启动后可运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\demo_smoke.py
+```
+
+完整演示顺序、模型配置、安全降级和停止方式见 [初步版本演示与验收手册](docs/demo-runbook.md)。代码执行默认关闭，只有显式传入 `-EnableCodeExecution` 且 Docker 隔离镜像就绪时才开启。
+
 ## 协作原则
 
 > **普通成员开始开发前，必须先阅读：[普通成员开发与提交指南](docs/member-workflow.md)。**
@@ -99,7 +116,6 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 docker compose --env-file .env -f infra/compose.yaml up -d
 python -m alembic upgrade head
-python scripts/seed_demo_data.py
 python -m uvicorn app.main:app --app-dir apps/api --reload
 ```
 
@@ -123,6 +139,7 @@ npm run dev
 - [MVP 范围与验收边界](docs/mvp-scope.md)
 - [课程包统一标准](docs/course-package-standard.md)
 - [数据、模型与安全边界](docs/data-and-security.md)
+- [初步版本演示与验收手册](docs/demo-runbook.md)
 - [DATA-01 最小数据模型与迁移](docs/data-model.md)
 - [贡献指南](CONTRIBUTING.md)
 - [AI 编码代理约束](AGENTS.md)

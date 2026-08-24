@@ -29,6 +29,7 @@ apps/web/.vite/
 Thumbs.db
 
 # Runtime files
+.runtime/
 logs/
 tmp/
 *.log

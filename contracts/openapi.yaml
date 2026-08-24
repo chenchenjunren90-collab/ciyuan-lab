@@ -391,11 +391,15 @@ components:
     CapabilitiesResponse:
       type: object
       additionalProperties: false
-      required: [status, modules]
+      required: [status, code_execution_enabled, tuoling_enabled, modules]
       properties:
         status:
           type: string
-          const: scaffold
+          const: mvp
+        code_execution_enabled:
+          type: boolean
+        tuoling_enabled:
+          type: boolean
         modules:
           type: array
           items:
