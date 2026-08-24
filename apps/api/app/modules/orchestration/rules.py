@@ -55,19 +55,25 @@ def build_whitelist(
 ) -> tuple[CourseActivity, ...]:
     """Legal activities reachable from the candidate knowledge points.
 
-    A concept is legal when its prerequisites are satisfied. An exercise is
-    legal when it belongs to a candidate knowledge point. A project is legal
-    when every covered concept is already mastered.
+    A concept or exercise is legal only when the linked concept prerequisites
+    are satisfied. A project is legal when every covered concept is already
+    mastered.
     """
     mastered = mastered_knowledge_point_ids(profile)
     whitelist: list[CourseActivity] = []
+    whitelisted_ids: set[str] = set()
+
+    def append_once(activity: CourseActivity) -> None:
+        if activity.activity_id not in whitelisted_ids:
+            whitelist.append(activity)
+            whitelisted_ids.add(activity.activity_id)
+
     for candidate in candidates:
         for activity in catalog.activities_for_kp(candidate.knowledge_point_id):
-            if activity.activity_type == CONCEPT:
-                if prerequisites_satisfied(activity, mastered):
-                    whitelist.append(activity)
-            else:
-                whitelist.append(activity)
+            if activity.activity_type == "project":
+                continue
+            if prerequisites_satisfied(activity, mastered):
+                append_once(activity)
 
     for activity in catalog.activities:
         if activity.activity_type != "project":
@@ -75,7 +81,7 @@ def build_whitelist(
         if activity.concept_ids and all(
             concept_id in mastered for concept_id in activity.concept_ids
         ):
-            whitelist.append(activity)
+            append_once(activity)
 
     return tuple(whitelist)
 
@@ -97,7 +103,7 @@ def select_by_rules(
     for candidate in candidates:
         knowledge_point_id = candidate.knowledge_point_id
         if candidate.reason_code == "needs_reinforcement":
-            exercise = _first_exercise(catalog, knowledge_point_id)
+            exercise = _first_legal_exercise(catalog, knowledge_point_id, mastered)
             if exercise is not None:
                 return _plan(exercise, candidate)
             concept = catalog.concept(knowledge_point_id)
@@ -108,13 +114,21 @@ def select_by_rules(
             if concept is not None and prerequisites_satisfied(concept, mastered):
                 return _plan(concept, candidate)
         elif candidate.reason_code == "continue_practice":
-            exercise = _first_exercise(catalog, knowledge_point_id)
+            exercise = _first_legal_exercise(catalog, knowledge_point_id, mastered)
             if exercise is not None:
                 return _plan(exercise, candidate)
         elif candidate.reason_code == "ready_to_progress":
             concept = _next_concept(catalog, knowledge_point_id, mastered)
             if concept is not None:
                 return _plan(concept, candidate)
+
+    project = _first_eligible_project(catalog, mastered)
+    if project is not None:
+        return PlannedActivity(
+            activity_id=project.activity_id,
+            activity_type=project.activity_type,
+            reason=f"已满足相关知识点要求，进入综合项目：{project.title}",
+        )
 
     fallback = _first_legal_concept(catalog, mastered)
     if fallback is not None:
@@ -125,6 +139,14 @@ def select_by_rules(
                 f"当前课程尚无可用规划路径，从基础活动开始："
                 f"{fallback.title}（知识点 {fallback.activity_id}）"
             ),
+        )
+
+    review = _first_legal_review(catalog, mastered)
+    if review is not None:
+        return PlannedActivity(
+            activity_id=review.activity_id,
+            activity_type=review.activity_type,
+            reason=f"当前知识点已完成基础学习，通过{review.title}进行复习巩固",
         )
     raise NoAvailableActivityError(f"course {catalog.course_id} has no legal activity")
 
@@ -188,11 +210,16 @@ def _plan(
     )
 
 
-def _first_exercise(
-    catalog: CourseCatalog, knowledge_point_id: str
+def _first_legal_exercise(
+    catalog: CourseCatalog,
+    knowledge_point_id: str,
+    mastered: frozenset[str],
 ) -> CourseActivity | None:
     exercises = catalog.exercises_for_kp(knowledge_point_id)
-    return exercises[0] if exercises else None
+    return next(
+        (item for item in exercises if prerequisites_satisfied(item, mastered)),
+        None,
+    )
 
 
 def _next_concept(
@@ -207,6 +234,19 @@ def _next_concept(
         if knowledge_point_id not in activity.prerequisites:
             continue
         if prerequisites_satisfied(activity, mastered):
+            if activity.activity_id in mastered:
+                continue
+            return activity
+    return None
+
+
+def _first_eligible_project(
+    catalog: CourseCatalog, mastered: frozenset[str]
+) -> CourseActivity | None:
+    for activity in catalog.activities:
+        if activity.activity_type != "project" or not activity.concept_ids:
+            continue
+        if all(concept_id in mastered for concept_id in activity.concept_ids):
             return activity
     return None
 
@@ -216,6 +256,19 @@ def _first_legal_concept(
 ) -> CourseActivity | None:
     for activity in catalog.activities:
         if activity.activity_type != CONCEPT:
+            continue
+        if prerequisites_satisfied(activity, mastered):
+            if activity.activity_id in mastered:
+                continue
+            return activity
+    return None
+
+
+def _first_legal_review(
+    catalog: CourseCatalog, mastered: frozenset[str]
+) -> CourseActivity | None:
+    for activity in catalog.activities:
+        if activity.activity_type not in {"objective", "short_answer", "code", "debug"}:
             continue
         if prerequisites_satisfied(activity, mastered):
             return activity

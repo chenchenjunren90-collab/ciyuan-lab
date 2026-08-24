@@ -15,6 +15,7 @@ from typing import Protocol
 from app.modules.learner_profile.models import LearnerProfile
 from app.modules.learner_profile.records import RecommendationCandidate
 from app.modules.learner_profile.service import LearnerProfileService
+from app.modules.model_adapters.errors import ModelError
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration.catalog import (
     CourseActivity,
@@ -74,6 +75,8 @@ class LearningPlanner:
 
     async def next_activity(self, student_id: str, course_id: str) -> PlannedActivity:
         """Select and verify the next activity for the student in one course."""
+        if not student_id.strip():
+            raise ValueError("student_id must not be empty")
         self._validate_course_id(course_id)
         profile = self._load_profile(student_id, course_id)
         candidates = self._build_candidates(profile)
@@ -109,6 +112,10 @@ class LearningPlanner:
         profile = self._profile_loader(student_id, course_id)
         if profile is None:
             return LearnerProfile(student_id=student_id, course_id=course_id)
+        if profile.student_id != student_id:
+            raise ValueError("profile student_id does not match the request")
+        if profile.course_id != course_id:
+            raise ValueError("profile course_id does not match the request")
         return profile
 
     def _build_candidates(
@@ -131,7 +138,7 @@ class LearningPlanner:
         candidates: Sequence[RecommendationCandidate],
         whitelist: Sequence[CourseActivity],
     ) -> ModelChoice | None:
-        """Ask the model and parse its answer; any failure degrades to None."""
+        """Ask the model and degrade only expected provider failures to None."""
         try:
             messages = build_planning_messages(
                 course_id=course_id,
@@ -139,7 +146,7 @@ class LearningPlanner:
                 whitelist=whitelist,
             )
             response = await self._model_adapter.complete(messages)
-        except Exception:
+        except ModelError:
             return None
         return parse_model_choice(response.content)
 
@@ -148,11 +155,8 @@ class LearningPlanner:
         activity: CourseActivity,
         candidates: Sequence[RecommendationCandidate],
     ) -> RecommendationCandidate | None:
-        knowledge_point_id = activity.knowledge_point_id
-        if knowledge_point_id is None:
-            return None
         for candidate in candidates:
-            if candidate.knowledge_point_id == knowledge_point_id:
+            if candidate.knowledge_point_id in activity.concept_ids:
                 return candidate
         return None
 

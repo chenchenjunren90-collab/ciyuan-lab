@@ -76,7 +76,11 @@ class CourseCatalog:
         return tuple(
             item
             for item in self.activities
-            if item.knowledge_point_id == knowledge_point_id
+            if (
+                item.activity_type == CONCEPT
+                and item.activity_id == knowledge_point_id
+            )
+            or knowledge_point_id in item.concept_ids
         )
 
     def concept(self, knowledge_point_id: str) -> CourseActivity | None:
@@ -86,12 +90,18 @@ class CourseCatalog:
         self, knowledge_point_id: str, *, order: tuple[str, ...] = EXERCISE_TYPE_PREFERENCE
     ) -> tuple[CourseActivity, ...]:
         """Exercises for one knowledge point, most preferred type first."""
-        by_type = {
-            item.activity_type: item
+        preference = {activity_type: index for index, activity_type in enumerate(order)}
+        exercises = [
+            item
             for item in self.activities_for_kp(knowledge_point_id)
-            if item.activity_type in order
-        }
-        return tuple(by_type[exercise_type] for exercise_type in order if exercise_type in by_type)
+            if item.activity_type in preference
+        ]
+        return tuple(
+            sorted(
+                exercises,
+                key=lambda item: (preference[item.activity_type], item.activity_id),
+            )
+        )
 
 
 def default_packs_root() -> Path:
@@ -141,6 +151,10 @@ def load_course_catalog(
             )
         )
 
+    prerequisites_by_kp = {
+        item.knowledge_point_id: item.prerequisites for item in knowledge_points
+    }
+
     for path in _yaml_files(pack_dir / exercises_dir):
         document = _load_mapping(path)
         exercise_id = _require_id(document, path)
@@ -150,13 +164,21 @@ def load_course_catalog(
                 f"{course_id}/exercises/{path.name}: unsupported type {exercise_type!r}"
             )
         concept_ids = _string_tuple(document.get("concept_ids"))
+        _validate_concept_ids(
+            course_id=course_id,
+            record_id=exercise_id,
+            concept_ids=concept_ids,
+            prerequisites_by_kp=prerequisites_by_kp,
+        )
         activities.append(
             CourseActivity(
                 activity_id=exercise_id,
                 activity_type=exercise_type,
                 title=_title(document, exercise_id),
                 concept_ids=concept_ids,
-                prerequisites=(),
+                prerequisites=_combined_prerequisites(
+                    concept_ids, prerequisites_by_kp
+                ),
             )
         )
 
@@ -164,6 +186,12 @@ def load_course_catalog(
         document = _load_mapping(path)
         project_id = _require_id(document, path)
         concept_ids = _string_tuple(document.get("concept_ids"))
+        _validate_concept_ids(
+            course_id=course_id,
+            record_id=project_id,
+            concept_ids=concept_ids,
+            prerequisites_by_kp=prerequisites_by_kp,
+        )
         activities.append(
             CourseActivity(
                 activity_id=project_id,
@@ -220,3 +248,36 @@ def _string_tuple(value: object) -> tuple[str, ...]:
     if not isinstance(value, list):
         return ()
     return tuple(item for item in value if isinstance(item, str) and item.strip())
+
+
+def _validate_concept_ids(
+    *,
+    course_id: str,
+    record_id: str,
+    concept_ids: tuple[str, ...],
+    prerequisites_by_kp: dict[str, tuple[str, ...]],
+) -> None:
+    if not concept_ids:
+        raise CourseCatalogError(f"{course_id}/{record_id}: concept_ids must not be empty")
+    unknown = sorted(set(concept_ids) - set(prerequisites_by_kp))
+    if unknown:
+        raise CourseCatalogError(
+            f"{course_id}/{record_id}: unknown concept_ids: {unknown}"
+        )
+
+
+def _combined_prerequisites(
+    concept_ids: tuple[str, ...],
+    prerequisites_by_kp: dict[str, tuple[str, ...]],
+) -> tuple[str, ...]:
+    """Prerequisites required before practising any linked concept."""
+
+    return tuple(
+        sorted(
+            {
+                prerequisite
+                for concept_id in concept_ids
+                for prerequisite in prerequisites_by_kp[concept_id]
+            }
+        )
+    )

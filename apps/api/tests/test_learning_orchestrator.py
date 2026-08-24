@@ -29,6 +29,7 @@ from app.modules.orchestration import (
 from app.modules.orchestration.catalog import (
     CourseActivity,
     CourseCatalog,
+    CourseCatalogError,
 )
 from app.modules.orchestration.catalog import (
     load_course_catalog as load_catalog,
@@ -384,14 +385,68 @@ def test_low_mastery_enters_reinforcement_path(
     assert result.activity_id == f"{PY_BASE_01}-C1"
 
 
+def test_exercise_cannot_bypass_unmet_concept_prerequisite(
+    python_catalog: CourseCatalog,
+) -> None:
+    profile = make_profile(mastery=[(PY_BASE_02, 0.4, 2)])
+    model = FakeModelAdapter(
+        reply=json.dumps(
+            {"activity_id": f"{PY_BASE_02}-Q1", "activity_type": "objective"}
+        )
+    )
+    planner = LearningPlanner(
+        catalog=python_catalog,
+        profile_provider=lambda _s, _c: profile,
+        model_adapter=model,
+    )
+
+    result = run(planner.next_activity("s-1", PY_COURSE))
+
+    assert result.activity_id == PY_BASE_01
+    assert result.activity_id != f"{PY_BASE_02}-Q1"
+
+
+@pytest.mark.parametrize(
+    ("profile", "message"),
+    [
+        (make_profile(student_id="another-student"), "student_id"),
+        (make_profile(course_id="c"), "course_id"),
+    ],
+)
+def test_planner_rejects_profile_for_another_request(
+    python_catalog: CourseCatalog,
+    profile: LearnerProfile,
+    message: str,
+) -> None:
+    planner = LearningPlanner(
+        catalog=python_catalog,
+        profile_provider=lambda _s, _c: profile,
+        model_adapter=MockAdapter(),
+    )
+
+    with pytest.raises(ValueError, match=message):
+        run(planner.next_activity("s-1", PY_COURSE))
+
+
+def test_planner_does_not_hide_programming_errors(
+    python_catalog: CourseCatalog,
+) -> None:
+    planner = LearningPlanner(
+        catalog=python_catalog,
+        profile_provider=lambda _s, _c: make_profile(),
+        model_adapter=FakeModelAdapter(error=RuntimeError("implementation bug")),
+    )
+
+    with pytest.raises(RuntimeError, match="implementation bug"):
+        run(planner.next_activity("s-1", PY_COURSE))
+
+
 def test_high_mastery_progresses_to_next_concept(
     python_catalog: CourseCatalog,
 ) -> None:
     profile = make_profile(
         mastery=[
             (PY_BASE_01, 0.9, 6),
-            (PY_BASE_02, 0.85, 4),
-            (PY_FUNC_01, 0.8, 4),
         ]
     )
     model = FakeModelAdapter()
@@ -403,7 +458,7 @@ def test_high_mastery_progresses_to_next_concept(
 
     assert result.activity_type == "concept"
     assert result.activity_id == PY_BASE_02
-    assert "推进" in result.reason
+    assert "尚无学习证据" in result.reason
 
 
 def test_three_courses_reuse_same_planning_logic(tmp_path: Path) -> None:
@@ -508,6 +563,65 @@ def test_catalog_loads_real_python_pack() -> None:
 def test_catalog_rejects_missing_course(tmp_path: Path) -> None:
     with pytest.raises(CourseNotFoundError):
         load_catalog("missing", packs_root=tmp_path)
+
+
+def test_catalog_rejects_activity_with_unknown_concept(tmp_path: Path) -> None:
+    write_pack(
+        tmp_path,
+        course_id=PY_COURSE,
+        concepts=[
+            {"id": PY_BASE_01, "title": "基础语法", "prerequisites": []}
+        ],
+        exercises=[
+            {
+                "id": "PY-UNKNOWN-Q1",
+                "title": "错误关联",
+                "type": "objective",
+                "concept_ids": ["PY-UNKNOWN"],
+            }
+        ],
+    )
+
+    with pytest.raises(CourseCatalogError, match="unknown concept_ids"):
+        load_catalog(PY_COURSE, packs_root=tmp_path)
+
+
+def test_catalog_indexes_multi_concept_activity_for_every_concept(
+    tmp_path: Path,
+) -> None:
+    write_pack(
+        tmp_path,
+        course_id=PY_COURSE,
+        concepts=[
+            {"id": PY_BASE_01, "title": "基础语法", "prerequisites": []},
+            {"id": PY_BASE_02, "title": "分支循环", "prerequisites": []},
+        ],
+        exercises=[
+            {
+                "id": "PY-MULTI-C1",
+                "title": "综合题",
+                "type": "code",
+                "concept_ids": [PY_BASE_01, PY_BASE_02],
+            },
+            {
+                "id": "PY-MULTI-C2",
+                "title": "综合题二",
+                "type": "code",
+                "concept_ids": [PY_BASE_01, PY_BASE_02],
+            },
+        ],
+    )
+
+    catalog = load_catalog(PY_COURSE, packs_root=tmp_path)
+
+    assert [item.activity_id for item in catalog.exercises_for_kp(PY_BASE_01)] == [
+        "PY-MULTI-C1",
+        "PY-MULTI-C2",
+    ]
+    assert [item.activity_id for item in catalog.exercises_for_kp(PY_BASE_02)] == [
+        "PY-MULTI-C1",
+        "PY-MULTI-C2",
+    ]
 
 
 def test_parse_model_choice_accepts_valid_json() -> None:
