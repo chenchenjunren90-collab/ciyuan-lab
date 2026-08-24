@@ -5,7 +5,8 @@ from typing import Annotated
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_rag_qa_service
-from app.modules.rag import QaRequest, QaResponse, RagQaService
+from app.modules.rag.models import QaRequest, QaResponse
+from app.modules.rag.service import RagQaService
 
 router = APIRouter(tags=["qa"])
 
