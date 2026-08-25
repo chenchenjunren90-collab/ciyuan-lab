@@ -36,6 +36,19 @@ class IngestionPlan:
         return json.dumps(asdict(self), ensure_ascii=False, indent=2) + "\n"
 
 
+@dataclass(frozen=True, slots=True)
+class EligibleKnowledgeChunk:
+    """Reviewed evidence payload that may be written to the retrieval index."""
+
+    chunk_id: str
+    source_id: str
+    course_id: CourseId
+    title: str
+    citation: dict[str, object]
+    content: str
+    content_hash: str
+
+
 def _digest(text: str) -> str:
     return hashlib.sha256(text.encode("utf-8")).hexdigest()
 
@@ -90,3 +103,27 @@ def build_ingestion_plan(repository: CoursePackRepository) -> IngestionPlan:
         blocked_count=sum(not item.eligible for item in ordered),
         candidates=ordered,
     )
+
+
+def build_eligible_chunks(
+    repository: CoursePackRepository,
+) -> tuple[EligibleKnowledgeChunk, ...]:
+    """Build only reviewed and explicitly RAG-eligible source chunks."""
+
+    chunks: list[EligibleKnowledgeChunk] = []
+    for course_id in ("c", "python", "data_structures"):
+        for source in repository.list_rag_source_records(course_id):
+            for index, content in enumerate(split_source(source), start=1):
+                digest = _digest(content)
+                chunks.append(
+                    EligibleKnowledgeChunk(
+                        chunk_id=f"source:{source.id}:{index:03d}:{digest[:10]}",
+                        source_id=source.id,
+                        course_id=course_id,
+                        title=source.title,
+                        citation={str(key): value for key, value in source.citation.items()},
+                        content=content,
+                        content_hash=digest,
+                    )
+                )
+    return tuple(sorted(chunks, key=lambda item: item.chunk_id))

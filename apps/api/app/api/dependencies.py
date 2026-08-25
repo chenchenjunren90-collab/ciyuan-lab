@@ -19,6 +19,8 @@ from app.modules.practice import (
     DockerSandboxRunner,
     PracticeSubmissionService,
 )
+from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
+from app.modules.rag.ports import KnowledgeRetriever
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 from app.modules.rag.service import RagQaService
 from app.modules.scenarios import ScenarioContextService
@@ -43,11 +45,21 @@ def get_model_adapter() -> ModelAdapter:
 
 @lru_cache
 def get_rag_qa_service() -> RagQaService:
-    retriever = LexicalKnowledgeRetriever.from_repository(get_course_repository())
+    settings = get_settings()
+    retriever: KnowledgeRetriever
+    if settings.rag_backend == "pgvector":
+        retriever = PgVectorKnowledgeRetriever(
+            create_database_engine(settings.database_url),
+            min_score=settings.rag_min_score,
+            vector_weight=settings.rag_vector_weight,
+        )
+    else:
+        retriever = LexicalKnowledgeRetriever.from_repository(get_course_repository())
     return RagQaService(
         retriever,
         CourseTutor(get_model_adapter()),
         QualitySupervisor(),
+        top_k=settings.rag_top_k,
     )
 
 
@@ -63,11 +75,7 @@ def get_learning_flow_service() -> LearningFlowService:
 @lru_cache
 def get_practice_submission_service() -> PracticeSubmissionService:
     settings = get_settings()
-    runner = (
-        DockerSandboxRunner()
-        if settings.code_execution_enabled
-        else DisabledSandboxRunner()
-    )
+    runner = DockerSandboxRunner() if settings.code_execution_enabled else DisabledSandboxRunner()
     return PracticeSubmissionService(
         repository=get_learning_repository(),
         courses=get_course_repository(),

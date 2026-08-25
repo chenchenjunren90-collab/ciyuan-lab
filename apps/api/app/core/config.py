@@ -46,6 +46,9 @@ class Settings(BaseSettings):
     xfyun_spark_mock_fallback: bool = True
 
     rag_top_k: int = Field(default=5, ge=1, le=20)
+    rag_backend: Literal["lexical", "pgvector"] = "lexical"
+    rag_min_score: float = Field(default=0.10, ge=0, le=1)
+    rag_vector_weight: float = Field(default=0.65, ge=0, le=1)
     code_execution_enabled: bool = False
 
 
