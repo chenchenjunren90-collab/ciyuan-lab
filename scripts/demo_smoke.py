@@ -28,7 +28,12 @@ def main() -> int:
     student_id = f"smoke-{uuid4().hex[:10]}"
     health = request("/health")
     courses = request("/courses")
-    knowledge = request("/courses/python/knowledge-points")["items"]
+    course_knowledge = {
+        course["id"]: request(f"/courses/{course['id']}/knowledge-points")["items"]
+        for course in courses
+    }
+    knowledge = course_knowledge["python"]
+    knowledge_detail = request(f"/courses/python/knowledge-points/{knowledge[0]['id']}")
     assessment = request(
         "/assessments",
         {
@@ -51,13 +56,37 @@ def main() -> int:
     scenario = request(
         "/courses/python/projects/PY-PROJ-FINANCE-DATA-01/scenario"
     )
+    activities = request("/courses/python/activities")
+    hint_activity = next(item for item in activities if item["type"] != "project")
+    hint = request(
+        f"/activities/{hint_activity['id']}/hint?course_id=python",
+        {"student_id": student_id, "level": 1},
+    )
+    project_submission = request(
+        "/projects/PY-PROJ-FINANCE-DATA-01/submissions?course_id=python",
+        {
+            "student_id": student_id,
+            "artifact_summary": (
+                "完成了解析、校验、异常分类和统计汇总模块，"
+                "并记录正常、边界与错误路径的测试证据。"
+            ),
+            "test_evidence": ["smoke: project intake path reached"],
+        },
+    )
 
     assert health["status"] == "ok"
     assert {course["id"] for course in courses} == {"c", "python", "data_structures"}
+    assert all(len(items) == 40 for items in course_knowledge.values())
+    assert knowledge_detail["lesson"]["key_points"]
     assert assessment["plan"]["next_activity"]["activity_id"]
-    assert qa["status"] == "answered" and qa["citations"]
+    assert qa["status"] == "answered" and qa["citations"] and len(qa["trace"]) == 3
     assert scenario["mode"] in {"tuoling", "fixed_synthetic"}
-    print("MVP smoke test passed: health, 3 courses, plan, grounded QA, scenario fallback")
+    assert hint["level"] == 1 and hint["answer_revealed"] is False
+    assert project_submission["status"] == "received_for_review"
+    print(
+        "MVP v0.2 smoke passed: 120 concepts, plan, grounded QA trace, "
+        "progressive hint, scenario fallback, project review intake"
+    )
     return 0
 
 

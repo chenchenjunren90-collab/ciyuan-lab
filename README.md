@@ -141,9 +141,16 @@ npm run dev
 - [数据、模型与安全边界](docs/data-and-security.md)
 - [初步版本演示与验收手册](docs/demo-runbook.md)
 - [DATA-01 最小数据模型与迁移](docs/data-model.md)
+- [RAG 入库与混合检索](docs/rag-hybrid-search.md)
+- [RAG 75 问检索评测](docs/rag-evaluation.md)
+- [模型服务接入与验收](docs/provider-integration.md)
 - [贡献指南](CONTRIBUTING.md)
 - [AI 编码代理约束](AGENTS.md)
 
 ## 当前状态
 
-仓库处于三周初步版本建设期。提交演示前，以“完整流程可运行、来源可追溯、代码结果可验证、三门课程结构一致”为优先级，不以功能数量或模型调用次数作为完成标准。
+仓库已形成 `MVP v0.2` 发布候选：三门课程共 120 个知识点已完成结构与内容补齐，
+课程内容仍需教师逐条审核后才能由 `draft` 转为 `reviewed`；RAG 只索引 13 个已审核来源片段，
+并具备课程隔离、pgvector 可选后端和 75 问回归评测。学习端已跑通知识学习、学情路径、
+有来源问答、三级提示、确定性练习与项目人工评审入口。真实讯飞/驼灵联调仍依赖授权凭据，
+无凭据时使用明确标识的安全降级，不把 Mock 当作真实调用结果。

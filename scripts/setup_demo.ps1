@@ -33,6 +33,9 @@ try {
         "postgresql+psycopg://ciyuan:replace-before-use@127.0.0.1:5432/ciyuan?connect_timeout=3"
     }
     & $Python -m alembic upgrade head
+    if ($LASTEXITCODE -ne 0) { throw "数据库迁移失败。" }
+    & $Python scripts/sync_knowledge_index.py
+    if ($LASTEXITCODE -ne 0) { throw "RAG 审核来源同步失败。" }
 
     if ($PullSandboxImages) {
         docker pull python:3.11.15-alpine3.24

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from app.modules.course_content import CoursePackRepository
 from app.modules.learner_profile.models import LearnerProfile, MasteryState
 from app.modules.practice.hints import ProgressiveHintService
@@ -24,6 +26,7 @@ def test_progressive_hints_are_distinct_and_never_claim_to_reveal_answer() -> No
         repository=ProfileStore(),  # type: ignore[arg-type]
     )
 
+    levels: tuple[Literal[1, 2, 3], ...] = (1, 2, 3)
     hints = [
         service.create_hint(
             student_id="hint-student",
@@ -31,7 +34,7 @@ def test_progressive_hints_are_distinct_and_never_claim_to_reveal_answer() -> No
             activity_id=activity.id,
             level=level,
         )
-        for level in (1, 2, 3)
+        for level in levels
     ]
 
     assert len({item.hint for item in hints}) == 3
