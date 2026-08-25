@@ -2,7 +2,7 @@ id: PY-EXC-01
 title: 异常处理
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 50
 prerequisites:
@@ -16,7 +16,8 @@ concepts:
 - finally
 - 异常类型
 lesson:
-  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。 本节围绕“异常处理”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。关键要点包括：try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型；else 用于没有异常时的后续逻辑，finally
+    用于无论成功失败都必须执行的清理；异常信息应保留输入位置和操作上下文，但不得泄露密钥或学生敏感数据。
   key_points:
   - try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型。
   - else 用于没有异常时的后续逻辑，finally 用于无论成功失败都必须执行的清理。
@@ -26,8 +27,8 @@ lesson:
 
     except ValueError: value = None'
   common_mistakes:
-  - '使用 except Exception: pass 静默吞掉所有错误。'
-  - 把程序缺陷当作正常分支长期依赖异常控制。
+  - 误以为except Exception 能捕获包括 KeyboardInterrupt 在内的所有 BaseException
+  - 误以为finally 只在没有异常时执行，出现异常后会被跳过
 assessment_ids:
 - PY-EXC-01-D1
 source_refs:

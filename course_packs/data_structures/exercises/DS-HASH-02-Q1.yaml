@@ -1,27 +1,25 @@
 id: DS-HASH-02-Q1
-title: 检查理解：冲突处理与扩容
+title: 概念判断：冲突处理与扩容
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: advanced
 estimated_minutes: 5
 concept_ids:
 - DS-HASH-02
-prompt: 关于“冲突处理与扩容”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“冲突处理与扩容”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-SORTSEARCH
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 比较链地址和开放寻址并设计扩容策略。
+    text: 开放寻址沿探测序列寻找位置，删除时通常使用墓碑，不能直接改为空槽中断后续查找。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 开放寻址删除键后可直接把槽设为从未使用，不会影响其他发生冲突的键。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 线性探测完全消除了聚集现象，因此装载因子接近 1 时仍保持稳定常数时间。
   accepted_answers:
   - A
 status: draft

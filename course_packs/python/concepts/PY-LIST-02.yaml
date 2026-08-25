@@ -2,7 +2,7 @@ id: PY-LIST-02
 title: 列表常用方法
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -17,7 +17,8 @@ concepts:
 - pop
 - sort
 lesson:
-  summary: 掌握列表的增删改查方法（append、insert、remove、pop、sort 等）及其返回值。 本节围绕“列表常用方法”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握列表的增删改查方法（append、insert、remove、pop、sort 等）及其返回值。关键要点包括：append(x) 在末尾追加，insert(i, x) 在指定位置插入；remove(x) 删除首个匹配值，pop()
+    删除并返回末尾元素；sort() 原地排序，注意它返回 None。
   key_points:
   - append(x) 在末尾追加，insert(i, x) 在指定位置插入
   - remove(x) 删除首个匹配值，pop() 删除并返回末尾元素
@@ -25,9 +26,8 @@ lesson:
   examples:
   - lst.append(4) 在末尾添加 4
   common_mistakes:
-  - 误用 sort() 的返回值当作排序后的列表
-  - 忽略“列表常用方法”的适用前提，直接套用结论或代码模板。
-  - 完成“列表常用方法”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为list.sort 会返回排序后的新列表，原列表保持不变
+  - 误以为remove(x) 会删除列表中所有等于 x 的元素
 assessment_ids:
 - PY-LIST-02-Q1
 source_refs:

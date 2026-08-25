@@ -2,7 +2,7 @@ id: DS-SEARCH-02
 title: 二分查找与边界
 course: data_structures
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,7 +15,7 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 在有序序列上维护不变量并避免区间错误。 本节围绕“二分查找与边界”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 在有序序列上维护不变量并避免区间错误。关键要点包括：二分查找只适用于按同一比较规则有序且支持随机访问的区间；采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间；查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。
   key_points:
   - 二分查找只适用于按同一比较规则有序且支持随机访问的区间。
   - 采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间。

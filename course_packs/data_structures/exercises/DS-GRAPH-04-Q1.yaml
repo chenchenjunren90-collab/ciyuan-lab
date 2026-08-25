@@ -1,27 +1,25 @@
 id: DS-GRAPH-04-Q1
-title: 检查理解：拓扑排序
+title: 概念判断：拓扑排序
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: advanced
 estimated_minutes: 5
 concept_ids:
 - DS-GRAPH-04
-prompt: 关于“拓扑排序”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“拓扑排序”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-TREEGRAPH
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 在有向无环图中生成满足依赖的线性次序。
+    text: Kahn 算法反复取入度为零的顶点并删除其出边，需同步更新剩余入度。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 任意有向图都至少有一个拓扑序，只需从最小编号顶点开始。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 拓扑排序的结果唯一，因此不同的零入度选择策略不会改变序列。
   accepted_answers:
   - A
 status: draft

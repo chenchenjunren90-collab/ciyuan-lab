@@ -1,27 +1,25 @@
 id: DS-FOUND-03-Q1
-title: 检查理解：渐进记号与增长率
+title: 概念判断：渐进记号与增长率
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: beginner
 estimated_minutes: 5
 concept_ids:
 - DS-FOUND-03
-prompt: 关于“渐进记号与增长率”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“渐进记号与增长率”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-FOUND
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 使用 O、Ω、Θ 比较算法增长趋势。
+    text: 比较增长率时关注 n 足够大后的主导项，但结论仍需注明输入规模定义。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: O(n²) 表示算法在每个输入上都恰好执行 n² 次基本操作。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 若函数属于 O(n²)，就不可能同时属于 O(n³)。
   accepted_answers:
   - A
 status: draft

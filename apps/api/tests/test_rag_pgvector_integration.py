@@ -29,7 +29,7 @@ def test_reviewed_chunks_can_be_synchronized_and_course_isolated() -> None:
 
     engine = create_database_engine(_DATABASE_URL)
     chunks = build_eligible_chunks(CoursePackRepository())
-    assert PgVectorKnowledgeStore(engine).synchronize(chunks) == 13
+    assert PgVectorKnowledgeStore(engine).synchronize(chunks) == len(chunks)
 
     retriever = PgVectorKnowledgeRetriever(engine)
     hits = asyncio.run(retriever.search("Python 容器 顺序 唯一性 键值关联", "python", 5))

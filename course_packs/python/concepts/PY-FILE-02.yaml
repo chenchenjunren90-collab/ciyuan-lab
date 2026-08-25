@@ -2,7 +2,7 @@ id: PY-FILE-02
 title: 上下文管理器 with
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
@@ -15,7 +15,7 @@ concepts:
 - 上下文管理器
 - 自动关闭
 lesson:
-  summary: 使用 with 语句管理文件等资源，理解上下文管理器在代码块结束后自动释放资源的机制。 本节围绕“上下文管理器 with”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 with 语句管理文件等资源，理解上下文管理器在代码块结束后自动释放资源的机制。关键要点包括：with 在代码块退出时调用上下文管理协议，异常发生时也能可靠释放资源；打开文本文件时显式指定编码和模式，避免平台默认编码造成不可复现结果；路径、权限和格式错误需要转成面向用户的受控诊断。
   key_points:
   - with 在代码块退出时调用上下文管理协议，异常发生时也能可靠释放资源。
   - 打开文本文件时显式指定编码和模式，避免平台默认编码造成不可复现结果。
@@ -23,8 +23,8 @@ lesson:
   examples:
   - '代码示例：with open(path, ''r'', encoding=''utf-8'') as stream: text = stream.read()'
   common_mistakes:
-  - 离开 with 代码块后继续使用已经关闭的文件对象。
-  - 省略编码并假设所有机器的默认设置相同。
+  - 误以为with 块只有正常退出时才会关闭文件，异常时需要手工 close
+  - 误以为同一个已关闭文件对象仍可继续 read，只是速度更慢
 assessment_ids:
 - PY-FILE-02-D1
 source_refs:

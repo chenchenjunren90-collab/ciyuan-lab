@@ -1,27 +1,25 @@
 id: DS-SORT-06-Q1
-title: 检查理解：堆排序
+title: 概念判断：堆排序
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: advanced
 estimated_minutes: 5
 concept_ids:
 - DS-SORT-06
-prompt: 关于“堆排序”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“堆排序”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-SORTSEARCH
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 利用堆的选择性质实现原地 O(n log n) 排序。
+    text: 最坏时间为 Θ(n log n)，数组实现只需 O(1) 额外空间，但通常不稳定。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 自底向上建堆需要对每个结点执行 O(log n) 工作，因此总时间必然是 Θ(n log n)。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 堆排序保持所有相等键的原相对顺序，所以属于稳定排序。
   accepted_answers:
   - A
 status: draft

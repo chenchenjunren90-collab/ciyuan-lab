@@ -2,7 +2,7 @@ id: PY-FUNC-05
 title: lambda 与高阶函数
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 45
 prerequisites:
@@ -17,7 +17,8 @@ concepts:
 - filter
 - 高阶函数
 lesson:
-  summary: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。 本节围绕“lambda 与高阶函数”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。关键要点包括：lambda 用于定义简单的匿名函数，无需 def；map(f, seq) 对每个元素应用 f；filter(f, seq)
+    保留使 f 为真的元素。
   key_points:
   - lambda 用于定义简单的匿名函数，无需 def
   - map(f, seq) 对每个元素应用 f
@@ -25,9 +26,8 @@ lesson:
   examples:
   - 'map(lambda x: x * x, [1, 2, 3])'
   common_mistakes:
-  - 把 map/filter 的结果当作列表，需 list() 转换
-  - 忽略“lambda 与高阶函数”的适用前提，直接套用结论或代码模板。
-  - 完成“lambda 与高阶函数”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为lambda 可以包含任意数量的赋值和循环语句
+  - 误以为把函数传给 sorted 时 key 函数应返回两个元素的比较结果
 assessment_ids:
 - PY-FUNC-05-Q1
 source_refs:

@@ -1,27 +1,25 @@
 id: C-BIT-01-Q1
-title: 检查理解：位运算与掩码
+title: 概念判断：位运算与掩码
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: intermediate
 estimated_minutes: 5
 concept_ids:
 - C-BIT-01
-prompt: 关于“位运算与掩码”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“位运算与掩码”，下列哪项说法正确？
 source_refs:
 - SRC-C-GUIDE-ENGINEERING
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 使用移位和按位运算表达标志位并避免混淆逻辑运算。
+    text: 移位位数必须非负且小于提升后左操作数的位宽；对无符号数移位更容易推理。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 表达式 1 << k 对任意 k 都有定义，超出类型位宽时会自动截断。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 按位运算符 & 和逻辑运算符 && 可以互换，因为二者都只产生 0 或 1。
   accepted_answers:
   - A
 status: draft

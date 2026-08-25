@@ -2,7 +2,7 @@ id: PY-STR-03
 title: 字符串方法与格式化
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 50
 prerequisites:
@@ -17,17 +17,17 @@ concepts:
 - join
 - f-string
 lesson:
-  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。 本节围绕“字符串方法与格式化”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。关键要点包括：strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列；f-string 用
+    f"{变量}" 内插变量值；replace() 替换子串，返回新字符串。
   key_points:
   - strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列
   - f-string 用 f"{变量}" 内插变量值
   - replace() 替换子串，返回新字符串
   examples:
-  - '"  a b  ".strip() 为 "a b"'
+  - 代码示例：price=12.3；f'{price:.2f}' 得到 '12.30'，格式说明只影响生成的字符串，不改变 price。
   common_mistakes:
-  - 误以为字符串方法会原地修改原字符串
-  - 忽略“字符串方法与格式化”的适用前提，直接套用结论或代码模板。
-  - 完成“字符串方法与格式化”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为f-string 会自动把任何数值按两位小数显示
+  - 误以为format 的字段顺序可以随意改变而不影响位置参数绑定
 assessment_ids:
 - PY-STR-03-Q1
 source_refs:

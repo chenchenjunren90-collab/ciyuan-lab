@@ -1,27 +1,25 @@
 id: C-PTR-04-Q1
-title: 检查理解：函数指针与回调
+title: 概念判断：函数指针与回调
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: advanced
 estimated_minutes: 5
 concept_ids:
 - C-PTR-04
-prompt: 关于“函数指针与回调”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“函数指针与回调”，下列哪项说法正确？
 source_refs:
 - SRC-C-GUIDE-MEMORY
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 用兼容签名的函数指针实现可替换策略。
+    text: 回调把可变策略注入通用流程，例如排序比较、遍历处理或事件通知。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 所有函数地址都可以转换为同一种函数指针并用任意参数列表安全调用。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 回调函数只能访问全局变量，无法通过参数接收调用上下文。
   accepted_answers:
   - A
 status: draft

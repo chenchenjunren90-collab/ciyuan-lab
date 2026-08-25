@@ -1,27 +1,25 @@
 id: C-FUNC-04-Q1
-title: 检查理解：递归与终止条件
+title: 概念判断：递归与终止条件
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: intermediate
 estimated_minutes: 5
 concept_ids:
 - C-FUNC-04
-prompt: 关于“递归与终止条件”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“递归与终止条件”，下列哪项说法正确？
 source_refs:
 - SRC-C-GUIDE-CONTROL
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 设计具有规模递减和明确终止条件的递归函数。
+    text: 每层调用拥有独立的自动局部状态，调用深度同时决定额外栈空间成本。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 只要函数体中出现对自身的调用，编译器就会自动推导终止条件。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 递归与迭代的空间成本必然相同，因为两者执行的计算步骤相似。
   accepted_answers:
   - A
 status: draft

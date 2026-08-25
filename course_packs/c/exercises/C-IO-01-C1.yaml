@@ -1,14 +1,16 @@
 id: C-IO-01-C1
-title: 编程实践：文本文件读写
+title: 编程实践：受控文本文件读写
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: intermediate
-estimated_minutes: 20
+estimated_minutes: 35
 concept_ids:
 - C-IO-01
-prompt: 读取若干整数（首项为数量 n），输出可写入文本记录的最小值和最大值。
+prompt: 编写 C17 程序完成可确定测试的文本文件读写。标准输入首行为模式：PRESENT、EMPTY 或 MISSING。PRESENT 后给出记录数 n 及 n 行整数：程序先用 fopen/fprintf 写入 records.txt，关闭后再用
+  fopen/fgets 逐行读取并解析，最后把“最小值 最大值”写入 result.txt，同时原样输出到 stdout。EMPTY 模式创建空的 records.txt，输出 EMPTY；MISSING 模式不得创建输入文件，尝试打开不存在的
+  records.txt 后输出 OPEN_ERROR。所有模式都必须检查 fopen、fgets/ferror、写入和 fclose 结果；禁止绕过文件直接对输入数据求最值。
 source_refs:
 - SRC-C-GUIDE-ENGINEERING
 evaluation:
@@ -23,34 +25,38 @@ evaluation:
     network_access: false
     filesystem_access: isolated
   tests:
-  - id: case-1
+  - id: case-present
     visibility: public
-    input: '4
+    input: 'PRESENT
 
-      3 9 1 5
+      4
+
+      3
+
+      9
+
+      1
+
+      5
 
       '
     expected_output: '1 9
 
       '
-  - id: case-2
+  - id: case-empty
     visibility: hidden
-    input: '1
-
-      8
+    input: 'EMPTY
 
       '
-    expected_output: '8 8
+    expected_output: 'EMPTY
 
       '
-  - id: case-3
+  - id: case-missing
     visibility: hidden
-    input: '3
-
-      -5 -2 -9
+    input: 'MISSING
 
       '
-    expected_output: '-9 -2
+    expected_output: 'OPEN_ERROR
 
       '
 status: draft

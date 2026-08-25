@@ -2,7 +2,7 @@ id: PY-BASE-08
 title: break、continue 与循环 else
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 40
 prerequisites:
@@ -18,7 +18,8 @@ concepts:
 - else
 - 循环控制
 lesson:
-  summary: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。 本节围绕“break、continue 与循环 else”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。关键要点包括：break 立即终止整个循环；continue 跳过本次迭代，继续下一次；循环的 else 子句在没有被
+    break 中断时执行。
   key_points:
   - break 立即终止整个循环
   - continue 跳过本次迭代，继续下一次
@@ -26,9 +27,8 @@ lesson:
   examples:
   - "for i in range(10):\n    if i == 3:\n        break"
   common_mistakes:
-  - 把 break 与 continue 的作用搞反
-  - 忽略“break、continue 与循环 else”的适用前提，直接套用结论或代码模板。
-  - 完成“break、continue 与循环 else”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为循环 else 在循环执行过至少一次时运行，与 break 无关
+  - 误以为continue 会跳过本轮后自动终止整个循环
 assessment_ids:
 - PY-BASE-08-Q1
 source_refs:

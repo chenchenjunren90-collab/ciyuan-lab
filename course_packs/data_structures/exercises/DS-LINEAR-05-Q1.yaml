@@ -1,27 +1,25 @@
 id: DS-LINEAR-05-Q1
-title: 检查理解：线性表查找、插入与删除
+title: 概念判断：线性表查找、插入与删除
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: intermediate
 estimated_minutes: 5
 concept_ids:
 - DS-LINEAR-05
-prompt: 关于“线性表查找、插入与删除”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“线性表查找、插入与删除”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-LINEAR
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 比较顺序表和链表操作的适用条件与复杂度。
+    text: 顺序表中间插入删除需要移动后续元素；链表在已知位置结点后只需调整链接。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 链表在只给定下标时也能 O(1) 完成插入，因为结点不连续。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 长度为 n 的线性表删除位置 n 是合法的，表示删除最后一个元素。
   accepted_answers:
   - A
 status: draft

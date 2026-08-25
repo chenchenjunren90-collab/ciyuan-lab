@@ -1,27 +1,25 @@
 id: DS-FOUND-02-Q1
-title: 检查理解：算法成本与输入规模
+title: 概念判断：算法成本与输入规模
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: beginner
 estimated_minutes: 5
 concept_ids:
 - DS-FOUND-02
-prompt: 关于“算法成本与输入规模”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“算法成本与输入规模”，下列哪项说法正确？
 source_refs:
 - SRC-DS-GUIDE-FOUND
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 选择基本操作并建立关于输入规模的成本模型。
+    text: 时间、额外空间、最坏与平均情况回答不同问题，结论必须注明所采用的情形。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 算法有两层循环就必然是 O(n²)，无需分析每层循环的实际范围。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 只要两个算法同为 O(n)，它们在所有输入规模上的运行时间就完全相同。
   accepted_answers:
   - A
 status: draft

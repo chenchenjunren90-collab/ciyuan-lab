@@ -2,29 +2,30 @@ id: C-MEM-02
 title: realloc、free 与所有权
 course: c
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: advanced
 estimated_minutes: 30
 prerequisites:
 - C-MEM-01
 learning_objectives:
-- 能够解释realloc、free 与所有权的核心规则
-- 能够运用realloc、free 与所有权解决边界明确的问题
+- 能判断与“realloc、free 与所有权”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“realloc、free 与所有权”的关键状态并验证边界
 concepts:
 - realloc、free 与所有权
 - 边界条件
 - 可验证性
 lesson:
-  summary: 维护内存所有权，避免泄漏、重复释放和悬空指针。 本节围绕“realloc、free 与所有权”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 维护内存所有权，避免泄漏、重复释放和悬空指针。关键要点包括：realloc 成功后旧指针不再可用，失败时返回 NULL 且原内存块仍保持有效；应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量；每个成功分配的内存块应有唯一清晰的释放责任，free
+    后不得再次解引用或重复释放。
   key_points:
-  - 维护内存所有权，避免泄漏、重复释放和悬空指针。
-  - 使用“realloc、free 与所有权”时必须写清输入、状态和失败条件，不能只记语法或模板。
-  - 通过“realloc、free 与所有权”的关联练习分别验证常规输入、边界输入和错误输入。
+  - realloc 成功后旧指针不再可用，失败时返回 NULL 且原内存块仍保持有效。
+  - 应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量。
+  - 每个成功分配的内存块应有唯一清晰的释放责任，free 后不得再次解引用或重复释放。
   common_mistakes:
-  - 忽略“realloc、free 与所有权”的适用前提，直接套用结论或代码模板。
-  - 完成“realloc、free 与所有权”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为可以直接写 p=realloc(p,n)，因为失败时 p 仍会自动指向原内存块。
+  - 误以为free(p) 会自动把变量 p 设置为 NULL，因此后续无需处理悬空指针。
   examples:
-  - 示例：为“realloc、free 与所有权”写出一个最小正常样例和一个边界样例，并逐步记录状态变化。
+  - 代码片段：int *tmp=realloc(p,new_n*sizeof *p); if(tmp){p=tmp;} else {/* p 仍有效，处理失败 */}
 assessment_ids:
 - C-MEM-02-Q1
 source_refs:

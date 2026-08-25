@@ -2,7 +2,7 @@ id: PY-OOP-01
 title: 类与对象
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 60
 prerequisites:
@@ -17,7 +17,8 @@ concepts:
 - self
 - 实例属性
 lesson:
-  summary: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。 本节围绕“类与对象”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。关键要点包括：class 定义类，类名() 创建实例对象；__init__ 在实例化时自动调用，self 指向当前实例；实例属性通过
+    self.属性 访问和赋值。
   key_points:
   - class 定义类，类名() 创建实例对象
   - __init__ 在实例化时自动调用，self 指向当前实例
@@ -25,9 +26,8 @@ lesson:
   examples:
   - "class Student:\n    def __init__(self, name):\n        self.name = name"
   common_mistakes:
-  - 实例方法忘记写 self 参数
-  - 忽略“类与对象”的适用前提，直接套用结论或代码模板。
-  - 完成“类与对象”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为实例属性必须预先在类体中声明后才能在 __init__ 赋值
+  - 误以为所有以双下划线开头和结尾的方法都由 Python 自动实现，无需定义
 assessment_ids:
 - PY-OOP-01-Q1
 source_refs:

@@ -2,7 +2,7 @@ id: PY-MOD-01
 title: 模块与 import
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
@@ -16,7 +16,7 @@ concepts:
 - 模块
 - 命名空间
 lesson:
-  summary: 掌握 import 与 from...import 的导入方式，理解模块的命名空间。 本节围绕“模块与 import”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握 import 与 from...import 的导入方式，理解模块的命名空间。关键要点包括：import 模块名 导入整个模块；from 模块 import 成员 导入指定成员；模块拥有独立命名空间，避免命名冲突。
   key_points:
   - import 模块名 导入整个模块
   - from 模块 import 成员 导入指定成员
@@ -24,9 +24,8 @@ lesson:
   examples:
   - import math
   common_mistakes:
-  - 使用 include、using 等非 Python 语法导入模块
-  - 忽略“模块与 import”的适用前提，直接套用结论或代码模板。
-  - 完成“模块与 import”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为import 每出现一次都会无条件重新执行模块顶层代码
+  - 误以为from module import * 能稳定导入模块未来版本的全部内部名称
 assessment_ids:
 - PY-MOD-01-Q1
 source_refs:

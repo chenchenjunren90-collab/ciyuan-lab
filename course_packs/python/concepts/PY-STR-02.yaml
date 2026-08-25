@@ -2,7 +2,7 @@ id: PY-STR-02
 title: 字符串索引与切片
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -16,17 +16,16 @@ concepts:
 - 负索引
 - 步长
 lesson:
-  summary: 掌握字符串索引（含负索引）与切片操作，理解切片起止与步长的含义。 本节围绕“字符串索引与切片”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握字符串索引（含负索引）与切片操作，理解切片起止与步长的含义。关键要点包括：索引从 0 开始，负索引从末尾倒着数；切片 s[start:end] 为左闭右开区间；切片支持步长 s[start:end:step]。
   key_points:
   - 索引从 0 开始，负索引从末尾倒着数
   - 切片 s[start:end] 为左闭右开区间
   - 切片支持步长 s[start:end:step]
   examples:
-  - s = "hello"；s[1:3] 为 "el"
+  - 代码示例：text='algorithm' 时 text[1:6:2] 得到 'loi'，原字符串不会被切片操作修改。
   common_mistakes:
-  - 以为切片包含右端点
-  - 忽略“字符串索引与切片”的适用前提，直接套用结论或代码模板。
-  - 完成“字符串索引与切片”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为切片 text[a:b] 会包含下标 b 对应的字符
+  - 误以为str.replace 会原地修改原字符串并返回 None
 assessment_ids:
 - PY-STR-02-Q1
 source_refs:

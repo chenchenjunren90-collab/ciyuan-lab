@@ -2,7 +2,7 @@ id: PY-FUNC-02
 title: 参数与返回值
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 50
 prerequisites:
@@ -16,17 +16,16 @@ concepts:
 - 默认值
 - 多返回值
 lesson:
-  summary: 掌握位置参数、关键字参数、默认参数与多返回值的用法与调用规则。 本节围绕“参数与返回值”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握位置参数、关键字参数、默认参数与多返回值的用法与调用规则。关键要点包括：位置参数按顺序绑定，关键字参数按名称绑定，调用必须满足函数签名；默认值在函数定义时求值，不能把可变对象直接作为会被修改的默认值；返回多个结果本质上是返回元组，调用方应明确每个位置的语义。
   key_points:
   - 位置参数按顺序绑定，关键字参数按名称绑定，调用必须满足函数签名。
   - 默认值在函数定义时求值，不能把可变对象直接作为会被修改的默认值。
   - 返回多个结果本质上是返回元组，调用方应明确每个位置的语义。
   examples:
-  - '代码示例：def append_item(item, items=None): items = [] if items is None else items; items.append(item);
-    return items'
+  - '代码示例：def append_item(item, items=None): items = [] if items is None else items; items.append(item); return items'
   common_mistakes:
-  - 使用 items=[] 作为可变默认值，多个调用共享同一列表。
-  - 混淆 print 和 return，导致函数难以复用和测试。
+  - 误以为位置参数可以无条件写在关键字参数之后
+  - 误以为返回多个值会创建多个独立返回通道，而不是一个元组对象
 assessment_ids:
 - PY-FUNC-02-C1
 source_refs:

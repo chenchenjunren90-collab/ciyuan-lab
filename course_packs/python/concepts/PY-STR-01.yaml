@@ -2,7 +2,7 @@ id: PY-STR-01
 title: 字符串基础
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
@@ -16,17 +16,16 @@ concepts:
 - 拼接
 - 重复
 lesson:
-  summary: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。 本节围绕“字符串基础”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。关键要点包括：字符串用单引号或双引号包裹；+ 拼接字符串，* 重复字符串；\n、\t 等转义字符表示特殊字符。
   key_points:
   - 字符串用单引号或双引号包裹
   - + 拼接字符串，* 重复字符串
   - \n、\t 等转义字符表示特殊字符
   examples:
-  - '"a" + "b" 的结果为 "ab"'
+  - 代码示例：text='data' 时 text[1] 为 'a'、len(text) 为 4；尝试 text[0]='D' 会抛出 TypeError。
   common_mistakes:
-  - 把数字和字符串直接相加导致 TypeError
-  - 忽略“字符串基础”的适用前提，直接套用结论或代码模板。
-  - 完成“字符串基础”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为字符串可以通过 text[0]='A' 原地修改字符
+  - 误以为len(text) 始终等于 UTF-8 编码后的字节数
 assessment_ids:
 - PY-STR-01-Q1
 source_refs:

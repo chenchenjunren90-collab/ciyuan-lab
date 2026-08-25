@@ -1,27 +1,25 @@
 id: DS-DESIGN-01-Q1
-title: 检查理解：分治、贪心与动态规划辨析
+title: 概念判断：分治、贪心与动态规划辨析
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: objective
 difficulty: advanced
 estimated_minutes: 5
 concept_ids:
 - DS-DESIGN-01
-prompt: 关于“分治、贪心与动态规划辨析”，下列哪项最符合本节应掌握的原则？
+prompt: 关于“分治、贪心与动态规划辨析”，下列哪项说法正确？
 source_refs:
-- SRC-DS-GUIDE-TREEGRAPH
+- SRC-DS-GUIDE-DESIGN
 evaluation:
   mode: exact
   options:
   - id: A
-    text: 依据子问题结构和选择性质匹配算法范式。
+    text: 贪心算法每步作局部选择，必须用交换论证、切分性质等证明该选择可扩展为全局最优。
   - id: B
-    text: 只需记住语法形式，不必验证边界或前置条件。
+    text: 只要每一步选择当前数值最大或最小的方案，贪心算法就必然得到全局最优解。
   - id: C
-    text: 任何实现方式的时间、空间和错误行为都完全相同。
-  - id: D
-    text: 模型生成的结论可以替代编译、运行和确定性测试。
+    text: 动态规划只需写出递归函数，无需定义状态含义和初始化边界。
   accepted_answers:
   - A
 status: draft

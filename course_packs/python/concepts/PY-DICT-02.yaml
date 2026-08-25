@@ -2,7 +2,7 @@ id: PY-DICT-02
 title: 字典遍历与常用方法
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 45
 prerequisites:
@@ -16,7 +16,8 @@ concepts:
 - values
 - 遍历
 lesson:
-  summary: 掌握字典的遍历方式与 items/keys/values 方法，能够按需遍历键值对。 本节围绕“字典遍历与常用方法”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 掌握字典的遍历方式与 items/keys/values 方法，能够按需遍历键值对。关键要点包括：keys() 返回键，values() 返回值，items() 返回键值对；for k, v in d.items() 同时遍历键和值；Python
+    3.7+ 字典保持插入顺序。
   key_points:
   - keys() 返回键，values() 返回值，items() 返回键值对
   - for k, v in d.items() 同时遍历键和值
@@ -24,9 +25,8 @@ lesson:
   examples:
   - 'for word, cnt in counts.items(): print(word, cnt)'
   common_mistakes:
-  - 遍历时边遍历边增删字典导致运行时错误
-  - 忽略“字典遍历与常用方法”的适用前提，直接套用结论或代码模板。
-  - 完成“字典遍历与常用方法”实现后只检查一个正常样例，没有验证边界和失败路径。
+  - 误以为遍历字典时可以任意增删键而不会影响迭代器
+  - 误以为dict.update 只添加新键，遇到已有键时不会覆盖原值
 assessment_ids:
 - PY-DICT-02-C1
 source_refs:

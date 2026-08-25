@@ -2,29 +2,30 @@ id: C-BASE-04
 title: 格式化输入输出
 course: c
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-BASE-03
 learning_objectives:
-- 能够解释格式化输入输出的核心规则
-- 能够运用格式化输入输出解决边界明确的问题
+- 能判断与“格式化输入输出”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“格式化输入输出”的关键状态并验证边界
 concepts:
 - 格式化输入输出
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用 printf 与 scanf 的格式说明符完成可靠交互。 本节围绕“格式化输入输出”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 printf 与 scanf 的格式说明符完成可靠交互。关键要点包括：printf 和 scanf 的格式说明符必须与实际参数类型匹配，否则可产生未定义行为；scanf 写入普通变量时通常需要传入地址，并应检查返回的成功转换项数；读取字符串时必须限制最大宽度并为终止空字符留出容量；面向整行输入时优先用
+    fgets 再解析。
   key_points:
-  - printf 的格式说明符必须匹配实参提升后的类型，scanf 还必须传入可写对象的地址。
-  - 检查 scanf 的返回值，只有成功转换的字段数符合预期时才能使用读入结果。
-  - 为字符串输入设置最大宽度，并把换行、空白和缓冲区容量纳入接口设计。
+  - printf 和 scanf 的格式说明符必须与实际参数类型匹配，否则可产生未定义行为。
+  - scanf 写入普通变量时通常需要传入地址，并应检查返回的成功转换项数。
+  - 读取字符串时必须限制最大宽度并为终止空字符留出容量；面向整行输入时优先用 fgets 再解析。
   common_mistakes:
-  - scanf 读取整数时写成 n 而不是 &n，造成无效写入。
-  - 用 %d 输出 long 或 size_t，产生类型不匹配和未定义行为。
+  - 误以为printf("%d", value) 可以安全输出任意整数或浮点类型，库会自动识别实参类型。
+  - 误以为scanf 的返回值表示读取的字符数，因此只要返回值非零就代表整行输入完全有效。
   examples:
-  - 代码示例：int n; if (scanf("%d", &n) != 1) return 1; printf("%d\n", n);
+  - 代码片段：int age; if (scanf("%d", &age) == 1) printf("age=%d\n", age); else fputs("invalid\n", stderr);
 assessment_ids:
 - C-BASE-04-Q1
 source_refs:

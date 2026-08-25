@@ -2,7 +2,7 @@ id: C-MEM-01
 title: 动态内存分配
 course: c
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,7 +15,7 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用 malloc/calloc 获取堆内存并检查失败。 本节围绕“动态内存分配”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 malloc/calloc 获取堆内存并检查失败。关键要点包括：malloc 返回未初始化的动态存储，calloc 会把分配字节置零，但都可能失败；分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出；每块成功分配的内存必须有明确所有者和唯一释放路径，失败分支同样要清理。
   key_points:
   - malloc 返回未初始化的动态存储，calloc 会把分配字节置零，但都可能失败。
   - 分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出。

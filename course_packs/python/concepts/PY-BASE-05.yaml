@@ -2,7 +2,7 @@ id: PY-BASE-05
 title: 条件语句
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 50
 prerequisites:
@@ -17,7 +17,7 @@ concepts:
 - 嵌套
 - 布尔表达式
 lesson:
-  summary: 使用 if/elif/else 根据条件选择执行路径，理解缩进对代码块的作用，并能构造多分支与嵌套判断。 本节围绕“条件语句”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 if/elif/else 根据条件选择执行路径，理解缩进对代码块的作用，并能构造多分支与嵌套判断。关键要点包括：if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块；区间判断可以使用链式比较，边界上的等号必须与题目契约一致；复杂条件优先拆成有含义的布尔变量，避免重复计算和难以测试的长表达式。
   key_points:
   - if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块。
   - 区间判断可以使用链式比较，边界上的等号必须与题目契约一致。
@@ -25,8 +25,8 @@ lesson:
   examples:
   - 代码示例：label = 'positive' if x > 0 else ('zero' if x == 0 else 'negative')
   common_mistakes:
-  - 混用制表符和空格造成缩进错误。
-  - 把多个独立 if 当作互斥分支，导致同一输入执行多段逻辑。
+  - 误以为嵌套 if 的 else 会自动与缩进距离最近但不一定同层的 if 配对
+  - 误以为多层条件可以忽略互斥边界，因为 Python 会消除重叠分支
 assessment_ids:
 - PY-BASE-05-C1
 source_refs:

@@ -2,7 +2,7 @@ id: DS-GRAPH-02
 title: 广度优先搜索
 course: data_structures
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,7 +15,7 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用队列按层访问并求无权最短路。 本节围绕“广度优先搜索”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用队列按层访问并求无权最短路。关键要点包括：BFS 用队列保存已发现但尚未展开的顶点，按距离层次访问；顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入；在无权图中首次到达顶点的层数就是最少边数距离，并可用前驱数组恢复路径。
   key_points:
   - BFS 用队列保存已发现但尚未展开的顶点，按距离层次访问。
   - 顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入。

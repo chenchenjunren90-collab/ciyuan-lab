@@ -2,7 +2,7 @@ id: PY-BASE-07
 title: for 循环与 range
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -16,7 +16,8 @@ concepts:
 - 遍历
 - 步长
 lesson:
-  summary: 使用 for 循环遍历序列，借助 range 生成指定范围的整数序列，理解 range 的起止与步长参数。 本节围绕“for 循环与 range”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
+  summary: 使用 for 循环遍历序列，借助 range 生成指定范围的整数序列，理解 range 的起止与步长参数。关键要点包括：for 直接遍历可迭代对象；range(start, stop, step) 不包含 stop；需要索引时使用
+    enumerate，需要并行遍历时使用 zip，而不是手工维护多个下标；循环前明确空输入、步长方向和聚合初值，循环后验证边界结果。
   key_points:
   - for 直接遍历可迭代对象；range(start, stop, step) 不包含 stop。
   - 需要索引时使用 enumerate，需要并行遍历时使用 zip，而不是手工维护多个下标。
@@ -24,8 +25,8 @@ lesson:
   examples:
   - 代码示例：total = sum(value for value in range(1, n + 1))
   common_mistakes:
-  - 认为 range(1, n) 会包含 n，产生少一次循环。
-  - 遍历列表时同时删除元素，造成元素被跳过。
+  - 误以为range(1,5) 会同时产生 1、2、3、4、5
+  - 误以为在遍历列表时随意删除元素不会影响后续迭代位置
 assessment_ids:
 - PY-BASE-07-C1
 source_refs:
