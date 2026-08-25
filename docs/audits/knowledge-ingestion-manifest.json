@@ -1,0 +1,1818 @@
+{
+  "schema_version": "0.1.0",
+  "snapshot_hash": "ebb762e52b5d5f1bf4540cf608f177ec585db585128b28ffe6b01b1147316ab4",
+  "eligible_count": 13,
+  "blocked_count": 120,
+  "candidates": [
+    {
+      "candidate_id": "concept:C-ARRAY-01:53ca80ea3b",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-ARRAY-01",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "53ca80ea3b0a651ff9420db7838d7066ef2b4e7350eb9f6a6e976d9d9423a10e",
+      "character_count": 446,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-ARRAY-02:b777571da7",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-ARRAY-02",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "b777571da7a06d5863009499187c3fceb6f1993d40ba60f8d5f6460996dd6c3f",
+      "character_count": 369,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-01:c711a5eea4",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-01",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "c711a5eea41db34a9476a1e570d8b213697bb32d304ba52e9345be322643c8c9",
+      "character_count": 434,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-02:e758bccb79",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-02",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "e758bccb797b51d4776f98fe640ad83a3a6cc38ef38786a93808b48cc74d888f",
+      "character_count": 415,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-03:0ab951db2e",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-03",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "0ab951db2e5951519f5154c9604f7db0774abd420417ae5934c353694e5487bc",
+      "character_count": 419,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-04:da9ba33012",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-04",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "da9ba330123c4a5250e6558e97c5599eb1f8795cd034da60fdc34646b1601bd5",
+      "character_count": 463,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-05:b2235d9b96",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-05",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "b2235d9b96940d464944c8b185798d60ac15cfbe25d713625d78b9c96e2360d1",
+      "character_count": 409,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BASE-06:1c5ee5ac19",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BASE-06",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "1c5ee5ac1931540b19328825e4c800530b589d60d10a3e01f8b9bb14747f43e2",
+      "character_count": 415,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-BIT-01:c988667745",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-BIT-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "c988667745a5c2411f08cdd63ca6f35cb8c6d890bba2473ea4209b91d584822f",
+      "character_count": 399,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-CTRL-01:09f669632a",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-CTRL-01",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "09f669632a469f8212292c70e582a89e23bd7850209acec2897d50bec9d223a6",
+      "character_count": 447,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-CTRL-02:1076a27ebb",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-CTRL-02",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "1076a27ebb255c5b0f024d2bf288217683cf2e79b9b98fb58defea9b05363802",
+      "character_count": 423,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-CTRL-03:ea3a8f070d",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-CTRL-03",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "ea3a8f070dc738166a8b58806905fbc55d5ec73f07a4b5f490d38e7c13828249",
+      "character_count": 443,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-CTRL-04:115083ac62",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-CTRL-04",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "115083ac62a3321c74bcf10d231b6fbe526a3b16dd2a63c5f8d72ea5ecbee33a",
+      "character_count": 425,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-CTRL-05:474b5c36c2",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-CTRL-05",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "474b5c36c231687aa0e6b4e2a4d0b5aec0911c3a5a1826b2e525b3cc61bb49db",
+      "character_count": 475,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-DEBUG-01:67ba439f0b",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-DEBUG-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "67ba439f0b399f47a0bb97a0813322f368e3f66c41b9e783f1ff49c08f9968e9",
+      "character_count": 378,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-ERR-01:2f591a4c70",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-ERR-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "2f591a4c70cb41f438240b3c8509ea152786017d540b63a733e51a0ace532d81",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-FUNC-01:9e8f0d9d12",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-FUNC-01",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "9e8f0d9d1283331f298f0491b1b9488a05788364335792e9537812071d3eaae4",
+      "character_count": 421,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-FUNC-02:aef99d7b26",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-FUNC-02",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "aef99d7b269e0d28841942f36e155dbff9b5e551bcb42bde8302264d17a6eb22",
+      "character_count": 405,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-FUNC-03:238fd8decf",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-FUNC-03",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "238fd8decfac28ad351dc1d4d43ae30e4bd5248e98ea1c9194d88f80c305a8ae",
+      "character_count": 425,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-FUNC-04:2edcbedd5a",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-FUNC-04",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "2edcbedd5a26a2a1be0d15ada4f6eb6a7767d99321a846433766009bcc7cafeb",
+      "character_count": 399,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-IO-01:a6ed64ca6d",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-IO-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "a6ed64ca6dafeccfa9fa4086c2ccd0406a56c85d5bc057c9a5f08ee0c39790c7",
+      "character_count": 383,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-IO-02:db5ab27790",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-IO-02",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "db5ab27790d800141b6025989fb930b678cdbc47e2019fba8ad190d6e3d4264d",
+      "character_count": 425,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-MAIN-01:4de72e17c6",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-MAIN-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "4de72e17c61536d9e411bbe159122a849d4707ce063a597497599c41c9f15546",
+      "character_count": 401,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-MEM-01:292e072fcd",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-MEM-01",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "292e072fcd010c32e73b872826fc7c8ab9027717a33b6370f1dd7fe089687938",
+      "character_count": 459,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-MEM-02:5f2eec0b3d",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-MEM-02",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "5f2eec0b3dffcdf0ee5320b80c3264be533c5c94a5be5070aa00de0324477840",
+      "character_count": 463,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-MEM-03:a8dccad6ae",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-MEM-03",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "a8dccad6ae13d2edf65a515345c5092994147b34e11334cd9c29ecadcb61fef1",
+      "character_count": 435,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-MOD-01:6a19fc02e7",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-MOD-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "6a19fc02e715b57c5228b63d81d6a5a82e6a0a30a67c5e6f5d35c42ca3017dfd",
+      "character_count": 413,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-PP-01:a3937c6314",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-PP-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "a3937c63140087806f5c663519400d9efbec51a5610fe185eb4c682141c82fc1",
+      "character_count": 413,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-PTR-01:9f91db27e3",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-PTR-01",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "9f91db27e353236b4bcdd3c5adf55892c0a2cc7e4465ed6c35dad0e69849c9ad",
+      "character_count": 422,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-PTR-02:9aa029c783",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-PTR-02",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "9aa029c7832d6e2b99af56c3d0e1a2ed5e9d2195a83d89f38804edbe702d96c2",
+      "character_count": 407,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-PTR-03:53d6f38a35",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-PTR-03",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "53d6f38a35be35a9cd5fee0c84f824cad6be95957992f06cc5a4d0ee24e86edc",
+      "character_count": 409,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-PTR-04:2eb2337f98",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-PTR-04",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "2eb2337f989e04cbd1d2598617d73a7ed8a8dc3046af6e3d09f20be9ba9bde99",
+      "character_count": 393,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-QUAL-01:324dd3444d",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-QUAL-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "324dd3444d713003db6bbc73526b9f246f2e70f2eee7d9a0ea245f02b961ae35",
+      "character_count": 429,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-STR-01:66d49b059b",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-STR-01",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "66d49b059b39c2e1e68d2d31db928d8c7f99e9d17a1d55e393b3c0c899943192",
+      "character_count": 440,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-STR-02:cc0dbd752c",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-STR-02",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "cc0dbd752caa1ef4ba6afca5b6192a762409710d3a4cddafd4fe60bede998ca7",
+      "character_count": 411,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-TEST-01:5b631589ec",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-TEST-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "5b631589ec2c49a0b3fa30123b1ac769b00347e97981714a2414bf29b196241d",
+      "character_count": 389,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-TYPE-01:6d4342f6fc",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-TYPE-01",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "6d4342f6fc4d2fb685249519b6e841fa26a454b90024b38bf8389130290bb6ad",
+      "character_count": 439,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-TYPE-02:0989e8b60b",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-TYPE-02",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "0989e8b60b33b753aca40f1cae634238a06fc174868ff0b2a7fd01858253dca4",
+      "character_count": 415,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-TYPE-03:d035ca4e18",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-TYPE-03",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "d035ca4e1820bf580bcea506171e36a8283007920422d0a5959902714a20b3cb",
+      "character_count": 385,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-TYPE-04:aac5892ee1",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-TYPE-04",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "aac5892ee17d816f706c911bec09d7e6d57c0177a07cd165571562a19c37968b",
+      "character_count": 435,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-DESIGN-01:170988d2fc",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-DESIGN-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "170988d2fcbcc137fa616ce4a397d4b13690928e9c9db9d744880ce33bf5d6ff",
+      "character_count": 425,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-EVAL-01:ce0a611422",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-EVAL-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "ce0a6114229ace040d73040ca87032cbd6049645fa570b090cfae3cb764906a2",
+      "character_count": 423,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-FOUND-01:dd38b06f1d",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-FOUND-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-FOUND"
+      ],
+      "content_hash": "dd38b06f1d75cb08c6b21a6f3c9309d57824d3899f2d1ba22770bbe5aeb32ba0",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-FOUND-02:bf79f1974c",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-FOUND-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-FOUND"
+      ],
+      "content_hash": "bf79f1974c082126cd15fca47efcfc79778b734676d7de2ccf72f554f3d9123b",
+      "character_count": 372,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-FOUND-03:25213c62ad",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-FOUND-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-FOUND"
+      ],
+      "content_hash": "25213c62adf343ebeeee0dc204be135a1f1dc24d1c5f77f98bf3157dfcaafb43",
+      "character_count": 370,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-FOUND-04:12e9a9ee4b",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-FOUND-04",
+      "source_ids": [
+        "SRC-DS-GUIDE-FOUND"
+      ],
+      "content_hash": "12e9a9ee4bc7e7d48a5b0445f4b6f8f3cb1141b78214076859c9180c2579ba5e",
+      "character_count": 389,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-01:95c7b398ad",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "95c7b398ad4229ffc0461c083bf5518c90d6c95c6d057b79bd030e1f89f78a65",
+      "character_count": 385,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-02:6688a620d3",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "6688a620d30bfa1a387b3bcf0497a0e3f9edc5dc53f14a583f1cae81f5132d8c",
+      "character_count": 365,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-03:71f776e2c4",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "71f776e2c43a73cc20591211e4d9d3cd13afde4d13a4e739aea69defd5094c34",
+      "character_count": 391,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-04:4e484c9e8f",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-04",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "4e484c9e8fdf63274c578b27002e08fe2440052399f68651576f0b32f79111a2",
+      "character_count": 377,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-05:f6dd2d61e4",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-05",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "f6dd2d61e4fa96dd55091f14ce461c687ae6b83397dac592db799d00a38c5f2e",
+      "character_count": 422,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-GRAPH-06:721adda2d7",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-GRAPH-06",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "721adda2d7f20233586978ed11ebd45e214c697a8f0bb97782d0076455735ff6",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-HASH-01:92eaf2c5f8",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-HASH-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "92eaf2c5f8883b301d64962e05123986df93f91fd244cc3061e9db99f8f48e47",
+      "character_count": 366,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-HASH-02:e79499232f",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-HASH-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "e79499232f55bbc0daffb58a5aa23b416f1d2d60cd3b06f886ed4d0d7ccec3e9",
+      "character_count": 393,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-HEAP-01:9b74b4c882",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-HEAP-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "9b74b4c882fb959ee4e974051d710b9137d26753f67cef038382354438d6ae83",
+      "character_count": 363,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-HEAP-02:37db050a19",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-HEAP-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "37db050a19125803cfce655c1b77fc906fb22a071a4b1b15bc30234dc9a97c31",
+      "character_count": 373,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-LINEAR-01:b8919adddc",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-LINEAR-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "b8919adddca59253f87838c8eb8e5a402dcf4f723987c279983675671c7cb60e",
+      "character_count": 375,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-LINEAR-02:fa13cb626e",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-LINEAR-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "fa13cb626e613b2d3af396d5e8d76abd97e0df06978fce0d104da620e9ddc9ca",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-LINEAR-03:6de261c5d6",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-LINEAR-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "6de261c5d69626b517b3c5cdb41f898f614fe5accbfed857bb6315e2cc1729f2",
+      "character_count": 377,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-LINEAR-04:84db6490ab",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-LINEAR-04",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "84db6490abffbecf8f2302e9ccc69012f035e0a6f0acc40fafe9db24f570973a",
+      "character_count": 387,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-LINEAR-05:93aef86151",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-LINEAR-05",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "93aef86151c16feab515d01fbb7b4380350a794653e9ff3e328737d4b7f3b5f2",
+      "character_count": 421,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-MAP-01:076d17750e",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-MAP-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "076d17750e93c6548095d76ae6459e3400b203a999266de13c41bde50448f550",
+      "character_count": 393,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-QUEUE-01:2be1aa8492",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-QUEUE-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "2be1aa849213a9623d14418fc3ad0aec9c45d9745427f40c6219754c2bd29d57",
+      "character_count": 418,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-QUEUE-02:ce9218107c",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-QUEUE-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "ce9218107c6c26b2bc3ba4f2f795d14ed215f06a66f678432e235d161107234e",
+      "character_count": 375,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-QUEUE-03:01b8d1ef77",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-QUEUE-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "01b8d1ef7714e25de3deac2186f7d001505516bacc37cee0d2ee1a1e9e445ba7",
+      "character_count": 377,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SEARCH-01:af308a8c56",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SEARCH-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "af308a8c5657ff7faec460966abeb9c8a9f806f1b9c53ced869e88ee2911c1fc",
+      "character_count": 373,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SEARCH-02:16f02fa7bf",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SEARCH-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "16f02fa7bf0add6dbab44c7868b4c29a96b1dcf9bd9b599ac9583ed62877ca3f",
+      "character_count": 392,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SET-01:7c63114726",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SET-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "7c63114726905cce37fb6e1b7d39e8f34e9d1821d27f4e75be4105f155837364",
+      "character_count": 371,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-01:6e1857f0fe",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "6e1857f0fe5d43c23210b72feacd11287bf4435877b1e4a018849288d7da9ab6",
+      "character_count": 419,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-02:1bdf50c5ad",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "1bdf50c5ad78897f9a6b410b7967cb0b66fa44f41baab60935fc91f709c6fecb",
+      "character_count": 377,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-03:d283c2b0de",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "d283c2b0def48722196e6e25713cff3a4b39d9036bfa4b9cd6a4398db65f5647",
+      "character_count": 405,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-04:bdd0f5d9c9",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-04",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "bdd0f5d9c923b6198b4aae7fb466554f1e213df0bdb3a1da7464d8cc493218f9",
+      "character_count": 374,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-05:574b135eb0",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-05",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "574b135eb03707b3c3f129236e0ee85440e20412c7f341f9ed574972250a6d45",
+      "character_count": 373,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-SORT-06:7c23db8174",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-SORT-06",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "7c23db8174d136aefe058911acede131a67afb76f7ec1bb3257c942da34c287e",
+      "character_count": 387,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-STACK-01:1bd6eb2761",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-STACK-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "1bd6eb27612e4e9b2d9024b65794a99163d84d507122d9fc251dd3f7909c7d52",
+      "character_count": 350,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-STACK-02:43fea8edf4",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-STACK-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "43fea8edf4a2e55bbbf89dc33afa908d09dbb5003d1b7f042004085a76998e8a",
+      "character_count": 407,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-TREE-01:e148e0dcd3",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-TREE-01",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "e148e0dcd366afb59998991d06f87c9ddfd760eb983f705119af0932a351266a",
+      "character_count": 413,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-TREE-02:040e1458fe",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-TREE-02",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "040e1458fe71077c82d7536a49019d171d45a8387c7104a593be4586acd4b51f",
+      "character_count": 379,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-TREE-03:aae01ec3fc",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-TREE-03",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "aae01ec3fc4fbc9b260ff7ebf2bcef0eaff92ee1ad96fc36c5a1d5abe86556f7",
+      "character_count": 388,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:DS-TREE-04:f3c2c11bec",
+      "course_id": "data_structures",
+      "record_type": "concept_preview",
+      "record_id": "DS-TREE-04",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "f3c2c11bece01611cb7954a922c1fffeb15e0b5dfd475d138850818cf173dc1d",
+      "character_count": 393,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-ALGO-01:98837cc72e",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-ALGO-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "98837cc72e3ebbf8d4a51c557e2c3b3094c7fdd0c7ba85968b0dcecf15aa9978",
+      "character_count": 456,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-ALGO-02:5bc27cb885",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-ALGO-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "5bc27cb88595e8463c2ea46b882ad69806306b8fb15d75e1d17feb88cd32388a",
+      "character_count": 374,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-01:c462292592",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "c462292592ffef96a64e3d28e2bb647e9ff2d4898589046b88beebe1fbfd06d5",
+      "character_count": 459,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-02:923f802b86",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "923f802b860cc4e0890c0e6289a578553dafb96c9095dd45191e635f3a2354a3",
+      "character_count": 469,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-03:6872af8cfc",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-03",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "6872af8cfc2ae6fcec9dcf60bf1405f6ff0929a37eaa752027b46b96269f27a8",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-04:148f65aeb8",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-04",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "148f65aeb8b77069b20783e098a53398fca15e99e6d05bb735a9e8ce4f8600fe",
+      "character_count": 441,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-05:db6cd8f423",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-05",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "db6cd8f423d79c31f1123bf771aa622d456a1c33c045a1e0d70edc4a1aabefe5",
+      "character_count": 444,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-06:a9f07b973d",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-06",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "a9f07b973d96031809a5c24b29f905ac0c9d648bbb0da322b178b602d522eb86",
+      "character_count": 414,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-07:9e96892450",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-07",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "9e9689245085e0007b07dd4e1ba35adb763d2ef5cb7adc07b0e1c13704ba58f1",
+      "character_count": 460,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-08:f8346414db",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-08",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "f8346414dbbdcf244d3347a8bb9f03843bc362b2cf4aebca706d68a0e5e01d63",
+      "character_count": 484,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-09:cf53fa07bc",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-09",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "cf53fa07bcf17b4125874173ee1dd7d8f564eb2ac8d35ac23eaec267a63aa102",
+      "character_count": 418,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-BASE-10:cd3a1b25ec",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-BASE-10",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "cd3a1b25ec94bcc93abfae2321aebba8c49bede9aa92b2d7bf812639f816f425",
+      "character_count": 375,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-CONTAINER-01:c46eabf0b8",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-CONTAINER-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "c46eabf0b89bba5ce646bc43050761753fe16566a7f1308dd64c90e0ec0f3d55",
+      "character_count": 395,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-DATA-01:72b775c230",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-DATA-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-DATA"
+      ],
+      "content_hash": "72b775c230f0c7b1235b0d786ec4903e342f21fc19a48a905ecd55098065368f",
+      "character_count": 405,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-DATA-02:a0ab702041",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-DATA-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-DATA"
+      ],
+      "content_hash": "a0ab702041a41aa575994f44eedf2939e446278b565158f41cbe99a944c4103a",
+      "character_count": 387,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-DICT-01:4577e50454",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-DICT-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "4577e504546b4a40329d55e7b87166ffbcb461967bf8b1f9c32d4eccbd7ff009",
+      "character_count": 435,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-DICT-02:ea852ad878",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-DICT-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "ea852ad8784cdc6188ad1d5c69513232ce138f48d1bd9db69fe911593212d477",
+      "character_count": 449,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-EXC-01:27778d3825",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-EXC-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "27778d3825d332620799fe33212d22fa41505762018b95dba21dca0d672987ea",
+      "character_count": 451,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-EXC-02:ec2e9b4b2e",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-EXC-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "ec2e9b4b2e98a71d765859daa86f8654504a7bef3eeefd81383f90a691e61d71",
+      "character_count": 393,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FILE-01:fe9343e1a8",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FILE-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "fe9343e1a84e649f99a382ddee1282497e012f696363aac0b95712060c2bb4d9",
+      "character_count": 417,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FILE-02:46a36c86ee",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FILE-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "46a36c86ee756c193f8f1c05433c1c3b273db839082a187ddfac5b4d13fb4953",
+      "character_count": 440,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FILE-03:2080852a44",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FILE-03",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "2080852a445fa1c215cfbcc9f7197642c05dcaf8e855dd8033a6b57ce4a14d47",
+      "character_count": 409,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FILE-04:8f5818a2ed",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FILE-04",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "8f5818a2ed3a7cdd237a31e103135399c275f843cc5895804b0a6661b0285a28",
+      "character_count": 403,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FUNC-01:4e59c41fa6",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FUNC-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "4e59c41fa64823d476b795daa367997b5a64b9699c52e08aa9dd66fbf7c32465",
+      "character_count": 419,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FUNC-02:de19c82e51",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FUNC-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "de19c82e51b6fcfc9a9f018577cdf94c1eb6f74df342d74fe0902ca4e3d7c713",
+      "character_count": 475,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FUNC-03:050aa57e9c",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FUNC-03",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "050aa57e9c4f3d496dcda9036405b5b0f6a6cc022fb90140f37b8439413d5df2",
+      "character_count": 394,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FUNC-04:9415694f47",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FUNC-04",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "9415694f476f37d02fb39cc1fb01a23e4e5c1d757293341413e0e44e2348d030",
+      "character_count": 405,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-FUNC-05:c29b110659",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-FUNC-05",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "c29b11065936711e8ac65f1a36afff904a7e41e1764b22d375a06a53b94332e5",
+      "character_count": 440,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-ITER-01:c9ef80d78c",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-ITER-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "c9ef80d78cfb54f61278711f3295b02b12da0bd7f96ffcf956d719db5d340038",
+      "character_count": 441,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-LIST-01:f9e3436778",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-LIST-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "f9e3436778d1809d5d35508e4e3c66f77b3d42f70b6a477ef843e52ef2c40f91",
+      "character_count": 429,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-LIST-02:9cdbb9e026",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-LIST-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "9cdbb9e02627f27d08d45714b64a97f3c374b2da6fd80b41d3ee6f89a44bf119",
+      "character_count": 429,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-LIST-03:aea73fe9d5",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-LIST-03",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "aea73fe9d5af2350e5a478a4d3cc03e4a63bab8dfb9132f6049c545a27db7610",
+      "character_count": 382,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-MOD-01:785da53eb8",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-MOD-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "785da53eb8a9dadbb34182564ed7e36b03f89f35423d311b5b743fbc4fd04cc9",
+      "character_count": 401,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-MOD-02:3154d4db1a",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-MOD-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "3154d4db1a32b9c987632d46bd7938eb7042fd36caaf61323bf158a49a2ccf7f",
+      "character_count": 398,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-OOP-01:d98cea3222",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-OOP-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "d98cea3222d487da0e55118579fadcd7243fbccdd3b9d4996b8d0762df13901d",
+      "character_count": 444,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-SET-01:f399f8d4cd",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-SET-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "f399f8d4cd00a744387641df033cb1570808b165b73ba615a78a4ab020ff1ca4",
+      "character_count": 366,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-STR-01:64e8c172c3",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-STR-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "64e8c172c34971fec4d43c7c1b3f172edb7fe69b3c3c24e8ea8df58916451e74",
+      "character_count": 368,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-STR-02:23926f7533",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-STR-02",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "23926f753347c10f2878c2c7eec4e641e7358b0d9a7c59980107cf3649ee14e9",
+      "character_count": 386,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-STR-03:a118231fdf",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-STR-03",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-REF",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "a118231fdf4b41d74e469323b5fd76ed91b409e71d84cd78b67403ba7e9df37c",
+      "character_count": 440,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:PY-TUPLE-01:b4719819d6",
+      "course_id": "python",
+      "record_type": "concept_preview",
+      "record_id": "PY-TUPLE-01",
+      "source_ids": [
+        "SRC-PY-OUTLINE-01",
+        "SRC-PY-OFFICIAL-TUTORIAL",
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "b4719819d6878d8b5b34159a47ee5bf2cdf5c8c9ba4829e92be2b4f665cb2079",
+      "character_count": 366,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "source:SRC-C-GUIDE-BASE:001:a5b1a0c2d1",
+      "course_id": "c",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-C-GUIDE-BASE",
+      "source_ids": [
+        "SRC-C-GUIDE-BASE"
+      ],
+      "content_hash": "a5b1a0c2d1ed37e680f5260c5a6d2fbd459b6d67900be801fa015d8c1907df4a",
+      "character_count": 112,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-C-GUIDE-CONTROL:001:e4f27ed0b7",
+      "course_id": "c",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-C-GUIDE-CONTROL",
+      "source_ids": [
+        "SRC-C-GUIDE-CONTROL"
+      ],
+      "content_hash": "e4f27ed0b7160098979afd510ea8db2ab08ab572f1c89f5674e1d10c59b234f1",
+      "character_count": 98,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-C-GUIDE-ENGINEERING:001:c07bcb22ae",
+      "course_id": "c",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-C-GUIDE-ENGINEERING",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "c07bcb22ae8187d106ca5aef7b50dafcb26ebd77f60df001acc9bcdfc91489b2",
+      "character_count": 106,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-C-GUIDE-MEMORY:001:f30c3e400b",
+      "course_id": "c",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-C-GUIDE-MEMORY",
+      "source_ids": [
+        "SRC-C-GUIDE-MEMORY"
+      ],
+      "content_hash": "f30c3e400b63f3cb7a172ef7e14a4087e53818da8e97dbd83ca4f3b9bba12632",
+      "character_count": 120,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-DS-GUIDE-FOUND:001:e356632251",
+      "course_id": "data_structures",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-DS-GUIDE-FOUND",
+      "source_ids": [
+        "SRC-DS-GUIDE-FOUND"
+      ],
+      "content_hash": "e356632251c904713eae2580359dd02ed5f9792d579985123980b5d074355b71",
+      "character_count": 85,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-DS-GUIDE-LINEAR:001:444692388d",
+      "course_id": "data_structures",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-DS-GUIDE-LINEAR",
+      "source_ids": [
+        "SRC-DS-GUIDE-LINEAR"
+      ],
+      "content_hash": "444692388d03b394129ae3d159991fe663407f6ca3665b12d4d4cfbb7ccdc766",
+      "character_count": 93,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-DS-GUIDE-SORTSEARCH:001:05036b2391",
+      "course_id": "data_structures",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-DS-GUIDE-SORTSEARCH",
+      "source_ids": [
+        "SRC-DS-GUIDE-SORTSEARCH"
+      ],
+      "content_hash": "05036b2391a846688b534e1df313575db96dc6a2b2048187a4d7da07eff18969",
+      "character_count": 91,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-DS-GUIDE-TREEGRAPH:001:61e498ca2e",
+      "course_id": "data_structures",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-DS-GUIDE-TREEGRAPH",
+      "source_ids": [
+        "SRC-DS-GUIDE-TREEGRAPH"
+      ],
+      "content_hash": "61e498ca2e9d1f56b18b6a4ab2ef47bdf2e4c4cbce10c7e5955c6e0760e4eaaa",
+      "character_count": 98,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-GUIDE-BASE:001:f9f8202309",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-GUIDE-BASE",
+      "source_ids": [
+        "SRC-PY-GUIDE-BASE"
+      ],
+      "content_hash": "f9f820230971fced8cd2fa4684ee0f3a65867387380b4d83624ff2564044bdac",
+      "character_count": 101,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-GUIDE-CASE-FALLBACK:001:821f64578f",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-GUIDE-CASE-FALLBACK",
+      "source_ids": [
+        "SRC-PY-GUIDE-CASE-FALLBACK"
+      ],
+      "content_hash": "821f64578f30bcebbac1f78eed8c6b386cc5c6dbbd2f216944d120072bd5030f",
+      "character_count": 89,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-GUIDE-DATA:001:5d8a4cd66a",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-GUIDE-DATA",
+      "source_ids": [
+        "SRC-PY-GUIDE-DATA"
+      ],
+      "content_hash": "5d8a4cd66a02fc82531f0eb821666a233756a123986a932bff8514b01a6d7254",
+      "character_count": 104,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-GUIDE-ENGINEERING:001:1ca1fdbc68",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-GUIDE-ENGINEERING",
+      "source_ids": [
+        "SRC-PY-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "1ca1fdbc6861f4299c8455fcd45575b89e79ddaf859045a106eda078f8fab39f",
+      "character_count": 99,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-GUIDE-FUNCTIONS:001:8a7fa63dcc",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-GUIDE-FUNCTIONS",
+      "source_ids": [
+        "SRC-PY-GUIDE-FUNCTIONS"
+      ],
+      "content_hash": "8a7fa63dcc92d2ab0facfb16484242f107704d2aab42dcc243a48e09c0747904",
+      "character_count": 89,
+      "eligible": true,
+      "blocked_reason": null
+    }
+  ]
+}
