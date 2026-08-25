@@ -60,6 +60,12 @@ class ScenarioContextService:
                 )
             except ModelError:
                 return self._fixed_context(course_id, project, "fallback")
+            allowed_source_refs = set([*project.source_refs, *project.fallback_source_refs])
+            verified_source_refs = [
+                source_ref
+                for source_ref in response.source_refs
+                if source_ref in allowed_source_refs
+            ]
             return ScenarioContext(
                 project_id=project.id,
                 course_id=course_id,
@@ -67,7 +73,7 @@ class ScenarioContextService:
                 provider_status="live",
                 context=response.context,
                 constraints=list(response.constraints) or project.requirements,
-                source_refs=list(response.source_refs),
+                source_refs=verified_source_refs or project.source_refs,
                 data_classification=project.data_classification,
                 notice=(
                     "驼灵仅补充脱敏经管背景与约束；编程目标、代码验证和评分规则仍由本平台确定。"

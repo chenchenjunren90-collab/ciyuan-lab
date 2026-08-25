@@ -30,6 +30,7 @@ class Settings(BaseSettings):
 
     xfyun_spark_base_url: str = "https://spark-api-open.xf-yun.com/agent/v1"
     xfyun_spark_app_id: SecretStr = SecretStr("")
+    xfyun_spark_api_password: SecretStr = SecretStr("")
     xfyun_spark_api_key: SecretStr = SecretStr("")
     xfyun_spark_api_secret: SecretStr = SecretStr("")
     tuoling_base_url: str = ""

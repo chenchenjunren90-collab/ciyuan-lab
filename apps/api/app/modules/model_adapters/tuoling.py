@@ -151,10 +151,18 @@ class TuolingScenarioAdapter:
         context = data.get("context")
         if not isinstance(context, str) or not context.strip():
             raise ModelUpstreamError("Tuoling response is missing scenario context")
+        if len(context) > 8_000:
+            raise ModelUpstreamError("Tuoling scenario context exceeds the size limit")
+        constraints = TuolingScenarioAdapter._string_tuple(data.get("constraints"))
+        source_refs = TuolingScenarioAdapter._string_tuple(data.get("source_refs"))
+        if len(constraints) > 20 or any(len(item) > 500 for item in constraints):
+            raise ModelUpstreamError("Tuoling constraints exceed the size limit")
+        if len(source_refs) > 50 or any(len(item) > 120 for item in source_refs):
+            raise ModelUpstreamError("Tuoling source references exceed the size limit")
         return TuolingScenarioResponse(
             context=context.strip(),
-            constraints=TuolingScenarioAdapter._string_tuple(data.get("constraints")),
-            source_refs=TuolingScenarioAdapter._string_tuple(data.get("source_refs")),
+            constraints=constraints,
+            source_refs=source_refs,
         )
 
     @staticmethod

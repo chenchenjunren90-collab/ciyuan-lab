@@ -17,12 +17,14 @@ def build_model_adapter(settings: Settings) -> ModelAdapter:
     Otherwise a fixed Mock adapter is returned unless fallback is disabled,
     in which case a configuration error is raised.
     """
+    api_password = settings.xfyun_spark_api_password.get_secret_value().strip()
     api_key = settings.xfyun_spark_api_key.get_secret_value().strip()
     api_secret = settings.xfyun_spark_api_secret.get_secret_value().strip()
 
-    if api_key and api_secret:
+    if api_password or (api_key and api_secret):
         return XfyunSparkAdapter(
             base_url=settings.xfyun_spark_base_url,
+            api_password=api_password,
             api_key=api_key,
             api_secret=api_secret,
             model=settings.xfyun_spark_model,
