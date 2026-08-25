@@ -2,7 +2,7 @@ id: PY-DATA-01
 title: 数据清洗基础
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 60
 prerequisites:
@@ -17,18 +17,20 @@ concepts:
 - 去重
 - 数据清洗
 lesson:
-  summary: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。
+  summary: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。 本节围绕“数据清洗基础”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 清洗规则应完全确定、可复现，而非靠主观判断
-  - 缺失值、空串、非数字与越界值分别处理
-  - 去重与类型转换是清洗的常见环节
+  - 数据清洗先定义字段、类型、缺失值、重复记录和异常范围，再编写转换规则。
+  - 每条规则保留原值、处理结果和失败原因，避免无法追溯的静默修改。
+  - 课程中的财经字段只提供脱敏业务语义，评分仍以解析、校验、测试和代码结构为核心。
   examples:
-  - 'if raw == "": skip；try int(raw) except ValueError'
+  - 示例：把空字符串收入标为 missing，把负成本记录为 invalid，并输出对应行号。
   common_mistakes:
-  - 清洗规则不明确，导致边界值处理不一致
+  - 直接删除所有异常行而不记录数量和原因。
+  - 用业务结论替代对数据类型、缺失和边界的程序验证。
 assessment_ids:
 - PY-DATA-01-C1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-DATA
 status: draft

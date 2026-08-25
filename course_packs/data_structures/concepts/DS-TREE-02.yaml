@@ -2,7 +2,7 @@ id: DS-TREE-02
 title: 二叉树遍历
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 实现前序、中序、后序和层序遍历。
+  summary: 实现前序、中序、后序和层序遍历。 本节围绕“二叉树遍历”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 实现前序、中序、后序和层序遍历。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 前序按根左右、中序按左根右、后序按左右根访问，层序使用队列逐层访问。
+  - 递归遍历的空树是直接返回的基本情形，显式栈实现要保存尚未处理的路径。
+  - 每个结点恰好访问一次，因此遍历时间为 Θ(n)，递归空间取决于树高。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 把访问根结点的位置写错，导致三种深度遍历结果相同。
+  - 忽略极度倾斜树的递归深度风险。
+  examples:
+  - 示例：根A、左子B、右子C的前序为 A B C，中序为 B A C，后序为 B C A。
 assessment_ids:
 - DS-TREE-02-Q1
 source_refs:

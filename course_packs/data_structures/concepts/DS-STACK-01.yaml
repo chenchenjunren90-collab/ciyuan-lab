@@ -2,7 +2,7 @@ id: DS-STACK-01
 title: 栈及其不变量
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 实现后进先出操作并维护栈顶边界。
+  summary: 实现后进先出操作并维护栈顶边界。 本节围绕“栈及其不变量”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 实现后进先出操作并维护栈顶边界。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 栈只在同一端压入和弹出，保持后进先出顺序。
+  - 数组实现维护 top 边界，链式实现维护栈顶结点；空栈弹出必须有明确策略。
+  - 调用栈、括号匹配和深度优先过程都依赖尚未完成任务的逆序恢复。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 遇到任意右括号都只弹栈，不检查括号类型。
+  - 空栈时仍读取栈顶元素。
+  examples:
+  - 示例：扫描 '([])' 时遇到左括号压栈，右括号必须与当前栈顶类型匹配。
 assessment_ids:
 - DS-STACK-01-C1
 source_refs:

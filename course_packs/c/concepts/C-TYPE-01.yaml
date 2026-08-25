@@ -2,7 +2,7 @@ id: C-TYPE-01
 title: 结构体定义与成员访问
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用结构体组合相关字段并通过点运算符访问。
+  summary: 使用结构体组合相关字段并通过点运算符访问。 本节围绕“结构体定义与成员访问”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 使用结构体组合相关字段并通过点运算符访问。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 结构体把不同类型但属于同一实体的字段组合为一个对象。
+  - 普通对象使用点运算符访问成员，结构体指针使用箭头运算符访问成员。
+  - 初始化时明确每个字段含义，跨文件共享结构体声明时放入受保护的头文件。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 复制字符串字段时忽略数组容量，覆盖相邻成员。
+  - 改变结构体字段后仍按旧的二进制布局读写文件。
+  examples:
+  - 代码示例：struct Student { char name[16]; int score; }; struct Student s = {.name = "Li", .score = 90};
 assessment_ids:
 - C-TYPE-01-C1
 source_refs:

@@ -2,7 +2,7 @@ id: C-CTRL-01
 title: if 条件分支
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 把互斥业务规则表达为边界清晰的条件分支。
+  summary: 把互斥业务规则表达为边界清晰的条件分支。 本节围绕“if 条件分支”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 把互斥业务规则表达为边界清晰的条件分支。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径。
+  - 互斥区间应从边界值开始设计，例如负数、零和正数必须完整且不重叠。
+  - 复杂条件先命名中间布尔含义，并利用短路求值保护除法或指针解引用。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 把比较写成赋值，例如 if (x = 0)，导致条件和变量同时被改变。
+  - 只测试典型正数，没有覆盖等号对应的边界值。
+  examples:
+  - 代码示例：if (x > 0) puts("positive"); else if (x == 0) puts("zero"); else puts("negative");
 assessment_ids:
 - C-CTRL-01-C1
 source_refs:

@@ -2,7 +2,7 @@ id: DS-SORT-04
 title: 归并排序
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用分治和线性归并获得稳定的 O(n log n) 排序。
+  summary: 使用分治和线性归并获得稳定的 O(n log n) 排序。 本节围绕“归并排序”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 使用分治和线性归并获得稳定的 O(n log n) 排序。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 归并排序递归地把序列分半，分别排序后在线性时间内合并两个有序段。
+  - 合并时相等元素优先取左段可以保持稳定性。
+  - 时间复杂度为 Θ(n log n)，典型数组实现需要 Θ(n) 辅助空间。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 合并结束后忘记复制某一侧剩余元素。
+  - 递归区间没有严格缩小，导致无限递归。
+  examples:
+  - 示例：合并 [2,5] 与 [1,4,6] 时依次比较段首，得到 [1,2,4,5,6]。
 assessment_ids:
 - DS-SORT-04-C1
 source_refs:

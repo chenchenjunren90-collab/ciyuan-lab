@@ -2,7 +2,7 @@ id: C-CTRL-04
 title: for 循环与计数模式
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 用初始化、条件和更新表达确定次数的迭代。
+  summary: 用初始化、条件和更新表达确定次数的迭代。 本节围绕“for 循环与计数模式”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 用初始化、条件和更新表达确定次数的迭代。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - for 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行。
+  - 计数循环应明确闭区间或半开区间，数组遍历通常使用 0 <= i < n。
+  - 循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 把 i < n 写成 i <= n 后访问 a[n]，发生越界。
+  - 更新方向与终止条件相反，循环永远无法结束。
+  examples:
+  - 代码示例：long long sum = 0; for (int i = 1; i <= n; ++i) sum += i;
 assessment_ids:
 - C-CTRL-04-C1
 source_refs:

@@ -2,7 +2,7 @@ id: DS-GRAPH-01
 title: 图与邻接表示
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 根据稀疏程度选择邻接表或邻接矩阵。
+  summary: 根据稀疏程度选择邻接表或邻接矩阵。 本节围绕“图与邻接表示”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
   - 根据稀疏程度选择邻接表或邻接矩阵。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 使用“图与邻接表示”时必须写清输入、状态和失败条件，不能只记语法或模板。
+  - 通过“图与邻接表示”的关联练习分别验证常规输入、边界输入和错误输入。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 忽略“图与邻接表示”的适用前提，直接套用结论或代码模板。
+  - 完成“图与邻接表示”实现后只检查一个正常样例，没有验证边界和失败路径。
+  examples:
+  - 示例：为“图与邻接表示”写出一个最小正常样例和一个边界样例，并逐步记录状态变化。
 assessment_ids:
 - DS-GRAPH-01-Q1
 source_refs:

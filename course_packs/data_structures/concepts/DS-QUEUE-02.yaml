@@ -2,7 +2,7 @@ id: DS-QUEUE-02
 title: 循环队列
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 通过模运算复用数组空间并区分空与满。
+  summary: 通过模运算复用数组空间并区分空与满。 本节围绕“循环队列”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 通过模运算复用数组空间并区分空与满。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 循环队列用模运算让队首和队尾在数组末端后回到开头。
+  - 必须通过保留空槽、记录元素数或额外标志区分 front==rear 时的空与满。
+  - 入队先检查容量，出队先检查空状态，操作后再更新对应索引。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 把 front==rear 同时解释为空和满，状态不可判定。
+  - 索引递增后不取模，最终越过数组边界。
+  examples:
+  - 示例：容量5且采用保留空槽时，(rear+1)%5==front 表示队列已满。
 assessment_ids:
 - DS-QUEUE-02-Q1
 source_refs:

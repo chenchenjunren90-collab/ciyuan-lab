@@ -2,7 +2,7 @@ id: PY-BASE-03
 title: 运算符与表达式
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -16,7 +16,7 @@ concepts:
 - 逻辑运算
 - 优先级
 lesson:
-  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。
+  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。 本节围绕“运算符与表达式”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
   - 算术运算符包括 + - * / // % **，其中 // 是整除
   - 比较运算符返回布尔值，逻辑运算符 and/or/not 用于组合条件
@@ -25,10 +25,13 @@ lesson:
   - 7 // 2 的结果为 3
   common_mistakes:
   - 把整除 // 与普通除法 / 混为一谈
+  - 忽略“运算符与表达式”的适用前提，直接套用结论或代码模板。
+  - 完成“运算符与表达式”实现后只检查一个正常样例，没有验证边界和失败路径。
 assessment_ids:
 - PY-BASE-03-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
 status: draft

@@ -2,7 +2,7 @@ id: C-BASE-04
 title: 格式化输入输出
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 使用 printf 与 scanf 的格式说明符完成可靠交互。
+  summary: 使用 printf 与 scanf 的格式说明符完成可靠交互。 本节围绕“格式化输入输出”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 使用 printf 与 scanf 的格式说明符完成可靠交互。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - printf 的格式说明符必须匹配实参提升后的类型，scanf 还必须传入可写对象的地址。
+  - 检查 scanf 的返回值，只有成功转换的字段数符合预期时才能使用读入结果。
+  - 为字符串输入设置最大宽度，并把换行、空白和缓冲区容量纳入接口设计。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - scanf 读取整数时写成 n 而不是 &n，造成无效写入。
+  - 用 %d 输出 long 或 size_t，产生类型不匹配和未定义行为。
+  examples:
+  - 代码示例：int n; if (scanf("%d", &n) != 1) return 1; printf("%d\n", n);
 assessment_ids:
 - C-BASE-04-Q1
 source_refs:

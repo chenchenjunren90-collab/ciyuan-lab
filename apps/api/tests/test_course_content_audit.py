@@ -11,15 +11,12 @@ def test_audit_covers_all_three_mvp_courses() -> None:
     assert all(len(audit.concept_gaps) == audit.concepts for audit in audits)
 
 
-def test_audit_exposes_template_repetition_and_review_gaps() -> None:
+def test_audit_confirms_template_repetition_was_removed() -> None:
     c_audit = audit_course("c")
 
-    assert any("重复 40 次" in item for item in c_audit.repeated_items)
-    pointer_gap = next(
-        gap for gap in c_audit.concept_gaps if gap.concept_id == "C-PTR-01"
-    )
-    assert "缺少可阅读或可运行示例" in pointer_gap.gaps
-    assert "知识点尚未人工审核" in pointer_gap.gaps
+    assert c_audit.repeated_items == ()
+    pointer_gap = next(gap for gap in c_audit.concept_gaps if gap.concept_id == "C-PTR-01")
+    assert pointer_gap.gaps == ("知识点尚未人工审核",)
 
 
 def test_markdown_report_contains_metrics_and_per_concept_findings() -> None:
@@ -30,3 +27,10 @@ def test_markdown_report_contains_metrics_and_per_concept_findings() -> None:
     assert "| PY-FUNC-01 | 函数定义与调用 |" in report
     assert "| DS-TREE-01 | 树、结点关系与基本术语 |" in report
 
+
+def test_enriched_cards_only_wait_for_human_review() -> None:
+    audits = [audit_course(course_id) for course_id in COURSE_IDS]
+
+    assert all(
+        gap.gaps == ("知识点尚未人工审核",) for audit in audits for gap in audit.concept_gaps
+    )

@@ -2,7 +2,7 @@ id: PY-BASE-04
 title: 输入与输出
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -16,18 +16,20 @@ concepts:
 - 格式化输出
 - 类型转换
 lesson:
-  summary: 掌握 input 读取输入与 print 输出结果的方法，理解输入默认是字符串、必要时需进行类型转换。
+  summary: 掌握 input 读取输入与 print 输出结果的方法，理解输入默认是字符串、必要时需进行类型转换。 本节围绕“输入与输出”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - input() 始终返回字符串，参与数值运算前需先转换类型
-  - print 可用逗号分隔多个输出项，也可用 f-string 格式化
-  - int()/float() 把字符串转换为数值
+  - input 每次返回去掉行尾的字符串，数值计算前必须完成显式转换。
+  - print 可通过 sep、end 和格式化字符串控制输出，评测输出必须严格匹配约定。
+  - 解析失败应给出清晰错误或受控退出，不能让未校验数据进入后续计算。
   examples:
-  - 'age = int(input("请输入年龄: "))'
+  - 代码示例：count = int(input().strip()); print(f'count={count}')
   common_mistakes:
-  - 直接把 input() 结果当数值参与运算
+  - 忘记转换输入，得到字符串拼接而不是数值加法。
+  - 在评测输出中加入多余提示文字，导致确定性比较失败。
 assessment_ids:
 - PY-BASE-04-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
 status: draft

@@ -2,7 +2,7 @@ id: DS-LINEAR-03
 title: 单链表
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 通过结点链接实现线性序列并维护头指针。
+  summary: 通过结点链接实现线性序列并维护头指针。 本节围绕“单链表”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 通过结点链接实现线性序列并维护头指针。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 单链表结点保存数据和后继引用，头指针确定整个可达序列。
+  - 已知前驱时插入和删除只改常数个链接，但按位置查找仍需线性遍历。
+  - 操作后必须保持无意外环、尾结点后继为空和所有有效结点可达。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 先修改 p.next 再保存旧后继，导致后半段链表丢失。
+  - 删除结点后仍保留并使用指向该结点的失效引用。
+  examples:
+  - 示例：在结点 p 后插入 q 时，先令 q.next=p.next，再令 p.next=q。
 assessment_ids:
 - DS-LINEAR-03-C1
 source_refs:

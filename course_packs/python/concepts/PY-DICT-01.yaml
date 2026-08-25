@@ -2,7 +2,7 @@ id: PY-DICT-01
 title: 字典基础
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
@@ -16,18 +16,20 @@ concepts:
 - 键唯一
 - get
 lesson:
-  summary: 掌握字典的创建、按键访问、增删改查，理解键的唯一性与 get 方法的容错用法。
+  summary: 掌握字典的创建、按键访问、增删改查，理解键的唯一性与 get 方法的容错用法。 本节围绕“字典基础”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 字典以 键:值 对存储，键必须唯一且可哈希
-  - d[key] 按键取值，赋值 d[key] = value 增加或覆盖
-  - d.get(key, 默认值) 在键不存在时返回默认值而不报错
+  - 字典把可散列且相等语义稳定的键映射到值，键在一个字典中唯一。
+  - 使用 get、in 或 setdefault 明确缺失键策略，不应无条件索引未知外部键。
+  - 遍历 items 可同时获得键和值，插入顺序不等于业务排序规则。
   examples:
-  - 'd = {"a": 1, "b": 2}；d["a"] 为 1'
+  - 代码示例：counts = {}; counts[word] = counts.get(word, 0) + 1
   common_mistakes:
-  - 用不存在的键直接 d[key] 导致 KeyError
+  - 直接读取 counts[word]，首次出现时触发 KeyError。
+  - 使用列表作为字典键，因其可变且不可散列而报错。
 assessment_ids:
 - PY-DICT-01-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
 status: draft

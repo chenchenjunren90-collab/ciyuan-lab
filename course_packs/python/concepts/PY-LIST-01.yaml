@@ -16,18 +16,20 @@ concepts:
 - 切片
 - 可变性
 lesson:
-  summary: 掌握列表的创建、索引访问、切片以及列表可变的基本特性。
+  summary: 掌握列表的创建、索引访问、切片以及列表可变的基本特性。 本节围绕“列表创建与访问”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 列表用方括号 [] 创建，元素可为任意类型
-  - 列表索引从 0 开始，支持负索引与切片
-  - 列表可变，可原地修改元素
+  - 列表是有序、可变容器，索引范围为 -len(items) 到 len(items)-1。
+  - 切片创建浅拷贝并使用半开区间，嵌套可变对象仍然可能被多个列表共享。
+  - 空列表访问、越界和别名修改必须通过接口约定与测试显式处理。
   examples:
-  - lst = [10, 20, 30]；lst[0] 为 10
+  - 代码示例：values = [3, 1, 4]; first, tail = values[0], values[1:]
   common_mistakes:
-  - 索引越界访问导致 IndexError
+  - 用 [[0] * 3] * 3 创建二维列表，导致三行引用同一个内部列表。
+  - 在列表为空时直接读取 items[0]。
 assessment_ids:
 - PY-LIST-01-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
 status: draft

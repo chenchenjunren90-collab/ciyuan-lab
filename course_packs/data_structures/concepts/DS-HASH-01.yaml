@@ -2,7 +2,7 @@ id: DS-HASH-01
 title: 散列表与散列函数
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
@@ -15,13 +15,16 @@ concepts:
 - 边界条件
 - 可验证性
 lesson:
-  summary: 把键映射到桶并理解装载因子的影响。
+  summary: 把键映射到桶并理解装载因子的影响。 本节围绕“散列表与散列函数”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - 把键映射到桶并理解装载因子的影响。
-  - 先说明适用前提，再通过示例或测试验证结论。
+  - 散列函数把键稳定映射到桶位置，相等键必须产生相同散列结果。
+  - 冲突不可避免，需要链地址或开放寻址等策略保存多个映射。
+  - 装载因子影响平均查找长度，达到阈值时通常需要扩容并重新散列。
   common_mistakes:
-  - 忽略输入边界或算法前置条件
-  - 只观察单个样例就判断实现正确
+  - 假设散列值不同，因此不实现冲突处理。
+  - 扩容后只复制旧桶位置，没有按新容量重新散列。
+  examples:
+  - 示例：容量8时可先用 hash(key)%8 选桶；不同键落入同一桶时再执行冲突策略。
 assessment_ids:
 - DS-HASH-01-Q1
 source_refs:

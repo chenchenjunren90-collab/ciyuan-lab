@@ -2,7 +2,7 @@ id: PY-FUNC-01
 title: 函数定义与调用
 course: python
 schema_version: 0.1.0
-version: 1
+version: 2
 difficulty: beginner
 estimated_minutes: 50
 prerequisites:
@@ -16,18 +16,20 @@ concepts:
 - 返回值
 - 参数
 lesson:
-  summary: 使用 def 定义带参数和返回值的函数，理解函数封装可复用逻辑的意义。
+  summary: 使用 def 定义带参数和返回值的函数，理解函数封装可复用逻辑的意义。 本节围绕“函数定义与调用”建立可执行的概念模型：先说明定义、适用前提和状态变化，再通过最小示例观察行为，最后用正常、边界和失败输入验证实现。学习结果以关联练习和确定性测试为准。
   key_points:
-  - def 定义函数，函数名后跟参数列表与冒号
-  - return 返回结果，未写 return 时返回 None
-  - 函数通过 函数名(实参) 调用
+  - def 创建函数对象并绑定名称，函数体只在调用时执行。
+  - 参数接收输入，return 结束当前调用并返回结果；省略 return 时返回 None。
+  - 函数应职责单一、输入输出明确，并尽量把文件和网络副作用留在边界层。
   examples:
-  - 'def add(a, b): return a + b'
+  - '代码示例：def add(a: int, b: int) -> int: return a + b'
   common_mistakes:
-  - 忘记 return 导致函数返回 None
+  - 只计算结果却忘记 return，调用方得到 None。
+  - 函数依赖未声明的全局可变状态，导致测试互相影响。
 assessment_ids:
 - PY-FUNC-01-C1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
 status: draft
