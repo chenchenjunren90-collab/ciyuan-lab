@@ -19,6 +19,8 @@ from app.modules.practice import (
     DockerSandboxRunner,
     PracticeSubmissionService,
 )
+from app.modules.practice.hints import ProgressiveHintService
+from app.modules.practice.projects import ProjectSubmissionService
 from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
 from app.modules.rag.ports import KnowledgeRetriever
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
@@ -81,6 +83,20 @@ def get_practice_submission_service() -> PracticeSubmissionService:
         courses=get_course_repository(),
         verifier=DeterministicCodeVerifier(runner),
         learning_flow=get_learning_flow_service(),
+    )
+
+
+@lru_cache
+def get_progressive_hint_service() -> ProgressiveHintService:
+    return ProgressiveHintService(
+        courses=get_course_repository(), repository=get_learning_repository()
+    )
+
+
+@lru_cache
+def get_project_submission_service() -> ProjectSubmissionService:
+    return ProjectSubmissionService(
+        courses=get_course_repository(), repository=get_learning_repository()
     )
 
 

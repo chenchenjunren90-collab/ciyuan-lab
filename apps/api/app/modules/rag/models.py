@@ -23,7 +23,16 @@ class Citation(StrictModel):
     score: float = Field(ge=0, le=1)
 
 
+class AgentTraceStep(StrictModel):
+    """Student-safe execution audit, never hidden chain-of-thought."""
+
+    component: Literal["retrieval", "course_tutor", "quality_supervisor"]
+    status: Literal["completed", "degraded", "blocked"]
+    detail: str
+
+
 class QaResponse(StrictModel):
     status: Literal["answered", "insufficient_evidence"]
     answer: str
     citations: list[Citation]
+    trace: list[AgentTraceStep] = Field(default_factory=list)

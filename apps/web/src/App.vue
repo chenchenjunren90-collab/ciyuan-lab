@@ -4,8 +4,9 @@ import { computed, onMounted, reactive, ref } from "vue";
 import {
   ApiError, api, fetchApiHealth,
   type ActivityDetail, type ActivitySummary, type CourseId, type CourseSummary,
-  type KnowledgePoint, type LearnerProfile, type NextActivity, type PlanStage,
-  type QaResponse, type ScenarioContext, type SubmissionResult
+  type HintResponse, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile,
+  type NextActivity, type PlanStage, type ProjectSubmissionResponse, type QaResponse,
+  type ScenarioContext, type SubmissionResult
 } from "./services/api";
 
 type Tab = "overview" | "path" | "tutor" | "practice";
@@ -17,6 +18,7 @@ const studentId = ref(localStorage.getItem("ciyuan-student-id") ?? "demo-student
 const courses = ref<CourseSummary[]>([]);
 const courseId = ref<CourseId>("python");
 const knowledge = ref<KnowledgePoint[]>([]);
+const selectedKnowledge = ref<KnowledgePointDetail | null>(null);
 const activities = ref<ActivitySummary[]>([]);
 const profile = ref<LearnerProfile | null>(null);
 const next = ref<NextActivity | null>(null);
@@ -30,6 +32,12 @@ const answer = ref("");
 const code = ref("");
 const submission = ref<SubmissionResult | null>(null);
 const scenario = ref<ScenarioContext | null>(null);
+const hint = ref<HintResponse | null>(null);
+const hintLevel = ref<1 | 2 | 3>(1);
+const projectSummary = ref("");
+const projectRepository = ref("");
+const projectTests = ref("");
+const projectSubmission = ref<ProjectSubmissionResponse | null>(null);
 
 const selectedCourse = computed(() => courses.value.find((item) => item.id === courseId.value));
 const baselineItems = computed(() => knowledge.value.slice(0, 8));
@@ -63,6 +71,7 @@ async function loadCourse(id: CourseId): Promise<void> {
   notice.value = "";
   qa.value = null;
   activity.value = null;
+  selectedKnowledge.value = null;
   scenario.value = null;
   submission.value = null;
   try {
@@ -104,6 +113,8 @@ async function openActivity(id: string): Promise<void> {
   try {
     activity.value = await api.activity(courseId.value, id);
     answer.value = ""; submission.value = null; scenario.value = null;
+    hint.value = null; hintLevel.value = 1; projectSubmission.value = null;
+    projectSummary.value = ""; projectRepository.value = ""; projectTests.value = "";
     if (activity.value.type === "project" && activity.value.scenario_scope) {
       scenario.value = await api.scenario(courseId.value, activity.value.id);
     }
@@ -112,6 +123,33 @@ async function openActivity(id: string): Promise<void> {
       ? "#include <stdio.h>\n\nint main(void) {\n    // 在这里完成程序\n    return 0;\n}\n"
       : language === "python" ? "# 在这里完成程序\n" : "";
     tab.value = "practice";
+  } catch (error) { fail(error) }
+}
+
+async function openKnowledgePoint(id: string): Promise<void> {
+  try { selectedKnowledge.value = await api.knowledgePoint(courseId.value, id) }
+  catch (error) { fail(error) }
+}
+
+async function requestHint(): Promise<void> {
+  if (!activity.value) return;
+  try {
+    hint.value = await api.hint(studentId.value, courseId.value, activity.value.id, hintLevel.value);
+    if (hintLevel.value < 3) hintLevel.value = (hintLevel.value + 1) as 1 | 2 | 3;
+  } catch (error) { fail(error) }
+}
+
+async function submitProject(): Promise<void> {
+  if (!activity.value || activity.value.type !== "project") return;
+  try {
+    projectSubmission.value = await api.submitProject(
+      studentId.value, courseId.value, activity.value.id,
+      {
+        artifact_summary: projectSummary.value,
+        ...(projectRepository.value.trim() ? { repository_url: projectRepository.value.trim() } : {}),
+        test_evidence: projectTests.value.split("\n").map((item) => item.trim()).filter(Boolean)
+      }
+    );
   } catch (error) { fail(error) }
 }
 
@@ -189,8 +227,13 @@ onMounted(async () => {
         <section class="panel">
           <header><div><p class="eyebrow">KNOWLEDGE MAP</p><h2>核心知识地图</h2></div><p>课程内容保持计算机专业主线，难度与前置关系由统一 Schema 管理。</p></header>
           <div class="knowledge-grid">
-            <article v-for="item in knowledge" :key="item.id"><div><b :data-level="item.difficulty">{{ difficulty(item.difficulty) }}</b><small>{{ item.id }}</small></div><h3>{{ item.title }}</h3><i><span :style="{ width: `${(masteryScore(item.id) ?? 0) * 100}%` }"></span></i><p>{{ masteryScore(item.id) !== null ? `掌握度 ${Math.round((masteryScore(item.id) ?? 0) * 100)}%` : "尚未建立学习证据" }}</p></article>
+            <article v-for="item in knowledge" :key="item.id" :class="{ selected: selectedKnowledge?.id === item.id }" @click="openKnowledgePoint(item.id)"><div><b :data-level="item.difficulty">{{ difficulty(item.difficulty) }}</b><small>{{ item.id }}</small></div><h3>{{ item.title }}</h3><i><span :style="{ width: `${(masteryScore(item.id) ?? 0) * 100}%` }"></span></i><p>{{ masteryScore(item.id) !== null ? `掌握度 ${Math.round((masteryScore(item.id) ?? 0) * 100)}%` : "尚未建立学习证据" }}</p></article>
           </div>
+          <section v-if="selectedKnowledge" class="lesson-detail">
+            <header><div><span>{{ selectedKnowledge.id }}</span><h3>{{ selectedKnowledge.title }}</h3></div><button @click="selectedKnowledge = null">关闭</button></header>
+            <p>{{ selectedKnowledge.lesson.summary }}</p>
+            <div><article><b>学习目标</b><ul><li v-for="item in selectedKnowledge.learning_objectives" :key="item">{{ item }}</li></ul></article><article><b>关键要点</b><ul><li v-for="item in selectedKnowledge.lesson.key_points" :key="item">{{ item }}</li></ul></article><article><b>常见误区</b><ul><li v-for="item in selectedKnowledge.lesson.common_mistakes" :key="item">{{ item }}</li></ul></article></div>
+          </section>
         </section>
       </template>
 
@@ -208,7 +251,7 @@ onMounted(async () => {
       <template v-else-if="tab === 'tutor'">
         <section class="tutor-layout">
           <div class="panel tutor"><header><div><p class="eyebrow">GROUNDED TUTOR</p><h2>有依据的课程辅导</h2></div><p>回答必须来自已审核课程资料；依据不足时明确拒答。</p></header>
-            <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qa.status === "answered" ? "已通过质量监督" : "依据不足" }}</b><p>{{ qa.answer || "当前资料不足以支持这个问题，我不会编造答案。" }}</p><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_id }} · {{ Math.round(citation.score * 100) }}%</span></div></article></div>
+            <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qa.status === "answered" ? "已通过质量监督" : "依据不足" }}</b><p>{{ qa.answer || "当前资料不足以支持这个问题，我不会编造答案。" }}</p><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_id }} · {{ Math.round(citation.score * 100) }}%</span></div><ol class="trace"><li v-for="step in qa.trace" :key="`${step.component}-${step.status}`" :data-status="step.status"><b>{{ step.component }}</b><span>{{ step.detail }}</span></li></ol></article></div>
             <div class="composer"><textarea v-model="question" rows="3"></textarea><button class="primary" :disabled="qaLoading" @click="ask">{{ qaLoading ? "检索中…" : "发送问题" }}</button></div>
           </div>
           <aside class="agent-stack"><article><em>01</em><div><strong>学情规划智能体</strong><p>选择合法的下一活动</p></div></article><article class="active"><em>02</em><div><strong>课程辅导智能体</strong><p>基于 RAG 组织讲解</p></div></article><article><em>03</em><div><strong>质量监督智能体</strong><p>检查引用、安全与事实</p></div></article></aside>
@@ -223,8 +266,11 @@ onMounted(async () => {
             <section v-if="activity.type === 'project'" class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
             <div v-if="activity.evaluation.options" class="options"><label v-for="option in activity.evaluation.options" :key="option.id" :class="{ selected: answer === option.id }"><input v-model="answer" type="radio" :value="option.id" /><b>{{ option.id }}</b><span>{{ option.text }}</span></label></div>
             <div v-else-if="activity.type === 'code' || activity.type === 'debug'" class="editor"><header><i></i><i></i><i></i><b>{{ activity.evaluation.runtime?.language }} · isolated sandbox</b></header><textarea v-model="code" spellcheck="false"></textarea></div>
+            <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" @click="submitProject">提交人工评审</button></section>
             <textarea v-else v-model="answer" class="answer-box" rows="7" placeholder="输入你的回答…"></textarea><button v-if="activity.type !== 'project'" class="primary" @click="submit">提交并验证</button>
+            <section class="hint-box"><button @click="requestHint">{{ hint ? `继续提示（${hintLevel}/3）` : "获取分层提示" }}</button><p v-if="hint"><b>第 {{ hint.level }} 层提示</b>{{ hint.hint }}</p></section>
             <div v-if="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><strong>{{ submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
+            <div v-if="projectSubmission" class="verification" data-pass="true"><strong>已进入人工评审</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.review_checklist" :key="item.item"><b>{{ item.present ? "✓" : "!" }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
           </template><div v-else class="empty">从左侧选择一道练习，或按照学习路径进入推荐活动。</div></div>
         </section>
       </template>

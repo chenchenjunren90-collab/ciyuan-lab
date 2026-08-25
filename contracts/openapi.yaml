@@ -334,6 +334,62 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/NextActivity"
+  /api/v1/activities/{activity_id}/hint:
+    post:
+      operationId: createProgressiveHint
+      summary: 返回不泄露答案的三级递进提示
+      parameters:
+        - name: activity_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HintRequest"
+      responses:
+        "200":
+          description: 当前层级提示
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HintResponse"
+  /api/v1/projects/{project_id}/submissions:
+    post:
+      operationId: submitProjectForReview
+      summary: 提交综合项目材料进入人工评审
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectSubmissionRequest"
+      responses:
+        "200":
+          description: 已接收但尚未评分的评审记录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSubmissionResponse"
 components:
   responses:
     NotFound:
@@ -866,6 +922,111 @@ components:
           description: 有依据回答必须携带可核验来源
           items:
             $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          description: 学生可见的组件执行审计，不包含隐藏思维过程
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"
+    AgentTraceStep:
+      type: object
+      additionalProperties: false
+      required: [component, status, detail]
+      properties:
+        component:
+          type: string
+          enum: [retrieval, course_tutor, quality_supervisor]
+        status:
+          type: string
+          enum: [completed, degraded, blocked]
+        detail:
+          type: string
+    HintRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, level]
+      properties:
+        student_id:
+          type: string
+        level:
+          type: integer
+          enum: [1, 2, 3]
+    HintResponse:
+      type: object
+      additionalProperties: false
+      required: [activity_id, level, hint, focus_concept_ids, source_refs]
+      properties:
+        activity_id:
+          type: string
+        level:
+          type: integer
+          enum: [1, 2, 3]
+        hint:
+          type: string
+        focus_concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        answer_revealed:
+          type: boolean
+          default: false
+    ProjectSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, artifact_summary]
+      properties:
+        student_id:
+          type: string
+        artifact_summary:
+          type: string
+          minLength: 30
+          maxLength: 4000
+        repository_url:
+          anyOf:
+            - type: string
+              maxLength: 1000
+            - type: "null"
+        test_evidence:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+    ReviewCheck:
+      type: object
+      additionalProperties: false
+      required: [item, present, detail]
+      properties:
+        item:
+          type: string
+        present:
+          type: boolean
+        detail:
+          type: string
+    ProjectSubmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [submission_id, project_id, status, feedback, review_checklist, mastery_unchanged]
+      properties:
+        submission_id:
+          type: string
+        project_id:
+          type: string
+        status:
+          type: string
+          const: received_for_review
+        feedback:
+          type: string
+        review_checklist:
+          type: array
+          items:
+            $ref: "#/components/schemas/ReviewCheck"
+        mastery_unchanged:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasteryState"
     SubmissionRequest:
       type: object
       additionalProperties: false

@@ -10,6 +10,12 @@ export interface KnowledgePoint {
   id: string; title: string; difficulty: "beginner" | "intermediate" | "advanced";
   prerequisites: string[]; source_refs: string[];
 }
+export interface KnowledgePointDetail extends KnowledgePoint {
+  course: CourseId; estimated_minutes: number; learning_objectives: string[];
+  concepts: string[];
+  lesson: { summary?: string; key_points?: string[]; examples?: string[]; common_mistakes?: string[] };
+  assessment_ids: string[]; status: string;
+}
 export interface ActivitySummary {
   id: string; title: string; course: CourseId;
   type: "objective" | "short_answer" | "code" | "debug" | "project";
@@ -53,6 +59,19 @@ export interface AssessmentResult {
 export interface QaResponse {
   status: "answered" | "insufficient_evidence"; answer: string;
   citations: Array<{ source_id: string; chunk_id: string; score: number }>;
+  trace: Array<{
+    component: "retrieval" | "course_tutor" | "quality_supervisor";
+    status: "completed" | "degraded" | "blocked"; detail: string;
+  }>;
+}
+export interface HintResponse {
+  activity_id: string; level: 1 | 2 | 3; hint: string;
+  focus_concept_ids: string[]; source_refs: string[]; answer_revealed: false;
+}
+export interface ProjectSubmissionResponse {
+  submission_id: string; project_id: string; status: "received_for_review"; feedback: string;
+  review_checklist: Array<{ item: string; present: boolean; detail: string }>;
+  mastery_unchanged: MasteryState[];
 }
 export interface SubmissionResult {
   verification: { accepted: boolean; passed_tests: number; total_tests: number; diagnostics: string[] } | null;
@@ -94,6 +113,8 @@ export const api = {
   courses: () => request<CourseSummary[]>("/api/v1/courses"),
   knowledgePoints: (courseId: CourseId) =>
     request<{ course_id: CourseId; items: KnowledgePoint[] }>(`/api/v1/courses/${courseId}/knowledge-points`),
+  knowledgePoint: (courseId: CourseId, knowledgePointId: string) =>
+    request<KnowledgePointDetail>(`/api/v1/courses/${courseId}/knowledge-points/${knowledgePointId}`),
   activities: (courseId: CourseId) => request<ActivitySummary[]>(`/api/v1/courses/${courseId}/activities`),
   activity: (courseId: CourseId, activityId: string) =>
     request<ActivityDetail>(`/api/v1/courses/${courseId}/activities/${activityId}`),
@@ -109,6 +130,16 @@ export const api = {
     }),
   ask: (studentId: string, courseId: CourseId, question: string) => request<QaResponse>("/api/v1/qa", {
     method: "POST", body: JSON.stringify({ student_id: studentId, course_id: courseId, question })
+  }),
+  hint: (studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3) =>
+    request<HintResponse>(`/api/v1/activities/${activityId}/hint?course_id=${courseId}`, {
+      method: "POST", body: JSON.stringify({ student_id: studentId, level })
+    }),
+  submitProject: (
+    studentId: string, courseId: CourseId, projectId: string,
+    payload: { artifact_summary: string; repository_url?: string; test_evidence: string[] }
+  ) => request<ProjectSubmissionResponse>(`/api/v1/projects/${projectId}/submissions?course_id=${courseId}`, {
+    method: "POST", body: JSON.stringify({ student_id: studentId, ...payload })
   }),
   submit: (
     studentId: string, courseId: CourseId, exerciseId: string,

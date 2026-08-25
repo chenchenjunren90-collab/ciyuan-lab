@@ -27,6 +27,11 @@ def test_retrieves_c_memory_evidence_with_traceable_citation() -> None:
     assert citations
     assert all(item["source_id"].startswith("SRC-C-") for item in citations)
     assert all(item["chunk_id"].startswith(item["source_id"]) for item in citations)
+    assert [step["component"] for step in payload["trace"]] == [
+        "retrieval",
+        "course_tutor",
+        "quality_supervisor",
+    ]
 
 
 def test_retrieves_python_data_quality_evidence() -> None:
@@ -40,15 +45,17 @@ def test_retrieves_data_structure_graph_evidence() -> None:
     payload = ask("data_structures", "BFS 为什么使用队列？Dijkstra 对权重有什么要求？")
 
     assert payload["status"] == "answered"
-    assert any(
-        item["source_id"] == "SRC-DS-GUIDE-TREEGRAPH" for item in payload["citations"]
-    )
+    assert any(item["source_id"] == "SRC-DS-GUIDE-TREEGRAPH" for item in payload["citations"])
 
 
 def test_returns_insufficient_evidence_for_unrelated_question() -> None:
     payload = ask("c", "明天火星基地的天气和航班价格是多少？")
 
-    assert payload == {"status": "insufficient_evidence", "answer": "", "citations": []}
+    assert payload["status"] == "insufficient_evidence"
+    assert payload["answer"] == ""
+    assert payload["citations"] == []
+    assert payload["trace"][0]["component"] == "retrieval"
+    assert payload["trace"][0]["status"] == "blocked"
 
 
 def test_rejects_unknown_request_fields() -> None:
