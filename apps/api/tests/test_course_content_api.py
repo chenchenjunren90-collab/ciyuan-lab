@@ -18,7 +18,7 @@ def test_lists_three_courses_with_real_progress() -> None:
     courses = {item["id"]: item for item in response.json()}
     assert set(courses) == {"c", "python", "data_structures"}
     assert courses["python"]["implemented_core_concepts"] == 40
-    assert courses["c"]["implemented_core_concepts"] == 40
+    assert courses["c"]["implemented_core_concepts"] == 42
     assert courses["data_structures"]["implemented_core_concepts"] == 40
 
 

@@ -1,0 +1,49 @@
+id: DS-PROJ-TRANSACTION-GRAPH-01
+title: 合成交易网络路径分析
+course: data_structures
+schema_version: 0.1.0
+version: 1
+difficulty: advanced
+estimated_minutes: 240
+concept_ids:
+- DS-GRAPH-01
+- DS-GRAPH-02
+- DS-GRAPH-03
+- DS-GRAPH-05
+summary: 在固定生成的虚构交易图上实现邻接表示、可达性搜索和限定深度路径分析，不作真实风险判断。
+requirements:
+- 解析虚构账户顶点和带时间、金额属性的有向边
+- 使用邻接表实现 BFS 或 DFS 与限定深度路径搜索
+- 处理自环、重复边、孤立点和不可达点
+- 报告时间空间复杂度、测试证据与算法适用边界
+deliverables:
+- 可运行的 Python 3.11 程序
+- 算法与复杂度说明
+- 正常、边界和错误路径测试
+source_refs:
+- SRC-DS-OPEN-AMLSIM
+- SRC-DS-SYNTHETIC-TRANSACTION-GRAPH
+- SRC-DS-GUIDE-TREEGRAPH
+verification_exercise_ids:
+- DS-GRAPH-02-C1
+- DS-GRAPH-05-C1
+scenario_scope: post_course_finance_practice
+scenario_provider: fixed_synthetic
+data_classification: synthetic
+computer_science_objectives:
+- 选择合适的图表示并实现遍历与受限路径搜索
+- 分析算法复杂度并用边界输入验证实现
+business_context_objectives:
+- 把合成交易字段映射为图模型
+- 明确模式标签仅用于算法练习，不构成真实风险结论
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 图算法正确性与测试
+    points: 60
+  - criterion: 复杂度和边界分析
+    points: 25
+  - criterion: 场景限制说明
+    points: 15
+status: draft

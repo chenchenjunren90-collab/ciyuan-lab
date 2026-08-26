@@ -4,12 +4,13 @@ from functools import lru_cache
 
 from app.core.config import get_settings
 from app.core.database import create_database_engine, create_session_factory
+from app.modules.adaptive_practice import AdaptiveProblemService
 from app.modules.course_content import CoursePackRepository
 from app.modules.learner_profile.repository import LearningRepository
 from app.modules.learning_flow import LearningFlowService
+from app.modules.learning_flow.diagnostics import DiagnosticService
 from app.modules.model_adapters.factory import (
     build_model_adapter,
-    build_tuoling_scenario_adapter,
 )
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
@@ -25,7 +26,7 @@ from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
 from app.modules.rag.ports import KnowledgeRetriever
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 from app.modules.rag.service import RagQaService
-from app.modules.scenarios import ScenarioContextService
+from app.modules.scenarios import ScenarioContextService, ScenarioProjectGenerator
 
 
 @lru_cache
@@ -75,14 +76,48 @@ def get_learning_flow_service() -> LearningFlowService:
 
 
 @lru_cache
+def get_diagnostic_service() -> DiagnosticService:
+    return DiagnosticService(
+        courses=get_course_repository(),
+        learning_flow=get_learning_flow_service(),
+    )
+
+
+@lru_cache
 def get_practice_submission_service() -> PracticeSubmissionService:
     settings = get_settings()
-    runner = DockerSandboxRunner() if settings.code_execution_enabled else DisabledSandboxRunner()
+    runner = (
+        DockerSandboxRunner(
+            work_root=settings.sandbox_work_root or None,
+            python_image=settings.sandbox_python_image,
+            c_image=settings.sandbox_c_image,
+        )
+        if settings.code_execution_enabled
+        else DisabledSandboxRunner()
+    )
     return PracticeSubmissionService(
         repository=get_learning_repository(),
         courses=get_course_repository(),
         verifier=DeterministicCodeVerifier(runner),
         learning_flow=get_learning_flow_service(),
+    )
+
+
+@lru_cache
+def get_adaptive_problem_service() -> AdaptiveProblemService:
+    settings = get_settings()
+    runner = (
+        DockerSandboxRunner(
+            work_root=settings.sandbox_work_root or None,
+            python_image=settings.sandbox_python_image,
+            c_image=settings.sandbox_c_image,
+        )
+        if settings.code_execution_enabled
+        else DisabledSandboxRunner()
+    )
+    return AdaptiveProblemService(
+        repository=get_learning_repository(),
+        verifier=DeterministicCodeVerifier(runner),
     )
 
 
@@ -102,8 +137,15 @@ def get_project_submission_service() -> ProjectSubmissionService:
 
 @lru_cache
 def get_scenario_context_service() -> ScenarioContextService:
-    settings = get_settings()
     return ScenarioContextService(
         courses=get_course_repository(),
-        tuoling=build_tuoling_scenario_adapter(settings),
+        tuoling=None,
+    )
+
+
+@lru_cache
+def get_scenario_project_generator() -> ScenarioProjectGenerator:
+    return ScenarioProjectGenerator(
+        courses=get_course_repository(),
+        model=get_model_adapter(),
     )

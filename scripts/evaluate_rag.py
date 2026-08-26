@@ -11,6 +11,7 @@ from app.core.database import create_database_engine
 from app.modules.course_content import CoursePackRepository
 from app.modules.rag.evaluation import evaluate_retriever, load_eval_cases
 from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
+from app.modules.rag.ports import KnowledgeRetriever
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,6 +26,7 @@ def main() -> int:
 
     dataset = args.dataset if args.dataset.is_absolute() else ROOT / args.dataset
     courses = CoursePackRepository()
+    retriever: KnowledgeRetriever
     if args.backend == "pgvector":
         retriever = PgVectorKnowledgeRetriever(create_database_engine(get_settings().database_url))
     else:

@@ -27,6 +27,30 @@ lesson:
   common_mistakes:
   - 误以为字典允许把列表直接作为键，因为列表内容可以比较
   - 误以为访问不存在的键时 dict[key] 与 dict.get(key) 都返回 None
+  learning_sequence:
+  - title: 建立键到值的映射
+    content: 先用少量键值对区分“按位置访问”和“按键访问”，理解键唯一。
+  - title: 明确缺失键策略
+    content: 比较方括号、in 与 get 的行为，并根据业务要求选择报错、默认值或跳过。
+  - title: 完成统计模式
+    content: 用 get(key, 0) 累加，再按 sorted(counts) 输出稳定、可测试的结果。
+  worked_example:
+    problem: 统计标签列表中每个标签出现次数，并按标签字典序输出。
+    steps:
+    - 创建空字典 counts 保存标签与次数。
+    - 遍历标签，用 get(label, 0) 读取旧值后加一。
+    - 遍历排序后的键，输出键和对应次数。
+    code: |
+      labels = ["beta", "alpha", "beta"]
+      counts = {}
+      for label in labels:
+          counts[label] = counts.get(label, 0) + 1
+      for label in sorted(counts):
+          print(label, counts[label])
+    reflection: 字典保留插入顺序，但题目要求的业务顺序必须显式实现，不能把插入顺序误当排序规则。
+  checkpoint:
+    prompt: 当键可能不存在时，counts[key]、counts.get(key) 和 counts.get(key, 0) 的结果有何不同？
+    guidance: 分别在空字典上运行三种写法，记录返回值或异常类型，再说明哪种适合计数。
 assessment_ids:
 - PY-DICT-01-Q1
 source_refs:

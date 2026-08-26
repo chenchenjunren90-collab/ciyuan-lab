@@ -6,6 +6,43 @@ from app.modules.course_content import CoursePackRepository
 from app.modules.rag.embeddings import TokenHashEmbedder
 from app.modules.rag.ingestion import build_eligible_chunks, build_ingestion_plan
 from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
+from app.modules.rag.retriever import query_is_in_course_scope, query_variants, tokenize
+
+
+def test_cjk_tokenization_does_not_emit_single_character_noise() -> None:
+    tokens = tokenize("民法典关于租赁合同如何规定")
+
+    assert "民法典关于租赁合同如何规定" in tokens
+    assert "民法" in tokens
+    assert "如何" in tokens
+    assert "法" not in tokens
+    assert "如" not in tokens
+
+
+def test_compound_question_produces_bounded_clause_variants() -> None:
+    variants = query_variants("BFS 为什么使用队列？Dijkstra 对权重有什么要求？")
+
+    assert variants == (
+        "BFS 为什么使用队列？Dijkstra 对权重有什么要求？",
+        "BFS 为什么使用队列",
+        "Dijkstra 对权重有什么要求",
+    )
+
+
+@pytest.mark.parametrize(
+    ("course_id", "question", "expected"),
+    [
+        ("c", "Python 默认参数在什么时候求值", False),
+        ("c", "散列表冲突如何处理", False),
+        ("data_structures", "C printf 格式说明符如何匹配类型", False),
+        ("python", "Python 数据清洗如何保留异常原因", True),
+        ("c", "变量为什么必须先初始化", True),
+    ],
+)
+def test_explicit_foreign_course_markers_are_rejected(
+    course_id: str, question: str, expected: bool
+) -> None:
+    assert query_is_in_course_scope(question, course_id) is expected
 
 
 def test_token_hash_embedding_is_deterministic_and_normalized() -> None:

@@ -1,4 +1,4 @@
-"""Project artifact intake that preserves human review as an explicit gate."""
+"""Project artifact intake with transparent, non-scoring evidence checks."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class ProjectSubmissionRequest(StrictModel):
     test_evidence: list[str] = Field(default_factory=list, max_length=20)
 
 
-class ReviewCheck(StrictModel):
+class EvidenceCheck(StrictModel):
     item: str
     present: bool
     detail: str
@@ -35,14 +35,14 @@ class ReviewCheck(StrictModel):
 class ProjectSubmissionResponse(StrictModel):
     submission_id: str
     project_id: str
-    status: Literal["received_for_review"]
+    status: Literal["evidence_recorded"]
     feedback: str
-    review_checklist: list[ReviewCheck]
+    evidence_checklist: list[EvidenceCheck]
     mastery_unchanged: list[MasteryState]
 
 
 class ProjectSubmissionService:
-    """Record an artifact for review without inventing an automatic project score."""
+    """Record project evidence without inventing a human or automatic score."""
 
     def __init__(self, *, courses: CoursePackRepository, repository: LearningStore) -> None:
         self._courses = courses
@@ -82,27 +82,28 @@ class ProjectSubmissionService:
             trace_id=str(submission_id),
             payload={
                 "project_id": project_id,
-                "review_status": "pending_human_review",
+                "project_status": "evidence_recorded_not_scored",
+                "automatic_score_applied": False,
                 "artifact_summary_hash": summary_hash,
                 "artifact_summary_length": len(artifact_summary.strip()),
                 "repository_url_present": bool(repository_url),
                 "test_evidence_count": len(clean_evidence),
             },
-            evidence_summary="综合项目材料已提交，等待人工评分",
+            evidence_summary="综合项目材料与自测证据已记录，未自动评分",
         )
         self._repository.append_event(event)
         checks = [
-            ReviewCheck(
+            EvidenceCheck(
                 item="项目说明",
                 present=True,
                 detail="已收到实现说明；系统仅保存摘要哈希和长度用于审计。",
             ),
-            ReviewCheck(
+            EvidenceCheck(
                 item="可复核代码位置",
                 present=bool(repository_url),
                 detail="已提供仓库链接。" if repository_url else "建议补充仓库或制品链接。",
             ),
-            ReviewCheck(
+            EvidenceCheck(
                 item="测试证据",
                 present=bool(clean_evidence),
                 detail=(
@@ -115,8 +116,11 @@ class ProjectSubmissionService:
         return ProjectSubmissionResponse(
             submission_id=str(submission_id),
             project_id=project_id,
-            status="received_for_review",
-            feedback="材料已进入人工评审队列；评审完成前不会改变掌握度，也不会生成虚假项目分数。",
-            review_checklist=checks,
+            status="evidence_recorded",
+            feedback=(
+                "系统已记录项目说明与自测证据，并完成材料完整性检查；"
+                "综合项目不自动评分，也不会据此改变掌握度。"
+            ),
+            evidence_checklist=checks,
             mastery_unchanged=profile.mastery,
         )

@@ -1,0 +1,10 @@
+{
+  "dataset_size": 75,
+  "answerable_count": 45,
+  "recall_at_k": 1.0,
+  "mean_reciprocal_rank": 1.0,
+  "unanswerable_rejection_rate": 1.0,
+  "cross_course_rejection_rate": 1.0,
+  "course_isolation_rate": 1.0,
+  "failures": []
+}

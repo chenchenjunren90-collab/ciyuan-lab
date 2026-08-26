@@ -60,6 +60,7 @@ class LearningFlowService:
         student_id: str,
         course_id: CourseId,
         answers: Sequence[tuple[str, bool]],
+        evidence_source: str = "legacy_client_assessment",
     ) -> AssessmentOutcome:
         self._validate_student_id(student_id)
         knowledge_points = self._courses.list_knowledge_points(course_id)
@@ -104,7 +105,7 @@ class LearningFlowService:
                 trace_id=str(assessment_id),
                 payload={
                     "is_correct": is_correct,
-                    "source": "student_baseline_assessment",
+                    "source": evidence_source,
                 },
                 evidence_summary="基线测评客观结果",
             )

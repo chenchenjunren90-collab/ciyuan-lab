@@ -22,7 +22,10 @@ try {
     & $Python -m pip install -e ".[dev]"
 
     Push-Location (Join-Path $RepoRoot "apps\web")
-    try { npm ci } finally { Pop-Location }
+    try {
+        npm ci
+        if ($LASTEXITCODE -ne 0) { throw "前端依赖安装失败。" }
+    } finally { Pop-Location }
 
     docker compose -f infra/compose.yaml up -d postgres redis
     if ($LASTEXITCODE -ne 0) { throw "PostgreSQL/Redis 启动失败。" }

@@ -15,6 +15,45 @@ from app.modules.rag.ports import KnowledgeRetriever, SearchHit
 ASCII_WORD = re.compile(r"[a-z0-9_+#.-]+")
 CJK_RUN = re.compile(r"[\u3400-\u9fff]+")
 
+_COURSE_SCOPE_MARKERS: dict[str, tuple[str, ...]] = {
+    "c": (
+        "c语言",
+        "c程序",
+        "c字符串",
+        "c头文件",
+        "printf",
+        "scanf",
+        "malloc",
+        "calloc",
+        "realloc",
+        "空字符",
+        "预处理",
+    ),
+    "python": (
+        "python",
+        "生成器",
+        "列表推导式",
+        "字典推导式",
+        "上下文管理器",
+        "装饰器",
+    ),
+    "data_structures": (
+        "数据结构",
+        "bfs",
+        "dfs",
+        "dijkstra",
+        "二分查找",
+        "散列表",
+        "哈希表",
+        "邻接表",
+        "最短路",
+        "拓扑排序",
+        "二叉树",
+        "时间复杂度",
+        "空间复杂度",
+    ),
+}
+
 
 @dataclass(frozen=True, slots=True)
 class IndexedChunk:
@@ -33,9 +72,52 @@ def tokenize(text: str) -> Counter[str]:
     normalized = text.casefold()
     tokens = ASCII_WORD.findall(normalized)
     for run in CJK_RUN.findall(normalized):
-        tokens.extend(run)
+        # Keep the complete CJK run as one exact token. ``list.extend(run)``
+        # would add every Han character separately and create false matches
+        # between unrelated questions and evidence that merely share a common
+        # character (for example ``民法典`` and ``算法`` both contain ``法``).
+        tokens.append(run)
         tokens.extend(run[index : index + 2] for index in range(len(run) - 1))
     return Counter(token for token in tokens if token.strip())
+
+
+def query_variants(text: str, *, max_clauses: int = 4) -> tuple[str, ...]:
+    """Return the complete question plus bounded sentence-level subqueries.
+
+    A compound student question can mention two related concepts. Scoring only
+    the complete text dilutes the overlap of each relevant evidence chunk. The
+    retrievers therefore score the full question and a small, deterministic set
+    of clauses, then keep the best score per chunk.
+    """
+
+    normalized = text.strip()
+    if not normalized:
+        return ()
+    variants = [normalized]
+    for clause in re.split(r"[。！？!?；;\n]+", normalized):
+        clause = clause.strip(" ，,：:")
+        if len(clause) >= 2 and clause not in variants:
+            variants.append(clause)
+        if len(variants) >= max_clauses + 1:
+            break
+    return tuple(variants)
+
+
+def query_is_in_course_scope(text: str, course_id: str) -> bool:
+    """Reject only questions that explicitly target another supported course.
+
+    Generic programming terms are intentionally absent from the marker table.
+    When a question has no unambiguous course marker, retrieval evidence and the
+    normal score threshold still decide whether it can be answered.
+    """
+
+    normalized = re.sub(r"\s+", "", text.casefold())
+    mentioned = {
+        candidate
+        for candidate, markers in _COURSE_SCOPE_MARKERS.items()
+        if any(marker in normalized for marker in markers)
+    }
+    return not mentioned or course_id in mentioned
 
 
 def split_source(source: RagSourceRecord, *, max_chars: int = 360) -> Iterable[str]:
@@ -83,16 +165,16 @@ class LexicalKnowledgeRetriever(KnowledgeRetriever):
         return cls(chunks)
 
     async def search(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
-        if not query.strip() or top_k < 1:
+        if not query.strip() or top_k < 1 or not query_is_in_course_scope(query, course_id):
             return ()
-        query_terms = tokenize(query)
+        query_terms = tuple(filter(None, (tokenize(item) for item in query_variants(query))))
         if not query_terms:
             return ()
         ranked: list[tuple[float, IndexedChunk]] = []
         for chunk in self._chunks:
             if chunk.course_id != course_id:
                 continue
-            score = self._cosine(query_terms, chunk.term_counts)
+            score = max(self._cosine(terms, chunk.term_counts) for terms in query_terms)
             if score >= self._min_score:
                 ranked.append((score, chunk))
         ranked.sort(key=lambda item: (-item[0], item[1].chunk_id))

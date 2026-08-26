@@ -176,6 +176,33 @@ paths:
           $ref: "#/components/responses/NotFound"
         "422":
           description: 活动不是允许调用场景服务的课后综合项目
+  /api/v1/courses/{course_id}/scenario-projects/generate:
+    post:
+      operationId: generateSyntheticScenarioProject
+      summary: 在已审核模板边界内生成个性化课后综合项目
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioProjectNeed"
+      responses:
+        "200":
+          description: 受控生成或固定降级的合成项目
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedScenarioProject"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: 模板、课程或知识点不符合生成边界
   /api/v1/courses/{course_id}/sources:
     get:
       operationId: listSources
@@ -236,6 +263,97 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/AssessmentResult"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/diagnostics:
+    get:
+      operationId: getDiagnosticQuiz
+      summary: 获取不含答案的初始诊断或阶段重测题
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: phase
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/DiagnosticPhase"
+      responses:
+        "200":
+          description: 公开诊断题；不返回答案键
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticQuiz"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/diagnostics/submissions:
+    post:
+      operationId: submitDiagnosticQuiz
+      summary: 由服务器判定诊断答案并更新画像与学习计划
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosticSubmissionRequest"
+      responses:
+        "200":
+          description: 诊断得分、逐题结果、画像与学习计划
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSubmissionResult"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/adaptive-problems/generate:
+    post:
+      operationId: generateAdaptiveProblem
+      summary: 根据 Python 学习画像生成确定性变式编程题
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateProblemRequest"
+      responses:
+        "200":
+          description: 不含隐藏测试的学生侧题面
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedCodeProblem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/adaptive-problems/{problem_id}/submissions:
+    post:
+      operationId: submitAdaptiveProblem
+      summary: 使用隔离沙箱与隐藏测试验证个性化 Python 题
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneratedProblemSubmissionRequest"
+      responses:
+        "200":
+          description: 验证事实、更新后的画像与下一道变式题
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedProblemSubmissionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
         "422":
           $ref: "#/components/responses/ValidationError"
   /api/v1/qa:
@@ -364,8 +482,8 @@ paths:
                 $ref: "#/components/schemas/HintResponse"
   /api/v1/projects/{project_id}/submissions:
     post:
-      operationId: submitProjectForReview
-      summary: 提交综合项目材料进入人工评审
+      operationId: recordProjectEvidence
+      summary: 记录综合项目材料与自测证据
       parameters:
         - name: project_id
           in: path
@@ -741,6 +859,118 @@ components:
           type: string
         notice:
           type: string
+    ScenarioProjectNeed:
+      type: object
+      additionalProperties: false
+      required:
+        - course_id
+        - template_project_id
+        - learner_goal
+        - target_concept_ids
+        - difficulty
+        - estimated_minutes
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        template_project_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        learner_goal:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: 不得包含姓名、学号、手机号、邮箱、证件号或凭据值
+        target_concept_ids:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 30
+          maximum: 480
+    SyntheticScenarioDataset:
+      type: object
+      additionalProperties: false
+      required: [filename, columns, rows, sha256]
+      properties:
+        filename:
+          type: string
+        columns:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: true
+        sha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+    GeneratedScenarioProject:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - scenario_context
+        - tasks
+        - constraints
+        - deliverables
+        - source_refs
+        - computer_science_objectives
+        - ai_generated_notice
+        - provider
+        - model
+        - degraded
+        - dataset
+      properties:
+        title:
+          type: string
+        scenario_context:
+          type: string
+        tasks:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            type: string
+        deliverables:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        computer_science_objectives:
+          type: array
+          items:
+            type: string
+        data_classification:
+          type: string
+          const: synthetic
+        ai_generated_notice:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        degraded:
+          type: boolean
+        dataset:
+          $ref: "#/components/schemas/SyntheticScenarioDataset"
     SourceDetail:
       type: object
       additionalProperties: false
@@ -883,6 +1113,211 @@ components:
           $ref: "#/components/schemas/LearnerProfile"
         plan:
           $ref: "#/components/schemas/Plan"
+    DiagnosticPhase:
+      type: string
+      enum: [initial, reassessment]
+    DiagnosticOption:
+      type: object
+      additionalProperties: false
+      required: [id, text]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+    DiagnosticItem:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, title, prompt, concept_ids, options]
+      properties:
+        exercise_id:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        concept_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/DiagnosticOption"
+    DiagnosticQuiz:
+      type: object
+      additionalProperties: false
+      required: [course_id, phase, title, instructions, items]
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        title:
+          type: string
+        instructions:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/DiagnosticItem"
+    DiagnosticAnswer:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, response]
+      properties:
+        exercise_id:
+          type: string
+        response:
+          type: string
+    DiagnosticSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, phase, answers]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        answers:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/DiagnosticAnswer"
+    DiagnosticItemResult:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, knowledge_point_id, correct]
+      properties:
+        exercise_id:
+          type: string
+        knowledge_point_id:
+          type: string
+        correct:
+          type: boolean
+    DiagnosticSubmissionResult:
+      type: object
+      additionalProperties: false
+      required: [phase, correct_count, total_count, item_results, profile, plan]
+      properties:
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        correct_count:
+          type: integer
+          minimum: 0
+        total_count:
+          type: integer
+          minimum: 1
+        item_results:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticItemResult"
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        plan:
+          $ref: "#/components/schemas/Plan"
+    GenerateProblemRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        attempt_index:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          default: 1
+    PublicExample:
+      type: object
+      additionalProperties: false
+      required: [input, expected_output]
+      properties:
+        input:
+          type: string
+        expected_output:
+          type: string
+    GeneratedCodeProblem:
+      type: object
+      additionalProperties: false
+      required: [problem_id, title, prompt, concept_ids, difficulty, constraints, public_examples, starter_code, hints, generation_notice]
+      properties:
+        problem_id:
+          type: string
+        course_id:
+          type: string
+          const: python
+        title:
+          type: string
+        prompt:
+          type: string
+        concept_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        constraints:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        public_examples:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PublicExample"
+        starter_code:
+          type: string
+        hints:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: string
+        generation_notice:
+          type: string
+    GeneratedProblemSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, source_code]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        source_code:
+          type: string
+          minLength: 1
+          maxLength: 100000
+    GeneratedProblemSubmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [problem, verification, feedback, profile, next_problem]
+      properties:
+        problem:
+          $ref: "#/components/schemas/GeneratedCodeProblem"
+        verification:
+          $ref: "#/components/schemas/VerificationResult"
+        feedback:
+          type: string
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        next_problem:
+          $ref: "#/components/schemas/GeneratedCodeProblem"
     Citation:
       type: object
       additionalProperties: false
@@ -994,7 +1429,7 @@ components:
           maxItems: 20
           items:
             type: string
-    ReviewCheck:
+    EvidenceCheck:
       type: object
       additionalProperties: false
       required: [item, present, detail]
@@ -1008,7 +1443,7 @@ components:
     ProjectSubmissionResponse:
       type: object
       additionalProperties: false
-      required: [submission_id, project_id, status, feedback, review_checklist, mastery_unchanged]
+      required: [submission_id, project_id, status, feedback, evidence_checklist, mastery_unchanged]
       properties:
         submission_id:
           type: string
@@ -1016,13 +1451,13 @@ components:
           type: string
         status:
           type: string
-          const: received_for_review
+          const: evidence_recorded
         feedback:
           type: string
-        review_checklist:
+        evidence_checklist:
           type: array
           items:
-            $ref: "#/components/schemas/ReviewCheck"
+            $ref: "#/components/schemas/EvidenceCheck"
         mastery_unchanged:
           type: array
           items:

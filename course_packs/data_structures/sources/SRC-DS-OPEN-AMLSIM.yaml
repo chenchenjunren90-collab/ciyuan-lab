@@ -1,0 +1,20 @@
+id: SRC-DS-OPEN-AMLSIM
+title: IBM AMLSim 合成交易网络项目说明
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: open_resource
+citation:
+  locator: IBM AMLSim GitHub仓库与项目说明
+  url: https://github.com/IBM/AMLSim
+  publisher: IBM
+rights:
+  basis: open_license
+  license: Apache-2.0
+  note: 仅参考合成交易网络与已知模式的建模思想并保留署名；本项目自行生成更小的教学图，不复制真实银行数据。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

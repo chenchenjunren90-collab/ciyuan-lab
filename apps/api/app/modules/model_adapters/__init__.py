@@ -19,6 +19,7 @@ from app.modules.model_adapters.tuoling import (
     TuolingScenarioResponse,
 )
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
+from app.modules.model_adapters.xfyun_maas import XfyunMaaSAdapter
 
 __all__ = [
     "ChatMessage",
@@ -31,6 +32,7 @@ __all__ = [
     "ModelTimeoutError",
     "ModelUpstreamError",
     "XfyunSparkAdapter",
+    "XfyunMaaSAdapter",
     "TuolingScenarioAdapter",
     "TuolingScenarioRequest",
     "TuolingScenarioResponse",

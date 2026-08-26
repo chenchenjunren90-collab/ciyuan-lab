@@ -8,7 +8,7 @@ from app.modules.model_adapters.ports import ChatMessage, ModelAdapter, ModelRes
 
 _DEFAULT_REPLY = (
     "Mock 适配器：模型服务未配置，已降级为固定回复。"
-    "配置 XFYUN_SPARK_API_KEY / XFYUN_SPARK_API_SECRET 后即可使用真实模型。"
+    "配置 XFYUN_MAAS_API_KEY 后即可使用讯飞MaaS真实模型。"
 )
 
 

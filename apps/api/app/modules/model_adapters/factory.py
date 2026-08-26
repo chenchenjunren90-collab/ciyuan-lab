@@ -8,15 +8,26 @@ from app.modules.model_adapters.mock import MockAdapter
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.model_adapters.tuoling import TuolingScenarioAdapter
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
+from app.modules.model_adapters.xfyun_maas import XfyunMaaSAdapter
 
 
 def build_model_adapter(settings: Settings) -> ModelAdapter:
     """Return a configured adapter, falling back to Mock when allowed.
 
-    A real adapter is built only when both the API key and secret are set.
-    Otherwise a fixed Mock adapter is returned unless fallback is disabled,
-    in which case a configuration error is raised.
+    Xfyun MaaS is preferred when its API key is configured. Legacy Spark
+    credentials remain supported for older local environments. Otherwise a
+    fixed Mock adapter is returned unless fallback is disabled.
     """
+    maas_api_key = settings.xfyun_maas_api_key.get_secret_value().strip()
+    if maas_api_key:
+        return XfyunMaaSAdapter(
+            base_url=settings.xfyun_maas_base_url,
+            api_key=maas_api_key,
+            model=settings.xfyun_maas_model,
+            timeout_seconds=settings.xfyun_maas_timeout_seconds,
+            max_retries=settings.xfyun_maas_max_retries,
+        )
+
     api_password = settings.xfyun_spark_api_password.get_secret_value().strip()
     api_key = settings.xfyun_spark_api_key.get_secret_value().strip()
     api_secret = settings.xfyun_spark_api_secret.get_secret_value().strip()
@@ -32,7 +43,7 @@ def build_model_adapter(settings: Settings) -> ModelAdapter:
             max_retries=settings.xfyun_spark_max_retries,
         )
 
-    if settings.xfyun_spark_mock_fallback:
+    if settings.xfyun_maas_mock_fallback and settings.xfyun_spark_mock_fallback:
         return MockAdapter()
 
     raise ModelConfigurationError("Model adapter is not configured and Mock fallback is disabled")

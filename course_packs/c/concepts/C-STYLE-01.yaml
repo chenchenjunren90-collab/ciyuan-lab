@@ -1,0 +1,36 @@
+id: C-STYLE-01
+title: 编码规范与程序组织
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-01
+- C-DEBUG-01
+learning_objectives:
+- 能使用一致的命名、缩进、常量和短函数组织可阅读、可测试的 C 程序
+- 能把公开声明与私有实现分离，并让错误路径、资源所有权和接口约束清晰可见
+concepts:
+- 编码规范
+- 程序组织
+- 可读性
+- 接口最小化
+- 资源所有权
+lesson:
+  summary: 编码规范不改变 C 的运行语义，却直接影响协作、调试和测试成本。可维护程序使用一致的命名与格式，以有含义的常量替代魔法数，把单一职责封装为短函数，并在头文件中只暴露必要接口。文件、内存等资源应有明确所有者，错误路径必须与正常路径一样可读并完成清理；注释应解释约束与原因，而不是重复代码表面行为。
+  key_points:
+  - 同一模块保持一致的命名、缩进和括号风格，名称表达用途、单位和所有权，而不是只追求简短。
+  - 用具名常量、枚举或受控配置替代散落的魔法数，让范围和业务含义可以集中修改与验证。
+  - 函数保持单一职责并显式返回错误；头文件只暴露稳定声明，文件内辅助函数优先使用 static 隐藏。
+  - 正常路径与错误路径都必须释放已获得资源，注释重点说明前置条件、不变量和非显然取舍。
+  common_mistakes:
+  - 把大量逻辑堆入 main 或单个长函数，依赖全局状态传递数据，使测试无法隔离失败原因。
+  - 为了“方便共享”在头文件中定义可变全局对象，造成重复定义、隐式耦合和不清晰的修改责任。
+  examples:
+  - 组织示例：parser.h 只声明 parse_record，parser.c 用 static 辅助函数分解校验步骤，统一 cleanup 标签释放文件和动态内存并返回明确错误码。
+assessment_ids:
+- C-STYLE-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

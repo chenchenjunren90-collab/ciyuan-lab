@@ -90,7 +90,7 @@ class ScenarioContextService:
         project: ActivityDetail,
         provider_status: Literal["disabled", "fallback"],
     ) -> ScenarioContext:
-        fallback_refs = project.fallback_source_refs
+        fallback_refs = project.fallback_source_refs or project.source_refs
         reviewed = {
             source.id: source
             for source in self._courses.list_rag_source_records(course_id)

@@ -26,6 +26,29 @@ lesson:
   common_mistakes:
   - 误以为访问列表下标 len(items) 会得到最后一个元素
   - 误以为列表赋值 copy = original 会创建元素完全独立的副本
+  learning_sequence:
+  - title: 先建立容器模型
+    content: 把列表理解为有顺序、可修改的一组值，先区分元素值与元素位置。
+  - title: 再练索引与切片
+    content: 用边界表验证首项、末项、半开区间和空切片，避免只背语法。
+  - title: 最后处理边界
+    content: 主动测试空列表、越界访问和列表别名，说明程序应如何响应。
+  worked_example:
+    problem: 从一组温度读数中输出数量、最低值、最高值；空输入输出 EMPTY。
+    steps:
+    - 先判断列表是否为空，避免直接调用 min 或 max。
+    - 非空时分别计算 len、min 和 max，保持输出字段顺序固定。
+    - 用空列表、单元素列表和包含负数的列表验证边界。
+    code: |
+      values = [18, 21, 17, 22]
+      if not values:
+          print("EMPTY")
+      else:
+          print(len(values), min(values), max(values))
+    reflection: 如果把 values 直接赋给另一个变量，两个变量仍指向同一个列表；需要独立外层列表时可使用切片或 copy。
+  checkpoint:
+    prompt: 对列表 [4, 7, 9]，items[1:] 与 items[-1] 分别得到什么？空列表时上述访问是否都安全？
+    guidance: 先在纸上标出索引，再用最小代码验证；重点解释半开区间和越界差异。
 assessment_ids:
 - PY-LIST-01-Q1
 source_refs:

@@ -5,8 +5,16 @@ def test_audit_covers_all_three_mvp_courses() -> None:
     audits = [audit_course(course_id) for course_id in COURSE_IDS]
 
     assert [audit.course_id for audit in audits] == ["c", "python", "data_structures"]
-    assert all(audit.concepts == 40 for audit in audits)
-    assert all(audit.exercises == 40 for audit in audits)
+    assert {audit.course_id: audit.concepts for audit in audits} == {
+        "c": 42,
+        "python": 40,
+        "data_structures": 40,
+    }
+    assert {audit.course_id: audit.exercises for audit in audits} == {
+        "c": 42,
+        "python": 40,
+        "data_structures": 40,
+    }
     assert all(audit.projects >= 1 for audit in audits)
     assert all(len(audit.concept_gaps) == audit.concepts for audit in audits)
 
@@ -23,7 +31,7 @@ def test_markdown_report_contains_metrics_and_per_concept_findings() -> None:
     report = render_markdown([audit_course(course_id) for course_id in COURSE_IDS])
 
     assert "# 三门课程内容 v2 基线审计" in report
-    assert "| C语言程序设计 | 40 | 40 |" in report
+    assert "| C语言程序设计 | 42 | 42 |" in report
     assert "| PY-FUNC-01 | 函数定义与调用 |" in report
     assert "| DS-TREE-01 | 树、结点关系与基本术语 |" in report
 

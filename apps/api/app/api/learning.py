@@ -7,16 +7,23 @@ from typing import Annotated, Any, cast
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from app.api.dependencies import get_learning_flow_service
+from app.api.dependencies import get_diagnostic_service, get_learning_flow_service
 from app.api.schemas import NextActivity
 from app.modules.course_content.models import CourseId
 from app.modules.learner_profile.models import LearnerProfile
 from app.modules.learning_flow import LearningFlowService
+from app.modules.learning_flow.diagnostics import (
+    DiagnosticPhase,
+    DiagnosticQuiz,
+    DiagnosticService,
+)
 
 router = APIRouter(tags=["learning"])
 LearningFlowDependency = Annotated[LearningFlowService, Depends(get_learning_flow_service)]
 StudentIdQuery = Annotated[str, Query(min_length=1, max_length=128)]
 CourseIdQuery = Annotated[CourseId, Query()]
+DiagnosticServiceDependency = Annotated[DiagnosticService, Depends(get_diagnostic_service)]
+DiagnosticPhaseQuery = Annotated[DiagnosticPhase, Query()]
 
 
 class StrictModel(BaseModel):
@@ -58,6 +65,91 @@ class Plan(StrictModel):
 class AssessmentResult(StrictModel):
     profile: LearnerProfile
     plan: Plan
+
+
+class DiagnosticAnswer(StrictModel):
+    exercise_id: str = Field(min_length=1, max_length=128)
+    response: str = Field(min_length=1, max_length=64)
+
+
+class DiagnosticSubmissionRequest(StrictModel):
+    student_id: str = Field(min_length=1, max_length=128)
+    course_id: CourseId
+    phase: DiagnosticPhase
+    answers: list[DiagnosticAnswer] = Field(min_length=1, max_length=12)
+
+
+class DiagnosticItemResult(StrictModel):
+    exercise_id: str
+    knowledge_point_id: str
+    correct: bool
+
+
+class DiagnosticSubmissionResult(AssessmentResult):
+    phase: DiagnosticPhase
+    correct_count: int = Field(ge=0)
+    total_count: int = Field(gt=0)
+    item_results: list[DiagnosticItemResult]
+
+
+@router.get("/diagnostics", response_model=DiagnosticQuiz)
+async def get_diagnostic_quiz(
+    service: DiagnosticServiceDependency,
+    course_id: CourseIdQuery,
+    phase: DiagnosticPhaseQuery = "initial",
+) -> DiagnosticQuiz:
+    try:
+        return service.build_quiz(course_id=course_id, phase=phase)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post("/diagnostics/submissions", response_model=DiagnosticSubmissionResult)
+async def submit_diagnostic(
+    request: DiagnosticSubmissionRequest,
+    service: DiagnosticServiceDependency,
+) -> DiagnosticSubmissionResult:
+    try:
+        result = await service.submit(
+            student_id=request.student_id,
+            course_id=request.course_id,
+            phase=request.phase,
+            answers=[(answer.exercise_id, answer.response) for answer in request.answers],
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return DiagnosticSubmissionResult(
+        phase=result.phase,
+        correct_count=sum(item.correct for item in result.grades),
+        total_count=len(result.grades),
+        item_results=[
+            DiagnosticItemResult(
+                exercise_id=item.exercise_id,
+                knowledge_point_id=item.knowledge_point_id,
+                correct=item.correct,
+            )
+            for item in result.grades
+        ],
+        profile=result.assessment.profile,
+        plan=Plan(
+            student_id=request.student_id,
+            course_id=request.course_id,
+            stages=[
+                PlanStage(
+                    stage=stage.stage,
+                    objective=stage.objective,
+                    knowledge_point_ids=list(stage.knowledge_point_ids),
+                    reason=stage.reason,
+                )
+                for stage in result.assessment.stages
+            ],
+            next_activity=NextActivity(
+                activity_id=result.assessment.next_activity.activity_id,
+                activity_type=cast(Any, result.assessment.next_activity.activity_type),
+                reason=result.assessment.next_activity.reason,
+            ),
+        ),
+    )
 
 
 @router.post("/assessments", response_model=AssessmentResult)

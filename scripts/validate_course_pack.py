@@ -307,7 +307,14 @@ def validate_learning_card(lesson: object, file_label: str) -> list[str]:
     errors = validate_keys(
         lesson,
         required={"summary"},
-        optional={"key_points", "examples", "common_mistakes"},
+        optional={
+            "key_points",
+            "examples",
+            "common_mistakes",
+            "learning_sequence",
+            "worked_example",
+            "checkpoint",
+        },
         file_label=f"{file_label}.lesson",
     )
     if not is_non_empty_string(lesson.get("summary")):
@@ -318,6 +325,68 @@ def validate_learning_card(lesson: object, file_label: str) -> list[str]:
                 lesson[field_name], field_name=f"lesson.{field_name}", file_label=file_label
             )
             errors.extend(field_errors)
+    sequence = lesson.get("learning_sequence")
+    if sequence is not None:
+        if not isinstance(sequence, list) or not sequence:
+            errors.append(f"{file_label}: lesson.learning_sequence must be a non-empty list")
+        else:
+            for index, step in enumerate(sequence):
+                step_label = f"{file_label}.lesson.learning_sequence[{index}]"
+                if not isinstance(step, dict):
+                    errors.append(f"{step_label}: step must be a mapping")
+                    continue
+                errors.extend(
+                    validate_keys(
+                        step,
+                        required={"title", "content"},
+                        optional=None,
+                        file_label=step_label,
+                    )
+                )
+                for field_name in ("title", "content"):
+                    if not is_non_empty_string(step.get(field_name)):
+                        errors.append(f"{step_label}: {field_name} must be a non-empty string")
+    worked_example = lesson.get("worked_example")
+    if worked_example is not None:
+        example_label = f"{file_label}.lesson.worked_example"
+        if not isinstance(worked_example, dict):
+            errors.append(f"{example_label}: worked_example must be a mapping")
+        else:
+            errors.extend(
+                validate_keys(
+                    worked_example,
+                    required={"problem", "steps", "code", "reflection"},
+                    optional=None,
+                    file_label=example_label,
+                )
+            )
+            for field_name in ("problem", "code", "reflection"):
+                if not is_non_empty_string(worked_example.get(field_name)):
+                    errors.append(f"{example_label}: {field_name} must be a non-empty string")
+            step_errors, _ = validate_string_list(
+                worked_example.get("steps"),
+                field_name="steps",
+                file_label=example_label,
+                min_items=2,
+            )
+            errors.extend(step_errors)
+    checkpoint = lesson.get("checkpoint")
+    if checkpoint is not None:
+        checkpoint_label = f"{file_label}.lesson.checkpoint"
+        if not isinstance(checkpoint, dict):
+            errors.append(f"{checkpoint_label}: checkpoint must be a mapping")
+        else:
+            errors.extend(
+                validate_keys(
+                    checkpoint,
+                    required={"prompt", "guidance"},
+                    optional=None,
+                    file_label=checkpoint_label,
+                )
+            )
+            for field_name in ("prompt", "guidance"):
+                if not is_non_empty_string(checkpoint.get(field_name)):
+                    errors.append(f"{checkpoint_label}: {field_name} must be a non-empty string")
     return errors
 
 

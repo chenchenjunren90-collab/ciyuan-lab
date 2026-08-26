@@ -9,7 +9,7 @@ from uuid import UUID
 import pytest
 from fastapi.testclient import TestClient
 
-from app.api.dependencies import get_learning_flow_service
+from app.api.dependencies import get_diagnostic_service, get_learning_flow_service
 from app.main import app
 from app.modules.course_content import CoursePackRepository
 from app.modules.course_content.models import CourseId
@@ -23,6 +23,7 @@ from app.modules.learner_profile.records import (
     MasteryUpdateResult,
 )
 from app.modules.learning_flow import LearningFlowService
+from app.modules.learning_flow.diagnostics import DiagnosticService
 from app.modules.model_adapters import MockAdapter
 
 
@@ -110,6 +111,9 @@ def client_and_store() -> Generator[tuple[TestClient, MemoryLearningStore]]:
         model_adapter=MockAdapter(),
     )
     app.dependency_overrides[get_learning_flow_service] = lambda: service
+    app.dependency_overrides[get_diagnostic_service] = lambda: DiagnosticService(
+        courses=CoursePackRepository(), learning_flow=service
+    )
     try:
         yield TestClient(app), store
     finally:
@@ -201,3 +205,61 @@ def test_profile_returns_not_found_before_assessment(
     )
 
     assert response.status_code == 404
+
+
+def test_diagnostic_hides_answers_and_server_grades_submission(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, store = client_and_store
+    quiz_response = client.get(
+        "/api/v1/diagnostics",
+        params={"course_id": "python", "phase": "initial"},
+    )
+
+    assert quiz_response.status_code == 200
+    quiz = quiz_response.json()
+    assert quiz["phase"] == "initial"
+    assert len(quiz["items"]) == 8
+    assert all("accepted_answers" not in item for item in quiz["items"])
+    answers = [
+        {"exercise_id": item["exercise_id"], "response": item["options"][0]["id"]}
+        for item in quiz["items"]
+    ]
+
+    result = client.post(
+        "/api/v1/diagnostics/submissions",
+        json={
+            "student_id": "diagnostic-student",
+            "course_id": "python",
+            "phase": "initial",
+            "answers": answers,
+        },
+    )
+
+    assert result.status_code == 200
+    payload = result.json()
+    assert payload["total_count"] == 8
+    assert payload["correct_count"] == sum(
+        item["correct"] for item in payload["item_results"]
+    )
+    assert len(store.events) == 8
+    assert payload["profile"]["mastery"]
+
+
+def test_diagnostic_rejects_missing_or_invented_items(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, _ = client_and_store
+
+    response = client.post(
+        "/api/v1/diagnostics/submissions",
+        json={
+            "student_id": "diagnostic-student",
+            "course_id": "python",
+            "phase": "reassessment",
+            "answers": [{"exercise_id": "PY-NOT-REAL", "response": "A"}],
+        },
+    )
+
+    assert response.status_code == 422
+    assert "must match the current quiz" in response.json()["detail"]

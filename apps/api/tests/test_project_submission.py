@@ -20,7 +20,7 @@ class EventStore:
         return True
 
 
-def test_project_submission_records_review_intake_without_automatic_score() -> None:
+def test_project_submission_records_evidence_without_automatic_score() -> None:
     courses = CoursePackRepository()
     project = next(item for item in courses.list_activities("python") if item.type == "project")
     store = EventStore()
@@ -39,11 +39,12 @@ def test_project_submission_records_review_intake_without_automatic_score() -> N
         test_evidence=["pytest: 12 passed", "异常输入返回明确错误"],
     )
 
-    assert result.status == "received_for_review"
+    assert result.status == "evidence_recorded"
     assert result.mastery_unchanged[0].score == 0.6
-    assert all(item.present for item in result.review_checklist)
+    assert all(item.present for item in result.evidence_checklist)
     assert len(store.events) == 1
     payload = store.events[0].payload
-    assert payload["review_status"] == "pending_human_review"
+    assert payload["project_status"] == "evidence_recorded_not_scored"
+    assert payload["automatic_score_applied"] is False
     assert "accepted" not in payload
     assert summary not in str(payload)

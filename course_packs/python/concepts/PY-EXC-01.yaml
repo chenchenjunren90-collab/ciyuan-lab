@@ -29,6 +29,32 @@ lesson:
   common_mistakes:
   - 误以为except Exception 能捕获包括 KeyboardInterrupt 在内的所有 BaseException
   - 误以为finally 只在没有异常时执行，出现异常后会被跳过
+  learning_sequence:
+  - title: 找出可能失败的最小操作
+    content: 先标记输入转换、文件访问等具体风险，不把整段业务逻辑都包进 try。
+  - title: 捕获可处理的异常
+    content: 针对 int 转换捕获 ValueError，并明确跳过、默认值或提示用户的策略。
+  - title: 区分 else 与 finally
+    content: 成功后的处理放在 else，成功失败都必须执行的清理放在 finally。
+  worked_example:
+    problem: 逐行读取文本，只汇总能被 int 转换的整数。
+    steps:
+    - 每次只把 int(text) 放入 try，避免掩盖其他程序错误。
+    - 捕获 ValueError 后跳过当前文本，不使用空 except。
+    - 最后输出有效整数数量与总和，并测试全部非法的输入。
+    code: |
+      values = []
+      for text in ["12", "bad", "-5"]:
+          try:
+              value = int(text)
+          except ValueError:
+              continue
+          values.append(value)
+      print(len(values), sum(values))
+    reflection: 异常处理应恢复可预期的输入错误，不应吞掉编程错误；错误日志也不应包含密钥或敏感数据。
+  checkpoint:
+    prompt: 为什么把 append、统计和输出全部放进同一个 try/except Exception 会降低程序可靠性？
+    guidance: 从异常定位、错误掩盖和可测试性三个角度回答，再把 try 缩小到单个转换语句。
 assessment_ids:
 - PY-EXC-01-D1
 source_refs:

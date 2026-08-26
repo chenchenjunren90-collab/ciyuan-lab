@@ -61,17 +61,17 @@ def test_tuoling_adapter_sends_only_project_metadata() -> None:
     assert source_refs == ("TUOLING-CASE-001",)
 
 
-def test_scenario_endpoint_uses_reviewed_fixed_fallback_when_disabled() -> None:
+def test_scenario_endpoint_uses_reviewed_fixed_synthetic_context() -> None:
     with TestClient(app) as client:
         response = client.get("/api/v1/courses/python/projects/PY-PROJ-FINANCE-DATA-01/scenario")
 
     assert response.status_code == 200
     payload = response.json()
     assert payload["mode"] == "fixed_synthetic"
-    assert payload["provider_status"] == "disabled"
+    assert payload["provider_status"] == "fallback"
     assert payload["data_classification"] == "synthetic"
-    assert payload["source_refs"] == ["SRC-PY-GUIDE-CASE-FALLBACK"]
-    assert "所有主体与数值均为虚构" in payload["context"]
+    assert "SRC-PY-SYNTHETIC-FINANCE-CATALOG" in payload["source_refs"]
+    assert "虚构客户编号" in payload["context"]
 
 
 def test_scenario_endpoint_rejects_non_finance_project() -> None:
@@ -100,16 +100,10 @@ def test_tuoling_adapter_rejects_oversized_context() -> None:
         asyncio.run(scenario())
 
 
-def test_scenario_service_filters_unregistered_provider_source_ids() -> None:
+def test_fixed_synthetic_project_does_not_call_tuoling() -> None:
     class FakeTuoling:
         async def fetch_context(self, _request: object) -> object:
-            from app.modules.model_adapters.tuoling import TuolingScenarioResponse
-
-            return TuolingScenarioResponse(
-                context="已授权脱敏场景",
-                constraints=("仅用于编程练习",),
-                source_refs=("UNREGISTERED-SOURCE", "SRC-PY-GUIDE-DATA"),
-            )
+            raise AssertionError("fixed synthetic projects must not call Tuoling")
 
     result = asyncio.run(
         ScenarioContextService(
@@ -118,4 +112,5 @@ def test_scenario_service_filters_unregistered_provider_source_ids() -> None:
         ).get_context("python", "PY-PROJ-FINANCE-DATA-01")
     )
 
-    assert result.source_refs == ["SRC-PY-GUIDE-DATA"]
+    assert result.mode == "fixed_synthetic"
+    assert "SRC-PY-SYNTHETIC-FINANCE-CATALOG" in result.source_refs

@@ -3,8 +3,8 @@ course:
   id: c
   title: C语言程序设计
   status: draft
-  target_core_concepts: 40
-  implemented_core_concepts: 40
+  target_core_concepts: 42
+  implemented_core_concepts: 42
 content:
   concepts_dir: concepts
   exercises_dir: exercises

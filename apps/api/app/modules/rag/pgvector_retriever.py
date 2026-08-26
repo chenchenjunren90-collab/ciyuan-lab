@@ -10,13 +10,19 @@ from sqlalchemy import Engine, bindparam, text
 from app.modules.rag.embeddings import TokenHashEmbedder
 from app.modules.rag.ingestion import EligibleKnowledgeChunk
 from app.modules.rag.ports import KnowledgeRetriever, SearchHit
-from app.modules.rag.retriever import tokenize
+from app.modules.rag.retriever import query_is_in_course_scope, query_variants, tokenize
 
 _COURSE_IDS = ("c", "python", "data_structures")
 
 
 def _vector_literal(values: Sequence[float]) -> str:
     return "[" + ",".join(f"{value:.9f}" for value in values) + "]"
+
+
+def _or_tsquery(tokens: Sequence[str]) -> str:
+    """Build a safely quoted OR query from already-tokenized lexemes."""
+
+    return " | ".join(f"'{token.replace(chr(39), chr(39) * 2)}'" for token in tokens)
 
 
 class PgVectorKnowledgeStore:
@@ -110,19 +116,20 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
         self._vector_weight = vector_weight
 
     async def search(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
-        if not query.strip() or course_id not in _COURSE_IDS or top_k < 1:
+        if (
+            not query.strip()
+            or course_id not in _COURSE_IDS
+            or top_k < 1
+            or not query_is_in_course_scope(query, course_id)
+        ):
             return ()
-        token_query = " ".join(tokenize(query))
-        if not token_query:
-            return ()
-        vector = _vector_literal(self._embedder.embed(query))
         statement = text(
             """
             WITH scored AS (
                 SELECT source_id, chunk_id, content, title, citation,
                        ts_rank_cd(
                            search_vector,
-                           plainto_tsquery('simple', :token_query)
+                           to_tsquery('simple', :token_query)
                        ) AS lexical_score,
                        GREATEST(0.0, 1.0 - (embedding <=> CAST(:embedding AS vector)))
                            AS vector_score
@@ -138,26 +145,39 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
             LIMIT :top_k
             """
         )
+        best_by_chunk: dict[str, SearchHit] = {}
         with self._engine.connect() as connection:
-            rows = connection.execute(
-                statement,
-                {
-                    "course_id": course_id,
-                    "embedding": vector,
-                    "token_query": token_query,
-                    "vector_weight": self._vector_weight,
-                    "min_score": self._min_score,
-                    "top_k": min(top_k, 20),
-                },
-            ).mappings()
-            return tuple(
-                SearchHit(
-                    source_id=str(row["source_id"]),
-                    chunk_id=str(row["chunk_id"]),
-                    content=str(row["content"]),
-                    score=round(float(row["score"]), 6),
-                    metadata={"title": row["title"], "citation": row["citation"]},
-                )
-                for row in rows
-                if float(row["score"]) >= self._min_score
-            )
+            for variant in query_variants(query):
+                token_query = _or_tsquery(tuple(tokenize(variant)))
+                if not token_query:
+                    continue
+                rows = connection.execute(
+                    statement,
+                    {
+                        "course_id": course_id,
+                        "embedding": _vector_literal(self._embedder.embed(variant)),
+                        "token_query": token_query,
+                        "vector_weight": self._vector_weight,
+                        "min_score": self._min_score,
+                        "top_k": min(top_k, 20),
+                    },
+                ).mappings()
+                for row in rows:
+                    score = round(float(row["score"]), 6)
+                    if score < self._min_score:
+                        continue
+                    hit = SearchHit(
+                        source_id=str(row["source_id"]),
+                        chunk_id=str(row["chunk_id"]),
+                        content=str(row["content"]),
+                        score=score,
+                        metadata={"title": row["title"], "citation": row["citation"]},
+                    )
+                    previous = best_by_chunk.get(hit.chunk_id)
+                    if previous is None or hit.score > previous.score:
+                        best_by_chunk[hit.chunk_id] = hit
+        return tuple(
+            sorted(best_by_chunk.values(), key=lambda hit: (-hit.score, hit.chunk_id))[
+                : min(top_k, 20)
+            ]
+        )

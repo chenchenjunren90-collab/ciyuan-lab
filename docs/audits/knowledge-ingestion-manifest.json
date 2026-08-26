@@ -1,8 +1,8 @@
 {
   "schema_version": "0.1.0",
-  "snapshot_hash": "42a43e4c77ff5aa4a90e1085300ebacf88b990a0fea9e1d6ac25101faec71417",
-  "eligible_count": 14,
-  "blocked_count": 120,
+  "snapshot_hash": "052d12616b77f32038ab32e7d312eec4d0a1595f44676b70c5ae35bf7aac7364",
+  "eligible_count": 17,
+  "blocked_count": 122,
   "candidates": [
     {
       "candidate_id": "concept:C-ARRAY-01:a6ce8fe229",
@@ -31,15 +31,15 @@
       "blocked_reason": "concept_not_human_reviewed"
     },
     {
-      "candidate_id": "concept:C-BASE-01:f011dc6205",
+      "candidate_id": "concept:C-BASE-01:64e5cb6b35",
       "course_id": "c",
       "record_type": "concept_preview",
       "record_id": "C-BASE-01",
       "source_ids": [
         "SRC-C-GUIDE-BASE"
       ],
-      "content_hash": "f011dc6205f96392136e39d836b3aba14d64174e26c6851d183684f83ba2d8eb",
-      "character_count": 597,
+      "content_hash": "64e5cb6b3596b1146d6d0ec3ada34d056a8eebe3ab0d72d2336da04920e2ae83",
+      "character_count": 666,
       "eligible": false,
       "blocked_reason": "concept_not_human_reviewed"
     },
@@ -278,15 +278,15 @@
       "blocked_reason": "concept_not_human_reviewed"
     },
     {
-      "candidate_id": "concept:C-IO-02:cec2e41994",
+      "candidate_id": "concept:C-IO-02:8cafc02a61",
       "course_id": "c",
       "record_type": "concept_preview",
       "record_id": "C-IO-02",
       "source_ids": [
         "SRC-C-GUIDE-ENGINEERING"
       ],
-      "content_hash": "cec2e4199487d943c93f83671e0500e70e77c8535cd512995edae65477cbe741",
-      "character_count": 500,
+      "content_hash": "8cafc02a61148557733678066c387fbefa4dea2e6c5c81143e7e0d6187db1773",
+      "character_count": 685,
       "eligible": false,
       "blocked_reason": "concept_not_human_reviewed"
     },
@@ -343,15 +343,15 @@
       "blocked_reason": "concept_not_human_reviewed"
     },
     {
-      "candidate_id": "concept:C-MOD-01:e36663042f",
+      "candidate_id": "concept:C-MOD-01:f6c3264c34",
       "course_id": "c",
       "record_type": "concept_preview",
       "record_id": "C-MOD-01",
       "source_ids": [
         "SRC-C-GUIDE-ENGINEERING"
       ],
-      "content_hash": "e36663042f687ecd6a8002e37e3b8ad2e62489f32ef2381a2c3c757a17d1f511",
-      "character_count": 535,
+      "content_hash": "f6c3264c34de9f0d550e1cedbd6164ed4b0b17147ad01d07c67aa8bb6a301be9",
+      "character_count": 619,
       "eligible": false,
       "blocked_reason": "concept_not_human_reviewed"
     },
@@ -434,6 +434,19 @@
       "blocked_reason": "concept_not_human_reviewed"
     },
     {
+      "candidate_id": "concept:C-STD-01:a9736d9079",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-STD-01",
+      "source_ids": [
+        "SRC-C-GUIDE-STDLIB"
+      ],
+      "content_hash": "a9736d90792def52346395825c27a58cf8d639da45c761ba53c953a512ff8bba",
+      "character_count": 657,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
       "candidate_id": "concept:C-STR-01:59856c75f3",
       "course_id": "c",
       "record_type": "concept_preview",
@@ -456,6 +469,19 @@
       ],
       "content_hash": "7583a7745e97d402e91fd119b8f959608b964db63616b951d2bb2b644fb8584c",
       "character_count": 543,
+      "eligible": false,
+      "blocked_reason": "concept_not_human_reviewed"
+    },
+    {
+      "candidate_id": "concept:C-STYLE-01:151b750962",
+      "course_id": "c",
+      "record_type": "concept_preview",
+      "record_id": "C-STYLE-01",
+      "source_ids": [
+        "SRC-C-GUIDE-ENGINEERING"
+      ],
+      "content_hash": "151b7509628ea73262747390065ef61db8dbbe099c33cedb8986bbf750c0409b",
+      "character_count": 591,
       "eligible": false,
       "blocked_reason": "concept_not_human_reviewed"
     },
@@ -499,15 +525,15 @@
       "blocked_reason": "concept_not_human_reviewed"
     },
     {
-      "candidate_id": "concept:C-TYPE-03:427e8095c9",
+      "candidate_id": "concept:C-TYPE-03:55cc3697d5",
       "course_id": "c",
       "record_type": "concept_preview",
       "record_id": "C-TYPE-03",
       "source_ids": [
         "SRC-C-GUIDE-MEMORY"
       ],
-      "content_hash": "427e8095c9bf357bcfc294b42faa4c710fa3272612865c29869408778aa1d8d3",
-      "character_count": 481,
+      "content_hash": "55cc3697d5eda1dfc12e490dc14f5390134f1d6dfb0ccccd930298212e67499b",
+      "character_count": 652,
       "eligible": false,
       "blocked_reason": "concept_not_human_reviewed"
     },
@@ -1698,6 +1724,19 @@
       "blocked_reason": null
     },
     {
+      "candidate_id": "source:SRC-C-GUIDE-STDLIB:001:62a1f2d3b9",
+      "course_id": "c",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-C-GUIDE-STDLIB",
+      "source_ids": [
+        "SRC-C-GUIDE-STDLIB"
+      ],
+      "content_hash": "62a1f2d3b9e38f6767f4be2e789dd9c70a42d2f015730e671e7cb3bfa672bfb2",
+      "character_count": 222,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
       "candidate_id": "source:SRC-DS-GUIDE-DESIGN:001:7eb32f28d2",
       "course_id": "data_structures",
       "record_type": "reviewed_source_chunk",
@@ -1763,6 +1802,19 @@
       "blocked_reason": null
     },
     {
+      "candidate_id": "source:SRC-DS-SYNTHETIC-TRANSACTION-GRAPH:001:83757b8ad4",
+      "course_id": "data_structures",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-DS-SYNTHETIC-TRANSACTION-GRAPH",
+      "source_ids": [
+        "SRC-DS-SYNTHETIC-TRANSACTION-GRAPH"
+      ],
+      "content_hash": "83757b8ad41cecc02c1b6e6049af8afd95b8a22bd519e0b843d8d16bf1360508",
+      "character_count": 140,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
       "candidate_id": "source:SRC-PY-GUIDE-BASE:001:f9f8202309",
       "course_id": "python",
       "record_type": "reviewed_source_chunk",
@@ -1824,6 +1876,19 @@
       ],
       "content_hash": "8a7fa63dcc92d2ab0facfb16484242f107704d2aab42dcc243a48e09c0747904",
       "character_count": 89,
+      "eligible": true,
+      "blocked_reason": null
+    },
+    {
+      "candidate_id": "source:SRC-PY-SYNTHETIC-FINANCE-CATALOG:001:1c07e7cae0",
+      "course_id": "python",
+      "record_type": "reviewed_source_chunk",
+      "record_id": "SRC-PY-SYNTHETIC-FINANCE-CATALOG",
+      "source_ids": [
+        "SRC-PY-SYNTHETIC-FINANCE-CATALOG"
+      ],
+      "content_hash": "1c07e7cae0b00e4008d84b71231321c0252d05943a76e7c47140cf7e8b585476",
+      "character_count": 234,
       "eligible": true,
       "blocked_reason": null
     }
