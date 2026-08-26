@@ -1,0 +1,33 @@
+id: C-PTR-02
+title: 指针算术与数组关系
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-PTR-01
+learning_objectives:
+- 能判断与“指针算术与数组关系”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“指针算术与数组关系”的关键状态并验证边界
+concepts:
+- 指针算术与数组关系
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在同一数组对象范围内进行合法指针移动。关键要点包括：指针加减只在同一数组对象及其尾后位置范围内有定义，尾后指针可以比较但不能解引用；p+i 按所指类型的元素大小移动，两个同数组指针相减得到 ptrdiff_t 类型的元素距离；数组表达式在多数场景转换为首元素指针，但
+    sizeof 和一元 & 等场景不发生该转换。
+  key_points:
+  - 指针加减只在同一数组对象及其尾后位置范围内有定义，尾后指针可以比较但不能解引用。
+  - p+i 按所指类型的元素大小移动，两个同数组指针相减得到 ptrdiff_t 类型的元素距离。
+  - 数组表达式在多数场景转换为首元素指针，但 sizeof 和一元 & 等场景不发生该转换。
+  common_mistakes:
+  - 误以为任意两个独立 malloc 块的指针都可以相减得到可靠的字节距离。
+  - 误以为int 指针 p 加一只前进一个字节，与元素类型大小无关。
+  examples:
+  - 代码片段：int a[4]={10,20,30,40}; int *p=a+2; printf("%d %td\n",*p,p-a); 输出 30 2。
+assessment_ids:
+- C-PTR-02-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

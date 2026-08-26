@@ -1,0 +1,32 @@
+id: C-FUNC-02
+title: 参数传递与返回值
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-01
+learning_objectives:
+- 能判断与“参数传递与返回值”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“参数传递与返回值”的关键状态并验证边界
+concepts:
+- 参数传递与返回值
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解 C 的值传递并用返回值表达计算结果。关键要点包括：C 函数参数按值传递，形参是实参值的副本；修改形参本身不会改变调用者变量；需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功；返回指针时所指对象的生命周期必须超过函数调用，不能返回自动局部变量地址。
+  key_points:
+  - C 函数参数按值传递，形参是实参值的副本；修改形参本身不会改变调用者变量。
+  - 需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功。
+  - 返回指针时所指对象的生命周期必须超过函数调用，不能返回自动局部变量地址。
+  common_mistakes:
+  - 误以为C 语言把数组之外的所有函数参数按引用传递，因此修改形参会修改实参。
+  - 误以为返回函数内局部数组的地址是安全的，因为 return 会延长局部对象生命周期。
+  examples:
+  - 代码片段：void swap(int *a,int *b){int t=*a;*a=*b;*b=t;} 调用 swap(&x,&y) 后调用者变量交换。
+assessment_ids:
+- C-FUNC-02-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

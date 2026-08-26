@@ -1,0 +1,33 @@
+id: C-MAIN-01
+title: 命令行参数
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-STR-01
+learning_objectives:
+- 能判断与“命令行参数”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“命令行参数”的关键状态并验证边界
+concepts:
+- 命令行参数
+- 边界条件
+- 可验证性
+lesson:
+  summary: 校验 argc 后解析 argv，并向调用者返回状态码。关键要点包括：argc 是非负参数个数，argv[argc] 为 null 指针；仅当 argc 大于 0 时 argv[0] 才表示程序调用名称；命令行参数都是字符串，数值解析应使用
+    strtol 等可报告错误的方法并检查结束位置和范围；程序应先验证参数数量和选项组合，错误时输出用法并返回非零退出状态。
+  key_points:
+  - argc 是非负参数个数，argv[argc] 为 null 指针；仅当 argc 大于 0 时 argv[0] 才表示程序调用名称。
+  - 命令行参数都是字符串，数值解析应使用 strtol 等可报告错误的方法并检查结束位置和范围。
+  - 程序应先验证参数数量和选项组合，错误时输出用法并返回非零退出状态。
+  common_mistakes:
+  - 误以为argv 中的数值参数会在进入 main 前自动转换成 int。
+  - 误以为只要 argc 大于零，就可以无条件访问 argv[1]。
+  examples:
+  - 调用示例：app 25；程序先确认 argc==2，再用 strtol(argv[1],&end,10) 并检查 *end=='\0'。
+assessment_ids:
+- C-MAIN-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

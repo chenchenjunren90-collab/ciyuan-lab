@@ -1,0 +1,32 @@
+id: C-BIT-01
+title: 位运算与掩码
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-BASE-05
+learning_objectives:
+- 能判断与“位运算与掩码”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“位运算与掩码”的关键状态并验证边界
+concepts:
+- 位运算与掩码
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用移位和按位运算表达标志位并避免混淆逻辑运算。关键要点包括：位运算作用于整数类型，掩码可用于设置、清除、翻转或检测指定比特；移位位数必须非负且小于提升后左操作数的位宽；对无符号数移位更容易推理；组合掩码时应明确每一位的意义，并用括号处理位运算与比较运算的优先级。
+  key_points:
+  - 位运算作用于整数类型，掩码可用于设置、清除、翻转或检测指定比特。
+  - 移位位数必须非负且小于提升后左操作数的位宽；对无符号数移位更容易推理。
+  - 组合掩码时应明确每一位的意义，并用括号处理位运算与比较运算的优先级。
+  common_mistakes:
+  - 误以为表达式 1 << k 对任意 k 都有定义，超出类型位宽时会自动截断。
+  - 误以为按位运算符 & 和逻辑运算符 && 可以互换，因为二者都只产生 0 或 1。
+  examples:
+  - 代码片段：unsigned flags=0; flags |= 1u<<2; bool set=(flags & (1u<<2)) != 0；set 为真。
+assessment_ids:
+- C-BIT-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

@@ -1,0 +1,33 @@
+id: DS-MAP-01
+title: 集合与映射抽象
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-HASH-01
+learning_objectives:
+- 能判断与“集合与映射抽象”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“集合与映射抽象”的关键状态并验证边界
+concepts:
+- 集合与映射抽象
+- 边界条件
+- 可验证性
+lesson:
+  summary: 依据成员查询或键值关联选择集合接口。关键要点包括：集合表示互不重复的成员并支持成员查询、插入、删除以及并交差等运算；重复插入不增加基数；映射维护唯一键到值的关联，重复键必须明确覆盖、拒绝或合并语义；散列表提供期望常数时间操作，有序树提供
+    O(log n) 操作与有序遍历；键的相等、散列或比较语义必须稳定。
+  key_points:
+  - 集合表示互不重复的成员并支持成员查询、插入、删除以及并交差等运算；重复插入不增加基数。
+  - 映射维护唯一键到值的关联，重复键必须明确覆盖、拒绝或合并语义。
+  - 散列表提供期望常数时间操作，有序树提供 O(log n) 操作与有序遍历；键的相等、散列或比较语义必须稳定。
+  common_mistakes:
+  - 误以为集合每插入一次相同元素都会增加一个副本和集合基数。
+  - 误以为散列表中的集合或映射天然按键排序，因此范围查询一定比有序树更高效。
+  examples:
+  - 示例：集合 add(3)、add(3) 后基数仍为1；映射 put("alice",80) 后再 put("alice",90)，采用覆盖语义时键数不变且 get 返回90。
+assessment_ids:
+- DS-MAP-01-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

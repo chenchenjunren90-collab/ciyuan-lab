@@ -1,0 +1,32 @@
+id: DS-SORT-02
+title: 插入排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-SORT-01
+learning_objectives:
+- 能判断与“插入排序”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“插入排序”的关键状态并验证边界
+concepts:
+- 插入排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 维护已排序前缀并分析近乎有序输入。关键要点包括：插入排序在第 i 轮开始前保持前缀 [0,i) 已有序，再把当前元素插入正确位置；最坏时间为 Θ(n²)，但对近乎有序数据移动较少，最好可达 Θ(n)；移动时只跨过严格大于当前键的元素可保持相等键的原相对顺序。
+  key_points:
+  - 插入排序在第 i 轮开始前保持前缀 [0,i) 已有序，再把当前元素插入正确位置。
+  - 最坏时间为 Θ(n²)，但对近乎有序数据移动较少，最好可达 Θ(n)。
+  - 移动时只跨过严格大于当前键的元素可保持相等键的原相对顺序。
+  common_mistakes:
+  - 误以为插入排序每轮都在整个数组中寻找最小值，因此与选择排序过程完全相同。
+  - 误以为插入排序无论输入是否已有序都必须执行 Θ(n²) 次元素移动。
+  examples:
+  - 轨迹示例：[2,5,3] 的有序前缀 [2,5] 插入3时，先右移5，再把3放到位置1，得到 [2,3,5]。
+assessment_ids:
+- DS-SORT-02-C1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

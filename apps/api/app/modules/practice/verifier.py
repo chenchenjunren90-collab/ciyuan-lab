@@ -109,9 +109,7 @@ class DeterministicCodeVerifier(CodeVerifier):
         if not tests:
             raise ValueError("tests must not be empty")
         test_ids = [test.id for test in tests]
-        if any(not test_id.strip() for test_id in test_ids) or len(set(test_ids)) != len(
-            test_ids
-        ):
+        if any(not test_id.strip() for test_id in test_ids) or len(set(test_ids)) != len(test_ids):
             raise ValueError("test ids must be non-empty and unique")
 
         normalized: dict[str, int] = {}

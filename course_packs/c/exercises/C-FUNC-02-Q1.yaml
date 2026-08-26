@@ -1,0 +1,25 @@
+id: C-FUNC-02-Q1
+title: 概念判断：参数传递与返回值
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-FUNC-02
+prompt: 关于“参数传递与返回值”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-CONTROL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功。
+  - id: B
+    text: C 语言把数组之外的所有函数参数按引用传递，因此修改形参会修改实参。
+  - id: C
+    text: 返回函数内局部数组的地址是安全的，因为 return 会延长局部对象生命周期。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,33 @@
+id: DS-LINEAR-02
+title: 动态数组与容量扩展
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-01
+learning_objectives:
+- 能判断与“动态数组与容量扩展”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“动态数组与容量扩展”的关键状态并验证边界
+concepts:
+- 动态数组与容量扩展
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分长度和容量并理解摊还扩容成本。关键要点包括：动态数组分别维护元素个数 size 与已分配容量 capacity，必须保持 0 <= size <= capacity；容量不足时按倍数扩容可使连续尾插的摊还时间为 O(1)，单次扩容仍需
+    O(n) 搬移；重新分配后旧元素地址、指针和迭代位置可能失效，调用者不能继续使用。
+  key_points:
+  - 动态数组分别维护元素个数 size 与已分配容量 capacity，必须保持 0 <= size <= capacity。
+  - 容量不足时按倍数扩容可使连续尾插的摊还时间为 O(1)，单次扩容仍需 O(n) 搬移。
+  - 重新分配后旧元素地址、指针和迭代位置可能失效，调用者不能继续使用。
+  common_mistakes:
+  - 误以为动态数组每次追加都只增加一个容量，仍能保证 n 次追加总成本 O(n)。
+  - 误以为扩容搬移元素后，所有指向原数组元素的指针都会自动更新到新地址。
+  examples:
+  - 摊还示例：容量按 1、2、4、8 扩展，追加 8 个元素发生的搬移总数小于 8+4，因此总成本为 O(n)。
+assessment_ids:
+- DS-LINEAR-02-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

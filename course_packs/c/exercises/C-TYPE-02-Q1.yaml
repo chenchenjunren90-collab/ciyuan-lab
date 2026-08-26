@@ -1,0 +1,25 @@
+id: C-TYPE-02-Q1
+title: 概念判断：结构体数组、嵌套与指针
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-TYPE-02
+prompt: 关于“结构体数组、嵌套与指针”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 结构体指针通过 p->member 访问成员，等价于 (*p).member，但必须保证 p 有效。
+  - id: B
+    text: 结构体大小始终等于所有成员 sizeof 之和，不可能包含填充。
+  - id: C
+    text: 复制含 char * 成员的结构体时，C 会自动复制字符串内容并建立独立所有权。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,32 @@
+id: DS-STACK-02
+title: 栈的表达式与括号应用
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-STACK-01
+learning_objectives:
+- 能判断与“栈的表达式与括号应用”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“栈的表达式与括号应用”的关键状态并验证边界
+concepts:
+- 栈的表达式与括号应用
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用栈处理嵌套结构和表达式求值。关键要点包括：栈可保存尚未匹配的括号或运算符，后进先出顺序与嵌套结构的关闭顺序一致；中缀转后缀时依据优先级和结合性弹出运算符，括号控制弹栈边界但不进入结果；后缀表达式求值遇操作数入栈，遇二元运算符时先弹右操作数再弹左操作数。
+  key_points:
+  - 栈可保存尚未匹配的括号或运算符，后进先出顺序与嵌套结构的关闭顺序一致。
+  - 中缀转后缀时依据优先级和结合性弹出运算符，括号控制弹栈边界但不进入结果。
+  - 后缀表达式求值遇操作数入栈，遇二元运算符时先弹右操作数再弹左操作数。
+  common_mistakes:
+  - 误以为计算后缀表达式 a b - 时先弹出的 b 应作为左操作数，因此结果是 b-a。
+  - 误以为括号匹配只需统计左右括号数量相同，无需检查类型和嵌套次序。
+  examples:
+  - 轨迹示例：后缀 5 2 3 * + 先算2*3=6，再算5+6=11；运算结束栈中应只剩11。
+assessment_ids:
+- DS-STACK-02-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

@@ -1,0 +1,32 @@
+id: DS-SORT-05
+title: 快速排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-04
+learning_objectives:
+- 能判断与“快速排序”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“快速排序”的关键状态并验证边界
+concepts:
+- 快速排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 围绕枢轴划分子问题并控制退化风险。关键要点包括：快速排序通过分区建立不变量，使枢轴两侧元素满足规定关系，再递归处理子区间；平均时间为 Θ(n log n)，连续产生极不平衡分区时最坏退化为 Θ(n²)；随机选择枢轴或三数取中可降低规律输入持续退化的概率，但不改变最坏上界。
+  key_points:
+  - 快速排序通过分区建立不变量，使枢轴两侧元素满足规定关系，再递归处理子区间。
+  - 平均时间为 Θ(n log n)，连续产生极不平衡分区时最坏退化为 Θ(n²)。
+  - 随机选择枢轴或三数取中可降低规律输入持续退化的概率，但不改变最坏上界。
+  common_mistakes:
+  - 误以为快速排序无论枢轴如何选择都保证最坏 O(n log n)。
+  - 误以为分区完成后左右两段内部已经分别完全有序，不需要递归。
+  examples:
+  - 分区示例：以3为枢轴处理 [4,1,3,2] 后可得到 [1,2,3,4]，关键保证枢轴左侧不大于3、右侧不小于3。
+assessment_ids:
+- DS-SORT-05-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

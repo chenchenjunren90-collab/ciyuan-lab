@@ -1,0 +1,25 @@
+id: DS-GRAPH-04-Q1
+title: 概念判断：拓扑排序
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-GRAPH-04
+prompt: 关于“拓扑排序”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: Kahn 算法反复取入度为零的顶点并删除其出边，需同步更新剩余入度。
+  - id: B
+    text: 任意有向图都至少有一个拓扑序，只需从最小编号顶点开始。
+  - id: C
+    text: 拓扑排序的结果唯一，因此不同的零入度选择策略不会改变序列。
+  accepted_answers:
+  - A
+status: draft

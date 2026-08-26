@@ -1,0 +1,18 @@
+id: SRC-DS-GUIDE-SORTSEARCH
+title: 数据结构与算法 MVP 教学提要：SORTSEARCH
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 数据结构与算法 SORTSEARCH 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 排序算法需要同时评价正确性、时间、额外空间、稳定性和输入特征。二分查找只适用于有序区间，关键是维持搜索区间不变量。散列表平均性能取决于散列分布、装载因子和冲突处理，最坏情况仍需明确。
+status: reviewed

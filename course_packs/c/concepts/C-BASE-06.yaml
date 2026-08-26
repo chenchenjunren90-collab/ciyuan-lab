@@ -1,0 +1,32 @@
+id: C-BASE-06
+title: 类型转换与表达式求值
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-05
+learning_objectives:
+- 能判断与“类型转换与表达式求值”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“类型转换与表达式求值”的关键状态并验证边界
+concepts:
+- 类型转换与表达式求值
+- 边界条件
+- 可验证性
+lesson:
+  summary: 识别整数除法、提升规则和显式转换的影响。关键要点包括：混合类型表达式会执行整数提升和通常算术转换，结果类型可能在运算前就已改变；显式强制转换只改变转换后的值或解释方式，不能补救转换前已经发生的溢出；窄化转换可能丢失范围或精度；有符号与无符号比较前应先确认共同类型。
+  key_points:
+  - 混合类型表达式会执行整数提升和通常算术转换，结果类型可能在运算前就已改变。
+  - 显式强制转换只改变转换后的值或解释方式，不能补救转换前已经发生的溢出。
+  - 窄化转换可能丢失范围或精度；有符号与无符号比较前应先确认共同类型。
+  common_mistakes:
+  - 误以为把整数除法结果强制转换为 double，可以恢复除法时已经丢失的小数部分。
+  - 误以为任何有符号负数与无符号数比较时都会按数学整数大小直接比较。
+  examples:
+  - 代码片段：double a=(double)5/2 得到 2.5，而 double b=(double)(5/2) 得到 2.0。
+assessment_ids:
+- C-BASE-06-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

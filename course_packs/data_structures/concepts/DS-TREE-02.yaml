@@ -1,0 +1,32 @@
+id: DS-TREE-02
+title: 二叉树遍历
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-TREE-01
+learning_objectives:
+- 能判断与“二叉树遍历”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“二叉树遍历”的关键状态并验证边界
+concepts:
+- 二叉树遍历
+- 边界条件
+- 可验证性
+lesson:
+  summary: 实现前序、中序、后序和层序遍历。关键要点包括：先序、中序、后序分别在左右子树之前、中间、之后访问根结点；层序遍历使用队列按深度逐层访问；深度优先遍历可用递归或显式栈；仅给先序和后序通常不能唯一恢复普通二叉树，配合含唯一键的中序序列才常可唯一确定。
+  key_points:
+  - 先序、中序、后序分别在左右子树之前、中间、之后访问根结点。
+  - 层序遍历使用队列按深度逐层访问；深度优先遍历可用递归或显式栈。
+  - 仅给先序和后序通常不能唯一恢复普通二叉树，配合含唯一键的中序序列才常可唯一确定。
+  common_mistakes:
+  - 误以为二叉树的中序遍历总会得到按键升序序列，与树是否为搜索树无关。
+  - 误以为只凭任意二叉树的先序和后序序列就一定可以唯一重建原树。
+  examples:
+  - 示例：根A、左B、右C的二叉树，先序 A B C，中序 B A C，后序 B C A，层序 A B C。
+assessment_ids:
+- DS-TREE-02-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

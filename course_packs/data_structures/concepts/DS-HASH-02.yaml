@@ -1,0 +1,32 @@
+id: DS-HASH-02
+title: 冲突处理与扩容
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-HASH-01
+learning_objectives:
+- 能判断与“冲突处理与扩容”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“冲突处理与扩容”的关键状态并验证边界
+concepts:
+- 冲突处理与扩容
+- 边界条件
+- 可验证性
+lesson:
+  summary: 比较链地址和开放寻址并设计扩容策略。关键要点包括：链地址法让同槽元素进入桶结构，平均桶长由装载因子决定；开放寻址沿探测序列寻找位置，删除时通常使用墓碑，不能直接改为空槽中断后续查找；装载因子过高会增加探测或桶遍历成本，应在阈值前扩容并重新散列。
+  key_points:
+  - 链地址法让同槽元素进入桶结构，平均桶长由装载因子决定。
+  - 开放寻址沿探测序列寻找位置，删除时通常使用墓碑，不能直接改为空槽中断后续查找。
+  - 装载因子过高会增加探测或桶遍历成本，应在阈值前扩容并重新散列。
+  common_mistakes:
+  - 误以为开放寻址删除键后可直接把槽设为从未使用，不会影响其他发生冲突的键。
+  - 误以为线性探测完全消除了聚集现象，因此装载因子接近 1 时仍保持稳定常数时间。
+  examples:
+  - 轨迹示例：容量 5，键 1、6 经 h(k)=k mod 5 冲突；线性探测把 1 放槽1、6 放槽2，查找6需经过槽1。
+assessment_ids:
+- DS-HASH-02-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

@@ -1,0 +1,33 @@
+id: DS-FOUND-03
+title: 渐进记号与增长率
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-02
+learning_objectives:
+- 能判断与“渐进记号与增长率”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“渐进记号与增长率”的关键状态并验证边界
+concepts:
+- 渐进记号与增长率
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用 O、Ω、Θ 比较算法增长趋势。关键要点包括：O 给出渐进上界，Ω 给出渐进下界，Θ 同时给出同阶上界和下界；比较增长率时关注 n 足够大后的主导项，但结论仍需注明输入规模定义；最坏情况 O(n²) 与最好情况 Ω(n)
+    可以同时成立，它们描述的是不同约束。
+  key_points:
+  - O 给出渐进上界，Ω 给出渐进下界，Θ 同时给出同阶上界和下界。
+  - 比较增长率时关注 n 足够大后的主导项，但结论仍需注明输入规模定义。
+  - 最坏情况 O(n²) 与最好情况 Ω(n) 可以同时成立，它们描述的是不同约束。
+  common_mistakes:
+  - 误以为O(n²) 表示算法在每个输入上都恰好执行 n² 次基本操作。
+  - 误以为若函数属于 O(n²)，就不可能同时属于 O(n³)。
+  examples:
+  - 推导示例：3n²+5n+7 在 n 足够大时被常数倍 n² 上下夹住，因此属于 Θ(n²)。
+assessment_ids:
+- DS-FOUND-03-Q1
+source_refs:
+- SRC-DS-GUIDE-FOUND
+status: draft

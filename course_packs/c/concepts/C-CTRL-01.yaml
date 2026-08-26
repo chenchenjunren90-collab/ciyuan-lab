@@ -1,0 +1,32 @@
+id: C-CTRL-01
+title: if 条件分支
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-05
+learning_objectives:
+- 能够解释if 条件分支的核心规则
+- 能够运用if 条件分支解决边界明确的问题
+concepts:
+- if 条件分支
+- 边界条件
+- 可验证性
+lesson:
+  summary: 把互斥业务规则表达为边界清晰的条件分支。关键要点包括：条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径；互斥区间应从边界值开始设计，例如负数、零和正数必须完整且不重叠；复杂条件先命名中间布尔含义，并利用短路求值保护除法或指针解引用。
+  key_points:
+  - 条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径。
+  - 互斥区间应从边界值开始设计，例如负数、零和正数必须完整且不重叠。
+  - 复杂条件先命名中间布尔含义，并利用短路求值保护除法或指针解引用。
+  common_mistakes:
+  - 把比较写成赋值，例如 if (x = 0)，导致条件和变量同时被改变。
+  - 只测试典型正数，没有覆盖等号对应的边界值。
+  examples:
+  - 代码示例：if (x > 0) puts("positive"); else if (x == 0) puts("zero"); else puts("negative");
+assessment_ids:
+- C-CTRL-01-C1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

@@ -1,0 +1,49 @@
+id: PY-PROJ-COMPLAINT-STATS-01
+title: 合成金融投诉分类统计
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 180
+concept_ids:
+- PY-FUNC-02
+- PY-DICT-01
+- PY-LIST-03
+- PY-FILE-03
+summary: 参考公开金融投诉数据库的结构化类别字段，对完全虚构的受理记录完成清洗、分类计数和按期回复统计。
+requirements:
+- 只处理虚构编号、产品类别、问题类别、日期、状态和按期回复字段
+- 拒绝包含姓名、联系方式、地址、账号或自由文本叙述的输入
+- 完成类别映射、日期校验、分组计数和异常报告
+- 为未知类别、非法日期和缺失状态编写测试
+deliverables:
+- 可运行的 Python 3.11 程序
+- 自动化测试
+- 分类统计报告与隐私边界说明
+source_refs:
+- SRC-PY-OFFICIAL-CFPB-COMPLAINT
+- SRC-PY-SYNTHETIC-FINANCE-CATALOG
+- SRC-PY-GUIDE-DATA
+verification_exercise_ids:
+- PY-FUNC-02-C1
+- PY-LIST-03-C1
+scenario_scope: post_course_finance_practice
+scenario_provider: fixed_synthetic
+data_classification: synthetic
+computer_science_objectives:
+- 使用函数、列表和字典实现字段校验与分组统计
+- 对隐私字段执行确定性拒绝规则并覆盖错误路径
+business_context_objectives:
+- 理解结构化投诉分类与处理时效字段
+- 不依据虚构统计评价真实机构或金融产品
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 程序正确性与测试
+    points: 55
+  - criterion: 隐私字段门禁与异常处理
+    points: 25
+  - criterion: 模块化与限制说明
+    points: 20
+status: draft

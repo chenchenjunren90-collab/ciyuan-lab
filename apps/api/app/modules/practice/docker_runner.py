@@ -32,16 +32,29 @@ class DockerSandboxRunner:
         docker_binary: str = "docker",
         python_image: str = "python:3.11.15-alpine3.24",
         c_image: str = "gcc:13.4.0-bookworm",
+        work_root: Path | str | None = None,
     ) -> None:
         self._docker_binary = docker_binary
         self._images = {"python": python_image, "c": c_image}
+        self._work_root = Path(work_root).resolve() if work_root else None
+        if self._work_root is not None:
+            self._work_root.mkdir(parents=True, exist_ok=True)
 
     async def run(self, request: SandboxRequest) -> SandboxOutcome:
         container_name = f"ciyuan-practice-{uuid4().hex}"
-        with tempfile.TemporaryDirectory(prefix="ciyuan-practice-") as temp_dir:
+        with tempfile.TemporaryDirectory(
+            prefix="ciyuan-practice-",
+            dir=self._work_root,
+        ) as temp_dir:
             source_dir = Path(temp_dir).resolve()
             source_name = "main.py" if request.language == "python" else "main.c"
-            (source_dir / source_name).write_text(request.source_code, encoding="utf-8")
+            source_path = source_dir / source_name
+            source_path.write_text(request.source_code, encoding="utf-8")
+            # The isolated container deliberately runs as uid/gid 65534. Python's
+            # TemporaryDirectory is owner-only by default, so grant that sandbox
+            # user traverse/read access while the bind mount remains read-only.
+            source_dir.chmod(0o755)
+            source_path.chmod(0o644)
             command = self._build_docker_command(
                 request=request,
                 source_dir=source_dir,
@@ -73,9 +86,7 @@ class DockerSandboxRunner:
 
         output_limit_bytes = request.output_limit_kb * 1024
         if process.returncode == 125:
-            raise SandboxUnavailableError(
-                "Docker could not start the isolated container or image"
-            )
+            raise SandboxUnavailableError("Docker could not start the isolated container or image")
         combined_size = len(stdout_bytes) + len(stderr_bytes)
         output_limit_exceeded = combined_size > output_limit_bytes
         stdout_slice = stdout_bytes[:output_limit_bytes]

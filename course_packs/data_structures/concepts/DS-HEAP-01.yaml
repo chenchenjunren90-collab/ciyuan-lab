@@ -1,0 +1,32 @@
+id: DS-HEAP-01
+title: 二叉堆
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-TREE-01
+learning_objectives:
+- 能判断与“二叉堆”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“二叉堆”的关键状态并验证边界
+concepts:
+- 二叉堆
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用完全二叉树数组表示维护堆序。关键要点包括：二叉堆是完全二叉树；数组下标 i 的子结点和父结点位置由统一下标约定计算；最大堆只保证每个父结点不小于子结点，不保证兄弟或不同子树之间全局有序；上浮和下沉通过局部交换恢复堆序，建堆可自最后一个非叶结点自底向上完成。
+  key_points:
+  - 二叉堆是完全二叉树；数组下标 i 的子结点和父结点位置由统一下标约定计算。
+  - 最大堆只保证每个父结点不小于子结点，不保证兄弟或不同子树之间全局有序。
+  - 上浮和下沉通过局部交换恢复堆序，建堆可自最后一个非叶结点自底向上完成。
+  common_mistakes:
+  - 误以为最大堆数组从左到右已经按降序排列，可以直接作为完整排序结果。
+  - 误以为在堆中查找任意给定值始终只需沿一条根到叶路径，因此是 O(log n)。
+  examples:
+  - 示例：最大堆 [9,7,8,2,3] 满足父结点不小于子结点，但 7 与 8 的相对位置并非降序。
+assessment_ids:
+- DS-HEAP-01-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

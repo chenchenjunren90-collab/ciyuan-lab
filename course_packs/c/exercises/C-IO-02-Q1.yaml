@@ -1,0 +1,25 @@
+id: C-IO-02-Q1
+title: 概念判断：二进制文件与序列化边界
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- C-IO-02
+prompt: 关于“二进制文件与序列化边界”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 直接持久化结构体会受到字节序、对齐填充和类型宽度影响，不是可移植文件格式。
+  - id: B
+    text: 把结构体用 fwrite 原样写出后，可保证在任何编译器和机器上按相同布局读回。
+  - id: C
+    text: fread 返回值小于请求数量时一定只是正常文件结束，不需要检查 ferror。
+  accepted_answers:
+  - A
+status: draft

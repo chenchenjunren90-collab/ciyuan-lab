@@ -1,0 +1,25 @@
+id: C-PTR-04-Q1
+title: 概念判断：函数指针与回调
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- C-PTR-04
+prompt: 关于“函数指针与回调”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 回调把可变策略注入通用流程，例如排序比较、遍历处理或事件通知。
+  - id: B
+    text: 所有函数地址都可以转换为同一种函数指针并用任意参数列表安全调用。
+  - id: C
+    text: 回调函数只能访问全局变量，无法通过参数接收调用上下文。
+  accepted_answers:
+  - A
+status: draft

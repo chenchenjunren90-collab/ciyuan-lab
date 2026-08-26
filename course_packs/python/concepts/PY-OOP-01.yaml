@@ -2,7 +2,7 @@ id: PY-OOP-01
 title: 类与对象
 course: python
 schema_version: 0.1.0
-version: 1
+version: 3
 difficulty: intermediate
 estimated_minutes: 60
 prerequisites:
@@ -17,7 +17,8 @@ concepts:
 - self
 - 实例属性
 lesson:
-  summary: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。
+  summary: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。关键要点包括：class 定义类，类名() 创建实例对象；__init__ 在实例化时自动调用，self 指向当前实例；实例属性通过
+    self.属性 访问和赋值。
   key_points:
   - class 定义类，类名() 创建实例对象
   - __init__ 在实例化时自动调用，self 指向当前实例
@@ -25,10 +26,12 @@ lesson:
   examples:
   - "class Student:\n    def __init__(self, name):\n        self.name = name"
   common_mistakes:
-  - 实例方法忘记写 self 参数
+  - 误以为实例属性必须预先在类体中声明后才能在 __init__ 赋值
+  - 误以为所有以双下划线开头和结尾的方法都由 Python 自动实现，无需定义
 assessment_ids:
 - PY-OOP-01-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
 status: draft

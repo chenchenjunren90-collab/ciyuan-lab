@@ -1,0 +1,25 @@
+id: DS-LINEAR-04-Q1
+title: 概念判断：双向链表与哨兵
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-LINEAR-04
+prompt: 关于“双向链表与哨兵”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 已知目标结点时删除可在 O(1) 完成，但按值寻找目标仍需 O(n)。
+  - id: B
+    text: 双向链表按值查找天然为 O(1)，因为可以从两个方向同时搜索。
+  - id: C
+    text: 删除结点时只更新前驱的 next 即可，后继的 prev 会自动变化。
+  accepted_answers:
+  - A
+status: draft

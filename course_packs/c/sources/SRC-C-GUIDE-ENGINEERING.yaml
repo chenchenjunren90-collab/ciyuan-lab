@@ -1,0 +1,18 @@
+id: SRC-C-GUIDE-ENGINEERING
+title: C 语言 MVP 教学提要：ENGINEERING
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 C 语言 ENGINEERING 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 可靠 C 程序要检查文件、内存和输入操作的结果，用头文件分离公开声明与实现，并开启编译器警告。错误状态应能够沿调用链传播。调试从可复现输入、最小失败样例和观测状态开始；测试需覆盖正常路径、边界、空输入及错误输入。
+status: reviewed

@@ -73,10 +73,13 @@ class EvidenceMasteryPolicy:
     @staticmethod
     def _extract_evidence(
         event: LearningEvent,
-    ) -> tuple[
-        float,
-        Literal["assessment_result", "practice_result", "code_test_ratio"],
-    ] | None:
+    ) -> (
+        tuple[
+            float,
+            Literal["assessment_result", "practice_result", "code_test_ratio"],
+        ]
+        | None
+    ):
         payload = event.payload
         if event.event_type == "assessment.completed":
             value = payload.get("is_correct", payload.get("correct"))

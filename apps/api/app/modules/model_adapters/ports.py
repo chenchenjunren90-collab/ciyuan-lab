@@ -18,6 +18,6 @@ class ModelResponse:
 
 
 class ModelAdapter(Protocol):
-    """Keeps Spark, Tuoling and future model APIs behind one interface."""
+    """Keep MaaS, legacy Spark and mock providers behind one interface."""
 
     async def complete(self, messages: Sequence[ChatMessage]) -> ModelResponse: ...

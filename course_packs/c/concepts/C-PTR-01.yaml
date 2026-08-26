@@ -1,0 +1,33 @@
+id: C-PTR-01
+title: 指针、地址与解引用
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-03
+learning_objectives:
+- 能够解释指针、地址与解引用的核心规则
+- 能够运用指针、地址与解引用解决边界明确的问题
+concepts:
+- 指针、地址与解引用
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解指针保存地址以及解引用访问对象的含义。关键要点包括：取地址运算符 & 获得对象地址，指针变量保存兼容类型的地址，*p 访问所指对象；解引用前必须证明指针非空、指向仍处于生命周期内且满足对齐与类型要求；修改调用方对象时传入其地址，同时用清晰命名和
+    const 标注读写意图。
+  key_points:
+  - 取地址运算符 & 获得对象地址，指针变量保存兼容类型的地址，*p 访问所指对象。
+  - 解引用前必须证明指针非空、指向仍处于生命周期内且满足对齐与类型要求。
+  - 修改调用方对象时传入其地址，同时用清晰命名和 const 标注读写意图。
+  common_mistakes:
+  - 未初始化指针就执行 *p = 1，向不确定地址写入。
+  - 返回局部变量地址，函数结束后指针立即悬空。
+  examples:
+  - 代码示例：void swap(int *a, int *b) { int t = *a; *a = *b; *b = t; }
+assessment_ids:
+- C-PTR-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

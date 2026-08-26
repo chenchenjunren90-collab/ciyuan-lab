@@ -1,0 +1,32 @@
+id: DS-QUEUE-02
+title: 循环队列
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-QUEUE-01
+learning_objectives:
+- 能判断与“循环队列”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“循环队列”的关键状态并验证边界
+concepts:
+- 循环队列
+- 边界条件
+- 可验证性
+lesson:
+  summary: 通过模运算复用数组空间并区分空与满。关键要点包括：循环队列用取模把数组尾部连接到开头，头尾索引每次移动都按容量回绕；必须采用预留一格、额外 size 或标志位区分队空与队满，否则 head==tail 含义不明确；入队先检查容量约定，出队先检查非空，并在操作后保持索引和元素数一致。
+  key_points:
+  - 循环队列用取模把数组尾部连接到开头，头尾索引每次移动都按容量回绕。
+  - 必须采用预留一格、额外 size 或标志位区分队空与队满，否则 head==tail 含义不明确。
+  - 入队先检查容量约定，出队先检查非空，并在操作后保持索引和元素数一致。
+  common_mistakes:
+  - 误以为循环队列中 head==tail 始终只表示队列为空，不需要其他状态。
+  - 误以为tail 到达数组末尾后必须整体搬移所有元素才能继续入队。
+  examples:
+  - 轨迹示例：容量4并预留一格，tail 从3入队后按 (tail+1)%4 回到0；最多同时保存3个元素。
+assessment_ids:
+- DS-QUEUE-02-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

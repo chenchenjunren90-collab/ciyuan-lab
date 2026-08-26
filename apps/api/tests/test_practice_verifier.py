@@ -12,6 +12,7 @@ import pytest
 from app.modules.practice import (
     CodeTestCase,
     DeterministicCodeVerifier,
+    DisabledSandboxRunner,
     SupportedLanguage,
     VerificationResult,
 )
@@ -51,6 +52,15 @@ HIDDEN_TEST = CodeTestCase(
     input="secret-input\n",
     expected_output="secret-output\n",
 )
+
+
+def test_disabled_runner_fails_closed_without_executing_code() -> None:
+    verifier = DeterministicCodeVerifier(DisabledSandboxRunner())
+    result = asyncio.run(verifier.verify("python", "print(4)", (PUBLIC_TEST,), {}))
+
+    assert result.accepted is False
+    assert result.passed_tests == 0
+    assert result.diagnostics == ("验证服务暂不可用：隔离运行环境未就绪",)
 
 
 def _verify(

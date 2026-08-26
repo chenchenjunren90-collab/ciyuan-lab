@@ -1,0 +1,33 @@
+id: C-CTRL-02
+title: switch 多分支
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-01
+learning_objectives:
+- 能判断与“switch 多分支”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“switch 多分支”的关键状态并验证边界
+concepts:
+- switch 多分支
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用 switch 处理离散选项并避免意外贯穿。关键要点包括：switch 控制表达式具有整数或枚举类型，case 标签必须是整型常量表达式且不能重复；匹配 case 后会继续向后执行，除非遇到 break、return
+    或其他控制转移；有意贯穿应明确注释；default 用于覆盖未列出的值，可以放在任意位置，但其位置不改变匹配规则。
+  key_points:
+  - switch 控制表达式具有整数或枚举类型，case 标签必须是整型常量表达式且不能重复。
+  - 匹配 case 后会继续向后执行，除非遇到 break、return 或其他控制转移；有意贯穿应明确注释。
+  - default 用于覆盖未列出的值，可以放在任意位置，但其位置不改变匹配规则。
+  common_mistakes:
+  - 误以为每个 case 执行结束后 switch 都会自动退出，因此不需要 break。
+  - 误以为switch 可以直接按字符串内容匹配 case "yes" 和 case "no"。
+  examples:
+  - '代码片段：switch(level){case 1: puts("low"); break; case 2: puts("high"); break; default: puts("unknown");}'
+assessment_ids:
+- C-CTRL-02-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

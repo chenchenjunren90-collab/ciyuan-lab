@@ -1,0 +1,32 @@
+id: DS-FOUND-02
+title: 算法成本与输入规模
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-01
+learning_objectives:
+- 能判断与“算法成本与输入规模”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“算法成本与输入规模”的关键状态并验证边界
+concepts:
+- 算法成本与输入规模
+- 边界条件
+- 可验证性
+lesson:
+  summary: 选择基本操作并建立关于输入规模的成本模型。关键要点包括：成本模型先定义输入规模 n 和基本操作，再统计操作次数随 n 的增长；时间、额外空间、最坏与平均情况回答不同问题，结论必须注明所采用的情形；渐进分析忽略常数并不表示常数不重要；相同数量级的实现仍需结合实际约束比较。
+  key_points:
+  - 成本模型先定义输入规模 n 和基本操作，再统计操作次数随 n 的增长。
+  - 时间、额外空间、最坏与平均情况回答不同问题，结论必须注明所采用的情形。
+  - 渐进分析忽略常数并不表示常数不重要；相同数量级的实现仍需结合实际约束比较。
+  common_mistakes:
+  - 误以为算法有两层循环就必然是 O(n²)，无需分析每层循环的实际范围。
+  - 误以为只要两个算法同为 O(n)，它们在所有输入规模上的运行时间就完全相同。
+  examples:
+  - 计数示例：for(i=0;i<n;i++) for(j=0;j<i;j++) 的内层总次数为 n(n-1)/2，因此时间为 Θ(n²)。
+assessment_ids:
+- DS-FOUND-02-Q1
+source_refs:
+- SRC-DS-GUIDE-FOUND
+status: draft

@@ -1,0 +1,25 @@
+id: C-TYPE-03-Q1
+title: 概念判断：枚举与联合
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-TYPE-03
+prompt: 关于“枚举与联合”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 不同枚举成员可以显式取相同值，因此不能依赖值唯一性反向确定名称。
+  - id: B
+    text: 枚举成员在运行时是字符串，可以直接用 printf 的 %s 输出名称。
+  - id: C
+    text: 联合体会同时为每个成员分配独立存储，因此其大小等于所有成员大小之和。
+  accepted_answers:
+  - A
+status: draft

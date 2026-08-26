@@ -2,7 +2,7 @@ id: PY-BASE-03
 title: 运算符与表达式
 course: python
 schema_version: 0.1.0
-version: 1
+version: 3
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -16,19 +16,21 @@ concepts:
 - 逻辑运算
 - 优先级
 lesson:
-  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。
+  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。关键要点包括：算术运算符包括 + - * / // % **，其中 // 是整除；比较运算符返回布尔值，逻辑运算符 and/or/not 用于组合条件；乘除优先级高于加减，可用括号显式改变求值顺序。
   key_points:
   - 算术运算符包括 + - * / // % **，其中 // 是整除
   - 比较运算符返回布尔值，逻辑运算符 and/or/not 用于组合条件
   - 乘除优先级高于加减，可用括号显式改变求值顺序
   examples:
-  - 7 // 2 的结果为 3
+  - 代码示例：-7 // 3 的结果为 -3，因为 // 向负无穷方向取整；-7 / 3 则得到浮点近似值。
   common_mistakes:
-  - 把整除 // 与普通除法 / 混为一谈
+  - 误以为Python 的 // 总是向零截断，因此 -7 // 3 等于 -2
+  - 误以为and 与 or 必然返回 bool，而不会返回参与运算的对象
 assessment_ids:
 - PY-BASE-03-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
 status: draft

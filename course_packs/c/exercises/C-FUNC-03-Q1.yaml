@@ -1,0 +1,25 @@
+id: C-FUNC-03-Q1
+title: 概念判断：作用域、生命周期与存储期
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-FUNC-03
+prompt: 关于“作用域、生命周期与存储期”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-CONTROL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 自动局部对象通常每次进入块时创建；static 局部对象具有静态存储期并在多次调用间保留值。
+  - id: B
+    text: 局部变量离开块后名字不可见，但保存其地址后对象仍然永久有效。
+  - id: C
+    text: static 局部变量每次调用函数都会重新初始化，因此不保存前一次状态。
+  accepted_answers:
+  - A
+status: draft

@@ -2,7 +2,7 @@ id: PY-STR-03
 title: 字符串方法与格式化
 course: python
 schema_version: 0.1.0
-version: 1
+version: 3
 difficulty: intermediate
 estimated_minutes: 50
 prerequisites:
@@ -17,18 +17,21 @@ concepts:
 - join
 - f-string
 lesson:
-  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。
+  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。关键要点包括：strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列；f-string 用
+    f"{变量}" 内插变量值；replace() 替换子串，返回新字符串。
   key_points:
   - strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列
   - f-string 用 f"{变量}" 内插变量值
   - replace() 替换子串，返回新字符串
   examples:
-  - '"  a b  ".strip() 为 "a b"'
+  - 代码示例：price=12.3；f'{price:.2f}' 得到 '12.30'，格式说明只影响生成的字符串，不改变 price。
   common_mistakes:
-  - 误以为字符串方法会原地修改原字符串
+  - 误以为f-string 会自动把任何数值按两位小数显示
+  - 误以为format 的字段顺序可以随意改变而不影响位置参数绑定
 assessment_ids:
 - PY-STR-03-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
 status: draft

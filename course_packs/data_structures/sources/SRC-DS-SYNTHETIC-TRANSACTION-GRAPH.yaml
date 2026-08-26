@@ -1,0 +1,18 @@
+id: SRC-DS-SYNTHETIC-TRANSACTION-GRAPH
+title: 数据结构课后合成交易图场景
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编合成交易图教学场景 v1
+rights:
+  basis: synthetic
+  note: 项目组原创教学图生成规则；账户、交易、金额和模式标签均为虚构。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 合成交易图使用虚构账户作为顶点、虚构交易作为带时间和金额属性的有向边。教学任务包括邻接表构建、可达性搜索、限定深度路径枚举、连通分量与度数统计。少量环形、扇出和汇聚结构由固定规则注入，只作为算法测试标签，不代表真实洗钱判断；课程评价只考查图表示、遍历、复杂度、边界处理和测试证据。
+status: reviewed

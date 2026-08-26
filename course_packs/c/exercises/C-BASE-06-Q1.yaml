@@ -1,0 +1,25 @@
+id: C-BASE-06-Q1
+title: 概念判断：类型转换与表达式求值
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-BASE-06
+prompt: 关于“类型转换与表达式求值”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-BASE
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 显式强制转换只改变转换后的值或解释方式，不能补救转换前已经发生的溢出。
+  - id: B
+    text: 把整数除法结果强制转换为 double，可以恢复除法时已经丢失的小数部分。
+  - id: C
+    text: 任何有符号负数与无符号数比较时都会按数学整数大小直接比较。
+  accepted_answers:
+  - A
+status: draft

@@ -50,8 +50,9 @@ class XfyunSparkAdapter(ModelAdapter):
         self,
         *,
         base_url: str,
-        api_key: str,
-        api_secret: str,
+        api_password: str = "",
+        api_key: str = "",
+        api_secret: str = "",
         model: str,
         timeout_seconds: float = 30.0,
         max_retries: int = 2,
@@ -63,11 +64,14 @@ class XfyunSparkAdapter(ModelAdapter):
         parsed_url = urlsplit(normalized_base_url)
         if parsed_url.scheme not in {"http", "https"} or not parsed_url.netloc:
             raise ModelConfigurationError("XFYUN_SPARK_BASE_URL must be an HTTP(S) URL")
+        token = api_password.strip()
         normalized_api_key = api_key.strip()
         normalized_api_secret = api_secret.strip()
-        if not normalized_api_key or not normalized_api_secret:
+        if not token and normalized_api_key and normalized_api_secret:
+            token = f"{normalized_api_key}:{normalized_api_secret}"
+        if not token:
             raise ModelConfigurationError(
-                "XFYUN_SPARK_API_KEY / XFYUN_SPARK_API_SECRET is not configured"
+                "XFYUN_SPARK_API_PASSWORD or API_KEY / API_SECRET is not configured"
             )
 
         if not model.strip():
@@ -78,7 +82,7 @@ class XfyunSparkAdapter(ModelAdapter):
             raise ModelConfigurationError("max_retries must not be negative")
 
         self._base_url = normalized_base_url
-        self._token = f"{normalized_api_key}:{normalized_api_secret}"
+        self._token = token
         self._model = model.strip()
         self._timeout_seconds = timeout_seconds
         self._max_retries = int(max_retries)
@@ -102,9 +106,7 @@ class XfyunSparkAdapter(ModelAdapter):
             except httpx.TimeoutException:
                 if attempt == attempts:
                     raise ModelTimeoutError("Xfyun Spark request timed out") from None
-                logger.warning(
-                    "xfyun spark request timed out (attempt %d/%d)", attempt, attempts
-                )
+                logger.warning("xfyun spark request timed out (attempt %d/%d)", attempt, attempts)
                 continue
             except httpx.RequestError:
                 if attempt == attempts:
@@ -119,9 +121,7 @@ class XfyunSparkAdapter(ModelAdapter):
 
             if response.status_code in _RETRYABLE_STATUS_CODES:
                 if attempt == attempts:
-                    raise ModelUpstreamError(
-                        f"Xfyun Spark returned HTTP {response.status_code}"
-                    )
+                    raise ModelUpstreamError(f"Xfyun Spark returned HTTP {response.status_code}")
                 logger.warning(
                     "xfyun spark returned HTTP %d (attempt %d/%d)",
                     response.status_code,
@@ -131,9 +131,7 @@ class XfyunSparkAdapter(ModelAdapter):
                 continue
 
             if response.status_code != 200:
-                raise ModelUpstreamError(
-                    f"Xfyun Spark returned HTTP {response.status_code}"
-                )
+                raise ModelUpstreamError(f"Xfyun Spark returned HTTP {response.status_code}")
 
             return self._parse_response(response)
 
@@ -155,8 +153,7 @@ class XfyunSparkAdapter(ModelAdapter):
         return {
             "model": self._model,
             "messages": [
-                {"role": message.role, "content": message.content}
-                for message in messages
+                {"role": message.role, "content": message.content} for message in messages
             ],
             "stream": False,
         }

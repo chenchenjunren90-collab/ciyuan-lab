@@ -1,0 +1,18 @@
+id: SRC-PY-GUIDE-DATA
+title: Python MVP 教学提要：DATA
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 Python DATA 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 数据处理先确认字段、类型和缺失约定，再执行解析、校验、转换、聚合与输出。异常不能被静默吞掉；每条清洗规则应有正常、边界和错误样例。财经背景只提供字段语义和约束，课程评价仍以程序结构、数据处理和测试证据为核心。
+status: reviewed

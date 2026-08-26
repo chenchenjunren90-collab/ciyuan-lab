@@ -1,0 +1,33 @@
+id: DS-TREE-03
+title: 二叉搜索树
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-TREE-02
+learning_objectives:
+- 能判断与“二叉搜索树”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“二叉搜索树”的关键状态并验证边界
+concepts:
+- 二叉搜索树
+- 边界条件
+- 可验证性
+lesson:
+  summary: 维护左小右大的查找不变量并处理删除情形。关键要点包括：二叉搜索树对每个结点维护左子树键较小、右子树键较大的有序约定，重复键策略必须预先定义；查找、插入和删除成本与树高 h 成正比；平衡时为 O(log n)，退化成链时为
+    O(n)；删除有两个孩子的结点时可用中序后继或前驱替换，并继续维护整个子树的有序不变量。
+  key_points:
+  - 二叉搜索树对每个结点维护左子树键较小、右子树键较大的有序约定，重复键策略必须预先定义。
+  - 查找、插入和删除成本与树高 h 成正比；平衡时为 O(log n)，退化成链时为 O(n)。
+  - 删除有两个孩子的结点时可用中序后继或前驱替换，并继续维护整个子树的有序不变量。
+  common_mistakes:
+  - 误以为二叉搜索树无论插入顺序如何都自动保持高度 O(log n)。
+  - 误以为删除有两个孩子的结点时可以直接丢弃其整棵右子树而不影响已有键。
+  examples:
+  - 轨迹示例：依次插入 5、3、7、6；查找6走 5→7→6，中序遍历得到 3、5、6、7。
+assessment_ids:
+- DS-TREE-03-C1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

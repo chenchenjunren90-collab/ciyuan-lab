@@ -1,0 +1,25 @@
+id: C-BASE-01-Q1
+title: 概念判断：C 程序结构与编译运行
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-BASE-01
+prompt: 关于“C 程序结构与编译运行”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-BASE
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 源文件先经预处理，再编译为目标文件，最后由链接器解析跨文件符号并生成可执行程序。
+  - id: B
+    text: C 程序可以把 main 声明为 void main，并认为所有标准实现都会接受且行为一致。
+  - id: C
+    text: 只要单个源文件编译成功，链接阶段就不会再出现未定义引用或重复定义。
+  accepted_answers:
+  - A
+status: draft

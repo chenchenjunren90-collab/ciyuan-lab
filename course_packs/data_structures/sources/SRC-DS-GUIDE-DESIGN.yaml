@@ -1,0 +1,18 @@
+id: SRC-DS-GUIDE-DESIGN
+title: 数据结构与算法 MVP 教学提要：设计与验证
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 数据结构与算法设计、性能分析与验证教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，已完成来源、权利与内容边界的 AI 辅助技术复核；不等同于课程教师审核。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 算法设计应明确输入、输出、不变量与适用前提。分治描述子问题与合并成本；贪心需要证明局部选择可扩展为全局最优；动态规划需要最优子结构、状态、转移和边界。正确性验证结合证明、边界样例与差分测试，性能评估需固定输入规模、分布、实现和运行环境，并区分理论增长率与实测常数。
+status: reviewed

@@ -11,10 +11,10 @@ content:
   projects_dir: projects
   sources_dir: sources
 features:
-  rag_qa: planned
-  adaptive_practice: planned
-  debug_tasks: planned
-  comprehensive_project: planned
+  rag_qa: in_progress
+  adaptive_practice: in_progress
+  debug_tasks: in_progress
+  comprehensive_project: in_progress
 review:
   content_owner: 王梓豪
   last_reviewed_at: null

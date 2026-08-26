@@ -1,0 +1,25 @@
+id: C-BASE-03-Q1
+title: 概念判断：变量、常量与初始化
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-BASE-03
+prompt: 关于“变量、常量与初始化”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-BASE
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 初始化发生在对象创建时，赋值发生在对象已存在之后，两者的语义和可用语法不同。
+  - id: B
+    text: 未初始化的局部 int 会自动得到 0，因此读取它可以作为默认值。
+  - id: C
+    text: 'const 对象与 #define 宏完全相同，二者都没有类型且都在预处理阶段替换。'
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,25 @@
+id: DS-LINEAR-02-Q1
+title: 概念判断：动态数组与容量扩展
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-LINEAR-02
+prompt: 关于“动态数组与容量扩展”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 容量不足时按倍数扩容可使连续尾插的摊还时间为 O(1)，单次扩容仍需 O(n) 搬移。
+  - id: B
+    text: 动态数组每次追加都只增加一个容量，仍能保证 n 次追加总成本 O(n)。
+  - id: C
+    text: 扩容搬移元素后，所有指向原数组元素的指针都会自动更新到新地址。
+  accepted_answers:
+  - A
+status: draft

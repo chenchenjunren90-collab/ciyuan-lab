@@ -1,0 +1,25 @@
+id: DS-TREE-01-Q1
+title: 概念判断：树、结点关系与基本术语
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-TREE-01
+prompt: 关于“树、结点关系与基本术语”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 深度通常从根到结点的边数计，结点高度从该结点到最深叶的边数计，需先统一约定。
+  - id: B
+    text: 树中一个非根结点可以同时拥有多个父结点，只要没有形成环。
+  - id: C
+    text: 结点深度与高度始终相等，因为都表示该结点所在层数。
+  accepted_answers:
+  - A
+status: draft

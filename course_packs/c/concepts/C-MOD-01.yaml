@@ -1,0 +1,34 @@
+id: C-MOD-01
+title: 头文件与模块化编程
+course: c
+schema_version: 0.1.0
+version: 4
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-PP-01
+learning_objectives:
+- 能判断与“头文件与模块化编程”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“头文件与模块化编程”的关键状态并验证边界
+concepts:
+- 头文件与模块化编程
+- 边界条件
+- 可验证性
+lesson:
+  summary: 分离声明和实现，使用包含保护组织多文件程序。关键要点包括：头文件放置供多个翻译单元共享的声明、类型和宏，并使用 include guard 防止重复包含；具有外部链接的对象或函数通常只在一个 .c 文件中定义，其他文件通过
+    extern 声明引用；公开接口应隐藏实现细节并保持依赖最小；一致的命名、缩进和短函数能降低协作误解，魔法数应替换为有含义的常量；修改头文件会影响所有直接或间接包含者。
+  key_points:
+  - 头文件放置供多个翻译单元共享的声明、类型和宏，并使用 include guard 防止重复包含。
+  - 具有外部链接的对象或函数通常只在一个 .c 文件中定义，其他文件通过 extern 声明引用。
+  - 公开接口应隐藏实现细节并保持依赖最小；修改头文件会影响所有直接或间接包含者。
+  - 模块内部保持一致的命名和格式，优先使用有含义的常量与短函数，让错误路径和资源所有权清晰可见。
+  common_mistakes:
+  - 误以为在头文件中定义普通全局变量并被多个 .c 文件包含，不会产生重复定义。
+  - 误以为#include 会在运行时动态加载另一个源文件，因此不影响编译依赖。
+  examples:
+  - 结构示例：counter.h 声明 int counter_next(void);，counter.c 提供定义，main.c 只包含头文件并调用。
+assessment_ids:
+- C-MOD-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

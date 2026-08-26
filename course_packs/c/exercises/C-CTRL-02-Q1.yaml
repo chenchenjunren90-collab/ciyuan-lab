@@ -1,0 +1,25 @@
+id: C-CTRL-02-Q1
+title: 概念判断：switch 多分支
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-CTRL-02
+prompt: 关于“switch 多分支”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-CONTROL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 匹配 case 后会继续向后执行，除非遇到 break、return 或其他控制转移；有意贯穿应明确注释。
+  - id: B
+    text: 每个 case 执行结束后 switch 都会自动退出，因此不需要 break。
+  - id: C
+    text: switch 可以直接按字符串内容匹配 case "yes" 和 case "no"。
+  accepted_answers:
+  - A
+status: draft

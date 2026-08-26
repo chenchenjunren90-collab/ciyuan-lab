@@ -1,0 +1,33 @@
+id: C-BASE-04
+title: 格式化输入输出
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-03
+learning_objectives:
+- 能判断与“格式化输入输出”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“格式化输入输出”的关键状态并验证边界
+concepts:
+- 格式化输入输出
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用 printf 与 scanf 的格式说明符完成可靠交互。关键要点包括：printf 和 scanf 的格式说明符必须与实际参数类型匹配，否则可产生未定义行为；scanf 写入普通变量时通常需要传入地址，并应检查返回的成功转换项数；读取字符串时必须限制最大宽度并为终止空字符留出容量；面向整行输入时优先用
+    fgets 再解析。
+  key_points:
+  - printf 和 scanf 的格式说明符必须与实际参数类型匹配，否则可产生未定义行为。
+  - scanf 写入普通变量时通常需要传入地址，并应检查返回的成功转换项数。
+  - 读取字符串时必须限制最大宽度并为终止空字符留出容量；面向整行输入时优先用 fgets 再解析。
+  common_mistakes:
+  - 误以为printf("%d", value) 可以安全输出任意整数或浮点类型，库会自动识别实参类型。
+  - 误以为scanf 的返回值表示读取的字符数，因此只要返回值非零就代表整行输入完全有效。
+  examples:
+  - 代码片段：int age; if (scanf("%d", &age) == 1) printf("age=%d\n", age); else fputs("invalid\n", stderr);
+assessment_ids:
+- C-BASE-04-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

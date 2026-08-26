@@ -36,3 +36,13 @@ class SandboxRunner(Protocol):
     """Runs untrusted code outside the API process and host language runtime."""
 
     async def run(self, request: SandboxRequest) -> SandboxOutcome: ...
+
+
+class DisabledSandboxRunner:
+    """Fail closed when isolated execution has not been explicitly enabled."""
+
+    async def run(self, request: SandboxRequest) -> SandboxOutcome:
+        del request
+        raise SandboxUnavailableError(
+            "isolated code execution is disabled by runtime configuration"
+        )

@@ -1,0 +1,62 @@
+id: C-IO-01-C1
+title: 编程实践：受控文本文件读写
+course: c
+schema_version: 0.1.0
+version: 2
+type: code
+difficulty: intermediate
+estimated_minutes: 35
+concept_ids:
+- C-IO-01
+prompt: 编写 C17 程序完成可确定测试的文本文件读写。标准输入首行为模式：PRESENT、EMPTY 或 MISSING。PRESENT 后给出记录数 n 及 n 行整数：程序先用 fopen/fprintf 写入 records.txt，关闭后再用
+  fopen/fgets 逐行读取并解析，最后把“最小值 最大值”写入 result.txt，同时原样输出到 stdout。EMPTY 模式创建空的 records.txt，输出 EMPTY；MISSING 模式不得创建输入文件，尝试打开不存在的
+  records.txt 后输出 OPEN_ERROR。所有模式都必须检查 fopen、fgets/ferror、写入和 fclose 结果；禁止绕过文件直接对输入数据求最值。
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: tests
+  runtime:
+    language: c
+    version: C17
+    entrypoint: main.c
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: case-present
+    visibility: public
+    input: 'PRESENT
+
+      4
+
+      3
+
+      9
+
+      1
+
+      5
+
+      '
+    expected_output: '1 9
+
+      '
+  - id: case-empty
+    visibility: hidden
+    input: 'EMPTY
+
+      '
+    expected_output: 'EMPTY
+
+      '
+  - id: case-missing
+    visibility: hidden
+    input: 'MISSING
+
+      '
+    expected_output: 'OPEN_ERROR
+
+      '
+status: draft

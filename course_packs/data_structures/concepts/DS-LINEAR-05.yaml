@@ -1,0 +1,33 @@
+id: DS-LINEAR-05
+title: 线性表查找、插入与删除
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-04
+learning_objectives:
+- 能判断与“线性表查找、插入与删除”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“线性表查找、插入与删除”的关键状态并验证边界
+concepts:
+- 线性表查找、插入与删除
+- 边界条件
+- 可验证性
+lesson:
+  summary: 比较顺序表和链表操作的适用条件与复杂度。关键要点包括：线性表按值查找通常逐项比较，顺序表和链表在无额外索引时最坏均为 O(n)；顺序表中间插入删除需要移动后续元素；链表在已知位置结点后只需调整链接；操作前要统一位置语义和合法范围，例如插入允许位置
+    [0,n]，删除只允许 [0,n)。
+  key_points:
+  - 线性表按值查找通常逐项比较，顺序表和链表在无额外索引时最坏均为 O(n)。
+  - 顺序表中间插入删除需要移动后续元素；链表在已知位置结点后只需调整链接。
+  - 操作前要统一位置语义和合法范围，例如插入允许位置 [0,n]，删除只允许 [0,n)。
+  common_mistakes:
+  - 误以为链表在只给定下标时也能 O(1) 完成插入，因为结点不连续。
+  - 误以为长度为 n 的线性表删除位置 n 是合法的，表示删除最后一个元素。
+  examples:
+  - 示例：在 [A,B,C] 的位置 1 插入 X 得到 [A,X,B,C]；删除合法下标范围仍是 0 到 3。
+assessment_ids:
+- DS-LINEAR-05-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

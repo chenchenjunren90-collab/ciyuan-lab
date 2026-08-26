@@ -29,12 +29,14 @@ def test_versioned_health() -> None:
     assert response.json()["status"] == "ok"
 
 
-def test_capabilities_are_explicitly_scaffolded() -> None:
+def test_capabilities_describe_mvp_runtime_switches() -> None:
     response = asyncio.run(request("/api/v1/capabilities"))
 
     assert response.status_code == 200
     payload = response.json()
-    assert payload["status"] == "scaffold"
+    assert payload["status"] == "mvp"
+    assert payload["code_execution_enabled"] is False
+    assert payload["tuoling_enabled"] is False
     assert set(payload["modules"]) == {
         "orchestration",
         "rag",

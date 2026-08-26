@@ -1,0 +1,33 @@
+id: C-QUAL-01
+title: const 与接口约束
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-PTR-01
+learning_objectives:
+- 能判断与“const 与接口约束”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“const 与接口约束”的关键状态并验证边界
+concepts:
+- const 与接口约束
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用 const 表达只读意图并理解指针限定位置。关键要点包括：const int *p 表示不能通过 p 修改所指 int，int *const p 表示指针 p 本身不能改指向；在函数接口中为只读输入添加 const 可表达意图，并允许调用者传入
+    const 对象；强制去掉 const 后修改原本定义为 const 的对象会产生未定义行为。
+  key_points:
+  - const int *p 表示不能通过 p 修改所指 int，int *const p 表示指针 p 本身不能改指向。
+  - 在函数接口中为只读输入添加 const 可表达意图，并允许调用者传入 const 对象。
+  - 强制去掉 const 后修改原本定义为 const 的对象会产生未定义行为。
+  common_mistakes:
+  - 误以为const int *p 与 int *const p 含义完全相同，都同时禁止改指针和改对象。
+  - 误以为通过强制类型转换去掉 const 后，任何对象都可以安全修改。
+  examples:
+  - 声明示例：void print_values(const int *data,size_t n); 函数可移动 data 的副本，但不能通过它改写元素。
+assessment_ids:
+- C-QUAL-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

@@ -2,7 +2,7 @@ id: PY-BASE-06
 title: while 循环
 course: python
 schema_version: 0.1.0
-version: 1
+version: 3
 difficulty: beginner
 estimated_minutes: 40
 prerequisites:
@@ -16,7 +16,7 @@ concepts:
 - 计数器
 - 死循环
 lesson:
-  summary: 使用 while 在条件成立时重复执行代码块，掌握计数器与循环终止条件的写法。
+  summary: 使用 while 在条件成立时重复执行代码块，掌握计数器与循环终止条件的写法。关键要点包括：while 先判断条件，条件为假时循环体一次也不执行；常用计数器变量在循环体内递增，直至条件不成立；条件始终为真且无终止路径会导致死循环。
   key_points:
   - while 先判断条件，条件为假时循环体一次也不执行
   - 常用计数器变量在循环体内递增，直至条件不成立
@@ -24,10 +24,12 @@ lesson:
   examples:
   - "i = 0\nwhile i < 5:\n    print(i)\n    i += 1"
   common_mistakes:
-  - 忘记更新循环变量导致死循环
+  - 误以为while 条件在循环体执行后才判断，因此循环至少执行一次
+  - 误以为循环体修改任意变量就足以保证 while 最终终止
 assessment_ids:
 - PY-BASE-06-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
 status: draft

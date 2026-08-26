@@ -1,0 +1,25 @@
+id: DS-GRAPH-01-Q1
+title: 概念判断：图与邻接表示
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-GRAPH-01
+prompt: 关于“图与邻接表示”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 邻接表占用 Θ(V+E) 空间，遍历一个顶点邻边的成本与其度数成正比。
+  - id: B
+    text: 邻接表判断任意两点是否相邻始终是 O(1)，与顶点度数无关。
+  - id: C
+    text: 无论图多稀疏，邻接矩阵都只占用 Θ(V+E) 空间。
+  accepted_answers:
+  - A
+status: draft

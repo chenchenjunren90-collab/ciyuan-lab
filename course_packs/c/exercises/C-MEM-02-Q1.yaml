@@ -1,0 +1,25 @@
+id: C-MEM-02-Q1
+title: 概念判断：realloc、free 与所有权
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- C-MEM-02
+prompt: 关于“realloc、free 与所有权”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量。
+  - id: B
+    text: 可以直接写 p=realloc(p,n)，因为失败时 p 仍会自动指向原内存块。
+  - id: C
+    text: free(p) 会自动把变量 p 设置为 NULL，因此后续无需处理悬空指针。
+  accepted_answers:
+  - A
+status: draft

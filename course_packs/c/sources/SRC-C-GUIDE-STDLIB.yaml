@@ -1,0 +1,18 @@
+id: SRC-C-GUIDE-STDLIB
+title: C 语言 MVP 教学提要：标准库接口契约
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 C 语言标准库接口教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: C 标准库接口由头文件、函数原型、参数前置条件、返回值和错误约定共同定义。stdio 负责流式输入输出，stdlib 提供内存、转换与通用算法，string 处理字节串，ctype 分类字符，math 提供数学函数。可靠调用必须包含正确头文件并检查具体返回值。数值文本解析可使用 strtol 配合结束指针和 errno 检查格式与范围；atoi 不能可靠报告失败。ctype 函数参数应为 EOF 或转换成 unsigned char 的值。
+status: reviewed

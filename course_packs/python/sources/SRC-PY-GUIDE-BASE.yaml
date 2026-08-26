@@ -1,0 +1,18 @@
+id: SRC-PY-GUIDE-BASE
+title: Python MVP 教学提要：BASE
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 Python BASE 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: Python 程序由语句和表达式组成，变量名绑定对象。条件与循环应覆盖边界，容器选择取决于是否需要顺序、唯一性或键值关联。函数通过参数、返回值和职责边界组织逻辑；代码生成结论必须通过实际运行和测试确认。
+status: reviewed

@@ -1,0 +1,25 @@
+id: DS-SORT-05-Q1
+title: 概念判断：快速排序
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-SORT-05
+prompt: 关于“快速排序”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 平均时间为 Θ(n log n)，连续产生极不平衡分区时最坏退化为 Θ(n²)。
+  - id: B
+    text: 快速排序无论枢轴如何选择都保证最坏 O(n log n)。
+  - id: C
+    text: 分区完成后左右两段内部已经分别完全有序，不需要递归。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,32 @@
+id: DS-LINEAR-04
+title: 双向链表与哨兵
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-03
+learning_objectives:
+- 能判断与“双向链表与哨兵”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“双向链表与哨兵”的关键状态并验证边界
+concepts:
+- 双向链表与哨兵
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用前后链接和哨兵简化边界操作。关键要点包括：双向链表结点同时维护 prev 和 next，插入删除后必须让相邻结点的两个方向一致；已知目标结点时删除可在 O(1) 完成，但按值寻找目标仍需 O(n)；哨兵结点可统一空表、表头和表尾操作，减少空指针分支。
+  key_points:
+  - 双向链表结点同时维护 prev 和 next，插入删除后必须让相邻结点的两个方向一致。
+  - 已知目标结点时删除可在 O(1) 完成，但按值寻找目标仍需 O(n)。
+  - 哨兵结点可统一空表、表头和表尾操作，减少空指针分支。
+  common_mistakes:
+  - 误以为双向链表按值查找天然为 O(1)，因为可以从两个方向同时搜索。
+  - 误以为删除结点时只更新前驱的 next 即可，后继的 prev 会自动变化。
+  examples:
+  - 指针轨迹：删除 x 时执行 x.prev.next=x.next 与 x.next.prev=x.prev，随后再释放 x。
+assessment_ids:
+- DS-LINEAR-04-Q1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

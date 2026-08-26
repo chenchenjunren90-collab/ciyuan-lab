@@ -1,0 +1,32 @@
+id: C-ARRAY-02
+title: 二维数组
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-ARRAY-01
+learning_objectives:
+- 能判断与“二维数组”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“二维数组”的关键状态并验证边界
+concepts:
+- 二维数组
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解行列布局并实现矩阵式遍历。关键要点包括：二维数组按行连续存储，声明 int a[R][C] 时每个元素都具有相同的 int 类型；访问 a[i][j] 必须同时满足 0 <= i < R 和 0 <= j < C，逐行遍历通常具有更好的局部性；二维数组传参时列数属于指针步长的一部分，应使用明确列宽或可变长数组形参。
+  key_points:
+  - 二维数组按行连续存储，声明 int a[R][C] 时每个元素都具有相同的 int 类型。
+  - 访问 a[i][j] 必须同时满足 0 <= i < R 和 0 <= j < C，逐行遍历通常具有更好的局部性。
+  - 二维数组传参时列数属于指针步长的一部分，应使用明确列宽或可变长数组形参。
+  common_mistakes:
+  - 误以为二维数组传入函数后可以在函数内用 sizeof 自动恢复全部行数和列数。
+  - 误以为交换两层循环次序不会影响数组访问边界，也不会影响任何实现的访问局部性。
+  examples:
+  - 轨迹示例：int a[2][3]={{1,2,3},{4,5,6}}；按行访问顺序为 1、2、3、4、5、6，a[1][2] 的值为 6。
+assessment_ids:
+- C-ARRAY-02-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

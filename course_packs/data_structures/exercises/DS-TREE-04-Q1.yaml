@@ -1,0 +1,25 @@
+id: DS-TREE-04-Q1
+title: 概念判断：平衡搜索树原理
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-TREE-04
+prompt: 关于“平衡搜索树原理”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 旋转只调整局部父子关系并保持二叉搜索树的中序键序不变。
+  - id: B
+    text: 树旋转会改变所有键的中序顺序，因此旋转后必须重新排序结点。
+  - id: C
+    text: 平衡树要求左右子树结点数完全相同，否则就不再是平衡树。
+  accepted_answers:
+  - A
+status: draft

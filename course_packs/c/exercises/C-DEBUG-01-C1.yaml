@@ -1,0 +1,60 @@
+id: C-DEBUG-01-C1
+title: 编程实践：编译警告、调试与缺陷定位
+course: c
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: intermediate
+estimated_minutes: 20
+concept_ids:
+- C-DEBUG-01
+prompt: 修复程序：读取 n 个整数并输出其和；不得访问数组边界之外。
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: tests
+  runtime:
+    language: c
+    version: C17
+    entrypoint: main.c
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: case-1
+    visibility: public
+    input: '3
+
+      1 2 3
+
+      '
+    expected_output: '6
+
+      '
+  - id: case-2
+    visibility: hidden
+    input: '1
+
+      9
+
+      '
+    expected_output: '9
+
+      '
+  - id: case-3
+    visibility: hidden
+    input: '5
+
+      -2 -1 0 1 2
+
+      '
+    expected_output: '0
+
+      '
+  starter_code: '#include <stdio.h>
+
+    int main(void){int n,a[100],sum=0; scanf("%d",&n); for(int i=0;i<=n;i++){scanf("%d",&a[i]);sum+=a[i];}
+    printf("%d\n",sum);return 0;}'
+status: draft

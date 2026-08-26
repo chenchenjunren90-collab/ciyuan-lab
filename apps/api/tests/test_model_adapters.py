@@ -51,9 +51,7 @@ def _adapter_with(
 
 def test_complete_success_returns_model_response() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
-        assert str(request.url) == (
-            "https://spark-api-open.xf-yun.com/agent/v1/chat/completions"
-        )
+        assert str(request.url) == ("https://spark-api-open.xf-yun.com/agent/v1/chat/completions")
         assert request.headers["Authorization"] == "Bearer test-key:test-secret"
         body = json.loads(request.read().decode())
         assert body["model"] == "spark-x"
@@ -349,6 +347,40 @@ def test_factory_builds_xfyun_adapter_when_configured() -> None:
     )
     adapter = build_model_adapter(settings)
     assert isinstance(adapter, XfyunSparkAdapter)
+
+
+def test_http_api_password_is_supported_without_key_secret_pair() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        assert request.headers["Authorization"] == "Bearer password-only"
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "choices": [{"message": {"content": "ok"}}],
+            },
+        )
+
+    async def scenario() -> ModelResponse:
+        async with _make_client(handler) as client:
+            adapter = XfyunSparkAdapter(
+                base_url="https://spark-api-open.xf-yun.com/agent/v1",
+                api_password="password-only",
+                model="spark-x",
+                client=client,
+            )
+            return await adapter.complete([USER_MESSAGE])
+
+    assert asyncio.run(scenario()).content == "ok"
+
+
+def test_factory_prefers_http_api_password() -> None:
+    settings = Settings(
+        xfyun_spark_api_password=SecretStr("password-only"),
+        xfyun_spark_api_key=SecretStr(""),
+        xfyun_spark_api_secret=SecretStr(""),
+    )
+
+    assert isinstance(build_model_adapter(settings), XfyunSparkAdapter)
 
 
 def test_factory_returns_mock_adapter_when_unconfigured() -> None:

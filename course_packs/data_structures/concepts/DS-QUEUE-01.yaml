@@ -1,0 +1,33 @@
+id: DS-QUEUE-01
+title: 队列及其不变量
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-01
+learning_objectives:
+- 能判断与“队列及其不变量”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“队列及其不变量”的关键状态并验证边界
+concepts:
+- 队列及其不变量
+- 边界条件
+- 可验证性
+lesson:
+  summary: 实现先进先出操作并维护队首队尾。关键要点包括：队列保持先进先出，入队只在队尾加入元素，出队只从队头移除元素；实现必须保持空队列、单元素队列以及入队出队后 head、tail 与 size 的一致性；链式队列删除最后一个元素后要同时更新头尾指针，避免
+    tail 残留为悬空指针。
+  key_points:
+  - 队列保持先进先出，入队只在队尾加入元素，出队只从队头移除元素。
+  - 实现必须保持空队列、单元素队列以及入队出队后 head、tail 与 size 的一致性。
+  - 链式队列删除最后一个元素后要同时更新头尾指针，避免 tail 残留为悬空指针。
+  common_mistakes:
+  - 误以为队列允许从任意位置删除元素而仍保持先进先出语义。
+  - 误以为链式队列删除唯一结点后只需修改 head，tail 可以继续指向已释放结点。
+  examples:
+  - 轨迹示例：空队列依次 enqueue(A)、enqueue(B)、dequeue()；返回 A，队头与队尾都指向剩余的 B。
+assessment_ids:
+- DS-QUEUE-01-C1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

@@ -1,0 +1,25 @@
+id: C-CTRL-03-Q1
+title: 概念判断：while 与 do-while
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-CTRL-03
+prompt: 关于“while 与 do-while”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-CONTROL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 循环应明确初始化、继续条件和使状态趋近终止的更新步骤。
+  - id: B
+    text: do-while 与 while 在所有输入下执行次数完全相同，只是书写位置不同。
+  - id: C
+    text: 循环体中只要修改了任意变量，就能保证循环条件最终为假。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,32 @@
+id: C-MEM-01
+title: 动态内存分配
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-PTR-01
+learning_objectives:
+- 能够解释动态内存分配的核心规则
+- 能够运用动态内存分配解决边界明确的问题
+concepts:
+- 动态内存分配
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用 malloc/calloc 获取堆内存并检查失败。关键要点包括：malloc 返回未初始化的动态存储，calloc 会把分配字节置零，但都可能失败；分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出；每块成功分配的内存必须有明确所有者和唯一释放路径，失败分支同样要清理。
+  key_points:
+  - malloc 返回未初始化的动态存储，calloc 会把分配字节置零，但都可能失败。
+  - 分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出。
+  - 每块成功分配的内存必须有明确所有者和唯一释放路径，失败分支同样要清理。
+  common_mistakes:
+  - 写成 malloc(n) 却按 n 个 int 使用，导致分配空间不足。
+  - 未检查返回值便解引用，内存不足时触发崩溃。
+  examples:
+  - 代码示例：int *a = malloc(n * sizeof *a); if (a == NULL) return 1; /* use */ free(a);
+assessment_ids:
+- C-MEM-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

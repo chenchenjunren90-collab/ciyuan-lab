@@ -1,0 +1,25 @@
+id: C-ERR-01-Q1
+title: 概念判断：错误处理与断言
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-ERR-01
+prompt: 关于“错误处理与断言”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: assert 用于验证程序内部不变量，发布构建可能禁用它，不能替代外部输入校验。
+  - id: B
+    text: assert 适合检查用户输入是否合法，因为断言失败后能够向用户友好恢复。
+  - id: C
+    text: 只要设置 errno，就可以忽略库函数返回值并直接判断调用成功或失败。
+  accepted_answers:
+  - A
+status: draft

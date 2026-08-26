@@ -19,8 +19,8 @@
 - 每门课程均提供问答、分级练习、代码题或 Debug 任务，并跑通一条完整学习流程；
 - 跑通“初始测评 → 个性化计划 → 学习辅导 → 练习/Debug → 确定性代码验证 → 画像更新 → 下一任务推荐”；
 - 使用数据库保存课程结构、学习记录与学生画像，使用 RAG 提供有来源的课程问答；
-- 通用推理能力优先接入科大讯飞星火 MaaS/Agent 平台，**不进行模型微调**；
-- “驼灵”API仅用于经授权、脱敏的经管综合练习背景与业务解释，不访问或暴露底层敏感数据；
+- 通用推理与受控项目编排接入讯飞星辰 MaaS 托管的 DeepSeek-V4-Flash-0731，**不进行模型微调**；
+- 财经综合练习只参考权利明确的公开字段结构，实际使用本地固定合成数据，不调用驼灵；
 - 暂不追求生产级高并发、全培养方案覆盖、大规模题库和复杂虚拟仿真实训。
 
 ## 三个协同智能体
@@ -43,7 +43,7 @@ FastAPI 模块化单体后端
         ├─ 课程/RAG 与引用
         ├─ 练习、Debug 与代码验证
         ├─ 学习画像与推荐
-        └─ 模型适配层（讯飞 MaaS/Agent；驼灵受限场景）
+        └─ 模型适配层（讯飞 MaaS；无凭据时安全降级）
         ↓
 PostgreSQL + pgvector / Redis / 受控代码运行环境
 ```
@@ -60,7 +60,7 @@ apps/
       rag/                 知识入库、检索、引用
       learner_profile/     学生画像、掌握度和学习计划
       practice/            练习、Debug、代码验证
-      model_adapters/      讯飞与驼灵模型适配
+      model_adapters/      讯飞 MaaS、兼容适配与 Mock 降级
   web/                     Vue/Vite 学生端
 contracts/                 OpenAPI、JSON Schema 等公共契约
 course_packs/
@@ -73,6 +73,23 @@ scripts/                   校验、导入和辅助脚本
 docs/                      架构、范围、标准与决策记录
 .gitee/                    Issue 与 PR 模板
 ```
+
+## 快速启动初步版本
+
+Windows + Docker Desktop 环境下：
+
+```powershell
+.\scripts\setup_demo.ps1 -PullSandboxImages
+.\scripts\run_demo.ps1 -EnableCodeExecution
+```
+
+打开 `http://localhost:3000`。服务启动后可运行：
+
+```powershell
+.\.venv\Scripts\python.exe scripts\demo_smoke.py
+```
+
+完整演示顺序、模型配置、安全降级和停止方式见 [初步版本演示与验收手册](docs/demo-runbook.md)。代码执行默认关闭，只有显式传入 `-EnableCodeExecution` 且 Docker 隔离镜像就绪时才开启。
 
 ## 协作原则
 
@@ -99,7 +116,6 @@ python -m venv .venv
 python -m pip install -e ".[dev]"
 docker compose --env-file .env -f infra/compose.yaml up -d
 python -m alembic upgrade head
-python scripts/seed_demo_data.py
 python -m uvicorn app.main:app --app-dir apps/api --reload
 ```
 
@@ -123,10 +139,25 @@ npm run dev
 - [MVP 范围与验收边界](docs/mvp-scope.md)
 - [课程包统一标准](docs/course-package-standard.md)
 - [数据、模型与安全边界](docs/data-and-security.md)
+- [初步版本演示与验收手册](docs/demo-runbook.md)
+- [MVP v0.3 完整演示版验收记录](docs/audits/mvp-v0.3-acceptance.md)
 - [DATA-01 最小数据模型与迁移](docs/data-model.md)
+- [RAG 入库与混合检索](docs/rag-hybrid-search.md)
+- [RAG 75 问检索评测](docs/rag-evaluation.md)
+- [模型服务接入与验收](docs/provider-integration.md)
+- [作品六部分说明（PPT统一素材）](docs/presentation-six-part-outline.md)
+- [单个PR六部分说明模板](docs/templates/pr-six-part-description.md)
 - [贡献指南](CONTRIBUTING.md)
 - [AI 编码代理约束](AGENTS.md)
 
 ## 当前状态
 
-仓库处于三周初步版本建设期。提交演示前，以“完整流程可运行、来源可追溯、代码结果可验证、三门课程结构一致”为优先级，不以功能数量或模型调用次数作为完成标准。
+仓库已形成 `MVP v0.3` 完整演示版：C语言42个、Python40个、数据结构40个知识点已完成结构与内容补齐，
+课程内容仍保持 `draft`，并附有 AI 辅助技术复核记录；RAG 只索引17个已审核、权利明确的项目原创来源片段，
+并具备课程隔离、pgvector 可选后端和 75 问回归评测；内存与 pgvector 两条路径的
+Recall@5、MRR、库外拒答、跨课程拒答和课程隔离当前均为 100%。学习端已跑通知识学习、
+学情路径、有来源问答、三级提示、确定性练习与项目证据记录入口。综合项目只做材料完整性检查，
+不虚构人工队列或自动分数。生产演示环境已完成讯飞 MaaS 托管
+DeepSeek-V4-Flash-0731 的真实联调；本地未配置凭据时仍使用明确标识的安全降级，
+不把 Mock 当作真实调用结果。服务器部署、密钥边界和复现命令见
+[服务器部署说明](docs/server-deployment.md)。

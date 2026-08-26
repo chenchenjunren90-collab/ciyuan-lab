@@ -1,0 +1,32 @@
+id: DS-TREE-04
+title: 平衡搜索树原理
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-TREE-03
+learning_objectives:
+- 能判断与“平衡搜索树原理”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“平衡搜索树原理”的关键状态并验证边界
+concepts:
+- 平衡搜索树原理
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解旋转如何限制树高并保持搜索次序。关键要点包括：平衡搜索树通过限制子树高度差或颜色等不变量，使查找、插入和删除保持 O(log n)；旋转只调整局部父子关系并保持二叉搜索树的中序键序不变；插入或删除先执行普通搜索树修改，再沿路径更新高度并在失衡处选择单旋或双旋。
+  key_points:
+  - 平衡搜索树通过限制子树高度差或颜色等不变量，使查找、插入和删除保持 O(log n)。
+  - 旋转只调整局部父子关系并保持二叉搜索树的中序键序不变。
+  - 插入或删除先执行普通搜索树修改，再沿路径更新高度并在失衡处选择单旋或双旋。
+  common_mistakes:
+  - 误以为树旋转会改变所有键的中序顺序，因此旋转后必须重新排序结点。
+  - 误以为平衡树要求左右子树结点数完全相同，否则就不再是平衡树。
+  examples:
+  - 旋转示例：依次插入 3、2、1 形成左左失衡，对3做一次右旋后2成为根，左右子结点为1和3。
+assessment_ids:
+- DS-TREE-04-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

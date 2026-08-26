@@ -1,0 +1,34 @@
+id: C-IO-02
+title: 二进制文件与序列化边界
+course: c
+schema_version: 0.1.0
+version: 4
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- C-IO-01
+learning_objectives:
+- 能判断与“二进制文件与序列化边界”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“二进制文件与序列化边界”的关键状态并验证边界
+concepts:
+- 二进制文件与序列化边界
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解二进制布局的可移植性限制并检查读写数量。关键要点包括：fread 和 fwrite 按对象个数报告成功量，调用者必须检查短读、短写和错误状态；fseek 与 ftell 可用于受控的随机访问，但偏移、错误返回和大文件范围必须显式处理；直接持久化结构体会受到字节序、对齐填充和类型宽度影响，不是可移植文件格式；可靠二进制格式应规定魔数、版本、字段宽度、字节序与长度上限，并在分配前验证长度。
+  key_points:
+  - fread 和 fwrite 按对象个数报告成功量，调用者必须检查短读、短写和错误状态。
+  - fseek 用于移动文件位置，ftell 用于查询当前位置；必须检查返回值，不能假设任意偏移都合法或可由 long 表示。
+  - 直接持久化结构体会受到字节序、对齐填充和类型宽度影响，不是可移植文件格式。
+  - 可靠二进制格式应规定魔数、版本、字段宽度、字节序与长度上限，并在分配前验证长度。
+  common_mistakes:
+  - 误以为把结构体用 fwrite 原样写出后，可保证在任何编译器和机器上按相同布局读回。
+  - 误以为fread 返回值小于请求数量时一定只是正常文件结束，不需要检查 ferror。
+  examples:
+  - 示例格式：前 4 字节为固定魔数，随后是版本和网络字节序的 32 位记录数；读取时先验证头部再按上限分配。
+  - 随机访问示例：先验证记录序号与乘法溢出，再用 fseek(fp, offset, SEEK_SET) 定位，并检查返回值后读取固定宽度记录。
+assessment_ids:
+- C-IO-02-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

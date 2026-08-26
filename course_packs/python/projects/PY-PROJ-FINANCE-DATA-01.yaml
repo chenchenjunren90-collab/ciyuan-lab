@@ -1,0 +1,51 @@
+id: PY-PROJ-FINANCE-DATA-01
+title: 合成信用还款记录质量审计
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 240
+concept_ids:
+- PY-FUNC-01
+- PY-DICT-01
+- PY-EXC-01
+- PY-FILE-03
+- PY-DATA-01
+summary: 参考公开信用还款数据的字段结构，读取固定生成的虚构记录，完成字段校验、异常分类、统计汇总和可追溯报告。
+requirements:
+- 把解析、校验、清洗和汇总拆分为可测试函数
+- 处理缺失值、非法数值和重复记录
+- 保留原始行号与错误原因，不静默删除异常
+- 驼灵不可用时自动使用固定合成背景完成同一编程任务
+deliverables:
+- 可运行的 Python 3.11 程序
+- 自动化测试
+- 数据质量报告与限制说明
+source_refs:
+- SRC-PY-GUIDE-DATA
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-OPEN-UCI-CREDIT
+- SRC-PY-SYNTHETIC-FINANCE-CATALOG
+verification_exercise_ids:
+- PY-DATA-01-C1
+- PY-FILE-03-C1
+scenario_scope: post_course_finance_practice
+scenario_provider: fixed_synthetic
+data_classification: synthetic
+computer_science_objectives:
+- 使用函数、字典、异常和文件处理实现数据管道
+- 用确定性测试验证清洗规则和错误路径
+business_context_objectives:
+- 理解虚构还款字段的含义与约束
+- 解释数据质量结论的适用范围，不替代真实业务决策
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 程序正确性与测试
+    points: 55
+  - criterion: 异常处理与可追溯性
+    points: 25
+  - criterion: 模块化与结果解释
+    points: 20
+status: draft

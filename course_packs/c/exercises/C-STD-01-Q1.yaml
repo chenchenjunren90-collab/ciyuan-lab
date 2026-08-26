@@ -1,0 +1,25 @@
+id: C-STD-01-Q1
+title: 概念判断：标准库接口契约
+course: c
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 6
+concept_ids:
+- C-STD-01
+prompt: 关于 C 标准库接口的可靠使用，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-STDLIB
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 使用 strtol 解析整数时，应同时检查结束指针和 errno；调用其他标准库接口也要依据各自返回值契约判断结果。
+  - id: B
+    text: atoi 可以可靠区分合法字符串 "0" 与转换失败，因此不需要额外的错误检查。
+  - id: C
+    text: ctype 系列函数可以接收任意负的 char 值，标准保证其行为与先转换为 unsigned char 完全相同。
+  accepted_answers:
+  - A
+status: draft

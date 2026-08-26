@@ -1,0 +1,37 @@
+id: C-STD-01
+title: 标准库接口与返回值契约
+course: c
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 35
+prerequisites:
+- C-BASE-04
+- C-FUNC-01
+- C-STR-02
+learning_objectives:
+- 能根据任务选择 stdio、stdlib、string、ctype 与 math 中的常用接口并包含正确头文件
+- 能依据函数原型、返回值和错误约定区分成功、输入结束、部分完成与失败
+concepts:
+- C 标准库
+- 头文件
+- 返回值契约
+- strtol
+- 字符分类
+lesson:
+  summary: 标准库不是零散函数清单，而是一组由头文件、参数、返回值和错误约定共同定义的接口。stdio 负责流式输入输出，stdlib 提供数值转换、内存与通用算法，string 处理字节串，ctype 分类和转换字符，math 提供数学函数。调用者必须包含正确头文件、传入满足前置条件的参数，并检查返回值；可靠程序不能用“调用未崩溃”代替契约验证。
+  key_points:
+  - 调用标准库函数前必须包含声明它的标准头文件，并让实参类型、可写性和缓冲区容量满足函数原型与前置条件。
+  - 输入输出、内存和转换函数通过返回值区分成功、文件结束或失败；调用者应根据具体接口检查，而不是统一与零比较。
+  - 数值文本解析优先使用 strtol 等可检查结束位置和范围错误的接口，atoi 无法可靠区分合法的零与转换失败。
+  - ctype 系列函数只接受 EOF 或可表示为 unsigned char 的值；直接传入负的 char 值可能产生未定义行为。
+  common_mistakes:
+  - 只凭函数名猜测参数和返回值，不查头文件或接口契约，导致格式、范围、所有权或错误处理不匹配。
+  - 认为标准库调用只要没有立即崩溃就一定成功，忽略短读、空指针、转换尾部和范围错误。
+  examples:
+  - 解析示例：先令 errno=0，再调用 strtol(text,&end,10)，随后检查 end 是否前进、*end 是否为终止符以及 errno 是否为 ERANGE。
+assessment_ids:
+- C-STD-01-Q1
+source_refs:
+- SRC-C-GUIDE-STDLIB
+status: draft

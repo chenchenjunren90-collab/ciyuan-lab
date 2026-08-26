@@ -2,7 +2,7 @@ id: PY-FILE-01
 title: 文件读写基础
 course: python
 schema_version: 0.1.0
-version: 1
+version: 3
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -16,7 +16,7 @@ concepts:
 - write
 - 读写模式
 lesson:
-  summary: 使用 open 打开文件，掌握文本文件的读取与写入以及读写模式的区别。
+  summary: 使用 open 打开文件，掌握文本文件的读取与写入以及读写模式的区别。关键要点包括：open() 默认只读模式 r，写入用 w 或 a；read() 读取全部内容，write() 写入字符串；w 会覆盖原文件，a 在末尾追加。
   key_points:
   - open() 默认只读模式 r，写入用 w 或 a
   - read() 读取全部内容，write() 写入字符串
@@ -24,10 +24,12 @@ lesson:
   examples:
   - f = open("data.txt", "r", encoding="utf-8")
   common_mistakes:
-  - 写入时忘记用 w/a 模式导致文件不可写
+  - 误以为以 w 模式打开已有文件会在原内容末尾继续追加
+  - 误以为读取文本时无需指定编码，因为所有平台默认编码相同
 assessment_ids:
 - PY-FILE-01-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
 status: draft

@@ -1,0 +1,25 @@
+id: DS-SEARCH-01-Q1
+title: 概念判断：顺序查找
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-SEARCH-01
+prompt: 关于“顺序查找”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 找到目标后是否立即返回取决于需求：查任一位置可停止，查全部位置必须继续扫描。
+  - id: B
+    text: 顺序查找要求输入预先有序，否则会跳过可能的目标。
+  - id: C
+    text: 目标不存在时顺序查找仍只需比较一次，因此最坏时间为 O(1)。
+  accepted_answers:
+  - A
+status: draft

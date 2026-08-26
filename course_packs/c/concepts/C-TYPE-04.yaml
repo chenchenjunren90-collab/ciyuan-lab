@@ -1,0 +1,33 @@
+id: C-TYPE-04
+title: typedef 与接口可读性
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-TYPE-01
+learning_objectives:
+- 能判断与“typedef 与接口可读性”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“typedef 与接口可读性”的关键状态并验证边界
+concepts:
+- typedef 与接口可读性
+- 边界条件
+- 可验证性
+lesson:
+  summary: 为复杂类型提供稳定、清晰的接口名称。关键要点包括：typedef 为已有类型建立别名，不会像结构体封装那样自动创建新的、不兼容的类型；别名可简化函数指针和平台相关类型，但接口仍应让所有权、可变性和单位清楚可见；匿名结构体配合
+    typedef 能简化名称；需要隐藏实现时更适合只公开不完整结构体声明。
+  key_points:
+  - typedef 为已有类型建立别名，不会像结构体封装那样自动创建新的、不兼容的类型。
+  - 别名可简化函数指针和平台相关类型，但接口仍应让所有权、可变性和单位清楚可见。
+  - 匿名结构体配合 typedef 能简化名称；需要隐藏实现时更适合只公开不完整结构体声明。
+  common_mistakes:
+  - 误以为typedef int UserId 会创建与 int 完全不兼容的新类型，编译器会阻止二者混用。
+  - 误以为把指针隐藏在 typedef 中总能提升接口清晰度，不会掩盖所有权或 const 位置。
+  examples:
+  - 声明示例：typedef int (*Compare)(const void *,const void *); 让排序接口的回调类型更易读。
+assessment_ids:
+- C-TYPE-04-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

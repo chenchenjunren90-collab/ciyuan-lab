@@ -2,7 +2,7 @@ id: PY-ALGO-01
 title: 排序与查找
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 difficulty: intermediate
 estimated_minutes: 50
 prerequisites:
@@ -17,18 +17,21 @@ concepts:
 - 线性查找
 - 二分查找
 lesson:
-  summary: 掌握 sorted 与自定义排序，理解线性查找与二分查找的适用条件与复杂度。
+  summary: 掌握 sorted 与自定义排序，理解线性查找与二分查找的适用条件与复杂度。关键要点包括：选择排序或查找方法前先确认输入是否有序、是否需要稳定性以及数据规模；Python 的 sorted 返回新列表，list.sort
+    原地修改；key 函数只描述排序键；二分查找必须维护半开或闭区间不变量，并明确重复元素时返回哪一个位置。
   key_points:
-  - sorted() 返回排序后新列表，list.sort() 原地排序
-  - 线性查找逐个比较，适用于无序序列
-  - 二分查找要求序列有序，复杂度更低
+  - 选择排序或查找方法前先确认输入是否有序、是否需要稳定性以及数据规模。
+  - Python 的 sorted 返回新列表，list.sort 原地修改；key 函数只描述排序键。
+  - 二分查找必须维护半开或闭区间不变量，并明确重复元素时返回哪一个位置。
   examples:
-  - sorted(nums, reverse=True)
+  - '代码示例：ordered = sorted(records, key=lambda item: (item[''score''], item[''id'']))'
   common_mistakes:
-  - 对无序序列直接使用二分查找
+  - 误以为只看代码行数就能确定时间复杂度，无需定义输入规模
+  - 误以为两个同为 O(n) 的程序在所有数据规模上运行时间都相同
 assessment_ids:
 - PY-ALGO-01-Q1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
 status: draft

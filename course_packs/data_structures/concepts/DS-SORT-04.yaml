@@ -1,0 +1,33 @@
+id: DS-SORT-04
+title: 归并排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-04
+learning_objectives:
+- 能够解释归并排序的核心规则
+- 能够运用归并排序解决边界明确的问题
+concepts:
+- 归并排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用分治和线性归并获得稳定的 O(n log n) 排序。关键要点包括：归并排序递归地把序列分半，分别排序后在线性时间内合并两个有序段；合并时相等元素优先取左段可以保持稳定性；时间复杂度为 Θ(n log n)，典型数组实现需要
+    Θ(n) 辅助空间。
+  key_points:
+  - 归并排序递归地把序列分半，分别排序后在线性时间内合并两个有序段。
+  - 合并时相等元素优先取左段可以保持稳定性。
+  - 时间复杂度为 Θ(n log n)，典型数组实现需要 Θ(n) 辅助空间。
+  common_mistakes:
+  - 合并结束后忘记复制某一侧剩余元素。
+  - 递归区间没有严格缩小，导致无限递归。
+  examples:
+  - 示例：合并 [2,5] 与 [1,4,6] 时依次比较段首，得到 [1,2,4,5,6]。
+assessment_ids:
+- DS-SORT-04-C1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft
