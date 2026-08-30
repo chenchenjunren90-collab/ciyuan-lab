@@ -1247,10 +1247,110 @@ components:
           type: string
         text:
           type: string
+    DiagnosticSkillAtom:
+      type: object
+      additionalProperties: false
+      required: [id, knowledge_point_id, label]
+      properties:
+        id:
+          type: string
+        knowledge_point_id:
+          type: string
+        label:
+          type: string
+    DiagnosticPrerequisiteGap:
+      type: object
+      additionalProperties: false
+      required: [downstream_id, downstream_title, missing_prerequisite_id, missing_prerequisite_title, reason]
+      properties:
+        downstream_id:
+          type: string
+        downstream_title:
+          type: string
+        missing_prerequisite_id:
+          type: string
+        missing_prerequisite_title:
+          type: string
+        reason:
+          type: string
+    DiagnosticLearningBlock:
+      type: object
+      additionalProperties: false
+      required: [block_id, knowledge_point_id, title, reason, estimated_minutes, skill_atoms, summary, key_points]
+      properties:
+        block_id:
+          type: string
+        knowledge_point_id:
+          type: string
+        title:
+          type: string
+        reason:
+          type: string
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        skill_atoms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticSkillAtom"
+        summary:
+          type: string
+        key_points:
+          type: array
+          items:
+            type: string
+        example_problem:
+          type: string
+          default: ""
+        example_steps:
+          type: array
+          items:
+            type: string
+        example_code:
+          type: string
+          default: ""
+    DiagnosticAnalysis:
+      type: object
+      additionalProperties: false
+      required: [course_core_nodes, course_skill_atoms, assessed_core_nodes, assessed_skill_atoms, evidence_scope, non_linear_profile, prerequisite_gaps, demonstrated_knowledge_point_ids, focus_knowledge_point_ids, learning_blocks]
+      properties:
+        course_core_nodes:
+          type: integer
+          minimum: 1
+        course_skill_atoms:
+          type: integer
+          minimum: 1
+        assessed_core_nodes:
+          type: integer
+          minimum: 0
+        assessed_skill_atoms:
+          type: integer
+          minimum: 0
+        evidence_scope:
+          type: string
+          const: knowledge_point_proxy
+        non_linear_profile:
+          type: boolean
+        prerequisite_gaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticPrerequisiteGap"
+        demonstrated_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        focus_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        learning_blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticLearningBlock"
     DiagnosticItem:
       type: object
       additionalProperties: false
-      required: [exercise_id, title, prompt, concept_ids, options]
+      required: [exercise_id, title, prompt, concept_ids, skill_atoms, options]
       properties:
         exercise_id:
           type: string
@@ -1263,6 +1363,10 @@ components:
           minItems: 1
           items:
             type: string
+        skill_atoms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticSkillAtom"
         options:
           type: array
           minItems: 2
@@ -1316,7 +1420,7 @@ components:
     DiagnosticItemResult:
       type: object
       additionalProperties: false
-      required: [exercise_id, knowledge_point_id, correct]
+      required: [exercise_id, knowledge_point_id, correct, skill_atom_ids]
       properties:
         exercise_id:
           type: string
@@ -1324,10 +1428,14 @@ components:
           type: string
         correct:
           type: boolean
+        skill_atom_ids:
+          type: array
+          items:
+            type: string
     DiagnosticSubmissionResult:
       type: object
       additionalProperties: false
-      required: [phase, correct_count, total_count, item_results, profile, plan]
+      required: [phase, correct_count, total_count, item_results, analysis, profile, plan]
       properties:
         phase:
           $ref: "#/components/schemas/DiagnosticPhase"
@@ -1341,6 +1449,8 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/DiagnosticItemResult"
+        analysis:
+          $ref: "#/components/schemas/DiagnosticAnalysis"
         profile:
           $ref: "#/components/schemas/LearnerProfile"
         plan:

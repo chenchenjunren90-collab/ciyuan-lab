@@ -343,7 +343,18 @@ class ClassroomDialogueService:
             draft = _persona_fallback(request.role, hits, dictionary_lesson=dictionary_lesson)
         decision = self._supervisor.inspect(draft=draft, evidence=hits)
         if not decision.accepted:
-            return self._blocked(request.role, "这次回答没有通过资料与安全检查，请换一种问法。")
+            # A configured upstream model can occasionally omit or misformat
+            # citations.  Keep the class responsive without relaxing the
+            # supervisor: rebuild a deterministic, evidence-bound persona
+            # answer and run the exact same inspection again.
+            fallback = _persona_fallback(
+                request.role, hits, dictionary_lesson=dictionary_lesson
+            )
+            decision = self._supervisor.inspect(draft=fallback, evidence=hits)
+            if not decision.accepted:
+                return self._blocked(
+                    request.role, "这次回答没有通过资料与安全检查，请换一种问法。"
+                )
         return ClassroomDialogueResponse(
             status="answered",
             role=request.role,

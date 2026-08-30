@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -15,22 +16,31 @@ DiagnosticPhase = Literal["initial", "reassessment"]
 
 _PYTHON_INITIAL = (
     "PY-BASE-01-Q1",
+    "PY-BASE-02-Q1",
+    "PY-BASE-03-Q1",
     "PY-BASE-04-Q1",
     "PY-BASE-06-Q1",
-    "PY-FUNC-03-Q1",
+    "PY-BASE-08-Q1",
     "PY-LIST-01-Q1",
     "PY-DICT-01-Q1",
-    "PY-FILE-01-Q1",
+    "PY-FUNC-03-Q1",
+    "PY-DATA-02-Q1",
     "PY-EXC-02-Q1",
+    "PY-ALGO-01-Q1",
 )
 _PYTHON_REASSESSMENT = (
     "PY-BASE-02-Q1",
     "PY-BASE-03-Q1",
-    "PY-BASE-08-Q1",
+    "PY-BASE-09-Q1",
+    "PY-BASE-10-Q1",
     "PY-FUNC-04-Q1",
     "PY-LIST-02-Q1",
+    "PY-STR-02-Q1",
+    "PY-SET-01-Q1",
     "PY-FILE-04-Q1",
     "PY-MOD-02-Q1",
+    "PY-OOP-01-Q1",
+    "PY-ALGO-02-Q1",
     "PY-DATA-02-Q1",
 )
 
@@ -44,11 +54,18 @@ class DiagnosticOption(StrictModel):
     text: str
 
 
+class DiagnosticSkillAtom(StrictModel):
+    id: str
+    knowledge_point_id: str
+    label: str
+
+
 class DiagnosticItem(StrictModel):
     exercise_id: str
     title: str
     prompt: str
     concept_ids: list[str]
+    skill_atoms: list[DiagnosticSkillAtom]
     options: list[DiagnosticOption] = Field(min_length=2)
 
 
@@ -60,17 +77,54 @@ class DiagnosticQuiz(StrictModel):
     items: list[DiagnosticItem] = Field(min_length=1)
 
 
+class DiagnosticPrerequisiteGap(StrictModel):
+    downstream_id: str
+    downstream_title: str
+    missing_prerequisite_id: str
+    missing_prerequisite_title: str
+    reason: str
+
+
+class DiagnosticLearningBlock(StrictModel):
+    block_id: str
+    knowledge_point_id: str
+    title: str
+    reason: str
+    estimated_minutes: int = Field(gt=0)
+    skill_atoms: list[DiagnosticSkillAtom]
+    summary: str
+    key_points: list[str]
+    example_problem: str = ""
+    example_steps: list[str] = Field(default_factory=list)
+    example_code: str = ""
+
+
+class DiagnosticAnalysis(StrictModel):
+    course_core_nodes: int = Field(gt=0)
+    course_skill_atoms: int = Field(gt=0)
+    assessed_core_nodes: int = Field(ge=0)
+    assessed_skill_atoms: int = Field(ge=0)
+    evidence_scope: Literal["knowledge_point_proxy"]
+    non_linear_profile: bool
+    prerequisite_gaps: list[DiagnosticPrerequisiteGap]
+    demonstrated_knowledge_point_ids: list[str]
+    focus_knowledge_point_ids: list[str]
+    learning_blocks: list[DiagnosticLearningBlock]
+
+
 @dataclass(frozen=True, slots=True)
 class DiagnosticGrade:
     exercise_id: str
     knowledge_point_id: str
     correct: bool
+    skill_atoms: tuple[DiagnosticSkillAtom, ...]
 
 
 @dataclass(frozen=True, slots=True)
 class DiagnosticSubmissionOutcome:
     phase: DiagnosticPhase
     grades: tuple[DiagnosticGrade, ...]
+    analysis: DiagnosticAnalysis
     assessment: AssessmentOutcome
 
 
@@ -97,6 +151,10 @@ class DiagnosticService:
         items: list[DiagnosticItem] = []
         for activity_id in activity_ids:
             activity = self._courses.get_activity(course_id, activity_id)
+            knowledge_point_id = activity.concept_ids[0]
+            knowledge_point = self._courses.get_knowledge_point(
+                course_id, knowledge_point_id
+            )
             options = activity.evaluation.get("options")
             if activity.type != "objective" or not isinstance(options, list):
                 raise ValueError(f"diagnostic activity is not an objective item: {activity_id}")
@@ -106,6 +164,7 @@ class DiagnosticService:
                     title=activity.title,
                     prompt=activity.prompt or activity.title,
                     concept_ids=activity.concept_ids,
+                    skill_atoms=list(self._skill_atoms(knowledge_point)),
                     options=[DiagnosticOption.model_validate(option) for option in options],
                 )
             )
@@ -151,6 +210,7 @@ class DiagnosticService:
                     exercise_id=item.exercise_id,
                     knowledge_point_id=knowledge_point_id,
                     correct=correct,
+                    skill_atoms=tuple(item.skill_atoms),
                 )
             )
             evidence.append((knowledge_point_id, correct))
@@ -163,8 +223,147 @@ class DiagnosticService:
         return DiagnosticSubmissionOutcome(
             phase=phase,
             grades=tuple(grades),
+            analysis=self._analyse(course_id=course_id, grades=tuple(grades)),
             assessment=assessment,
         )
+
+    def _analyse(
+        self,
+        *,
+        course_id: CourseId,
+        grades: tuple[DiagnosticGrade, ...],
+    ) -> DiagnosticAnalysis:
+        knowledge_points = self._courses.list_knowledge_points(course_id)
+        by_id = {item.id: item for item in knowledge_points}
+        correct_by_id = {item.knowledge_point_id: item.correct for item in grades}
+
+        def assessed_missing_prerequisites(knowledge_point_id: str) -> list[str]:
+            missing: list[str] = []
+            visited: set[str] = set()
+
+            def visit(current_id: str) -> None:
+                if current_id in visited:
+                    return
+                visited.add(current_id)
+                current = by_id.get(current_id)
+                if current is None:
+                    return
+                for prerequisite_id in current.prerequisites:
+                    if correct_by_id.get(prerequisite_id) is False:
+                        missing.append(prerequisite_id)
+                    visit(prerequisite_id)
+
+            visit(knowledge_point_id)
+            return list(dict.fromkeys(missing))
+
+        gaps: list[DiagnosticPrerequisiteGap] = []
+        for downstream_id, correct in correct_by_id.items():
+            if not correct:
+                continue
+            downstream = by_id[downstream_id]
+            for prerequisite_id in assessed_missing_prerequisites(downstream_id):
+                prerequisite = by_id[prerequisite_id]
+                gaps.append(
+                    DiagnosticPrerequisiteGap(
+                        downstream_id=downstream_id,
+                        downstream_title=downstream.title,
+                        missing_prerequisite_id=prerequisite_id,
+                        missing_prerequisite_title=prerequisite.title,
+                        reason=(
+                            f"已证明会“{downstream.title}”，但前置“{prerequisite.title}”"
+                            "本轮未通过，需要精准回补而不是从头重学。"
+                        ),
+                    )
+                )
+
+        gap_ids = [item.missing_prerequisite_id for item in gaps]
+        incorrect_ids = [
+            item.knowledge_point_id for item in grades if not item.correct
+        ]
+        focus_ids = list(dict.fromkeys([*gap_ids, *incorrect_ids]))[:6]
+        learning_blocks = [
+            self._learning_block(
+                course_id=course_id,
+                knowledge_point_id=knowledge_point_id,
+                is_prerequisite_gap=knowledge_point_id in gap_ids,
+            )
+            for knowledge_point_id in focus_ids
+        ]
+        all_atoms = {
+            atom.id
+            for item in knowledge_points
+            for atom in self._skill_atoms(
+                self._courses.get_knowledge_point(course_id, item.id)
+            )
+        }
+        assessed_atoms = {
+            atom.id for grade in grades for atom in grade.skill_atoms
+        }
+        return DiagnosticAnalysis(
+            course_core_nodes=len(knowledge_points),
+            course_skill_atoms=len(all_atoms),
+            assessed_core_nodes=len(correct_by_id),
+            assessed_skill_atoms=len(assessed_atoms),
+            evidence_scope="knowledge_point_proxy",
+            non_linear_profile=bool(gaps),
+            prerequisite_gaps=gaps,
+            demonstrated_knowledge_point_ids=[
+                item.knowledge_point_id for item in grades if item.correct
+            ],
+            focus_knowledge_point_ids=focus_ids,
+            learning_blocks=learning_blocks,
+        )
+
+    def _learning_block(
+        self,
+        *,
+        course_id: CourseId,
+        knowledge_point_id: str,
+        is_prerequisite_gap: bool,
+    ) -> DiagnosticLearningBlock:
+        detail = self._courses.get_knowledge_point(course_id, knowledge_point_id)
+        lesson = detail.lesson
+        worked_example = lesson.get("worked_example")
+        example = worked_example if isinstance(worked_example, dict) else {}
+        return DiagnosticLearningBlock(
+            block_id=f"diagnostic-block-{knowledge_point_id.lower()}",
+            knowledge_point_id=knowledge_point_id,
+            title=detail.title,
+            reason=(
+                "前置断层回补：保留你已经会的后续内容，只补这一块。"
+                if is_prerequisite_gap
+                else "客观测评未通过：安排短讲解、例题和一次验证。"
+            ),
+            estimated_minutes=max(6, min(18, detail.estimated_minutes // 3)),
+            skill_atoms=list(self._skill_atoms(detail)),
+            summary=str(lesson.get("summary") or detail.title),
+            key_points=self._string_list(lesson.get("key_points")),
+            example_problem=str(example.get("problem") or ""),
+            example_steps=self._string_list(example.get("steps")),
+            example_code=str(example.get("code") or ""),
+        )
+
+    @staticmethod
+    def _skill_atoms(knowledge_point: Any) -> tuple[DiagnosticSkillAtom, ...]:
+        atoms: list[DiagnosticSkillAtom] = []
+        for label in knowledge_point.concepts:
+            digest = hashlib.blake2s(
+                f"{knowledge_point.id}:{label}".encode(), digest_size=4
+            ).hexdigest()
+            atoms.append(
+                DiagnosticSkillAtom(
+                    id=f"{knowledge_point.id}::{digest}",
+                    knowledge_point_id=knowledge_point.id,
+                    label=label,
+                )
+            )
+        return tuple(atoms)
+
+    @staticmethod
+    def _string_list(value: Any) -> list[str]:
+        if not isinstance(value, list):
+            return []
+        return [item for item in value if isinstance(item, str) and item.strip()]
 
     def _select_activity_ids(
         self, course_id: CourseId, phase: DiagnosticPhase

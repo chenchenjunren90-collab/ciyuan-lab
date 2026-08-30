@@ -78,16 +78,38 @@ export interface AssessmentResult {
   plan: { student_id: string; course_id: CourseId; stages: PlanStage[]; next_activity: NextActivity };
 }
 export type DiagnosticPhase = "initial" | "reassessment";
+export interface DiagnosticSkillAtom {
+  id: string; knowledge_point_id: string; label: string;
+}
+export interface DiagnosticPrerequisiteGap {
+  downstream_id: string; downstream_title: string;
+  missing_prerequisite_id: string; missing_prerequisite_title: string; reason: string;
+}
+export interface DiagnosticLearningBlock {
+  block_id: string; knowledge_point_id: string; title: string; reason: string;
+  estimated_minutes: number; skill_atoms: DiagnosticSkillAtom[]; summary: string;
+  key_points: string[]; example_problem: string; example_steps: string[]; example_code: string;
+}
+export interface DiagnosticAnalysis {
+  course_core_nodes: number; course_skill_atoms: number;
+  assessed_core_nodes: number; assessed_skill_atoms: number;
+  evidence_scope: "knowledge_point_proxy"; non_linear_profile: boolean;
+  prerequisite_gaps: DiagnosticPrerequisiteGap[];
+  demonstrated_knowledge_point_ids: string[]; focus_knowledge_point_ids: string[];
+  learning_blocks: DiagnosticLearningBlock[];
+}
 export interface DiagnosticQuiz {
   course_id: CourseId; phase: DiagnosticPhase; title: string; instructions: string;
   items: Array<{
     exercise_id: string; title: string; prompt: string; concept_ids: string[];
+    skill_atoms: DiagnosticSkillAtom[];
     options: Array<{ id: string; text: string }>;
   }>;
 }
 export interface DiagnosticSubmissionResult extends AssessmentResult {
   phase: DiagnosticPhase; correct_count: number; total_count: number;
-  item_results: Array<{ exercise_id: string; knowledge_point_id: string; correct: boolean }>;
+  item_results: Array<{ exercise_id: string; knowledge_point_id: string; correct: boolean; skill_atom_ids: string[] }>;
+  analysis: DiagnosticAnalysis;
 }
 export interface QaResponse {
   status: "answered" | "insufficient_evidence"; answer: string;

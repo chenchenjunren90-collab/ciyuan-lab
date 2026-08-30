@@ -17,6 +17,8 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, [tabindex="0"
 ::selection { color: #fff; background: var(--red); }
 h1, h2, h3, p { margin-top: 0; }
 .app-shell { min-height: 100vh; display: grid; grid-template-columns: 272px minmax(0, 1fr); }
+.app-shell.classroom-focus { grid-template-columns: minmax(0, 1fr); background: #f7f3f2; }
+.app-shell.classroom-focus .workspace { width: min(1560px, 100%); margin: 0 auto; padding: 18px clamp(16px, 2.5vw, 40px) 42px; }
 .sidebar { position: sticky; top: 0; height: 100vh; padding: 30px 20px 22px; border-right: 1px solid #292c34; color: #fff; background: linear-gradient(180deg, #111319 0%, #17191f 62%, #101116 100%); display: flex; flex-direction: column; box-shadow: 12px 0 40px #11131812; }
 .brand { display: flex; align-items: center; gap: 12px; padding: 0 8px 28px; }
 .brand > span { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 12px; color: #fff; background: linear-gradient(145deg, #f02a43, #b70018); font: 900 13px/1 Consolas, monospace; box-shadow: 0 12px 30px #d6001c45, inset 0 1px #ffffff4d; }

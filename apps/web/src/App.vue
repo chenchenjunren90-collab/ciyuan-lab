@@ -81,6 +81,7 @@ const learnerContextResolved = ref(false);
 const genericMode = ref(false);
 const assessmentWarningOpen = ref(false);
 const pendingLearningTab = ref<"classroom" | "practice">("classroom");
+const classroomFocusMode = ref(false);
 
 const selectedCourse = computed(() => courses.value.find((item) => item.id === courseId.value));
 const diagnosticComplete = computed(() => diagnostic.value?.items.every(
@@ -196,6 +197,10 @@ function openClassroom(): void {
   }
   notice.value = "";
   tab.value = courseId.value === "python" ? "classroom" : "overview";
+}
+function onClassroomFocusChanged(active: boolean): void {
+  classroomFocusMode.value = active;
+  notice.value = active ? "已进入专注课堂；可从课堂顶部切换听课、交流、代码和资料。" : "课堂已暂停，学习进度已经保存。";
 }
 function openPractice(): void {
   if (courseId.value === "python" && !learnerContextResolved.value) {
@@ -546,8 +551,8 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="app-shell">
-    <aside class="sidebar">
+  <div class="app-shell" :class="{ 'classroom-focus': classroomFocusMode }">
+    <aside v-if="!classroomFocusMode" class="sidebar">
       <div class="brand"><span>&lt;/&gt;</span><div><strong>词元研究所</strong></div></div>
       <nav class="course-nav">
         <p>我的课程</p>
@@ -562,11 +567,11 @@ onMounted(async () => {
     </aside>
 
     <main class="workspace">
-      <header class="topbar">
+      <header v-if="!classroomFocusMode" class="topbar">
         <h1>{{ selectedCourse?.title ?? "课程工作台" }}</h1>
       </header>
       <div v-if="notice" class="notice" role="status" aria-live="polite" @click="notice = ''">{{ notice }}<span>×</span></div>
-      <nav class="tabs">
+      <nav v-if="!classroomFocusMode" class="tabs">
         <button :class="{ active: tab !== 'practice' }" :aria-current="tab !== 'practice' ? 'page' : undefined" @click="openClassroom">{{ courseId === 'python' ? '沉浸课堂' : '课程学习' }}</button>
         <button :class="{ active: tab === 'practice' }" :aria-current="tab === 'practice' ? 'page' : undefined" @click="openPractice">练习工坊</button>
       </nav>
@@ -723,6 +728,7 @@ onMounted(async () => {
           @open-knowledge-map="openKnowledgeMap"
           @request-generic-mode="requestGenericMode('classroom')"
           @request-assessment="goToAssessment"
+          @focus-changed="onClassroomFocusChanged"
         />
       </template>
     </main>
@@ -731,7 +737,7 @@ onMounted(async () => {
         <h2 id="assessment-warning-title">还没有足够信息为你定制课程</h2>
         <p>如果现在继续，平台仍可提供通用讲解和基础练习，但无法根据你的 Python 水平调整第一课起点、讲解速度、每日计划和后续题目难度。</p>
         <ul><li>可能重复你已经掌握的内容</li><li>也可能跳过你需要补齐的基础</li><li>后续推荐暂时不会写入个性化画像</li></ul>
-        <div><button class="text-button" @click="assessmentWarningOpen = false">取消</button><button class="secondary" @click="continueWithGenericCourse">仍然继续通用课程</button><button class="primary" @click="goToAssessment">先完成 5 分钟摸底 <b>→</b></button></div>
+        <div><button class="text-button" @click="assessmentWarningOpen = false">取消</button><button class="secondary" @click="continueWithGenericCourse">仍然继续通用课程</button><button class="primary" @click="goToAssessment">先完成约 8 分钟摸底 <b>→</b></button></div>
       </section>
     </div>
   </div>
