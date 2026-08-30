@@ -1,0 +1,87 @@
+id: PY-BASE-08-H1
+title: 课后 Debug：用循环 else 判断质数
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: intermediate
+estimated_minutes: 20
+concept_ids:
+- PY-BASE-08
+prompt: 程序应判断 n 是否为质数。请修复 break 与循环 else 的位置或输出，使质数输出“是质数”，否则输出“不是质数”。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "n = int(input())\nfor divisor in range(2, n):\n    if n % divisor == 0:\n        print(\"\
+    是质数\")\n        break\nelse:\n    print(\"不是质数\")\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-prime
+    visibility: public
+    input: '7
+
+      '
+    expected_output: '是质数
+
+      '
+  - id: public-composite
+    visibility: public
+    input: '9
+
+      '
+    expected_output: '不是质数
+
+      '
+  - id: hidden-two
+    visibility: hidden
+    input: '2
+
+      '
+    expected_output: '是质数
+
+      '
+  - id: hidden-even
+    visibility: hidden
+    input: '12
+
+      '
+    expected_output: '不是质数
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 找到因数时说明不是质数
+  - 没有找到因数才进入循环 else
+  - 单独测试 n=2，此时循环体不会执行
+  input_format: 一个不小于 2 的整数 n。
+  output_format: 输出是质数或不是质数。
+  constraints:
+  - 2 <= n <= 10000
+  - 循环 else 只在没有执行 break 时运行
+  public_examples:
+  - input: '7
+
+      '
+    expected_output: '是质数
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 循环 else 的含义是“正常遍历完”，不是普通 if 的 else。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: loop-control / loop-else'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

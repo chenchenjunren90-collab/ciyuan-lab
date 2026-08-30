@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 CourseId = Literal["c", "python", "data_structures"]
 Difficulty = Literal["beginner", "intermediate", "advanced"]
 ActivityType = Literal["objective", "short_answer", "code", "debug", "project"]
+LearningStage = Literal["diagnostic", "in_class", "after_class", "challenge"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,6 +78,7 @@ class KnowledgePointSummary(StrictModel):
     title: str
     difficulty: Difficulty
     prerequisites: list[str]
+    concepts: list[str]
     source_refs: list[str]
 
 
@@ -94,6 +96,13 @@ class ActivitySummary(StrictModel):
     estimated_minutes: int = Field(gt=0)
     concept_ids: list[str]
     source_refs: list[str]
+    learning_stage: LearningStage | None = None
+
+
+class ActivityExample(StrictModel):
+    input: str
+    expected_output: str
+    explanation: str
 
 
 class ActivityDetail(ActivitySummary):
@@ -108,6 +117,14 @@ class ActivityDetail(ActivitySummary):
     computer_science_objectives: list[str] = Field(default_factory=list)
     business_context_objectives: list[str] = Field(default_factory=list)
     fallback_source_refs: list[str] = Field(default_factory=list)
+    audience: str | None = None
+    scaffolding: list[str] = Field(default_factory=list)
+    input_format: str | None = None
+    output_format: str | None = None
+    constraints: list[str] = Field(default_factory=list)
+    public_examples: list[ActivityExample] = Field(default_factory=list)
+    reflection_prompt: str | None = None
+    source_adaptation: dict[str, str] = Field(default_factory=dict)
     status: str
 
 

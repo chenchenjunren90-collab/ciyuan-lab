@@ -1,0 +1,82 @@
+id: PY-BASE-03-H1
+title: 课后练习：整除与余数
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-BASE-03
+prompt: 读取两个整数 a 和 b（b 大于 0），输出 a 整除 b 的商和余数，中间用一个空格分隔。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'a, b = map(int, input().split())
+
+    # 输出整除结果与余数
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-normal
+    visibility: public
+    input: '17 5
+
+      '
+    expected_output: '3 2
+
+      '
+  - id: hidden-exact
+    visibility: hidden
+    input: '20 4
+
+      '
+    expected_output: '5 0
+
+      '
+  - id: hidden-small
+    visibility: hidden
+    input: '3 8
+
+      '
+    expected_output: '0 3
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - // 得到整除的商
+  - '% 得到余数'
+  - 用 a == (a // b) * b + a % b 自检
+  input_format: 一行两个整数 a b。
+  output_format: 一行两个整数：商 余数。
+  constraints:
+  - b > 0
+  - 使用整数运算，不输出小数
+  public_examples:
+  - input: '17 5
+
+      '
+    expected_output: '3 2
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 看到“整除”和“余数”时，先确认题目是否允许负数以及除数能否为零。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: basics / operators'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

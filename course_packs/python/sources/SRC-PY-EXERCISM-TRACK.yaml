@@ -1,0 +1,20 @@
+id: SRC-PY-EXERCISM-TRACK
+title: Exercism Python 开放练习轨道
+course: python
+schema_version: "0.1.0"
+version: 1
+source_type: open_resource
+citation:
+  locator: Exercism Python Track（概念练习、实践练习及测试结构）
+  url: https://github.com/exercism/python
+  publisher: Exercism
+rights:
+  basis: open_license
+  license: MIT License
+  note: 仅借鉴知识依赖、题型结构和测试边界；中文题面、脚手架与情境由项目组重新编写，并保留来源说明。许可依据见仓库 LICENSE。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

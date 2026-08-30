@@ -1,0 +1,20 @@
+id: SRC-PY-INTERACTIVE-TUTORIALS
+title: Interactive Tutorials Python 开放教程
+course: python
+schema_version: "0.1.0"
+version: 1
+source_type: open_resource
+citation:
+  locator: Interactive Tutorials 中 learnpython.org 的教程与练习结构
+  url: https://github.com/ronreiter/interactive-tutorials
+  publisher: Interactive Tutorials contributors
+rights:
+  basis: open_license
+  license: Apache License 2.0
+  note: 用于核对初学知识顺序和互动练习结构；平台内容采用中文重写，不直接保存远程页面原文。许可依据见仓库 LICENSE。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

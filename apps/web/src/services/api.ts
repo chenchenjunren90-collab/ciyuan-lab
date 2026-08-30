@@ -8,11 +8,10 @@ export interface CourseSummary {
 }
 export interface KnowledgePoint {
   id: string; title: string; difficulty: "beginner" | "intermediate" | "advanced";
-  prerequisites: string[]; source_refs: string[];
+  prerequisites: string[]; concepts: string[]; source_refs: string[];
 }
 export interface KnowledgePointDetail extends KnowledgePoint {
   course: CourseId; estimated_minutes: number; learning_objectives: string[];
-  concepts: string[];
   lesson: {
     summary?: string; key_points?: string[]; examples?: string[]; common_mistakes?: string[];
     learning_sequence?: Array<{ title: string; content: string }>;
@@ -25,6 +24,7 @@ export interface ActivitySummary {
   id: string; title: string; course: CourseId;
   type: "objective" | "short_answer" | "code" | "debug" | "project";
   difficulty: string; estimated_minutes: number; concept_ids: string[]; source_refs: string[];
+  learning_stage: "diagnostic" | "in_class" | "after_class" | "challenge" | null;
 }
 export interface ActivityDetail extends ActivitySummary {
   prompt: string | null; summary: string | null; requirements: string[]; deliverables: string[];
@@ -32,11 +32,17 @@ export interface ActivityDetail extends ActivitySummary {
     mode: string;
     options?: Array<{ id: string; text: string }>;
     runtime?: { language: "c" | "python" };
+    starter_code?: string;
     tests?: Array<{ id: string; visibility: "public"; input: string; expected_output: string }>;
   };
   computer_science_objectives: string[]; business_context_objectives: string[];
   scenario_scope: string | null; scenario_provider: string | null;
   data_classification: string | null; fallback_source_refs: string[];
+  audience: string | null; scaffolding: string[];
+  input_format: string | null; output_format: string | null; constraints: string[];
+  public_examples: Array<{ input: string; expected_output: string; explanation: string }>;
+  reflection_prompt: string | null; source_adaptation: Record<string, string>;
+  status: string;
 }
 export interface ScenarioContext {
   project_id: string; course_id: CourseId;
@@ -90,6 +96,43 @@ export interface QaResponse {
     component: "retrieval" | "course_tutor" | "quality_supervisor";
     status: "completed" | "degraded" | "blocked"; detail: string;
   }>;
+}
+export type ClassroomRole = "teacher" | "ta" | "peer_cautious" | "peer_debugger" | "peer_summarizer";
+export type ClassroomPhase = "welcome" | "concept" | "discussion" | "debug" | "practice" | "summary" | "homework";
+export interface ClassroomPersona {
+  role: ClassroomRole; display_name: string; tagline: string; tone: string;
+}
+export interface ClassroomChoice { id: string; text: string }
+export interface ClassroomBeat {
+  id: string; phase: ClassroomPhase; speaker: ClassroomRole; eyebrow: string; title: string;
+  message: string; board_title: string; board_explanation: string; board_points: string[];
+  board_code: string; board_trace: string[];
+  action: "continue" | "choice" | "practice" | "homework" | "complete";
+  checkpoint: { prompt: string; choices: ClassroomChoice[] } | null;
+}
+export interface ClassroomCodeTask {
+  exercise_id: string; title: string; prompt: string; difficulty: string; estimated_minutes: number;
+  input_format: string; output_format: string; constraints: string[]; starter_code: string;
+  public_examples: Array<{ input: string; expected_output: string; explanation: string }>;
+}
+export interface ClassroomLesson {
+  lesson_id: string; course_id: "python"; title: string; subtitle: string; duration_minutes: number;
+  knowledge_point_ids: string[]; unlock_title: string; cast: ClassroomPersona[];
+  beats: ClassroomBeat[]; practice: ClassroomCodeTask; homework: ClassroomCodeTask;
+}
+export interface ClassroomCheckpointResult {
+  accepted: boolean; feedback: string; reply_role: ClassroomRole;
+  reply_display_name: string; reply_message: string;
+}
+export interface ClassroomDialogueResponse {
+  status: "answered" | "insufficient_evidence"; role: ClassroomRole; display_name: string;
+  answer: string; citations: QaResponse["citations"]; trace: QaResponse["trace"];
+}
+export interface ClassroomSelfProfileResponse {
+  level: "newcomer" | "beginner" | "developing" | "experienced";
+  level_label: string; confidence: "low" | "medium" | "high"; course_fit: string;
+  recommended_start: string; matched_knowledge_point_ids: string[]; signals: string[];
+  advisor_message: string; citations: QaResponse["citations"]; trace: QaResponse["trace"];
 }
 export interface HintResponse {
   activity_id: string; level: 1 | 2 | 3; hint: string;
@@ -184,7 +227,18 @@ export const api = {
     request<{ course_id: CourseId; items: KnowledgePoint[] }>(`/api/v1/courses/${courseId}/knowledge-points`),
   knowledgePoint: (courseId: CourseId, knowledgePointId: string) =>
     request<KnowledgePointDetail>(`/api/v1/courses/${courseId}/knowledge-points/${knowledgePointId}`),
-  activities: (courseId: CourseId) => request<ActivitySummary[]>(`/api/v1/courses/${courseId}/activities`),
+  activities: (
+    courseId: CourseId,
+    filters: { knowledgePointId?: string; learningStage?: ActivitySummary["learning_stage"] } = {}
+  ) => {
+    const params = new URLSearchParams();
+    if (filters.knowledgePointId) params.set("knowledge_point_id", filters.knowledgePointId);
+    if (filters.learningStage) params.set("learning_stage", filters.learningStage);
+    const query = params.toString();
+    return request<ActivitySummary[]>(
+      `/api/v1/courses/${courseId}/activities${query ? `?${query}` : ""}`
+    );
+  },
   activity: (courseId: CourseId, activityId: string) =>
     request<ActivityDetail>(`/api/v1/courses/${courseId}/activities/${activityId}`),
   scenario: (courseId: CourseId, projectId: string) =>
@@ -233,6 +287,26 @@ export const api = {
   ask: (studentId: string, courseId: CourseId, question: string) => request<QaResponse>("/api/v1/qa", {
     method: "POST", body: JSON.stringify({ student_id: studentId, course_id: courseId, question })
   }, fetch, aiTimeoutMs),
+  classroomLesson: (lessonId: string) =>
+    request<ClassroomLesson>(`/api/v1/classroom/lessons/${encodeURIComponent(lessonId)}`),
+  classroomCheckpoint: (lessonId: string, beatId: string, response: string) =>
+    request<ClassroomCheckpointResult>("/api/v1/classroom/checkpoints", {
+      method: "POST", body: JSON.stringify({ lesson_id: lessonId, beat_id: beatId, response })
+    }),
+  classroomDialogue: (
+    studentId: string, lessonId: string, phase: ClassroomPhase,
+    role: ClassroomRole, message: string
+  ) => request<ClassroomDialogueResponse>("/api/v1/classroom/dialogue", {
+    method: "POST", body: JSON.stringify({
+      student_id: studentId, lesson_id: lessonId, phase, role, message
+    })
+  }, fetch, aiTimeoutMs),
+  classroomSelfProfile: (studentId: string, lessonId: string, description: string) =>
+    request<ClassroomSelfProfileResponse>("/api/v1/classroom/self-profile", {
+      method: "POST", body: JSON.stringify({
+        student_id: studentId, lesson_id: lessonId, description
+      })
+    }, fetch, aiTimeoutMs),
   hint: (studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3) =>
     request<HintResponse>(`/api/v1/activities/${activityId}/hint?course_id=${courseId}`, {
       method: "POST", body: JSON.stringify({ student_id: studentId, level })

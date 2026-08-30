@@ -14,7 +14,7 @@ from app.modules.course_content import (
     KnowledgePointList,
     SourceDetail,
 )
-from app.modules.course_content.models import CourseId
+from app.modules.course_content.models import CourseId, LearningStage
 
 router = APIRouter(prefix="/courses", tags=["courses"])
 
@@ -47,11 +47,16 @@ async def get_knowledge_point(course_id: CourseId, knowledge_point_id: str) -> K
 async def list_activities(
     course_id: CourseId,
     knowledge_point_id: str | None = Query(default=None),
+    learning_stage: LearningStage | None = None,
 ) -> list[ActivitySummary]:
     activities = get_course_repository().list_activities(course_id)
     if knowledge_point_id is not None:
         activities = tuple(
             activity for activity in activities if knowledge_point_id in activity.concept_ids
+        )
+    if learning_stage is not None:
+        activities = tuple(
+            activity for activity in activities if activity.learning_stage == learning_stage
         )
     return list(activities)
 

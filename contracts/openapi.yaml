@@ -117,6 +117,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: learning_stage
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [diagnostic, in_class, after_class, challenge]
       responses:
         "200":
           description: 学习活动目录
@@ -508,6 +514,76 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProjectSubmissionResponse"
+  /api/v1/classroom/lessons/{lesson_id}:
+    get:
+      operationId: getClassroomLesson
+      summary: 获取 Python 沉浸式课堂的教学脚本与公开任务
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 课堂角色、教学节拍、理解检查与公开代码任务
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomLesson"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/classroom/checkpoints:
+    post:
+      operationId: evaluateClassroomCheckpoint
+      summary: 对课堂理解检查进行确定性判定
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomCheckpointRequest"
+      responses:
+        "200":
+          description: 检查结果与对应课堂角色的反馈
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomCheckpointResult"
+  /api/v1/classroom/dialogue:
+    post:
+      operationId: answerClassroomDialogue
+      summary: 使用课程辅导智能体的课堂人格开展可溯源对话
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomDialogueRequest"
+      responses:
+        "200":
+          description: 经过课程检索与质量监督的角色化回答
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomDialogueResponse"
+  /api/v1/classroom/self-profile:
+    post:
+      operationId: assessClassroomSelfProfile
+      summary: 将学生自述与 Python 系统课程路线进行保守匹配
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomSelfProfileRequest"
+      responses:
+        "200":
+          description: 经课程检索与质量监督的自述初判，仍需客观测评校正
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomSelfProfileResponse"
 components:
   responses:
     NotFound:
@@ -628,7 +704,7 @@ components:
     KnowledgePointSummary:
       type: object
       additionalProperties: false
-      required: [id, title, difficulty, prerequisites, source_refs]
+      required: [id, title, difficulty, prerequisites, concepts, source_refs]
       properties:
         id:
           type: string
@@ -640,6 +716,11 @@ components:
           enum: [beginner, intermediate, advanced]
         prerequisites:
           type: array
+          items:
+            type: string
+        concepts:
+          type: array
+          description: 该核心节点下可展示与检索的细分技能单元
           items:
             type: string
         source_refs:
@@ -747,6 +828,9 @@ components:
           type: array
           items:
             type: string
+        learning_stage:
+          type: [string, "null"]
+          enum: [diagnostic, in_class, after_class, challenge, null]
     ActivityDetail:
       type: object
       additionalProperties: false
@@ -785,6 +869,9 @@ components:
           type: array
           items:
             type: string
+        learning_stage:
+          type: [string, "null"]
+          enum: [diagnostic, in_class, after_class, challenge, null]
         prompt:
           type: [string, "null"]
         summary:
@@ -818,7 +905,42 @@ components:
           type: array
           items:
             type: string
+        audience:
+          type: [string, "null"]
+        scaffolding:
+          type: array
+          items:
+            type: string
+        input_format:
+          type: [string, "null"]
+        output_format:
+          type: [string, "null"]
+        constraints:
+          type: array
+          items:
+            type: string
+        public_examples:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityExample"
+        reflection_prompt:
+          type: [string, "null"]
+        source_adaptation:
+          type: object
+          additionalProperties:
+            type: string
         status:
+          type: string
+    ActivityExample:
+      type: object
+      additionalProperties: false
+      required: [input, expected_output, explanation]
+      properties:
+        input:
+          type: string
+        expected_output:
+          type: string
+        explanation:
           type: string
     ScenarioContext:
       type: object
@@ -1517,3 +1639,267 @@ components:
             $ref: "#/components/schemas/MasteryState"
         next_activity:
           $ref: "#/components/schemas/NextActivity"
+    ClassroomPersona:
+      type: object
+      additionalProperties: false
+      required: [role, display_name, tagline, tone]
+      properties:
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        display_name:
+          type: string
+        tagline:
+          type: string
+        tone:
+          type: string
+    ClassroomChoice:
+      type: object
+      additionalProperties: false
+      required: [id, text]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+    ClassroomCheckpoint:
+      type: object
+      additionalProperties: false
+      required: [prompt, choices]
+      properties:
+        prompt:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomChoice"
+    ClassroomBeat:
+      type: object
+      additionalProperties: false
+      required: [id, phase, speaker, eyebrow, title, message, board_title, action]
+      properties:
+        id:
+          type: string
+        phase:
+          type: string
+          enum: [welcome, concept, discussion, debug, practice, summary, homework]
+        speaker:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        eyebrow:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        board_title:
+          type: string
+        board_explanation:
+          type: string
+          default: ""
+        board_points:
+          type: array
+          items:
+            type: string
+        board_code:
+          type: string
+          default: ""
+        board_trace:
+          type: array
+          items:
+            type: string
+        action:
+          type: string
+          enum: [continue, choice, practice, homework, complete]
+        checkpoint:
+          anyOf:
+            - $ref: "#/components/schemas/ClassroomCheckpoint"
+            - type: "null"
+    ClassroomCodeTask:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, title, prompt, difficulty, estimated_minutes, input_format, output_format, constraints, starter_code, public_examples]
+      properties:
+        exercise_id:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        difficulty:
+          type: string
+        estimated_minutes:
+          type: integer
+        input_format:
+          type: string
+        output_format:
+          type: string
+        constraints:
+          type: array
+          items:
+            type: string
+        starter_code:
+          type: string
+        public_examples:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+    ClassroomLesson:
+      type: object
+      additionalProperties: false
+      required: [lesson_id, course_id, title, subtitle, duration_minutes, knowledge_point_ids, unlock_title, cast, beats, practice, homework]
+      properties:
+        lesson_id:
+          type: string
+        course_id:
+          type: string
+          const: python
+        title:
+          type: string
+        subtitle:
+          type: string
+        duration_minutes:
+          type: integer
+        knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        unlock_title:
+          type: string
+        cast:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomPersona"
+        beats:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomBeat"
+        practice:
+          $ref: "#/components/schemas/ClassroomCodeTask"
+        homework:
+          $ref: "#/components/schemas/ClassroomCodeTask"
+    ClassroomCheckpointRequest:
+      type: object
+      additionalProperties: false
+      required: [lesson_id, beat_id, response]
+      properties:
+        lesson_id:
+          type: string
+        beat_id:
+          type: string
+        response:
+          type: string
+          minLength: 1
+          maxLength: 120
+    ClassroomCheckpointResult:
+      type: object
+      additionalProperties: false
+      required: [accepted, feedback, reply_role, reply_display_name, reply_message]
+      properties:
+        accepted:
+          type: boolean
+        feedback:
+          type: string
+        reply_role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        reply_display_name:
+          type: string
+        reply_message:
+          type: string
+    ClassroomDialogueRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, lesson_id, phase, role, message]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        lesson_id:
+          type: string
+        phase:
+          type: string
+          enum: [welcome, concept, discussion, debug, practice, summary, homework]
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        message:
+          type: string
+          minLength: 2
+          maxLength: 1000
+    ClassroomDialogueResponse:
+      type: object
+      additionalProperties: false
+      required: [status, role, display_name, answer, citations, trace]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence]
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        display_name:
+          type: string
+        answer:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"
+    ClassroomSelfProfileRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, lesson_id, description]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        lesson_id:
+          type: string
+        description:
+          type: string
+          minLength: 8
+          maxLength: 1200
+    ClassroomSelfProfileResponse:
+      type: object
+      additionalProperties: false
+      required: [level, level_label, confidence, course_fit, recommended_start, matched_knowledge_point_ids, signals, advisor_message, citations, trace]
+      properties:
+        level:
+          type: string
+          enum: [newcomer, beginner, developing, experienced]
+        level_label:
+          type: string
+        confidence:
+          type: string
+          enum: [low, medium, high]
+        course_fit:
+          type: string
+        recommended_start:
+          type: string
+        matched_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        signals:
+          type: array
+          items:
+            type: string
+        advisor_message:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"

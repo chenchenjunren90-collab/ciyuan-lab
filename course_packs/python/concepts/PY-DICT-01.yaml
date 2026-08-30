@@ -16,8 +16,8 @@ concepts:
 - 键唯一
 - get
 lesson:
-  summary: 掌握字典的创建、按键访问、增删改查，理解键的唯一性与 get 方法的容错用法。关键要点包括：字典把可散列且相等语义稳定的键映射到值，键在一个字典中唯一；使用 get、in 或 setdefault 明确缺失键策略，不应无条件索引未知外部键；遍历
-    items 可同时获得键和值，插入顺序不等于业务排序规则。
+  summary: 掌握字典的创建、按键访问、增删改查，理解键的唯一性与 get 方法的容错用法。关键要点包括：字典把可散列且相等语义稳定的键映射到值，键在一个字典中唯一；使用 get、in 或 setdefault
+    明确缺失键策略，不应无条件索引未知外部键；遍历 items 可同时获得键和值，插入顺序不等于业务排序规则。
   key_points:
   - 字典把可散列且相等语义稳定的键映射到值，键在一个字典中唯一。
   - 使用 get、in 或 setdefault 明确缺失键策略，不应无条件索引未知外部键。
@@ -40,21 +40,20 @@ lesson:
     - 创建空字典 counts 保存标签与次数。
     - 遍历标签，用 get(label, 0) 读取旧值后加一。
     - 遍历排序后的键，输出键和对应次数。
-    code: |
-      labels = ["beta", "alpha", "beta"]
-      counts = {}
-      for label in labels:
-          counts[label] = counts.get(label, 0) + 1
-      for label in sorted(counts):
-          print(label, counts[label])
+    code: "labels = [\"beta\", \"alpha\", \"beta\"]\ncounts = {}\nfor label in labels:\n    counts[label]\
+      \ = counts.get(label, 0) + 1\nfor label in sorted(counts):\n    print(label, counts[label])\n"
     reflection: 字典保留插入顺序，但题目要求的业务顺序必须显式实现，不能把插入顺序误当排序规则。
   checkpoint:
     prompt: 当键可能不存在时，counts[key]、counts.get(key) 和 counts.get(key, 0) 的结果有何不同？
     guidance: 分别在空字典上运行三种写法，记录返回值或异常类型，再说明哪种适合计数。
 assessment_ids:
 - PY-DICT-01-Q1
+- PY-DICT-01-H1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
 status: draft

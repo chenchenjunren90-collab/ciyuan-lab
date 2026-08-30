@@ -7,6 +7,10 @@ from app.modules.orchestration.catalog import (
     CourseNotFoundError,
     load_course_catalog,
 )
+from app.modules.orchestration.classroom import (
+    ClassroomDialogueService,
+    ClassroomLessonService,
+)
 from app.modules.orchestration.ports import LearningOrchestrator, PlannedActivity
 from app.modules.orchestration.service import LearningPlanner, build_learning_planner
 from app.modules.orchestration.supervisor import QualitySupervisor, SupervisionResult
@@ -23,6 +27,8 @@ __all__ = [
     "QualitySupervisor",
     "SupervisionResult",
     "TutorDraft",
+    "ClassroomDialogueService",
+    "ClassroomLessonService",
     "PlannedActivity",
     "build_learning_planner",
     "load_course_catalog",

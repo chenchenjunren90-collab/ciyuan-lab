@@ -1,0 +1,146 @@
+"""Python immersive lessons are scripted, grounded and safe to expose."""
+
+from typing import Any, cast
+
+from fastapi.testclient import TestClient
+
+from app.main import app
+
+client = TestClient(app)
+
+
+def test_first_python_lesson_exposes_complete_flow_without_hidden_tests() -> None:
+    response = client.get("/api/v1/classroom/lessons/python-list-filter-01")
+
+    assert response.status_code == 200
+    payload = cast(dict[str, Any], response.json())
+    assert payload["course_id"] == "python"
+    assert [beat["phase"] for beat in payload["beats"]] == [
+        "welcome",
+        "concept",
+        "discussion",
+        "debug",
+        "practice",
+        "summary",
+        "homework",
+    ]
+    assert len(payload["cast"]) == 5
+    assert payload["practice"]["exercise_id"] == "PY-LIST-03-C1"
+    assert payload["homework"]["exercise_id"] == "PY-LIST-03-H1"
+    assert len(payload["practice"]["public_examples"]) == 2
+    assert len(payload["homework"]["public_examples"]) == 2
+    assert payload["practice"]["input_format"]
+    assert payload["practice"]["output_format"]
+    assert payload["practice"]["constraints"]
+    assert all(item["explanation"] for item in payload["practice"]["public_examples"])
+    assert all(beat["board_explanation"] for beat in payload["beats"])
+    assert all(beat["board_trace"] for beat in payload["beats"])
+    assert "hidden" not in response.text.casefold()
+
+
+def test_checkpoint_waits_for_understanding_and_allows_retry() -> None:
+    wrong = client.post(
+        "/api/v1/classroom/checkpoints",
+        json={
+            "lesson_id": "python-list-filter-01",
+            "beat_id": "beat-filter",
+            "response": "A",
+        },
+    )
+    correct = client.post(
+        "/api/v1/classroom/checkpoints",
+        json={
+            "lesson_id": "python-list-filter-01",
+            "beat_id": "beat-filter",
+            "response": "B",
+        },
+    )
+
+    assert wrong.status_code == 200
+    assert wrong.json()["accepted"] is False
+    assert correct.status_code == 200
+    assert correct.json()["accepted"] is True
+    assert correct.json()["reply_role"] == "teacher"
+
+
+def test_second_python_lesson_is_real_and_uses_dictionary_tasks() -> None:
+    response = client.get("/api/v1/classroom/lessons/python-dict-lookup-02")
+
+    assert response.status_code == 200
+    payload = cast(dict[str, Any], response.json())
+    assert payload["title"] == "字典与快速查找"
+    assert payload["knowledge_point_ids"] == ["PY-DICT-01", "PY-DICT-02"]
+    assert payload["practice"]["exercise_id"] == "PY-DICT-02-C1"
+    assert payload["homework"]["exercise_id"] == "PY-DICT-01-H1"
+    assert len(payload["practice"]["public_examples"]) == 2
+    assert payload["homework"]["public_examples"]
+    assert all(beat["board_explanation"] for beat in payload["beats"])
+
+    checkpoint = client.post(
+        "/api/v1/classroom/checkpoints",
+        json={
+            "lesson_id": "python-dict-lookup-02",
+            "beat_id": "dict-beat-lookup",
+            "response": "C",
+        },
+    )
+    assert checkpoint.status_code == 200
+    assert checkpoint.json()["accepted"] is True
+
+
+def test_classroom_dialogue_uses_persona_and_traceable_python_evidence() -> None:
+    response = client.post(
+        "/api/v1/classroom/dialogue",
+        json={
+            "student_id": "classroom-test",
+            "lesson_id": "python-list-filter-01",
+            "phase": "discussion",
+            "role": "peer_cautious",
+            "message": "for 和 if 分别负责什么？",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["status"] == "answered"
+    assert payload["role"] == "peer_cautious"
+    assert payload["display_name"] == "小禾"
+    assert payload["citations"]
+    assert all(item["source_id"].startswith("SRC-PY-") for item in payload["citations"])
+    assert [item["component"] for item in payload["trace"]] == [
+        "retrieval",
+        "course_tutor",
+        "quality_supervisor",
+    ]
+
+
+def test_unknown_classroom_lesson_is_not_silently_substituted() -> None:
+    response = client.get("/api/v1/classroom/lessons/not-a-lesson")
+
+    assert response.status_code == 404
+
+
+def test_self_report_is_conservatively_matched_to_course_route() -> None:
+    response = client.post(
+        "/api/v1/classroom/self-profile",
+        json={
+            "student_id": "self-profile-test",
+            "lesson_id": "python-list-filter-01",
+            "description": (
+                "我学过变量、if、for、列表和函数，做过课程作业，但调试时经常不知道从哪里开始。"
+            ),
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["level"] in {"developing", "experienced"}
+    assert payload["recommended_start"]
+    assert payload["matched_knowledge_point_ids"]
+    assert payload["signals"]
+    assert "测评" in payload["advisor_message"] or "校正" in payload["advisor_message"]
+    assert [item["component"] for item in payload["trace"]] == [
+        "retrieval",
+        "course_tutor",
+        "quality_supervisor",
+    ]

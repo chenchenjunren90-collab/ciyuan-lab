@@ -1,0 +1,86 @@
+id: PY-EXC-02-H1
+title: 课后练习：定义成绩范围异常
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: advanced
+estimated_minutes: 25
+concept_ids:
+- PY-EXC-02
+prompt: 定义 ScoreRangeError。读取一个整数分数；若不在 0 到 100，抛出并捕获该异常，输出“分数越界”；否则输出“有效分数:分数”。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "class ScoreRangeError(ValueError):\n    pass\n\nscore = int(input())\n# 校验、抛出并捕获自定义异常\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-valid
+    visibility: public
+    input: '80
+
+      '
+    expected_output: '有效分数:80
+
+      '
+  - id: public-low
+    visibility: public
+    input: '-1
+
+      '
+    expected_output: '分数越界
+
+      '
+  - id: hidden-high
+    visibility: hidden
+    input: '101
+
+      '
+    expected_output: '分数越界
+
+      '
+  - id: hidden-edge
+    visibility: hidden
+    input: '100
+
+      '
+    expected_output: '有效分数:100
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 先定义异常类
+  - 条件不满足时 raise ScoreRangeError
+  - 只捕获自己预期的异常类型
+  input_format: 一个整数分数。
+  output_format: 有效分数:分数，或分数越界。
+  constraints:
+  - 合法范围包含 0 和 100
+  - 自定义异常继承 ValueError
+  public_examples:
+  - input: '80
+
+      '
+    expected_output: '有效分数:80
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 自定义异常用于表达稳定的业务或领域错误，不要为每一行代码新建异常类。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: custom exceptions'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

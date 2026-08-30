@@ -2,7 +2,7 @@ id: PY-LIST-03
 title: 列表推导式
 course: python
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: intermediate
 estimated_minutes: 45
 prerequisites:
@@ -39,18 +39,25 @@ lesson:
     - 过滤条件是 value > 0 且 value % 2 == 0。
     - 变换表达式是 value * value。
     - 推导式按原列表遍历，因此自然保留相对顺序。
-    code: |
-      values = [-3, 2, 5, 4, 0]
+    code: 'values = [-3, 2, 5, 4, 0]
+
       result = [value * value for value in values if value > 0 and value % 2 == 0]
+
       print(result)
+
+      '
     reflection: 先保证普通循环可读且正确，再决定是否改写为推导式；代码短不等于更容易维护。
   checkpoint:
     prompt: 把“保留长度不少于 3 的字符串并转为大写”先写成普通循环，再写成列表推导式。
     guidance: 对比两版的遍历对象、过滤条件和变换表达式是否一一对应。
 assessment_ids:
 - PY-LIST-03-C1
+- PY-LIST-03-H1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
 status: draft

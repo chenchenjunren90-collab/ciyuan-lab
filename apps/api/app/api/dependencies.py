@@ -14,6 +14,10 @@ from app.modules.model_adapters.factory import (
 )
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
+from app.modules.orchestration.classroom import (
+    ClassroomDialogueService,
+    ClassroomLessonService,
+)
 from app.modules.practice import (
     DeterministicCodeVerifier,
     DisabledSandboxRunner,
@@ -62,6 +66,31 @@ def get_rag_qa_service() -> RagQaService:
         retriever,
         CourseTutor(get_model_adapter()),
         QualitySupervisor(),
+        top_k=settings.rag_top_k,
+    )
+
+
+@lru_cache
+def get_classroom_lesson_service() -> ClassroomLessonService:
+    return ClassroomLessonService(get_course_repository())
+
+
+@lru_cache
+def get_classroom_dialogue_service() -> ClassroomDialogueService:
+    settings = get_settings()
+    retriever: KnowledgeRetriever
+    if settings.rag_backend == "pgvector":
+        retriever = PgVectorKnowledgeRetriever(
+            create_database_engine(settings.database_url),
+            min_score=settings.rag_min_score,
+            vector_weight=settings.rag_vector_weight,
+        )
+    else:
+        retriever = LexicalKnowledgeRetriever.from_repository(get_course_repository())
+    return ClassroomDialogueService(
+        retriever=retriever,
+        tutor=CourseTutor(get_model_adapter()),
+        supervisor=QualitySupervisor(),
         top_k=settings.rag_top_k,
     )
 

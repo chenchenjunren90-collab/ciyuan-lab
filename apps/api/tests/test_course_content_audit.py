@@ -12,7 +12,7 @@ def test_audit_covers_all_three_mvp_courses() -> None:
     }
     assert {audit.course_id: audit.exercises for audit in audits} == {
         "c": 42,
-        "python": 40,
+        "python": 80,
         "data_structures": 40,
     }
     assert all(audit.projects >= 1 for audit in audits)

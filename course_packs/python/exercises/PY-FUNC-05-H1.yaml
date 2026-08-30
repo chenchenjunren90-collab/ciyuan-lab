@@ -1,0 +1,74 @@
+id: PY-FUNC-05-H1
+title: 课后练习：按长度和字典序排序
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-FUNC-05
+prompt: 读取一行单词，使用 sorted 和 lambda：先按长度升序，同长度按单词字典序升序，最后以空格输出。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'words = input().split()
+
+    # key 返回一个包含两个排序依据的元组
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-words
+    visibility: public
+    input: 'pear a fig apple
+
+      '
+    expected_output: 'a fig pear apple
+
+      '
+  - id: hidden-tie
+    visibility: hidden
+    input: 'bb aa c
+
+      '
+    expected_output: 'c aa bb
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 第一排序键是 len(word)
+  - 第二排序键是 word
+  - 让 lambda 返回二元组
+  input_format: 一行一个或多个单词。
+  output_format: 按规则排序的单词，以空格分隔。
+  constraints:
+  - 保留重复单词
+  - '使用 key=lambda word: (...)'
+  public_examples:
+  - input: 'pear a fig apple
+
+      '
+    expected_output: 'a fig pear apple
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: lambda 适合短小的一次性规则；复杂逻辑应改用具名函数。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: lambda / higher-order functions / sorting'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

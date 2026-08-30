@@ -1,0 +1,84 @@
+id: PY-BASE-07-H1
+title: 课后练习：累加偶数
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-BASE-07
+prompt: 读取正整数 n，计算并输出 1 到 n（包含 n）之间所有偶数的和。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'n = int(input())
+
+    total = 0
+
+    # 使用 for 与 range 完成累加
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-six
+    visibility: public
+    input: '6
+
+      '
+    expected_output: '12
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: '1
+
+      '
+    expected_output: '0
+
+      '
+  - id: hidden-ten
+    visibility: hidden
+    input: '10
+
+      '
+    expected_output: '30
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 可以让 range 从 2 开始、步长为 2
+  - 停止位置需要写成 n + 1
+  - 用奇数 n 检查最后一个偶数
+  input_format: 一个正整数 n。
+  output_format: 一个整数，表示偶数之和。
+  constraints:
+  - 1 <= n <= 100000
+  - range 的停止位置不包含在序列中
+  public_examples:
+  - input: '6
+
+      '
+    expected_output: '12
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 使用 range 前先写出期望得到的前三项和最后一项。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: loops / for-range'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft
