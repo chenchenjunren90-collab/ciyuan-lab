@@ -1,0 +1,80 @@
+id: PY-FILE-02-H1
+title: 课后 Debug：用 with 管理文本流
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-FILE-02
+prompt: 读取一行文本，使用 with 和 io.StringIO 读取内容并输出大写形式。修复当前未正确使用上下文管理器的代码。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'from io import StringIO
+
+    text = input()
+
+    file = StringIO(text)
+
+    content = file.read()
+
+    print(content.upper())
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-word
+    visibility: public
+    input: 'Python
+
+      '
+    expected_output: 'PYTHON
+
+      '
+  - id: hidden-phrase
+    visibility: hidden
+    input: 'hello world
+
+      '
+    expected_output: 'HELLO WORLD
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 把资源创建写在 with 后
+  - 缩进读取操作
+  - 离开 with 后只使用已读取的普通字符串
+  input_format: 一行文本。
+  output_format: 该文本的大写形式。
+  constraints:
+  - 必须使用 with StringIO(text) as file
+  - 不要在 with 结束后再次读取已关闭对象
+  public_examples:
+  - input: 'Python
+
+      '
+    expected_output: 'PYTHON
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: with 把获取和释放资源写在同一结构里，减少忘记关闭的问题。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: context manager / with'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

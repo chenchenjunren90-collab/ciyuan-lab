@@ -1,0 +1,82 @@
+id: PY-BASE-04-H1
+title: 课后 Debug：修好两数求和
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-BASE-04
+prompt: 下面程序想读取两个整数并输出它们的和，但当前代码会报错或得到错误结果。请修复代码。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'a, b = input()
+
+    print(a + b)
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-positive
+    visibility: public
+    input: '3 5
+
+      '
+    expected_output: '8
+
+      '
+  - id: hidden-negative
+    visibility: hidden
+    input: '-2 7
+
+      '
+    expected_output: '5
+
+      '
+  - id: hidden-zero
+    visibility: hidden
+    input: '0 0
+
+      '
+    expected_output: '0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 观察解包时右侧有几个值
+  - 先 split() 再转换为整数
+  - 用负数测试，排除字符串拼接
+  input_format: 一行两个整数。
+  output_format: 输出两个整数的和。
+  constraints:
+  - 输入以空格分隔
+  - 不得拼接字符串
+  public_examples:
+  - input: '3 5
+
+      '
+    expected_output: '8
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 调试输入问题时，把“读取、拆分、转换、计算、输出”分成五步检查。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: basics / input-output'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

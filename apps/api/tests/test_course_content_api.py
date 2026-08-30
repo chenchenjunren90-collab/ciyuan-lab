@@ -33,6 +33,7 @@ def test_lists_real_python_knowledge_points() -> None:
         item for item in payload["items"] if item["id"] == "PY-FUNC-01"
     )
     assert function["title"] == "函数定义与调用"
+    assert len(function["concepts"]) >= 3
     assert function["source_refs"]
 
     detail = client.get(
@@ -72,6 +73,43 @@ def test_filters_activities_by_knowledge_point() -> None:
     assert response.status_code == 200
     assert response.json()
     assert all("PY-FUNC-01" in item["concept_ids"] for item in response.json())
+
+
+def test_exposes_beginner_scaffolding_without_hidden_tests() -> None:
+    response = client.get("/api/v1/courses/python/activities/PY-BASE-04-H1")
+
+    assert response.status_code == 200
+    activity = response.json()
+    assert activity["learning_stage"] == "after_class"
+    assert activity["audience"] == "chinese_beginner"
+    assert len(activity["scaffolding"]) == 3
+    assert activity["input_format"] == "一行两个整数。"
+    assert activity["output_format"] == "输出两个整数的和。"
+    assert activity["public_examples"][0]["expected_output"] == "8\n"
+    assert activity["reflection_prompt"]
+    assert activity["source_adaptation"]["source_id"] == "SRC-PY-EXERCISM-TRACK"
+    assert all(
+        test["visibility"] == "public" for test in activity["evaluation"]["tests"]
+    )
+
+
+def test_filters_after_class_activities_for_a_knowledge_point() -> None:
+    response = client.get(
+        "/api/v1/courses/python/activities",
+        params={"knowledge_point_id": "PY-FUNC-01", "learning_stage": "after_class"},
+    )
+
+    assert response.status_code == 200
+    assert [item["id"] for item in response.json()] == ["PY-FUNC-01-H1"]
+
+
+def test_rejects_unknown_learning_stage() -> None:
+    response = client.get(
+        "/api/v1/courses/python/activities",
+        params={"learning_stage": "homework-ish"},
+    )
+
+    assert response.status_code == 422
 
 
 def test_lists_registered_sources_with_rag_eligibility() -> None:

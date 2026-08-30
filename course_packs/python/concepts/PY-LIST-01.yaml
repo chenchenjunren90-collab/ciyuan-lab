@@ -39,20 +39,20 @@ lesson:
     - 先判断列表是否为空，避免直接调用 min 或 max。
     - 非空时分别计算 len、min 和 max，保持输出字段顺序固定。
     - 用空列表、单元素列表和包含负数的列表验证边界。
-    code: |
-      values = [18, 21, 17, 22]
-      if not values:
-          print("EMPTY")
-      else:
-          print(len(values), min(values), max(values))
+    code: "values = [18, 21, 17, 22]\nif not values:\n    print(\"EMPTY\")\nelse:\n    print(len(values),\
+      \ min(values), max(values))\n"
     reflection: 如果把 values 直接赋给另一个变量，两个变量仍指向同一个列表；需要独立外层列表时可使用切片或 copy。
   checkpoint:
     prompt: 对列表 [4, 7, 9]，items[1:] 与 items[-1] 分别得到什么？空列表时上述访问是否都安全？
     guidance: 先在纸上标出索引，再用最小代码验证；重点解释半开区间和越界差异。
 assessment_ids:
 - PY-LIST-01-Q1
+- PY-LIST-01-H1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
 status: draft

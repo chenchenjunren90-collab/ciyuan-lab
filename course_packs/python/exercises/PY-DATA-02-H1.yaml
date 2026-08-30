@@ -1,0 +1,109 @@
+id: PY-DATA-02-H1
+title: 课后综合：汇总分类交易额
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: advanced
+estimated_minutes: 25
+concept_ids:
+- PY-DATA-02
+prompt: 第一行读取记录数 n，随后 n 行包含类别和整数金额。汇总每个类别的金额，按类别字典序逐行输出“类别 总额”。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'n = int(input())
+
+    totals = {}
+
+    # 读取记录并完成分组汇总
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-sales
+    visibility: public
+    input: '4
+
+      A 10
+
+      B 7
+
+      A 5
+
+      C 2
+
+      '
+    expected_output: 'A 15
+
+      B 7
+
+      C 2
+
+      '
+  - id: hidden-negative
+    visibility: hidden
+    input: '3
+
+      x 5
+
+      x -2
+
+      y 0
+
+      '
+    expected_output: 'x 3
+
+      y 0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 用字典保存类别到累计值的映射
+  - get(category, 0) 处理首次出现
+  - 输出前对字典键排序
+  input_format: 第一行 n；随后 n 行：类别 金额。
+  output_format: 按类别字典序输出各类别总额。
+  constraints:
+  - 1 <= n <= 1000
+  - 金额为整数
+  - 类别不含空格
+  public_examples:
+  - input: '4
+
+      A 10
+
+      B 7
+
+      A 5
+
+      C 2
+
+      '
+    expected_output: 'A 15
+
+      B 7
+
+      C 2
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 综合数据题按读取、清洗、汇总、排序、输出五步实现。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'curriculum: data aggregation / grouping'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

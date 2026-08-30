@@ -1,0 +1,79 @@
+id: PY-FUNC-04-H1
+title: 课后 Debug：避免误改全局计数
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-FUNC-04
+prompt: 程序希望函数 add_one(value) 返回 value+1，且不依赖或修改全局变量。请修复函数，使输入 5 时输出 6。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "count = 100\n\ndef add_one(value):\n    global count\n    count += 1\n    return count\n\
+    \nvalue = int(input())\nprint(add_one(value))\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-five
+    visibility: public
+    input: '5
+
+      '
+    expected_output: '6
+
+      '
+  - id: hidden-zero
+    visibility: hidden
+    input: '0
+
+      '
+    expected_output: '1
+
+      '
+  - id: hidden-negative
+    visibility: hidden
+    input: '-2
+
+      '
+    expected_output: '-1
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 删除不必要的 global
+  - 返回 value + 1
+  - 用不同输入确认结果不受 count 影响
+  input_format: 一个整数。
+  output_format: 输入整数加 1。
+  constraints:
+  - 函数不得读取或修改全局 count
+  - 只依据参数 value 计算
+  public_examples:
+  - input: '5
+
+      '
+    expected_output: '6
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 能通过参数传入、返回值传出的数据，不要优先使用 global。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: scope / pure function'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

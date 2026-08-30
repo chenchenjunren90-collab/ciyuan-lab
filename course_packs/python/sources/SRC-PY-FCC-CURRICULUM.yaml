@@ -1,0 +1,20 @@
+id: SRC-PY-FCC-CURRICULUM
+title: freeCodeCamp Python 开放课程结构
+course: python
+schema_version: "0.1.0"
+version: 1
+source_type: open_resource
+citation:
+  locator: freeCodeCamp curriculum 中 Python 课程、实验与复习模块
+  url: https://github.com/freeCodeCamp/freeCodeCamp/tree/main/curriculum/challenges/english/blocks
+  publisher: freeCodeCamp
+rights:
+  basis: open_license
+  license: BSD 3-Clause License
+  note: 用于核对讲授—实验—项目的递进方式；中文知识卡和练习由项目组重新编写，并保留本来源登记。许可依据见仓库 LICENSE.md。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

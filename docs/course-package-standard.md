@@ -168,6 +168,38 @@ runtime:
 
 每个测试包含 `id`、`visibility`、`input`、`expected_output`，`visibility` 仅允许 `public`、`hidden`。隐藏测试只能供后端验证器使用，不得通过 API、前端、RAG 文本或模型提示泄露。课程包只声明确定性判定事实；真正的隔离执行、限时限资源和诊断脱敏由 `PRACTICE-*` Issue 实现。模型可以解释测试结果，但不能改变是否通过。
 
+### 6.1 中文初学者讲练适配字段
+
+面向中文初学者的练习可在 `extensions` 中声明统一的教学脚手架。该映射不保存答案，也不能替代 `evaluation.tests` 的确定性判定：
+
+```yaml
+extensions:
+  learning_stage: after_class       # diagnostic / in_class / after_class / challenge
+  audience: chinese_beginner
+  scaffolding:
+    - 先识别输入包含几个值
+    - 再完成类型转换
+    - 最后核对输出格式
+  input_format: 一行两个空格分隔的整数。
+  output_format: 输出两个整数的和。
+  constraints: [不得拼接字符串]
+  public_examples:
+    - input: "3 5\n"
+      expected_output: "8\n"
+      explanation: 3 与 5 均转换为整数后相加。
+  reflection_prompt: input().split() 后为什么仍需 int()？
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: concept basics / practice input-output
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+```
+
+- `after_class` 练习必须由至少一个知识点的 `assessment_ids` 引用，形成“知识卡—练习”的可追踪关系；
+- `scaffolding` 按从启发到具体的顺序提供，不直接给出完整答案；
+- `public_examples` 用于帮助初学者理解输入输出，不能包含隐藏测试；
+- `reflection_prompt` 用于提交后复盘错因，不影响自动评分；
+- `source_adaptation` 必须指向同课程已登记来源，并说明借鉴范围和重写方法；不得复制许可不明、非商业限制或未授权题面。
+
 ## 7. 来源 Schema 与 RAG 边界
 
 完整示例见 `_template/sources/SRC-PY-OUTLINE-01.example.yaml`。必填字段：

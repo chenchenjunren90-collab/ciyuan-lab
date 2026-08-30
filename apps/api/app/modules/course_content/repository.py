@@ -11,12 +11,14 @@ import yaml  # type: ignore[import-untyped]
 
 from app.modules.course_content.models import (
     ActivityDetail,
+    ActivityExample,
     ActivitySummary,
     CourseId,
     CourseSummary,
     CourseVersionMetadata,
     KnowledgePointDetail,
     KnowledgePointSummary,
+    LearningStage,
     PracticeActivityRecord,
     RagSourceRecord,
     SourceDetail,
@@ -186,6 +188,7 @@ class CoursePackRepository:
             title=detail.title,
             difficulty=detail.difficulty,
             prerequisites=detail.prerequisites,
+            concepts=detail.concepts,
             source_refs=detail.source_refs,
         )
 
@@ -195,6 +198,8 @@ class CoursePackRepository:
         document: dict[str, Any],
         forced_type: str | None,
     ) -> ActivitySummary:
+        extensions = self._optional_mapping(document.get("extensions"))
+        learning_stage = self._optional_string(extensions.get("learning_stage"))
         return ActivitySummary(
             id=self._required_string(document, "id"),
             title=self._required_string(document, "title"),
@@ -207,6 +212,7 @@ class CoursePackRepository:
             estimated_minutes=self._required_int(document, "estimated_minutes"),
             concept_ids=self._string_list(document.get("concept_ids")),
             source_refs=self._string_list(document.get("source_refs")),
+            learning_stage=cast(LearningStage | None, learning_stage),
         )
 
     def _activity_detail(
@@ -221,6 +227,14 @@ class CoursePackRepository:
         )
         fallback_value = document.get("fallback")
         fallback = fallback_value if isinstance(fallback_value, dict) else {}
+        extensions = self._optional_mapping(document.get("extensions"))
+        examples = extensions.get("public_examples")
+        public_examples = (
+            [ActivityExample.model_validate(item) for item in examples if isinstance(item, dict)]
+            if isinstance(examples, list)
+            else []
+        )
+        source_adaptation = self._optional_mapping(extensions.get("source_adaptation"))
         return ActivityDetail(
             **summary.model_dump(),
             prompt=self._optional_string(document.get("prompt")),
@@ -238,6 +252,18 @@ class CoursePackRepository:
                 document.get("business_context_objectives")
             ),
             fallback_source_refs=self._string_list(fallback.get("source_refs")),
+            audience=self._optional_string(extensions.get("audience")),
+            scaffolding=self._string_list(extensions.get("scaffolding")),
+            input_format=self._optional_string(extensions.get("input_format")),
+            output_format=self._optional_string(extensions.get("output_format")),
+            constraints=self._string_list(extensions.get("constraints")),
+            public_examples=public_examples,
+            reflection_prompt=self._optional_string(extensions.get("reflection_prompt")),
+            source_adaptation={
+                str(key): str(value)
+                for key, value in source_adaptation.items()
+                if isinstance(value, (str, int, float, bool))
+            },
             status=self._required_string(document, "status"),
         )
 
@@ -339,6 +365,10 @@ class CoursePackRepository:
         if not isinstance(value, dict):
             raise CourseContentError(f"{label} must be a mapping")
         return cast(dict[str, Any], value)
+
+    @staticmethod
+    def _optional_mapping(value: object) -> dict[str, Any]:
+        return cast(dict[str, Any], value) if isinstance(value, dict) else {}
 
     @staticmethod
     def _required_string(value: dict[str, Any], key: str) -> str:

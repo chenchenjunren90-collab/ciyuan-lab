@@ -1,0 +1,76 @@
+id: PY-STR-03-H1
+title: 课后练习：清理不规则空格
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-STR-03
+prompt: 读取一行文本，去掉首尾空格，把单词之间的连续空白统一为一个空格，并将所有字母转为小写。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'text = input()
+
+    # split() 后再 join()，最后统一大小写
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-spaces
+    visibility: public
+    input: "  PyThOn   IS fun  \n"
+    expected_output: 'python is fun
+
+      '
+  - id: hidden-clean
+    visibility: hidden
+    input: 'Already clean
+
+      '
+    expected_output: 'already clean
+
+      '
+  - id: hidden-tabs
+    visibility: hidden
+    input: "A\tB   C\n"
+    expected_output: 'a b c
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 不传参数的 split() 会处理连续空白
+  - 使用 ' '.join(words) 重新连接
+  - 使用 lower() 统一大小写
+  input_format: 一行文本，单词之间可能包含多个空格或制表符。
+  output_format: 规范化后的小写文本。
+  constraints:
+  - 输入至少包含一个非空白字符
+  - 输出首尾不得有空格
+  public_examples:
+  - input: "  PyThOn   IS fun  \n"
+    expected_output: 'python is fun
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 字符串清洗应先定义规则，再组合最少且可测试的方法。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'tutorial: Basic String Operations / methods'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

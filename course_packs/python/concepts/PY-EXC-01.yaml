@@ -16,8 +16,8 @@ concepts:
 - finally
 - 异常类型
 lesson:
-  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。关键要点包括：try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型；else 用于没有异常时的后续逻辑，finally
-    用于无论成功失败都必须执行的清理；异常信息应保留输入位置和操作上下文，但不得泄露密钥或学生敏感数据。
+  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。关键要点包括：try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型；else
+    用于没有异常时的后续逻辑，finally 用于无论成功失败都必须执行的清理；异常信息应保留输入位置和操作上下文，但不得泄露密钥或学生敏感数据。
   key_points:
   - try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型。
   - else 用于没有异常时的后续逻辑，finally 用于无论成功失败都必须执行的清理。
@@ -42,23 +42,20 @@ lesson:
     - 每次只把 int(text) 放入 try，避免掩盖其他程序错误。
     - 捕获 ValueError 后跳过当前文本，不使用空 except。
     - 最后输出有效整数数量与总和，并测试全部非法的输入。
-    code: |
-      values = []
-      for text in ["12", "bad", "-5"]:
-          try:
-              value = int(text)
-          except ValueError:
-              continue
-          values.append(value)
-      print(len(values), sum(values))
+    code: "values = []\nfor text in [\"12\", \"bad\", \"-5\"]:\n    try:\n        value = int(text)\n\
+      \    except ValueError:\n        continue\n    values.append(value)\nprint(len(values), sum(values))\n"
     reflection: 异常处理应恢复可预期的输入错误，不应吞掉编程错误；错误日志也不应包含密钥或敏感数据。
   checkpoint:
     prompt: 为什么把 append、统计和输出全部放进同一个 try/except Exception 会降低程序可靠性？
     guidance: 从异常定位、错误掩盖和可测试性三个角度回答，再把 try 缩小到单个转换语句。
 assessment_ids:
 - PY-EXC-01-D1
+- PY-EXC-01-H1
 source_refs:
 - SRC-PY-OUTLINE-01
 - SRC-PY-OFFICIAL-TUTORIAL
 - SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
 status: draft

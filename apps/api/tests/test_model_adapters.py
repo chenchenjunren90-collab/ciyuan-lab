@@ -340,6 +340,7 @@ def test_mock_adapter_returns_fixed_response() -> None:
 
 def test_factory_builds_xfyun_adapter_when_configured() -> None:
     settings = Settings(
+        xfyun_maas_api_key=SecretStr(""),
         xfyun_spark_api_key=SecretStr("key"),
         xfyun_spark_api_secret=SecretStr("secret"),
         xfyun_spark_model="spark-x",
@@ -375,6 +376,7 @@ def test_http_api_password_is_supported_without_key_secret_pair() -> None:
 
 def test_factory_prefers_http_api_password() -> None:
     settings = Settings(
+        xfyun_maas_api_key=SecretStr(""),
         xfyun_spark_api_password=SecretStr("password-only"),
         xfyun_spark_api_key=SecretStr(""),
         xfyun_spark_api_secret=SecretStr(""),
@@ -384,13 +386,18 @@ def test_factory_prefers_http_api_password() -> None:
 
 
 def test_factory_returns_mock_adapter_when_unconfigured() -> None:
-    settings = Settings(xfyun_spark_api_key=SecretStr(""), xfyun_spark_api_secret=SecretStr(""))
+    settings = Settings(
+        xfyun_maas_api_key=SecretStr(""),
+        xfyun_spark_api_key=SecretStr(""),
+        xfyun_spark_api_secret=SecretStr(""),
+    )
     adapter = build_model_adapter(settings)
     assert isinstance(adapter, MockAdapter)
 
 
 def test_factory_raises_when_fallback_disabled() -> None:
     settings = Settings(
+        xfyun_maas_api_key=SecretStr(""),
         xfyun_spark_api_key=SecretStr(""),
         xfyun_spark_api_secret=SecretStr(""),
         xfyun_spark_mock_fallback=False,
