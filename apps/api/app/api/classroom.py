@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.api.dependencies import (
     get_classroom_dialogue_service,
@@ -16,11 +16,31 @@ from app.modules.orchestration.classroom import (
     ClassroomDialogueService,
     ClassroomLesson,
     ClassroomLessonService,
+    ClassroomPreference,
     ClassroomSelfProfileRequest,
     ClassroomSelfProfileResponse,
 )
 
 router = APIRouter(prefix="/classroom", tags=["classroom"])
+
+
+@router.get("/sessions/next", response_model=ClassroomLesson)
+async def get_next_classroom_session(
+    service: Annotated[ClassroomLessonService, Depends(get_classroom_lesson_service)],
+    student_id: Annotated[str, Query(min_length=1, max_length=128)],
+    daily_minutes: Annotated[int, Query(ge=20, le=120)] = 30,
+    preferred_mode: ClassroomPreference = "step_by_step",
+) -> ClassroomLesson:
+    try:
+        return await service.next_session(
+            student_id=student_id,
+            daily_minutes=daily_minutes,
+            preferred_mode=preferred_mode,
+        )
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get("/lessons/{lesson_id}", response_model=ClassroomLesson)

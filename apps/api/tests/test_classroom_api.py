@@ -1,12 +1,33 @@
 """Python immersive lessons are scripted, grounded and safe to expose."""
 
+import asyncio
 from typing import Any, cast
 
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.modules.course_content import CoursePackRepository
+from app.modules.learner_profile.models import LearnerProfile, MasteryState
+from app.modules.orchestration.classroom import ClassroomLessonService
+from app.modules.orchestration.ports import PlannedActivity
 
 client = TestClient(app)
+
+
+class _AdaptiveLearningContext:
+    def __init__(self, profile: LearnerProfile, planned: PlannedActivity) -> None:
+        self.profile = profile
+        self.planned = planned
+
+    def get_profile(self, *, student_id: str, course_id: str) -> LearnerProfile:
+        assert student_id == self.profile.student_id
+        assert course_id == "python"
+        return self.profile
+
+    async def next_activity(self, *, student_id: str, course_id: str) -> PlannedActivity:
+        assert student_id == self.profile.student_id
+        assert course_id == "python"
+        return self.planned
 
 
 def test_first_python_lesson_exposes_complete_flow_without_hidden_tests() -> None:
@@ -86,6 +107,47 @@ def test_second_python_lesson_is_real_and_uses_dictionary_tasks() -> None:
     )
     assert checkpoint.status_code == 200
     assert checkpoint.json()["accepted"] is True
+
+
+def test_adaptive_session_repairs_prerequisite_gap_and_uses_real_code_tasks() -> None:
+    profile = LearnerProfile(
+        student_id="non-linear-student",
+        course_id="python",
+        mastery=[
+            MasteryState(knowledge_point_id="PY-LIST-03", score=0.9, evidence_count=2),
+        ],
+    )
+    service = ClassroomLessonService(
+        CoursePackRepository(),
+        learning_context=_AdaptiveLearningContext(
+            profile,
+            PlannedActivity(
+                activity_id="PY-DICT-02-C1",
+                activity_type="code",
+                reason="优先修复已经证实的前置断层",
+            ),
+        ),
+    )
+
+    lesson = asyncio.run(
+        service.next_session(
+            student_id=profile.student_id,
+            daily_minutes=25,
+            preferred_mode="step_by_step",
+        )
+    )
+
+    assert lesson.delivery_mode == "adaptive"
+    assert len(lesson.knowledge_point_ids) == 2
+    assert lesson.knowledge_point_ids != ["PY-DICT-01", "PY-DICT-02"]
+    assert lesson.practice.exercise_id != lesson.homework.exercise_id
+    assert lesson.practice.public_examples
+    assert lesson.homework.public_examples
+    assert {"practice", "homework"}.issubset({beat.action for beat in lesson.beats})
+    assert "优先修复" in lesson.planning_reason
+
+    restored = service.get_lesson(lesson.lesson_id)
+    assert restored.knowledge_point_ids == lesson.knowledge_point_ids
 
 
 def test_classroom_dialogue_uses_persona_and_traceable_python_evidence() -> None:

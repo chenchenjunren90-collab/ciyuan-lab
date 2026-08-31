@@ -1,0 +1,48 @@
+id: PY-PROJ-STAGE-CONTROL-01
+title: 命令行学习打卡统计器
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 90
+concept_ids:
+- PY-BASE-04
+- PY-BASE-05
+- PY-BASE-07
+- PY-STR-03
+summary: 使用输入输出、条件、循环和字符串处理，实现一个可反复录入并汇总学习打卡记录的命令行程序。
+requirements:
+- 读取多条学习时长与状态记录，并校验空输入和非法数字
+- 使用条件和循环统计完成次数、总时长与平均时长
+- 统一清理字符串两端空白并输出清晰的中文汇总
+- 至少覆盖正常输入、空记录、非法时长和边界值测试
+deliverables:
+- 可运行的 Python 3.11 程序
+- 不少于 4 个自动化测试
+- 一页程序流程与边界情况说明
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+verification_exercise_ids:
+- PY-BASE-05-C1
+- PY-BASE-07-C1
+- PY-STR-03-H1
+scenario_scope: none
+scenario_provider: none
+data_classification: public
+computer_science_objectives:
+- 综合使用输入输出、分支和循环构建完整控制流
+- 对用户输入执行类型转换、边界检查和明确错误反馈
+business_context_objectives: []
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 程序正确性与边界测试
+    points: 60
+  - criterion: 控制流清晰度与输入校验
+    points: 25
+  - criterion: 输出可读性与说明文档
+    points: 15
+status: draft

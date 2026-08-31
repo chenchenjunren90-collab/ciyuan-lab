@@ -29,6 +29,7 @@ const emit = defineEmits<{
   requestGenericMode: [];
   requestAssessment: [];
   focusChanged: [active: boolean];
+  openProjects: [];
 }>();
 
 type MessageRole = ClassroomRole | "student";
@@ -40,7 +41,10 @@ interface ClassroomMessage {
   kind: "lesson" | "reply" | "student";
   review?: "approved" | "limited";
   evidenceCount?: number;
+  evidenceSource?: "course" | "online";
   target?: ClassroomRole;
+  scopeNotice?: string;
+  suggestedKnowledgePointIds?: string[];
 }
 
 const FIRST_LESSON_ID = "python-list-filter-01";
@@ -85,6 +89,7 @@ const assessmentStarted = ref(false);
 const assessmentIndex = ref(0);
 const assessmentResultVisible = ref(false);
 const selfDescription = ref("");
+const selfDescriptionFocused = ref(false);
 const selfProfile = ref<ClassroomSelfProfileResponse | null>(null);
 const selfProfileLoading = ref(false);
 const progressExplanationOpen = ref(false);
@@ -93,6 +98,29 @@ const classroomView = ref<"lecture" | "discussion" | "code" | "materials">("lect
 const selectedMaterialId = ref("");
 const exitDialogOpen = ref(false);
 const isPaused = ref(false);
+const planBuildButton = ref<HTMLButtonElement | null>(null);
+const planProgressStep = ref(0);
+const PLAN_PROGRESS_LABELS = ["正在检索薄弱点", "正在组合课程", "正在进行质量审核"] as const;
+const SELF_DESCRIPTION_EXAMPLE = "例如：我学过变量和 for 循环，能看懂简单代码，但不太会自己拆题；希望以后能完成数据分析小项目。";
+let planProgressTimer: ReturnType<typeof setInterval> | null = null;
+
+const planProgressMessage = computed(() => (
+  PLAN_PROGRESS_LABELS[Math.max(0, planProgressStep.value - 1)] ?? "正在准备个性化课程"
+));
+
+function clearPlanProgress(): void {
+  if (planProgressTimer !== null) clearInterval(planProgressTimer);
+  planProgressTimer = null;
+  planProgressStep.value = 0;
+}
+
+function startPlanProgress(): void {
+  clearPlanProgress();
+  planProgressStep.value = 1;
+  planProgressTimer = setInterval(() => {
+    planProgressStep.value = Math.min(PLAN_PROGRESS_LABELS.length, planProgressStep.value + 1);
+  }, 900);
+}
 
 function blockToBeat(block: DiagnosticLearningBlock, index: number): ClassroomBeat {
   return {
@@ -115,7 +143,11 @@ function blockToBeat(block: DiagnosticLearningBlock, index: number): ClassroomBe
 }
 
 const selectedLearningBlocks = computed(() => {
-  const blocks = diagnosticAnalysis.value?.learning_blocks ?? [];
+  const sourceBlocks = diagnosticAnalysis.value?.learning_blocks ?? [];
+  const lessonIds = new Set(lesson.value?.knowledge_point_ids ?? []);
+  const blocks = lesson.value?.delivery_mode === "adaptive"
+    ? sourceBlocks.filter((block) => lessonIds.has(block.knowledge_point_id))
+    : sourceBlocks;
   if (!blocks.length) return [];
   const teachingBudget = Math.max(8, dailyMinutes.value - 12);
   let used = 0;
@@ -135,6 +167,7 @@ const selectedMaterial = computed(() => {
 
 const personalizedBeats = computed<ClassroomBeat[]>(() => {
   if (!lesson.value) return [];
+  if (lesson.value.delivery_mode === "adaptive") return lesson.value.beats;
   if (props.genericMode || averageMastery.value === null) return lesson.value.beats;
   const score = lessonTargetMastery.value ?? averageMastery.value;
   const all = lesson.value.beats;
@@ -329,6 +362,9 @@ function pushMessage(
   review?: ClassroomMessage["review"],
   evidenceCount?: number,
   target?: ClassroomRole,
+  scopeNotice?: string,
+  suggestedKnowledgePointIds?: string[],
+  evidenceSource?: ClassroomMessage["evidenceSource"],
 ): void {
   messageCounter.value += 1;
   messages.value.push({
@@ -339,7 +375,10 @@ function pushMessage(
     kind,
     review,
     evidenceCount,
+    evidenceSource,
     target,
+    scopeNotice,
+    suggestedKnowledgePointIds,
   });
 }
 
@@ -409,6 +448,11 @@ async function startBaseline(): Promise<void> {
     if (!diagnostic.value) return;
   }
   baselineOpen.value = true;
+  if (lessonComplete.value) {
+    planConfirmed.value = false;
+    localStorage.removeItem(planConfirmationKey());
+    emit("focusChanged", false);
+  }
   assessmentIndex.value = 0;
   showFeedback(learnerProfile.value ? "已展开阶段重测，完成后会刷新学习计划。" : "已展开能力基线，请依次完成每一道题。");
   await nextTick();
@@ -514,10 +558,31 @@ function nextAssessmentQuestion(): void {
   }
 }
 
-function enterPersonalizedClassroom(): void {
+async function enterPersonalizedClassroom(): Promise<void> {
   if (!learningPlan.value) {
     showFeedback("请先让助教根据你的时间与目标生成本次课程安排。");
     return;
+  }
+  if (!props.genericMode) {
+    loading.value = true;
+    showFeedback("助教正在从 162 个原子能力中组合本次课堂…");
+    try {
+      const nextLesson = await api.nextClassroomSession(
+        props.studentId,
+        dailyMinutes.value,
+        preferredMode.value,
+      );
+      applyLesson(nextLesson);
+      localStorage.setItem(
+        `ciyuan-active-lesson:${props.studentId}:python`,
+        nextLesson.lesson_id,
+      );
+    } catch (cause) {
+      showFeedback(cause instanceof Error ? cause.message : "个性化课堂生成失败，请重试。");
+      loading.value = false;
+      return;
+    }
+    loading.value = false;
   }
   assessmentResultVisible.value = false;
   planConfirmed.value = true;
@@ -533,6 +598,20 @@ function enterPersonalizedClassroom(): void {
   announceBeat();
   pushMessage("ta", `已按你的测评证据、${dailyMinutes.value} 分钟/天和“${planGoal.value}”完成编排。本次不是固定课表：共 ${personalizedBeats.value.length} 个学习环节，我会根据后续答题与代码结果继续调整。`, "reply", "approved", 1);
   showFeedback(`已进入“${personalizedSession.value.title}”，本次内容和节奏已按你的信息重新编排。`);
+}
+
+async function requestEnterPersonalizedClassroom(): Promise<void> {
+  if (!learningPlan.value || planLoading.value) {
+    showFeedback(planLoading.value
+      ? `${planProgressMessage.value}，完成后即可进入课堂。`
+      : "请先点击“生成专属课程”，助教会结合测评、时间和目标完成编排。"
+    );
+    await nextTick();
+    planBuildButton.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+    planBuildButton.value?.focus({ preventScroll: true });
+    return;
+  }
+  await enterPersonalizedClassroom();
 }
 
 function changeClassroomView(view: typeof classroomView.value): void {
@@ -578,6 +657,7 @@ async function generateLearningPlan(): Promise<void> {
     return;
   }
   planLoading.value = true;
+  startPlanProgress();
   learningPlan.value = null;
   planConfirmed.value = false;
   localStorage.removeItem(planConfirmationKey());
@@ -603,12 +683,16 @@ async function generateLearningPlan(): Promise<void> {
       "reply",
       result.status === "answered" ? "approved" : "limited",
       result.citations.length,
+      undefined,
+      result.scope_notice ?? undefined,
+      result.suggested_knowledge_point_ids,
     );
     showFeedback(result.status === "answered" ? "个性化学习计划已生成并通过质量监督。" : "课程依据不足，已给出保守建议。");
   } catch (cause) {
     showFeedback(cause instanceof Error ? cause.message : "学习计划生成失败，请重试。");
   } finally {
     planLoading.value = false;
+    clearPlanProgress();
   }
 }
 
@@ -630,24 +714,28 @@ function selectDialogueRole(role: ClassroomRole): void {
   showFeedback(`已切换为和${roleMeta[role].name}交流。`);
 }
 
+function applyLesson(value: ClassroomLesson): void {
+  activeLessonId.value = value.lesson_id;
+  lesson.value = value;
+  currentIndex.value = 0;
+  selectedChoice.value = "";
+  checkpointResult.value = null;
+  practiceResult.value = null;
+  homeworkResult.value = null;
+  lessonComplete.value = false;
+  hint.value = "";
+  messages.value = [];
+  messageCounter.value = 0;
+  practiceCode.value = value.practice.starter_code;
+  homeworkCode.value = value.homework.starter_code;
+  announceBeat();
+}
+
 async function loadLesson(targetLessonId = activeLessonId.value): Promise<void> {
   loading.value = true;
   error.value = "";
   try {
-    activeLessonId.value = targetLessonId;
-    lesson.value = await api.classroomLesson(targetLessonId);
-    currentIndex.value = 0;
-    selectedChoice.value = "";
-    checkpointResult.value = null;
-    practiceResult.value = null;
-    homeworkResult.value = null;
-    lessonComplete.value = false;
-    hint.value = "";
-    messages.value = [];
-    messageCounter.value = 0;
-    practiceCode.value = lesson.value.practice.starter_code;
-    homeworkCode.value = lesson.value.homework.starter_code;
-    announceBeat();
+    applyLesson(await api.classroomLesson(targetLessonId));
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : "课堂暂时没有准备好，请稍后重试。";
   } finally {
@@ -656,11 +744,27 @@ async function loadLesson(targetLessonId = activeLessonId.value): Promise<void> 
 }
 
 async function startNextLesson(): Promise<void> {
-  if (activeLessonId.value !== FIRST_LESSON_ID || !lessonComplete.value) return;
-  showFeedback("第二课已解锁，林老师正在准备“字典与快速查找”…");
-  await loadLesson(SECOND_LESSON_ID);
-  localStorage.setItem(`ciyuan-active-lesson:${props.studentId}:python`, SECOND_LESSON_ID);
-  showFeedback("已进入第二课；助教沿用你的画像、时间与学习偏好重新编排课堂环节。");
+  if (!lessonComplete.value || loading.value) return;
+  loading.value = true;
+  showFeedback("助教正在读取最新代码证据并重新检查知识断层…");
+  try {
+    const nextLesson = await api.nextClassroomSession(
+      props.studentId,
+      dailyMinutes.value,
+      preferredMode.value,
+    );
+    applyLesson(nextLesson);
+    localStorage.setItem(
+      `ciyuan-active-lesson:${props.studentId}:python`,
+      nextLesson.lesson_id,
+    );
+    classroomView.value = "lecture";
+    showFeedback(`已生成新的“${nextLesson.title}”；它来自最新画像，不是固定下一章。`);
+  } catch (cause) {
+    showFeedback(cause instanceof Error ? cause.message : "下一节课堂生成失败，请重试。");
+  } finally {
+    loading.value = false;
+  }
 }
 
 async function submitChoice(): Promise<void> {
@@ -720,12 +824,8 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
       pushMessage(
         role,
         homework
-          ? activeLessonId.value === FIRST_LESSON_ID
-            ? "作业通过了。你不是因为点完页面，而是用真实测试证明了掌握。第二课“字典与快速查找”已经亮起。"
-            : "第二课作业通过了。两次课堂、随堂练习和课后迁移已经形成连续证据，现在适合阶段重测并更新画像。"
-          : activeLessonId.value === FIRST_LESSON_ID
-            ? "全部测试通过。你已经把“遍历—判断—保存”真正写进代码里了，我们可以一起做课堂小结。"
-            : "全部测试通过。你已经用字典完成了“建立映射—安全查询—格式化输出”，我们可以一起做课堂小结。",
+          ? "作业通过了。你不是因为点完页面，而是用真实测试留下了新的掌握证据；助教现在可以重算下一节课。"
+          : "全部测试通过。我们已经得到一份真实代码证据，可以一起做课堂小结。",
         "reply",
       );
       if (homework) lessonComplete.value = true;
@@ -752,6 +852,10 @@ async function requestHint(task: ClassroomCodeTaskData): Promise<void> {
 async function askRole(): Promise<void> {
   const text = dialogueText.value.trim();
   if (!lesson.value || !currentBeat.value || !text || dialogueLoading.value) return;
+  const recentTurns = messages.value.slice(-8).map((message) => ({
+    role: message.role,
+    content: message.content,
+  }));
   dialogueLoading.value = true;
   dialogueText.value = "";
   pushMessage("student", text, "student", undefined, undefined, dialogueRole.value);
@@ -762,15 +866,31 @@ async function askRole(): Promise<void> {
       currentBeat.value.phase,
       dialogueRole.value,
       text,
+      recentTurns,
     );
+    const onlineEvidence = result.citations.some((citation) => citation.source_type === "online");
     pushMessage(
       result.role,
       result.answer,
       "reply",
       result.status === "answered" ? "approved" : "limited",
       result.citations.length,
+      undefined,
+      result.scope_notice ?? undefined,
+      result.suggested_knowledge_point_ids,
+      onlineEvidence ? "online" : "course",
     );
-    showFeedback(result.status === "answered" ? `${result.display_name}已回答，内容通过质量监督。` : "课程依据不足，系统没有生成未经证实的答案。");
+    const finalTrace = result.trace.at(-1)?.detail ?? "";
+    showFeedback(result.status === "answered"
+      ? onlineEvidence
+        ? `${result.display_name}已基于 Python 官方文档联网回答，并通过质量监督。`
+        : result.question_scope === "python_course_extension"
+        ? `${result.display_name}已做本节外延伸回答；不会改变当前课堂进度。`
+        : `${result.display_name}已回答，内容通过质量监督。`
+      : finalTrace.includes("安全")
+        ? "请求触发安全边界，系统未发布候选回答。"
+        : "问题信息或课程依据不足；角色已说明还需要你补充什么。"
+    );
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : "这次对话没有发送成功。";
   } finally {
@@ -781,11 +901,16 @@ async function askRole(): Promise<void> {
 onMounted(async () => {
   loadPlanPreferences();
   const savedLesson = localStorage.getItem(`ciyuan-active-lesson:${props.studentId}:python`);
-  if (savedLesson === SECOND_LESSON_ID) activeLessonId.value = SECOND_LESSON_ID;
+  if (savedLesson === SECOND_LESSON_ID || savedLesson?.startsWith("python-adaptive--")) {
+    activeLessonId.value = savedLesson;
+  }
   await Promise.all([loadLesson(), loadLearningContext()]);
 });
 
-onBeforeUnmount(() => emit("focusChanged", false));
+onBeforeUnmount(() => {
+  clearPlanProgress();
+  emit("focusChanged", false);
+});
 </script>
 
 <template>
@@ -815,13 +940,19 @@ onBeforeUnmount(() => emit("focusChanged", false));
           <label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label>
           <label class="wide">我的阶段目标<input v-model="planGoal" maxlength="120" /></label>
         </div>
-        <section class="self-profile-inline"><label>我的学习经历<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="补充学过什么、做过什么、哪里容易卡住" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
+        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
         <div class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
-        <button class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "助教正在编排…" : learningPlan ? "按新设置重新编排" : "生成我的专属课程" }} <span>→</span></button>
+        <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成我的专属课程" }} <span>→</span></button>
+        <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
         <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status"><header><div><b>助教小程 · 专属课程提案</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header><SafeMarkdown :source="learningPlan.answer" /><small class="audit-mark">{{ learningPlan.status === "answered" ? `✓ 质量监督已审核 · ${learningPlan.citations.length} 条课程依据` : "△ 依据有限 · 已执行保守降级" }}</small></article>
         <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
+        <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
+          <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
+        </section>
       </section>
-      <footer><button class="secondary" @click="assessmentResultVisible = false; assessmentStarted = true; startBaseline()">重新测评</button><button class="primary" :disabled="!learningPlan" @click="enterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="assessmentResultVisible = false; assessmentStarted = true; startBaseline()">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
     </section>
 
     <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed" class="returning-planner-gate">
@@ -829,13 +960,19 @@ onBeforeUnmount(() => emit("focusChanged", false));
       <section class="planning-studio">
         <header><div><span>助教小程 · 可随时修改</span><h3>我的学习设置</h3></div><button class="suggestion-button" @click="useSuggestedPace">采用助教建议</button></header>
         <div class="preference-grid"><label>每天可投入<input v-model.number="dailyMinutes" type="number" min="10" max="180" step="5" /><span>分钟</span></label><label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label><label class="wide">我的阶段目标<input v-model="planGoal" maxlength="120" /></label></div>
-        <section class="self-profile-inline"><label>我的学习经历<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="补充学过什么、做过什么、哪里容易卡住" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
+        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
         <div class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
-        <button class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "助教正在编排…" : learningPlan ? "按新设置重新编排" : "生成今天的专属课程" }} <span>→</span></button>
+        <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成今天的专属课程" }} <span>→</span></button>
+        <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
         <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status"><header><div><b>助教小程 · 专属课程提案</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header><SafeMarkdown :source="learningPlan.answer" /><small class="audit-mark">{{ learningPlan.status === "answered" ? `✓ 质量监督已审核 · ${learningPlan.citations.length} 条课程依据` : "△ 依据有限 · 已执行保守降级" }}</small></article>
         <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
+        <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
+          <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
+        </section>
       </section>
-      <footer><button class="secondary" @click="startBaseline">重新测评</button><button class="primary" :disabled="!learningPlan" @click="enterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="startBaseline">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
       <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
     </section>
 
@@ -843,13 +980,13 @@ onBeforeUnmount(() => emit("focusChanged", false));
       <header><div><b>能力摸底</b><small>{{ diagnostic?.items.length ?? 12 }} 道跨层级短题，约 8 分钟，不计入成绩</small></div></header>
       <template v-if="!assessmentStarted">
         <div class="assessment-welcome">
-          <div><h1>先了解你的 Python 基础</h1><p>先用自己的话说说学习经历，再完成几道短题。助教会把自述和客观结果放在一起，安排合适的起点、讲解节奏和后续练习。</p></div>
+          <div><h1>先了解你的 Python 基础</h1><p>你可以先说说学习经历，也可以直接完成几道短题。助教会以客观测评为主、自述为辅，安排合适的起点、讲解节奏和后续练习。</p></div>
         </div>
         <section class="self-profile-card">
-          <header><div><b>先说说你现在会什么</b><span>可填写学过的内容、做过的练习、容易卡住的地方；自述只作初判，测评会继续校正。</span></div><small>最多 1200 字</small></header>
+          <header><div><b>先说说你现在会什么（选填）</b><span>可以填写学过的内容、做过的练习和容易卡住的地方，也可以直接开始测评；自述只作初判，测评会继续校正。</span></div><small>最多 1200 字</small></header>
           <div class="self-profile-presets"><button @click="useSelfDescriptionTemplate('我目前基本是零基础，没有系统学过 Python，希望从最基础的运行和输入输出开始。')">我基本没学过</button><button @click="useSelfDescriptionTemplate('我学过变量、if、for 和 while，能看懂简单代码，但自己写时容易卡住。')">学过基础语法</button><button @click="useSelfDescriptionTemplate('我学过列表、字典和函数，做过课程作业，希望加强调试、算法和项目能力。')">做过一些练习</button></div>
-          <textarea v-model="selfDescription" rows="4" maxlength="1200" placeholder="例如：我学过变量和 for 循环，能看懂简单代码，但不太会自己拆题；希望以后能完成数据分析小项目。" @input="updateSelfDescription"></textarea>
-          <footer><span v-if="!selfProfile">写得越具体，助教越容易找到合适起点。</span><span v-else>自述初判：<b>{{ selfProfile.level_label }}</b> · {{ selfProfile.course_fit }}</span><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "助教正在判断…" : selfProfile ? "按新描述重新判断" : "让助教先判断" }}</button></footer>
+          <textarea v-model="selfDescription" rows="4" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea>
+          <footer><span v-if="!selfProfile">写得越具体，助教越容易找到合适起点；不填写也可以直接开始客观测评。</span><span v-else>自述初判：<b>{{ selfProfile.level_label }}</b> · {{ selfProfile.course_fit }}</span><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "助教正在判断…" : selfProfile ? "按新描述重新判断" : "让助教先判断" }}</button></footer>
           <article v-if="selfProfile" class="self-profile-result"><div><small>推荐起点</small><b>{{ selfProfile.recommended_start }}</b></div><p>{{ selfProfile.advisor_message }}</p><small>识别线索：{{ selfProfile.signals.join('、') }} · 可信度 {{ { low: '较低', medium: '中等', high: '较高' }[selfProfile.confidence] }} · ✓ 质量监督已审核</small></article>
         </section>
         <div class="assessment-start-actions"><button class="text-button" @click="emit('requestGenericMode')">暂不测评，先看看课程</button><button class="primary" @click="beginAssessment">开始摸底测试 <span>→</span></button></div>
@@ -948,7 +1085,7 @@ onBeforeUnmount(() => emit("focusChanged", false));
       <div v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="classroom-layout" :class="{ 'lecture-only': classroomView === 'lecture', 'discussion-only': classroomView === 'discussion' }">
         <section v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="teacher-lecture-card">
           <div class="teacher-portrait"><i>林</i></div>
-          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条依据` : "✓ 课程讲义已审核" }}</span><button @click="selectDialogueRole('teacher'); dialogueText = '老师，我对刚才这一步的理解是：'">向老师提问</button></footer></div>
+          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="selectDialogueRole('teacher'); dialogueText = '老师，我对刚才这一步的理解是：'">向老师提问</button></footer></div>
         </section>
         <div v-if="classroomView === 'lecture'" class="classroom-scene" :data-phase="currentBeat.phase">
           <div class="sun-window"><span></span><i></i></div>
@@ -989,7 +1126,7 @@ onBeforeUnmount(() => emit("focusChanged", false));
             <div v-if="!communityMessages.length" class="discussion-empty"><b>这里不是答案墙，而是你的思考空间</b><span>说出一个猜想、困惑或总结，同学会结合当前课堂环节回应你。</span></div>
             <article v-for="message in communityMessages" :key="message.id" :class="[`role-${message.role}`, `kind-${message.kind}`]">
               <i :style="{ background: roleMeta[message.role].color }">{{ roleMeta[message.role].icon }}</i>
-              <div><b>{{ message.name }}</b><SafeMarkdown :source="message.content" /><small v-if="message.review" class="message-audit">{{ message.review === "approved" ? `✓ 已审核 · ${message.evidenceCount ?? 0} 条依据` : "△ 依据有限 · 保守回答" }}</small></div>
+              <div><b>{{ message.name }}</b><p v-if="message.scopeNotice" class="scope-notice compact"><b>本节外延伸</b>{{ message.scopeNotice }}</p><SafeMarkdown :source="message.content" /><small v-if="message.review" class="message-audit">{{ message.review === "approved" ? `✓ 已审核 · ${message.evidenceCount ?? 0} 条${message.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "△ 依据有限 · 保守回答" }}</small></div>
             </article>
           </div>
           <footer>
@@ -1037,11 +1174,14 @@ onBeforeUnmount(() => emit("focusChanged", false));
 
         <template v-else-if="currentBeat.action === 'homework'">
           <div v-if="lessonComplete" class="lesson-complete">
-            <h3>{{ activeLessonId === FIRST_LESSON_ID ? "第一课完成，做得很好。" : "第二课完成，学习闭环已经跑通。" }}</h3>
-            <p>{{ activeLessonId === FIRST_LESSON_ID ? "你已用随堂练习和课后作业留下两份代码证据；第二课会沿用画像，但换成字典查询与词频统计。" : "两节课的课堂互动、真实判题和课后迁移均已形成证据。现在通过阶段重测校正画像，助教会据此生成新的学习路线。" }}</p>
-            <div><b>{{ activeLessonId === FIRST_LESSON_ID ? "已解锁" : "下一步" }}</b>{{ lesson.unlock_title }}</div>
-            <footer v-if="activeLessonId === FIRST_LESSON_ID"><button class="secondary" @click="startBaseline">先阶段重测</button><button class="primary" @click="startNextLesson">进入第二课 <span>→</span></button></footer>
-            <footer v-else><button class="secondary" @click="startBaseline">阶段重测并更新画像</button><button class="primary" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "正在规划…" : "规划下一阶段" }} <span>→</span></button></footer>
+            <h3>本次个性化课堂完成，做得很好。</h3>
+            <p>随堂练习和课后作业都已通过真实测试，画像获得两份新的代码证据。助教不会机械进入固定下一章，而会重新检查薄弱点、前置断层与已掌握内容。</p>
+            <div><b>下一步</b>{{ lesson.unlock_title }}</div>
+            <footer>
+              <button class="secondary" @click="startBaseline">阶段重测并校正画像</button>
+              <button v-if="lesson.unlocked_project_ids.length" class="secondary" @click="emit('openProjects')">进入已解锁项目</button>
+              <button class="primary" :disabled="loading" @click="startNextLesson">{{ loading ? "正在重算…" : "生成下一节不同的课" }} <span>→</span></button>
+            </footer>
           </div>
           <ClassroomCodeTask
             v-else
@@ -1057,7 +1197,7 @@ onBeforeUnmount(() => emit("focusChanged", false));
 
         <template v-else>
           <header><div><p>{{ currentBeat.eyebrow }}</p><h3>{{ currentBeat.title }}</h3></div><span>老师会等你准备好</span></header>
-          <div class="ready-card"><i>✓</i><div><b>{{ currentBeat.phase === "summary" ? "回想一下今天的三个动作" : "准备好后再继续" }}</b><span>{{ currentBeat.phase === "summary" ? (activeLessonId === FIRST_LESSON_ID ? "遍历、筛选、验证" : "映射、查询、累计") : "这里没有自动跳转，也没有催促倒计时" }}</span></div><button class="primary" @click="advance">{{ currentBeat.phase === "summary" ? "领取课后作业" : "我准备好了" }} <span>→</span></button></div>
+          <div class="ready-card"><i>✓</i><div><b>{{ currentBeat.phase === "summary" ? "用自己的话复盘今天的方法" : "准备好后再继续" }}</b><span>{{ currentBeat.phase === "summary" ? lesson.focus_skill_atoms.join("、") : "这里没有自动跳转，也没有催促倒计时" }}</span></div><button class="primary" @click="advance">{{ currentBeat.phase === "summary" ? "领取课后作业" : "我准备好了" }} <span>→</span></button></div>
         </template>
       </section>
     </template>
@@ -1126,11 +1266,14 @@ onBeforeUnmount(() => emit("focusChanged", false));
 .conversation-dock > header small { display: block; max-width: 260px; margin-top: 4px; color: #9b8e92; font-size: 7px; line-height: 1.5; }.discussion-prompts { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px; border-bottom: 1px solid #eee2e0; background: #fffaf8; }.discussion-prompts button { padding: 6px 8px; border: 1px solid #ead9d8; border-radius: 99px; color: #8a515b; background: #fff; font-size: 7px; }.discussion-prompts button:hover { color: #a3142d; border-color: #d79aa4; }.discussion-empty { display: grid; place-items: center; align-content: center; min-height: 150px; padding: 26px; color: #8d7f84; text-align: center; }.discussion-empty b { color: #675b5f; font-size: 10px; }.discussion-empty span { max-width: 270px; margin-top: 8px; font-size: 8px; line-height: 1.7; }.role-pills .teacher-pill { color: #a21c32; border-color: #d8a6ae; background: #fff4f5; font-weight: 800; }
 .self-profile-card { display: grid; gap: 12px; width: min(100%, 860px); margin: 4px auto 18px; padding: 18px; border: 1px solid #e8dcde; border-radius: 16px; background: #fffdfc; box-shadow: 0 14px 35px #54101f08; }.self-profile-card > header { display: flex; justify-content: space-between; gap: 16px; }.self-profile-card > header b, .self-profile-card > header span { display: block; }.self-profile-card > header b { font-size: 14px; }.self-profile-card > header span { margin-top: 5px; color: #7f7277; font-size: 10px; line-height: 1.55; }.self-profile-card > header small { color: #a09397; font-size: 9px; white-space: nowrap; }.self-profile-presets { display: flex; flex-wrap: wrap; gap: 7px; }.self-profile-presets button { padding: 7px 10px; border: 1px solid #e5d7d9; border-radius: 99px; color: #885560; background: #fff; font-size: 9px; }.self-profile-card > textarea, .self-profile-inline textarea { width: 100%; padding: 12px 14px; resize: vertical; border: 1px solid #dfd2d5; border-radius: 11px; color: #443b3e; background: #fff; font: 11px/1.75 inherit; outline: none; }.self-profile-card > textarea:focus, .self-profile-inline textarea:focus { border-color: #c96676; box-shadow: 0 0 0 3px #c5163210; }.self-profile-card > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }.self-profile-card > footer span { color: #75686d; font-size: 9px; line-height: 1.5; }.self-profile-card > footer button, .self-profile-inline > button { padding: 9px 12px; border: 1px solid #d49aa4; border-radius: 9px; color: #9d1c32; background: #fff; font-size: 9px; font-weight: 800; white-space: nowrap; }.self-profile-card button:disabled, .self-profile-inline button:disabled { opacity: .45; }.self-profile-result { display: grid; grid-template-columns: 150px 1fr; gap: 10px 16px; padding: 13px 14px; border-radius: 11px; color: #476b56; background: #f1f8f3; }.self-profile-result small, .self-profile-result b { display: block; }.self-profile-result div small { font-size: 8px; }.self-profile-result div b { margin-top: 4px; color: #315d43; font-size: 11px; }.self-profile-result p { margin: 0; font-size: 10px; line-height: 1.7; }.self-profile-result > small { grid-column: 1 / -1; color: #6e8a78; font-size: 8px; }
 .self-profile-inline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; padding: 13px; border: 1px solid #eadfe0; border-radius: 12px; background: #fffdfc; }.self-profile-inline label { display: grid; gap: 6px; color: #75696d; font-size: 9px; font-weight: 800; }.self-profile-inline > div { grid-column: 1 / -1; display: grid; gap: 4px; padding: 10px 12px; border-radius: 9px; background: #f2f8f4; }.self-profile-inline > div b { color: #386448; font-size: 10px; }.self-profile-inline > div span { color: #627469; font-size: 9px; line-height: 1.55; }
+.self-profile-card > textarea::placeholder, .self-profile-inline textarea::placeholder { color: #a89ca0; opacity: .64; }
+.plan-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 11px; border: 1px solid #eadfe1; border-radius: 11px; background: #fffafa; }.plan-progress span { display: flex; align-items: center; gap: 7px; color: #9a8e92; font-size: 8px; }.plan-progress i { width: 20px; height: 20px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #9e8f93; background: #eee7e8; font-style: normal; font-weight: 800; }.plan-progress span.active { color: #a11c33; font-weight: 800; }.plan-progress span.active i { color: #fff; background: #bd1a34; box-shadow: 0 0 0 4px #bd1a3412; }.plan-progress span.done { color: #477158; }.plan-progress span.done i { color: #fff; background: #4e8b65; }
 .self-profile-details { overflow: hidden; border: 1px solid #e9dfe0; border-radius: 11px; background: #fff; }.self-profile-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #76696d; cursor: pointer; font-size: 9px; }.self-profile-details summary b { color: #a12338; }.self-profile-details[open] summary { border-bottom: 1px solid #eee4e5; background: #fff9f8; }.self-profile-details .self-profile-inline { border: 0; border-radius: 0; }
 .lesson-masthead aside button { grid-column: 1 / -1; justify-self: end; padding: 0; border: 0; color: #9e5763; background: transparent; font-size: 8px; text-decoration: underline; }.progress-explanation { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 42px 14px 14px; border: 1px solid #e6dadd; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px #4c0f1b0a; }.progress-explanation article { padding: 12px; border-radius: 10px; background: #faf7f7; }.progress-explanation b { color: #8f1c31; font-size: 11px; }.progress-explanation p { margin: 6px 0; color: #665b5f; font-size: 9px; line-height: 1.65; }.progress-explanation small { color: #8c7f83; font-size: 8px; }.progress-explanation > button { position: absolute; top: 9px; right: 12px; border: 0; color: #9b8c90; background: transparent; font-size: 18px; }.profile-chip { border: 0; text-align: left; cursor: pointer; }
 .smart-board .board-explanation { margin: 10px 0; color: #ede5dc; font-size: 11px; line-height: 1.75; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 9px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 9px/1.55 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }
+.scope-notice { display: flex; align-items: flex-start; gap: 7px; margin: 7px 0 9px; padding: 8px 10px; border: 1px solid #e8cf9c; border-radius: 9px; background: #fff9ec; color: #765c2b; font-size: 8px; line-height: 1.55; }.scope-notice > b { flex: 0 0 auto; color: #a06017; font-size: 7px; letter-spacing: .04em; }.scope-notice.compact { margin: 5px 0 7px; padding: 6px 8px; }
 @media (max-width: 760px) { .assessment-gate, .assessment-result-screen { min-height: 600px; padding: 24px 18px; }.assessment-welcome { grid-template-columns: 1fr; gap: 24px; }.assessment-gate > header, .assessment-result-screen > header, .generic-mode-banner { align-items: flex-start; flex-direction: column; }.result-summary, .assessment-result-screen > section:not(.planning-studio) > div { grid-template-columns: 1fr 1fr; }.assessment-navigation { flex-wrap: wrap; }.assessment-navigation > span { width: 100%; order: -1; } }
-@media (max-width: 760px) { .returning-planner-gate { padding: 24px 18px; }.returning-planner-gate > header, .planning-studio > header { align-items: flex-start; flex-direction: column; }.preference-grid, .self-profile-result, .progress-explanation { grid-template-columns: 1fr; }.self-profile-card > footer, .self-profile-inline { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; }.self-profile-inline > div { grid-column: auto; }.classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; }.teacher-portrait { justify-items: start; }.teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 760px) { .returning-planner-gate { padding: 24px 18px; }.returning-planner-gate > header, .planning-studio > header { align-items: flex-start; flex-direction: column; }.preference-grid, .self-profile-result, .progress-explanation, .plan-progress { grid-template-columns: 1fr; }.self-profile-card > footer, .self-profile-inline { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; }.self-profile-inline > div { grid-column: auto; }.classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; }.teacher-portrait { justify-items: start; }.teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } }
 .desk-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .diagnostic-analysis { display: grid; gap: 13px; padding: 18px; border: 1px solid #e4d8da; border-radius: 15px; background: #fff; }
 .diagnostic-analysis > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }.diagnostic-analysis > header b { color: #a21b32; font-size: 13px; }.diagnostic-analysis > header p { margin: 6px 0 0; color: #6f6367; font-size: 10px; }.diagnostic-analysis > header > span { padding: 7px 10px; border-radius: 99px; color: #37684a; background: #eef7f1; font-size: 9px; white-space: nowrap; }

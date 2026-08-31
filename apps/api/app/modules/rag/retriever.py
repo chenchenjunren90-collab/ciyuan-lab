@@ -13,7 +13,58 @@ from app.modules.course_content import CourseId, CoursePackRepository, RagSource
 from app.modules.rag.ports import KnowledgeRetriever, SearchHit
 
 ASCII_WORD = re.compile(r"[a-z0-9_+#.-]+")
+CODE_IDENTIFIER = re.compile(r"(?i)(?<![a-z0-9_])([a-z_][a-z0-9_]*)(?![a-z0-9_])")
 CJK_RUN = re.compile(r"[\u3400-\u9fff]+")
+
+_QUERY_IDENTIFIER_STOP_WORDS = frozenset(
+    {"python", "language", "code", "program", "please", "help"}
+)
+
+_CJK_TECHNICAL_QUERY_TERMS = (
+    "输入",
+    "输出",
+    "变量",
+    "类型",
+    "运算符",
+    "条件",
+    "循环",
+    "字符串",
+    "数组",
+    "列表",
+    "元组",
+    "集合",
+    "字典",
+    "键值",
+    "函数",
+    "参数",
+    "返回值",
+    "迭代",
+    "模块",
+    "文件",
+    "异常",
+    "对象",
+    "指针",
+    "内存",
+    "结构体",
+    "编译",
+    "链表",
+    "栈",
+    "队列",
+    "树",
+    "图",
+    "哈希",
+    "散列",
+    "复杂度",
+    "遍历",
+    "查找",
+    "排序",
+    "递归",
+    "权重",
+    "最短路",
+    "生成器",
+    "装饰器",
+    "上下文管理器",
+)
 
 _COURSE_SCOPE_MARKERS: dict[str, tuple[str, ...]] = {
     "c": (
@@ -81,13 +132,21 @@ def tokenize(text: str) -> Counter[str]:
     return Counter(token for token in tokens if token.strip())
 
 
-def query_variants(text: str, *, max_clauses: int = 4) -> tuple[str, ...]:
+def query_variants(
+    text: str,
+    *,
+    max_clauses: int = 4,
+    max_identifiers: int = 4,
+    max_cjk_terms: int = 4,
+) -> tuple[str, ...]:
     """Return the complete question plus bounded sentence-level subqueries.
 
     A compound student question can mention two related concepts. Scoring only
     the complete text dilutes the overlap of each relevant evidence chunk. The
     retrievers therefore score the full question and a small, deterministic set
-    of clauses, then keep the best score per chunk.
+    of clauses, then keep the best score per chunk.  Code identifiers are also
+    emitted independently: otherwise a short identifier such as ``print`` can
+    be diluted by a long natural-language sentence in the lexical backend.
     """
 
     normalized = text.strip()
@@ -100,6 +159,23 @@ def query_variants(text: str, *, max_clauses: int = 4) -> tuple[str, ...]:
             variants.append(clause)
         if len(variants) >= max_clauses + 1:
             break
+    identifiers: list[str] = []
+    for match in CODE_IDENTIFIER.finditer(normalized):
+        identifier = match.group(1).casefold()
+        if (
+            len(identifier) >= 2
+            and identifier not in _QUERY_IDENTIFIER_STOP_WORDS
+            and identifier not in identifiers
+        ):
+            identifiers.append(identifier)
+        if len(identifiers) >= max_identifiers:
+            break
+    variants.extend(identifier for identifier in identifiers if identifier not in variants)
+    cjk_terms = sorted(
+        (term for term in _CJK_TECHNICAL_QUERY_TERMS if term in normalized),
+        key=lambda term: (normalized.find(term), -len(term)),
+    )[:max_cjk_terms]
+    variants.extend(term for term in cjk_terms if term not in variants)
     return tuple(variants)
 
 
@@ -167,14 +243,32 @@ class LexicalKnowledgeRetriever(KnowledgeRetriever):
     async def search(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
         if not query.strip() or top_k < 1 or not query_is_in_course_scope(query, course_id):
             return ()
-        query_terms = tuple(filter(None, (tokenize(item) for item in query_variants(query))))
+        variants = query_variants(query)
+        query_terms = tuple(filter(None, (tokenize(item) for item in variants)))
         if not query_terms:
             return ()
+        exact_identifiers = {
+            variant.casefold()
+            for variant in variants
+            if CODE_IDENTIFIER.fullmatch(variant)
+            and variant.casefold() not in _QUERY_IDENTIFIER_STOP_WORDS
+        }
+        exact_cjk_terms = {variant for variant in variants if variant in _CJK_TECHNICAL_QUERY_TERMS}
         ranked: list[tuple[float, IndexedChunk]] = []
         for chunk in self._chunks:
             if chunk.course_id != course_id:
                 continue
             score = max(self._cosine(terms, chunk.term_counts) for terms in query_terms)
+            if any(chunk.term_counts.get(term, 0) for term in exact_identifiers):
+                # A single programming identifier is often the strongest part
+                # of a beginner's natural-language question.  Long source
+                # chunks otherwise dilute its cosine score below min_score.
+                score = max(score, 0.30 + min(score, 0.20))
+            elif any(chunk.term_counts.get(term, 0) for term in exact_cjk_terms):
+                # Preserve the original full-question ordering.  A flat boost
+                # would tie every chunk mentioning a broad word such as
+                # "异常" and could displace a more relevant data-quality hit.
+                score = max(score, 0.12 + min(score, 0.25))
             if score >= self._min_score:
                 ranked.append((score, chunk))
         ranked.sort(key=lambda item: (-item[0], item[1].chunk_id))

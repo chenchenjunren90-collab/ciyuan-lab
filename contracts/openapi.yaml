@@ -514,6 +514,35 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ProjectSubmissionResponse"
+  /api/v1/classroom/sessions/next:
+    get:
+      operationId: getNextClassroomSession
+      tags: [classroom]
+      parameters:
+        - in: query
+          name: student_id
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 128 }
+        - in: query
+          name: daily_minutes
+          required: false
+          schema: { type: integer, minimum: 20, maximum: 120, default: 30 }
+        - in: query
+          name: preferred_mode
+          required: false
+          schema:
+            type: string
+            enum: [step_by_step, example_first, practice_first]
+            default: step_by_step
+      responses:
+        "200":
+          description: 根据画像和课程图生成的下一节个性化课堂
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomLesson"
+        "404":
+          description: 尚未建立学习画像
   /api/v1/classroom/lessons/{lesson_id}:
     get:
       operationId: getClassroomLesson
@@ -1557,11 +1586,20 @@ components:
       properties:
         source_id:
           type: string
-          description: 已登记的课程来源 ID（SRC-*）
+          description: 已登记课程来源（SRC-*）或 Python 官方文档白名单来源（WEB-PYDOC-*）
         chunk_id:
           type: string
         score:
           type: number
+        source_type:
+          type: string
+          enum: [course, online]
+          default: course
+        source_title:
+          type: [string, "null"]
+        source_url:
+          type: [string, "null"]
+          description: 仅联网白名单来源提供，当前只允许 docs.python.org
     QaRequest:
       type: object
       additionalProperties: false
@@ -1890,6 +1928,36 @@ components:
           $ref: "#/components/schemas/ClassroomCodeTask"
         homework:
           $ref: "#/components/schemas/ClassroomCodeTask"
+        delivery_mode:
+          type: string
+          enum: [scripted, adaptive]
+          default: scripted
+        stage_id:
+          type: string
+          default: ""
+        stage_index:
+          type: integer
+          default: 0
+        total_stages:
+          type: integer
+          default: 6
+        stage_title:
+          type: string
+          default: ""
+        stage_outcome:
+          type: string
+          default: ""
+        planning_reason:
+          type: string
+          default: ""
+        focus_skill_atoms:
+          type: array
+          items:
+            type: string
+        unlocked_project_ids:
+          type: array
+          items:
+            type: string
     ClassroomCheckpointRequest:
       type: object
       additionalProperties: false
@@ -1940,10 +2008,28 @@ components:
           type: string
           minLength: 2
           maxLength: 1000
+        recent_turns:
+          type: array
+          maxItems: 8
+          default: []
+          items:
+            $ref: "#/components/schemas/ClassroomDialogueTurn"
+    ClassroomDialogueTurn:
+      type: object
+      additionalProperties: false
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [student, teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 500
     ClassroomDialogueResponse:
       type: object
       additionalProperties: false
-      required: [status, role, display_name, answer, citations, trace]
+      required: [status, role, display_name, answer, question_scope, scope_notice, suggested_knowledge_point_ids, citations, trace]
       properties:
         status:
           type: string
@@ -1955,6 +2041,15 @@ components:
           type: string
         answer:
           type: string
+        question_scope:
+          type: string
+          enum: [current_lesson, python_course_extension, outside_course, undetermined]
+        scope_notice:
+          type: [string, "null"]
+        suggested_knowledge_point_ids:
+          type: array
+          items:
+            type: string
         citations:
           type: array
           items:

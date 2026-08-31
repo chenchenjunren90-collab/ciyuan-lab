@@ -34,6 +34,8 @@ class Settings(BaseSettings):
     xfyun_maas_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
     xfyun_maas_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_mock_fallback: bool = True
+    model_max_concurrency: int = Field(default=4, ge=1, le=32)
+    model_queue_timeout_seconds: float = Field(default=15.0, gt=0, le=60)
 
     # Legacy Spark settings remain available for older local environments.
     xfyun_spark_base_url: str = "https://spark-api-open.xf-yun.com/agent/v1"
@@ -58,6 +60,10 @@ class Settings(BaseSettings):
     rag_backend: Literal["lexical", "pgvector"] = "lexical"
     rag_min_score: float = Field(default=0.10, ge=0, le=1)
     rag_vector_weight: float = Field(default=0.65, ge=0, le=1)
+    python_online_search_enabled: bool = True
+    python_docs_base_url: str = "https://docs.python.org/zh-cn/3.11/"
+    python_online_search_timeout_seconds: float = Field(default=8.0, gt=0, le=30)
+    python_online_search_max_pages: int = Field(default=2, ge=1, le=3)
     code_execution_enabled: bool = False
     sandbox_work_root: str = ""
     sandbox_python_image: str = "python:3.11.15-alpine3.24"

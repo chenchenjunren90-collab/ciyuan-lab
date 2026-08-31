@@ -176,6 +176,42 @@ def test_profile_and_next_activity_are_available_after_assessment(
     assert next_activity.json()["activity_id"]
 
 
+def test_two_learners_keep_independent_profiles(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, store = client_and_store
+    for student_id, is_correct in (("learner-alpha", True), ("learner-beta", False)):
+        response = client.post(
+            "/api/v1/assessments",
+            json={
+                "student_id": student_id,
+                "course_id": "python",
+                "answers": [
+                    {"knowledge_point_id": "PY-BASE-01", "is_correct": is_correct}
+                ],
+            },
+        )
+        assert response.status_code == 200
+
+    alpha = client.get(
+        "/api/v1/profile",
+        params={"student_id": "learner-alpha", "course_id": "python"},
+    ).json()
+    beta = client.get(
+        "/api/v1/profile",
+        params={"student_id": "learner-beta", "course_id": "python"},
+    ).json()
+
+    assert alpha["student_id"] == "learner-alpha"
+    assert beta["student_id"] == "learner-beta"
+    assert alpha["mastery"][0]["score"] == 0.725
+    assert beta["mastery"][0]["score"] == 0.275
+    assert set(store.profiles) >= {
+        ("learner-alpha", "python"),
+        ("learner-beta", "python"),
+    }
+
+
 def test_assessment_rejects_unknown_knowledge_point(
     client_and_store: tuple[TestClient, MemoryLearningStore],
 ) -> None:

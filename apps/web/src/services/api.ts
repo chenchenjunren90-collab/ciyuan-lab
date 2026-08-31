@@ -113,13 +113,20 @@ export interface DiagnosticSubmissionResult extends AssessmentResult {
 }
 export interface QaResponse {
   status: "answered" | "insufficient_evidence"; answer: string;
-  citations: Array<{ source_id: string; chunk_id: string; score: number }>;
+  citations: Array<{
+    source_id: string; chunk_id: string; score: number;
+    source_type?: "course" | "online"; source_title?: string | null; source_url?: string | null;
+  }>;
   trace: Array<{
     component: "retrieval" | "course_tutor" | "quality_supervisor";
     status: "completed" | "degraded" | "blocked"; detail: string;
   }>;
 }
 export type ClassroomRole = "teacher" | "ta" | "peer_cautious" | "peer_debugger" | "peer_summarizer";
+export interface ClassroomDialogueTurn {
+  role: ClassroomRole | "student";
+  content: string;
+}
 export type ClassroomPhase = "welcome" | "concept" | "discussion" | "debug" | "practice" | "summary" | "homework";
 export interface ClassroomPersona {
   role: ClassroomRole; display_name: string; tagline: string; tone: string;
@@ -141,6 +148,9 @@ export interface ClassroomLesson {
   lesson_id: string; course_id: "python"; title: string; subtitle: string; duration_minutes: number;
   knowledge_point_ids: string[]; unlock_title: string; cast: ClassroomPersona[];
   beats: ClassroomBeat[]; practice: ClassroomCodeTask; homework: ClassroomCodeTask;
+  delivery_mode: "scripted" | "adaptive"; stage_id: string; stage_index: number;
+  total_stages: number; stage_title: string; stage_outcome: string; planning_reason: string;
+  focus_skill_atoms: string[]; unlocked_project_ids: string[];
 }
 export interface ClassroomCheckpointResult {
   accepted: boolean; feedback: string; reply_role: ClassroomRole;
@@ -148,6 +158,8 @@ export interface ClassroomCheckpointResult {
 }
 export interface ClassroomDialogueResponse {
   status: "answered" | "insufficient_evidence"; role: ClassroomRole; display_name: string;
+  question_scope: "current_lesson" | "python_course_extension" | "outside_course" | "undetermined";
+  scope_notice: string | null; suggested_knowledge_point_ids: string[];
   answer: string; citations: QaResponse["citations"]; trace: QaResponse["trace"];
 }
 export interface ClassroomSelfProfileResponse {
@@ -311,16 +323,32 @@ export const api = {
   }, fetch, aiTimeoutMs),
   classroomLesson: (lessonId: string) =>
     request<ClassroomLesson>(`/api/v1/classroom/lessons/${encodeURIComponent(lessonId)}`),
+  nextClassroomSession: (
+    studentId: string,
+    dailyMinutes: number,
+    preferredMode: "step_by_step" | "example_first" | "practice_first"
+  ) => {
+    const params = new URLSearchParams({
+      student_id: studentId,
+      daily_minutes: String(dailyMinutes),
+      preferred_mode: preferredMode,
+    });
+    return request<ClassroomLesson>(`/api/v1/classroom/sessions/next?${params.toString()}`, {}, fetch, aiTimeoutMs);
+  },
   classroomCheckpoint: (lessonId: string, beatId: string, response: string) =>
     request<ClassroomCheckpointResult>("/api/v1/classroom/checkpoints", {
       method: "POST", body: JSON.stringify({ lesson_id: lessonId, beat_id: beatId, response })
     }),
   classroomDialogue: (
     studentId: string, lessonId: string, phase: ClassroomPhase,
-    role: ClassroomRole, message: string
+    role: ClassroomRole, message: string, recentTurns: ClassroomDialogueTurn[] = []
   ) => request<ClassroomDialogueResponse>("/api/v1/classroom/dialogue", {
     method: "POST", body: JSON.stringify({
-      student_id: studentId, lesson_id: lessonId, phase, role, message
+      student_id: studentId, lesson_id: lessonId, phase, role, message,
+      recent_turns: recentTurns.slice(-8).map((turn) => ({
+        role: turn.role,
+        content: turn.content.slice(0, 500),
+      })),
     })
   }, fetch, aiTimeoutMs),
   classroomSelfProfile: (studentId: string, lessonId: string, description: string) =>
