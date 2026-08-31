@@ -168,6 +168,7 @@ export interface ClassroomSelfProfileResponse {
   recommended_start: string; matched_knowledge_point_ids: string[]; signals: string[];
   advisor_message: string; citations: QaResponse["citations"]; trace: QaResponse["trace"];
 }
+export type ClassroomSelfProfileLevel = ClassroomSelfProfileResponse["level"];
 export interface HintResponse {
   activity_id: string; level: 1 | 2 | 3; hint: string;
   focus_concept_ids: string[]; source_refs: string[]; answer_revealed: false;
@@ -326,13 +327,15 @@ export const api = {
   nextClassroomSession: (
     studentId: string,
     dailyMinutes: number,
-    preferredMode: "step_by_step" | "example_first" | "practice_first"
+    preferredMode: "step_by_step" | "example_first" | "practice_first",
+    selfProfileLevel?: ClassroomSelfProfileLevel,
   ) => {
     const params = new URLSearchParams({
       student_id: studentId,
       daily_minutes: String(dailyMinutes),
       preferred_mode: preferredMode,
     });
+    if (selfProfileLevel) params.set("self_profile_level", selfProfileLevel);
     return request<ClassroomLesson>(`/api/v1/classroom/sessions/next?${params.toString()}`, {}, fetch, aiTimeoutMs);
   },
   classroomCheckpoint: (lessonId: string, beatId: string, response: string) =>

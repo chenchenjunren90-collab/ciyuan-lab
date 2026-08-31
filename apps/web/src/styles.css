@@ -438,6 +438,64 @@ html[data-theme="dark"] .immersive-lesson .lesson-materials > aside { border-col
 html[data-theme="dark"] .immersive-lesson .lesson-materials article > p,
 html[data-theme="dark"] .immersive-lesson .lesson-materials article li { color: #c3cad5; }
 html[data-theme="dark"] .immersive-lesson .teacher-lecture-card :is(p,span) { color: #c8cdd7; }
+
+/* Keep every classroom screen connected to the user-selected accent.  The
+   classroom components predate appearance settings and still contain neutral
+   crimson fallbacks; these higher-specificity semantic rules make the live
+   theme authoritative without recolouring success, warning or code syntax. */
+html .immersive-lesson :is(
+  .assessment-gate > header b,.single-question > header span,.assessment-progress div b,
+  .returning-planner-gate > header span,.planning-studio > header span,
+  .learning-copilot > header p,.lesson-masthead p,.lesson-masthead aside b,
+  .teacher-lecture-card header span,.conversation-dock header p,.lesson-action header p,
+  .baseline-questions p em,.self-profile-details summary b,.checkpoint-options button b
+) { color: var(--accent-dark); }
+html .immersive-lesson :is(
+  .primary,.talk-composer button,.teacher-portrait i,.plan-progress span.active i
+) { color: #fff; background: linear-gradient(135deg,var(--accent-bright),var(--accent-dark)); box-shadow: 0 8px 20px color-mix(in srgb,var(--accent) 28%,transparent); }
+html .immersive-lesson :is(
+  .lesson-masthead aside i span,.assessment-progress > i span
+) { background: linear-gradient(90deg,var(--accent),var(--accent-bright)); }
+html .immersive-lesson :is(
+  .single-question button.selected,.checkpoint-options button.selected,
+  .mode-picker button.active,.role-pills button.active,.focus-view-buttons button.active,
+  .lesson-steps > div.active
+) { border-color: color-mix(in srgb,var(--accent) 55%,var(--line)); background: var(--accent-soft); box-shadow: inset 3px 0 var(--accent); }
+html .immersive-lesson :is(
+  .single-question button b,.checkpoint-options button b,.profile-chip,
+  .plan-controls .secondary,.self-profile-presets button,.suggestion-button,
+  .teacher-lecture-card footer button,.role-pills .teacher-pill
+) { color: var(--accent-dark); border-color: color-mix(in srgb,var(--accent) 30%,var(--line)); background: var(--accent-soft); }
+html .immersive-lesson :is(input,textarea):focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent); }
+html .immersive-lesson .classmate.speaking { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb,var(--accent) 12%,transparent),0 16px 25px #6b3c2230; }
+html .immersive-lesson .classmate.speaking > span { background: var(--accent); box-shadow: 0 0 0 5px color-mix(in srgb,var(--accent) 14%,transparent); }
+html .immersive-lesson .code-task :is(header p,.io-format b) { color: var(--accent-dark); }
+html .immersive-lesson .code-task .primary { background: linear-gradient(135deg,var(--accent-bright),var(--accent-dark)); box-shadow: 0 8px 18px color-mix(in srgb,var(--accent) 28%,transparent); }
+html .immersive-lesson .code-workspace > aside > button { color: var(--accent-dark); border-color: color-mix(in srgb,var(--accent) 28%,var(--line)); background: var(--accent-pale); }
+
+html[data-theme="dark"] .immersive-lesson :is(
+  .lesson-masthead,.learning-copilot,.lesson-action,.classroom-layout,
+  .assessment-gate,.assessment-result-screen,.returning-planner-gate,.planning-studio,
+  .self-profile-card,.self-profile-inline,.baseline-panel,.progress-explanation,
+  .teacher-lecture-card,.conversation-dock,.conversation-dock > footer,
+  .lesson-materials,.code-standby,.paused-classroom,.ready-card,.lesson-complete,
+  .code-task .problem-statement,.code-task .code-workspace > aside
+) { color: var(--ink); border-color: var(--line); background: var(--surface-raised); box-shadow: 0 18px 55px #0003; }
+html[data-theme="dark"] .immersive-lesson :is(
+  .single-question button,.checkpoint-options button,.mode-picker button,
+  .self-profile-presets button,.role-pills button,.discussion-prompts button,
+  .lesson-steps > div,.code-task .io-format article,.code-task .task-constraints li,
+  .code-task .code-workspace > aside article,.code-task .code-workspace aside code
+) { color: var(--ink); border-color: var(--line); background: var(--surface-muted); }
+html[data-theme="dark"] .immersive-lesson :is(
+  .assessment-welcome p,.assessment-result-screen p,.single-question button span,
+  .lesson-masthead div > span,.learning-copilot span,.teacher-lecture-card p,
+  .teacher-lecture-card footer span,.lesson-action header > span,.ready-card span,
+  .code-task .problem-statement > p,.code-task .io-format span,
+  .code-task .task-constraints li,.code-task .code-workspace aside article p
+) { color: var(--muted); }
+html[data-theme="dark"] .immersive-lesson .classroom-scene { filter: brightness(.84) saturate(.9); }
+html[data-theme="dark"] .immersive-lesson .code-task .code-editor { border: 1px solid #343b49; }
 html[data-theme="dark"] .immersive-lesson .teacher-question { color: #d9bcc2; background: color-mix(in srgb,var(--accent) 9%,var(--surface-muted)); }
 html[data-theme="dark"] .immersive-lesson .session-preview { color: var(--ink); border-color: #315746; background: #17271f; }
 

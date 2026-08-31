@@ -15,6 +15,12 @@ from app.modules.learning_flow.service import LearningFlowService
 DiagnosticPhase = Literal["initial", "reassessment"]
 UNKNOWN_DIAGNOSTIC_RESPONSE = "UNKNOWN"
 
+# Correct options are deliberately spread across visible positions.  The
+# source course pack keeps its stable answer ids, while a diagnostic quiz gets
+# a deterministic display order and fresh A/B/C/D labels.  This avoids the
+# accidental "mostly B" pattern without exposing or changing source answers.
+_BALANCED_CORRECT_POSITIONS = (1, 3, 0, 2, 2, 0, 3, 1, 0, 2, 1, 3)
+
 _PYTHON_INITIAL = (
     "PY-BASE-01-Q1",
     "PY-BASE-02-Q1",
@@ -151,7 +157,7 @@ class DiagnosticService:
     ) -> DiagnosticQuiz:
         activity_ids = self._select_activity_ids(course_id, phase)
         items: list[DiagnosticItem] = []
-        for activity_id in activity_ids:
+        for item_index, activity_id in enumerate(activity_ids):
             activity = self._courses.get_activity(course_id, activity_id)
             knowledge_point_id = activity.concept_ids[0]
             knowledge_point = self._courses.get_knowledge_point(
@@ -160,9 +166,11 @@ class DiagnosticService:
             options = activity.evaluation.get("options")
             if activity.type != "objective" or not isinstance(options, list):
                 raise ValueError(f"diagnostic activity is not an objective item: {activity_id}")
-            public_options = [
-                DiagnosticOption.model_validate(option) for option in options
-            ]
+            graded_activity = self._courses.get_practice_activity(course_id, activity_id)
+            public_options, _ = self._balanced_options(
+                graded_activity.evaluation,
+                item_index,
+            )
             public_options.append(
                 DiagnosticOption(
                     id=UNKNOWN_DIAGNOSTIC_RESPONSE,
@@ -212,11 +220,9 @@ class DiagnosticService:
         answer_map = {exercise_id: response.strip() for exercise_id, response in answers}
         grades: list[DiagnosticGrade] = []
         evidence: list[tuple[str, bool]] = []
-        for item in quiz.items:
+        for item_index, item in enumerate(quiz.items):
             record = self._courses.get_practice_activity(course_id, item.exercise_id)
-            accepted = record.evaluation.get("accepted_answers")
-            if not isinstance(accepted, list) or not accepted:
-                raise ValueError(f"diagnostic answer key is incomplete: {item.exercise_id}")
+            _, accepted = self._balanced_options(record.evaluation, item_index)
             response = answer_map[item.exercise_id]
             allowed_responses = {option.id for option in item.options}
             if response not in allowed_responses:
@@ -386,6 +392,39 @@ class DiagnosticService:
         if not isinstance(value, list):
             return []
         return [item for item in value if isinstance(item, str) and item.strip()]
+
+    @staticmethod
+    def _balanced_options(
+        evaluation: dict[str, Any], item_index: int
+    ) -> tuple[list[DiagnosticOption], set[str]]:
+        raw_options = evaluation.get("options")
+        accepted_answers = evaluation.get("accepted_answers")
+        if not isinstance(raw_options, list) or not raw_options:
+            raise ValueError("diagnostic options are incomplete")
+        if not isinstance(accepted_answers, list) or not accepted_answers:
+            raise ValueError("diagnostic answer key is incomplete")
+        accepted_source_ids = {str(item) for item in accepted_answers}
+        normalized = [DiagnosticOption.model_validate(option) for option in raw_options]
+        correct = [option for option in normalized if option.id in accepted_source_ids]
+        distractors = [option for option in normalized if option.id not in accepted_source_ids]
+        if not correct:
+            raise ValueError("diagnostic answer key does not reference a public option")
+
+        target = min(
+            _BALANCED_CORRECT_POSITIONS[item_index % len(_BALANCED_CORRECT_POSITIONS)],
+            len(normalized) - 1,
+        )
+        ordered = list(distractors)
+        ordered.insert(target, correct[0])
+        ordered.extend(correct[1:])
+        visible: list[DiagnosticOption] = []
+        accepted_visible_ids: set[str] = set()
+        for position, option in enumerate(ordered):
+            visible_id = chr(ord("A") + position)
+            visible.append(DiagnosticOption(id=visible_id, text=option.text))
+            if option.id in accepted_source_ids:
+                accepted_visible_ids.add(visible_id)
+        return visible, accepted_visible_ids
 
     def _select_activity_ids(
         self, course_id: CourseId, phase: DiagnosticPhase

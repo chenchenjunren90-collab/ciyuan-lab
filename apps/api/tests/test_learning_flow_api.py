@@ -265,6 +265,22 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
         }
         for item in quiz["items"]
     )
+    correct_positions: list[int] = []
+    repository = CoursePackRepository()
+    for item in quiz["items"]:
+        record = repository.get_practice_activity("python", item["exercise_id"])
+        accepted_source_ids = set(record.evaluation["accepted_answers"])
+        accepted_texts = {
+            option["text"]
+            for option in record.evaluation["options"]
+            if option["id"] in accepted_source_ids
+        }
+        correct_positions.append(next(
+            index for index, option in enumerate(item["options"][:-1])
+            if option["text"] in accepted_texts
+        ))
+    assert set(correct_positions) == {0, 1, 2, 3}
+    assert max(correct_positions.count(position) for position in range(4)) <= 3
     answers = [
         {"exercise_id": item["exercise_id"], "response": item["options"][0]["id"]}
         for item in quiz["items"]
@@ -358,7 +374,16 @@ def test_diagnostic_detects_later_skill_with_missing_prerequisite(
     answers = []
     for item in quiz["items"]:
         record = repository.get_practice_activity("python", item["exercise_id"])
-        accepted = set(record.evaluation["accepted_answers"])
+        accepted_source_ids = set(record.evaluation["accepted_answers"])
+        accepted_texts = {
+            option["text"]
+            for option in record.evaluation["options"]
+            if option["id"] in accepted_source_ids
+        }
+        accepted = {
+            option["id"] for option in item["options"]
+            if option["text"] in accepted_texts
+        }
         response = next(iter(accepted))
         if item["exercise_id"] == "PY-BASE-02-Q1":
             response = next(

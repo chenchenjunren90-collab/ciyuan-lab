@@ -150,6 +150,39 @@ def test_adaptive_session_repairs_prerequisite_gap_and_uses_real_code_tasks() ->
     assert restored.knowledge_point_ids == lesson.knowledge_point_ids
 
 
+def test_zero_basis_self_report_overrides_guessed_diagnostic_mastery() -> None:
+    profile = LearnerProfile(
+        student_id="guessed-but-zero-basis",
+        course_id="python",
+        mastery=[
+            MasteryState(knowledge_point_id="PY-LIST-03", score=0.95, evidence_count=1),
+            MasteryState(knowledge_point_id="PY-DICT-02", score=0.9, evidence_count=1),
+        ],
+    )
+    service = ClassroomLessonService(
+        CoursePackRepository(),
+        learning_context=_AdaptiveLearningContext(
+            profile,
+            PlannedActivity(
+                activity_id="PY-DATA-02-Q1",
+                activity_type="objective",
+                reason="短测分数较高",
+            ),
+        ),
+    )
+
+    lesson = asyncio.run(service.next_session(
+        student_id=profile.student_id,
+        daily_minutes=25,
+        preferred_mode="step_by_step",
+        self_profile_level="newcomer",
+    ))
+
+    assert lesson.knowledge_point_ids == ["PY-BASE-01", "PY-BASE-02"]
+    assert "零基础" in lesson.planning_reason
+    assert "不会因猜对而跳级" in lesson.planning_reason
+
+
 def test_classroom_dialogue_uses_persona_and_traceable_python_evidence() -> None:
     response = client.post(
         "/api/v1/classroom/dialogue",
@@ -200,7 +233,7 @@ def test_self_report_is_conservatively_matched_to_course_route() -> None:
     assert payload["recommended_start"]
     assert payload["matched_knowledge_point_ids"]
     assert payload["signals"]
-    assert "测评" in payload["advisor_message"] or "校正" in payload["advisor_message"]
+    assert "短测" in payload["advisor_message"] or "摸底" in payload["advisor_message"]
     assert [item["component"] for item in payload["trace"]] == [
         "retrieval",
         "course_tutor",

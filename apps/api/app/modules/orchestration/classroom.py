@@ -675,6 +675,7 @@ class ClassroomLessonService:
         student_id: str,
         daily_minutes: int,
         preferred_mode: ClassroomPreference,
+        self_profile_level: SelfProfileLevel | None = None,
     ) -> ClassroomLesson:
         if self._learning_context is None:
             raise RuntimeError("classroom learning context is not configured")
@@ -687,11 +688,18 @@ class ClassroomLessonService:
             self._courses,
             profile,
             planned,
+            self_profile_level=self_profile_level,
         )
+        planning_reason = planned.reason
+        if self_profile_level == "newcomer":
+            planning_reason = (
+                "课程规划智能体优先采纳了你的‘零基础’学习倾向：从运行程序、"
+                "输入输出和变量建立可解释的起点；摸底题仅用于后续微调，不会因猜对而跳级。"
+            )
         return _build_adaptive_lesson(
             self._courses,
             knowledge_point_ids,
-            planning_reason=planned.reason,
+            planning_reason=planning_reason,
             daily_minutes=daily_minutes,
             preferred_mode=preferred_mode,
             profile=profile,
@@ -1030,7 +1038,8 @@ class ClassroomDialogueService:
                 question=(
                     f"学生自述：{request.description}\n"
                     f"系统初判：{profile.label}；建议起点：{profile.start}。"
-                    "请以助教身份说明为什么匹配这个起点，并提醒自述还要由客观测评校正。"
+                    "请以课程规划助教身份说明为什么匹配这个起点。明确学习倾向决定主方向，"
+                    "短测只补充断层证据；若学生明确表示零基础，不得因短测猜对而跳级。"
                 ),
                 evidence=hits,
                 system_prompt=(
@@ -1042,7 +1051,7 @@ class ClassroomDialogueService:
             decision = await self._supervisor.review(
                 draft=draft,
                 evidence=hits,
-                learning_context="Python 入课前学习经历初判；结论必须提醒由客观测评校正",
+                learning_context="Python 入课前学习倾向识别；学习倾向决定主方向，短测只用于细调",
             )
             supervisor_degraded = decision.model_degraded
             supervisor_reviewed = decision.model_reviewed
@@ -1050,8 +1059,10 @@ class ClassroomDialogueService:
                 advisor_message = decision.answer
                 used_hits = decision.citations
                 tutor_status = "degraded" if draft.degraded else "completed"
-        if "测评" not in advisor_message and "校正" not in advisor_message:
-            advisor_message = f"{advisor_message} 这只是自述初判，仍需用客观测评继续校正。"
+        if "摸底" not in advisor_message and "短测" not in advisor_message:
+            advisor_message = (
+                f"{advisor_message} 课程规划会优先尊重这个学习起点，短测只用于发现断层和细调。"
+            )
 
         return ClassroomSelfProfileResponse(
             level=profile.level,
@@ -1848,7 +1859,13 @@ def _select_adaptive_knowledge_points(
     courses: CoursePackRepository,
     profile: LearnerProfile,
     planned: PlannedActivity,
+    *,
+    self_profile_level: SelfProfileLevel | None = None,
 ) -> tuple[str, ...]:
+    if self_profile_level == "newcomer":
+        # Explicit zero-basis self-report outweighs a short objective sample:
+        # guessed answers must never skip the learner over the true starting point.
+        return ("PY-BASE-01", "PY-BASE-02")
     mastered = _mastered_ids(profile)
     score_by_id = {item.knowledge_point_id: item.score for item in profile.mastery}
     planned_id = _planned_knowledge_point_id(courses, planned)

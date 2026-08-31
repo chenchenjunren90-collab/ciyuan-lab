@@ -19,6 +19,7 @@ from app.modules.orchestration.classroom import (
     ClassroomPreference,
     ClassroomSelfProfileRequest,
     ClassroomSelfProfileResponse,
+    SelfProfileLevel,
 )
 
 router = APIRouter(prefix="/classroom", tags=["classroom"])
@@ -30,12 +31,14 @@ async def get_next_classroom_session(
     student_id: Annotated[str, Query(min_length=1, max_length=128)],
     daily_minutes: Annotated[int, Query(ge=20, le=120)] = 30,
     preferred_mode: ClassroomPreference = "step_by_step",
+    self_profile_level: SelfProfileLevel | None = None,
 ) -> ClassroomLesson:
     try:
         return await service.next_session(
             student_id=student_id,
             daily_minutes=daily_minutes,
             preferred_mode=preferred_mode,
+            self_profile_level=self_profile_level,
         )
     except LookupError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

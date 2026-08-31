@@ -534,6 +534,13 @@ paths:
             type: string
             enum: [step_by_step, example_first, practice_first]
             default: step_by_step
+        - in: query
+          name: self_profile_level
+          required: false
+          description: 课程规划智能体识别出的学习起点；明确的零基础倾向优先于短测分数。
+          schema:
+            type: string
+            enum: [newcomer, beginner, developing, experienced]
       responses:
         "200":
           description: 根据画像和课程图生成的下一节个性化课堂

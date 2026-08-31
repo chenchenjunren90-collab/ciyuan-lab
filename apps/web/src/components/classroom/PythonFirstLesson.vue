@@ -20,6 +20,13 @@ import {
 } from "../../services/api";
 import SafeMarkdown from "../SafeMarkdown.vue";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
+import {
+  loadClassroomSession,
+  saveClassroomSession,
+  type ClassroomSessionDraft,
+  type ClassroomWorkspaceView,
+  type PersistedClassroomMessage,
+} from "./classroomSession";
 
 const props = defineProps<{ studentId: string; genericMode?: boolean }>();
 const emit = defineEmits<{
@@ -33,19 +40,7 @@ const emit = defineEmits<{
 }>();
 
 type MessageRole = ClassroomRole | "student";
-interface ClassroomMessage {
-  id: number;
-  role: MessageRole;
-  name: string;
-  content: string;
-  kind: "lesson" | "reply" | "student";
-  review?: "approved" | "limited";
-  evidenceCount?: number;
-  evidenceSource?: "course" | "online";
-  target?: ClassroomRole;
-  scopeNotice?: string;
-  suggestedKnowledgePointIds?: string[];
-}
+type ClassroomMessage = PersistedClassroomMessage;
 
 const FIRST_LESSON_ID = "python-list-filter-01";
 const SECOND_LESSON_ID = "python-dict-lookup-02";
@@ -98,7 +93,7 @@ const selfProfile = ref<ClassroomSelfProfileResponse | null>(null);
 const selfProfileLoading = ref(false);
 const progressExplanationOpen = ref(false);
 const diagnosticAnalysis = ref<DiagnosticAnalysis | null>(null);
-const classroomView = ref<"lecture" | "discussion" | "code" | "materials">("lecture");
+const classroomView = ref<ClassroomWorkspaceView>("lecture");
 const selectedMaterialId = ref("");
 const exitDialogOpen = ref(false);
 const isPaused = ref(false);
@@ -108,6 +103,7 @@ const planProgressStep = ref(0);
 const PLAN_PROGRESS_LABELS = ["正在检索薄弱点", "正在组合课程", "正在进行质量审核"] as const;
 const SELF_DESCRIPTION_EXAMPLE = "例如：我学过变量和 for 循环，能看懂简单代码，但不太会自己拆题；希望以后能完成数据分析小项目。";
 let planProgressTimer: ReturnType<typeof setInterval> | null = null;
+let sessionReady = false;
 
 const planProgressMessage = computed(() => (
   PLAN_PROGRESS_LABELS[Math.max(0, planProgressStep.value - 1)] ?? "正在准备个性化课程"
@@ -249,8 +245,13 @@ const assessmentProgress = computed(() => {
   return total ? Math.round(Object.keys(diagnosticAnswers.value).length / total * 100) : 0;
 });
 const currentDiagnosticItem = computed(() => diagnostic.value?.items[assessmentIndex.value] ?? null);
+const hasRetakeDraft = computed(() => (
+  diagnostic.value?.phase === "reassessment"
+  && (assessmentIndex.value > 0 || Object.keys(diagnosticAnswers.value).length > 0)
+));
+const retakeEntryLabel = computed(() => hasRetakeDraft.value ? "继续上次重测" : "重新测评");
 const learningTrack = computed(() => {
-  const score = averageMastery.value ?? 0;
+  const score = selfProfile.value?.level === "newcomer" ? 0 : (averageMastery.value ?? 0);
   if (score >= 70) return {
     name: "挑战进阶路线",
     summary: "基础概念掌握较稳，将从 Debug、重构和综合应用切入。",
@@ -271,7 +272,9 @@ const learningTrack = computed(() => {
   };
 });
 const personalizedSession = computed(() => {
-  const score = lessonTargetMastery.value ?? averageMastery.value ?? 0;
+  const score = selfProfile.value?.level === "newcomer"
+    ? 0
+    : (lessonTargetMastery.value ?? averageMastery.value ?? 0);
   const lessonName = lesson.value?.title ?? "Python 学习课";
   const modeLabel = ({
     step_by_step: "老师分步引导",
@@ -373,6 +376,109 @@ function loadPlanPreferences(): void {
     showFeedback("上次的学习设置无法读取，已使用建议值。");
   }
 }
+
+function buildSessionDraft(): ClassroomSessionDraft | null {
+  if (!lesson.value) return null;
+  return {
+    version: 1,
+    savedAt: new Date().toISOString(),
+    lessonId: lesson.value.lesson_id,
+    currentIndex: currentIndex.value,
+    selectedChoice: selectedChoice.value,
+    checkpointResult: checkpointResult.value,
+    messages: messages.value.slice(-200),
+    practiceCode: practiceCode.value,
+    homeworkCode: homeworkCode.value,
+    practiceResult: practiceResult.value,
+    homeworkResult: homeworkResult.value,
+    hint: hint.value,
+    lessonComplete: lessonComplete.value,
+    diagnosticResult: diagnosticResult.value,
+    diagnosticAnswers: diagnosticAnswers.value,
+    baselineOpen: baselineOpen.value,
+    assessmentStarted: assessmentStarted.value,
+    assessmentIndex: assessmentIndex.value,
+    assessmentResultVisible: assessmentResultVisible.value,
+    retakeActive: retakeActive.value,
+    learningPlan: learningPlan.value,
+    classroomView: classroomView.value,
+    selectedMaterialId: selectedMaterialId.value,
+    isPaused: isPaused.value,
+    sessionBeatSnapshot: sessionBeatSnapshot.value,
+  };
+}
+
+function persistSession(): void {
+  if (!sessionReady) return;
+  const draft = buildSessionDraft();
+  if (!draft) return;
+  try {
+    saveClassroomSession(localStorage, props.studentId, draft);
+  } catch {
+    showFeedback("当前课堂仍可继续，但浏览器存储空间不足，暂时无法自动保存新进度。");
+  }
+}
+
+function restoreSession(draft: ClassroomSessionDraft): boolean {
+  if (!lesson.value || lesson.value.lesson_id !== draft.lessonId) return false;
+  sessionBeatSnapshot.value = draft.sessionBeatSnapshot;
+  const beatCount = sessionBeatSnapshot.value.length || generatedPersonalizedBeats.value.length;
+  currentIndex.value = Math.min(draft.currentIndex, Math.max(0, beatCount - 1));
+  selectedChoice.value = draft.selectedChoice;
+  checkpointResult.value = draft.checkpointResult;
+  messages.value = draft.messages;
+  messageCounter.value = draft.messages.reduce((maximum, message) => Math.max(maximum, message.id), 0);
+  practiceCode.value = draft.practiceCode;
+  homeworkCode.value = draft.homeworkCode;
+  practiceResult.value = draft.practiceResult;
+  homeworkResult.value = draft.homeworkResult;
+  hint.value = draft.hint;
+  lessonComplete.value = draft.lessonComplete;
+  diagnosticResult.value = draft.diagnosticResult;
+  const validExerciseIds = new Set(diagnostic.value?.items.map((item) => item.exercise_id) ?? []);
+  diagnosticAnswers.value = Object.fromEntries(
+    Object.entries(draft.diagnosticAnswers).filter(([exerciseId, response]) => (
+      validExerciseIds.has(exerciseId) && typeof response === "string"
+    )),
+  );
+  baselineOpen.value = draft.baselineOpen;
+  assessmentStarted.value = draft.assessmentStarted;
+  const assessmentCount = diagnostic.value?.items.length ?? 0;
+  assessmentIndex.value = Math.min(draft.assessmentIndex, Math.max(0, assessmentCount - 1));
+  assessmentResultVisible.value = draft.assessmentResultVisible;
+  retakeActive.value = draft.retakeActive && diagnostic.value?.phase === "reassessment";
+  learningPlan.value = draft.learningPlan;
+  classroomView.value = draft.classroomView;
+  selectedMaterialId.value = draft.selectedMaterialId;
+  isPaused.value = draft.isPaused;
+  return true;
+}
+
+watch(() => ({
+  lessonId: activeLessonId.value,
+  currentIndex: currentIndex.value,
+  selectedChoice: selectedChoice.value,
+  checkpointResult: checkpointResult.value,
+  messages: messages.value,
+  practiceCode: practiceCode.value,
+  homeworkCode: homeworkCode.value,
+  practiceResult: practiceResult.value,
+  homeworkResult: homeworkResult.value,
+  hint: hint.value,
+  lessonComplete: lessonComplete.value,
+  diagnosticResult: diagnosticResult.value,
+  diagnosticAnswers: diagnosticAnswers.value,
+  baselineOpen: baselineOpen.value,
+  assessmentStarted: assessmentStarted.value,
+  assessmentIndex: assessmentIndex.value,
+  assessmentResultVisible: assessmentResultVisible.value,
+  retakeActive: retakeActive.value,
+  learningPlan: learningPlan.value,
+  classroomView: classroomView.value,
+  selectedMaterialId: selectedMaterialId.value,
+  isPaused: isPaused.value,
+  sessionBeatSnapshot: sessionBeatSnapshot.value,
+}), persistSession, { deep: true });
 
 function pushMessage(
   role: MessageRole,
@@ -547,6 +653,14 @@ async function restartAssessment(): Promise<void> {
     showFeedback("能力诊断正在准备或提交，请稍候。");
     return;
   }
+  if (hasRetakeDraft.value) {
+    assessmentResultVisible.value = false;
+    assessmentStarted.value = true;
+    retakeActive.value = true;
+    baselineOpen.value = false;
+    showFeedback(`已恢复上次重测，从第 ${assessmentIndex.value + 1} 题继续；已选答案都还在。`);
+    return;
+  }
   diagnosticLoading.value = true;
   assessmentResultVisible.value = false;
   assessmentStarted.value = true;
@@ -570,9 +684,7 @@ async function restartAssessment(): Promise<void> {
 
 function cancelRetake(): void {
   retakeActive.value = false;
-  diagnosticAnswers.value = {};
-  assessmentIndex.value = 0;
-  showFeedback("已退出本次重测，原有学习画像保持不变。");
+  showFeedback("已暂存本次重测；下次点击“继续上次重测”会回到当前题，原有学习画像暂不改变。");
 }
 
 function useSelfDescriptionTemplate(value: string): void {
@@ -599,7 +711,10 @@ async function analyzeSelfDescription(): Promise<void> {
   try {
     selfProfile.value = await api.classroomSelfProfile(props.studentId, activeLessonId.value, description);
     savePlanPreferences();
-    showFeedback(`自述初判为“${selfProfile.value.level_label}”；接下来仍会用客观测评校正。`);
+  showFeedback(selfProfile.value.level === "newcomer"
+    ? "已记录为零基础倾向；课程规划会以此为主要起点，摸底题只用于细节校正。"
+    : `自述初判为“${selfProfile.value.level_label}”；课程规划会先尊重你的学习倾向，再用客观证据细调。`
+  );
   } catch (cause) {
     showFeedback(cause instanceof Error ? cause.message : "学习经历分析暂时不可用，请稍后重试。");
   } finally {
@@ -636,6 +751,7 @@ async function enterPersonalizedClassroom(): Promise<void> {
         props.studentId,
         dailyMinutes.value,
         preferredMode.value,
+        selfProfile.value?.level,
       );
       applyLesson(nextLesson);
       localStorage.setItem(
@@ -662,7 +778,7 @@ async function enterPersonalizedClassroom(): Promise<void> {
   messages.value = [];
   messageCounter.value = 0;
   announceBeat();
-  pushMessage("ta", `已按你的测评证据、${dailyMinutes.value} 分钟/天和“${planGoal.value}”完成编排。本次不是固定课表：共 ${personalizedBeats.value.length} 个学习环节，我会根据后续答题与代码结果继续调整。`, "reply", "approved", 1);
+  pushMessage("ta", `已优先按你的学习经历与倾向，并结合测评证据、${dailyMinutes.value} 分钟/天和“${planGoal.value}”完成编排。本次不是固定课表：共 ${personalizedBeats.value.length} 个学习环节，我会根据后续答题与代码结果继续调整。`, "reply", "approved", 1);
   showFeedback(`已进入“${personalizedSession.value.title}”，本次内容和节奏已按你的信息重新编排。`);
 }
 
@@ -747,7 +863,7 @@ async function generateLearningPlan(): Promise<void> {
       lesson.value.lesson_id,
       currentBeat.value?.phase ?? "welcome",
       "ta",
-      `请以课程规划助教身份，为我设计个性化 Python 学习方案。每天 ${dailyMinutes.value} 分钟，每周 ${weeklyDays.value} 天；目标：${planGoal.value}；学习偏好：${preferredMode.value}；学生自述：${selfDescription.value.trim() || "未填写"}；自述初判：${selfProfile.value?.level_label ?? "待判断"}；当前薄弱点：${weakest}。请明确本次课重点、讲解与练习比例、每日节奏和调整依据，不要给所有学生相同课表，控制在 300 字内。`,
+      `请以课程规划助教身份，为我设计个性化 Python 学习方案。每天 ${dailyMinutes.value} 分钟，每周 ${weeklyDays.value} 天；目标：${planGoal.value}；学习偏好：${preferredMode.value}；学生自述：${selfDescription.value.trim() || "未填写"}；自述初判：${selfProfile.value?.level_label ?? "待判断"}；当前薄弱点：${weakest}。决策规则：学习倾向与明确的零基础自述优先于短测分数，摸底只用于发现断层和微调；零基础不得因选择题猜对而跳级。请明确本次课重点、讲解与练习比例、每日节奏和调整依据，不要给所有学生相同课表，控制在 300 字内。`,
     );
     learningPlan.value = result;
     pushMessage(
@@ -770,7 +886,7 @@ async function generateLearningPlan(): Promise<void> {
 }
 
 function useSuggestedPace(): void {
-  const score = averageMastery.value ?? 0;
+  const score = selfProfile.value?.level === "newcomer" ? 0 : (averageMastery.value ?? 0);
   dailyMinutes.value = score >= 70 ? 40 : score >= 40 ? 30 : 25;
   weeklyDays.value = score >= 70 ? 4 : 5;
   showFeedback(`已采用助教建议：每天 ${dailyMinutes.value} 分钟、每周 ${weeklyDays.value} 天；你仍可继续修改。`);
@@ -840,6 +956,7 @@ async function startNextLesson(): Promise<void> {
       props.studentId,
       dailyMinutes.value,
       preferredMode.value,
+      selfProfile.value?.level,
     );
     applyLesson(nextLesson);
     localStorage.setItem(
@@ -1043,14 +1160,26 @@ async function askRole(): Promise<void> {
 
 onMounted(async () => {
   loadPlanPreferences();
-  const savedLesson = localStorage.getItem(`ciyuan-active-lesson:${props.studentId}:python`);
+  const savedSession = loadClassroomSession(localStorage, props.studentId);
+  const savedLesson = savedSession?.lessonId
+    ?? localStorage.getItem(`ciyuan-active-lesson:${props.studentId}:python`);
   if (savedLesson === SECOND_LESSON_ID || savedLesson?.startsWith("python-adaptive--")) {
     activeLessonId.value = savedLesson;
   }
   await Promise.all([loadLesson(), loadLearningContext()]);
+  const restored = savedSession ? restoreSession(savedSession) : false;
+  sessionReady = true;
+  persistSession();
+  if (restored && (assessmentStarted.value || planConfirmed.value || sessionBeatSnapshot.value.length)) {
+    showFeedback(isPaused.value
+      ? "已恢复上次保存的过程，回来后可从原位置继续。"
+      : "已接上上次进度，测评答案、课堂环节、对话和代码草稿都已保留。"
+    );
+  }
 });
 
 onBeforeUnmount(() => {
+  persistSession();
   clearPlanProgress();
   if (feedbackDismissTimer) clearTimeout(feedbackDismissTimer);
   emit("focusChanged", false);
@@ -1076,7 +1205,7 @@ onBeforeUnmount(() => {
 
     <section v-else-if="assessmentResultVisible && diagnosticResult" class="assessment-result-screen">
       <header><b>测评已完成</b></header>
-      <div class="result-celebration"><i>✓</i><p>摸底完成</p><h2>现在，和助教一起把课表定下来</h2><span>测评只告诉我们你的起点；你的可用时间、目标和学习方式，同样决定课程内容。以下建议都可以修改。</span></div>
+      <div class="result-celebration"><i>✓</i><p>摸底完成</p><h2>现在，和助教一起把课表定下来</h2><span>你的学习经历、目标和偏好决定课程主方向；这次短测只负责补充证据、发现断层，不会单独把你推到不合适的难度。</span></div>
       <div class="result-summary">
         <article><small>本次答对</small><strong>{{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><em v-if="diagnosticResult.unknown_count">其中 {{ diagnosticResult.unknown_count }} 题选择“我不知道”</em></article>
         <article><small>当前掌握度</small><strong>{{ averageMastery ?? 0 }}%</strong></article>
@@ -1096,7 +1225,7 @@ onBeforeUnmount(() => {
           <label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label>
           <label class="wide">我的阶段目标<input v-model="planGoal" maxlength="120" /></label>
         </div>
-        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
+        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新学习倾向" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。课程规划优先尊重明确的学习倾向，短测用于细调。</span></div></section>
         <div class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
         <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成我的专属课程" }} <span>→</span></button>
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
@@ -1108,7 +1237,7 @@ onBeforeUnmount(() => {
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
-      <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="restartAssessment">{{ retakeEntryLabel }}</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
     </section>
 
     <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed && !sessionBeatSnapshot.length" class="returning-planner-gate">
@@ -1116,7 +1245,7 @@ onBeforeUnmount(() => {
       <section class="planning-studio">
         <header><div><span>助教小程 · 可随时修改</span><h3>我的学习设置</h3></div><button class="suggestion-button" @click="useSuggestedPace">采用助教建议</button></header>
         <div class="preference-grid"><label>每天可投入<input v-model.number="dailyMinutes" type="number" min="10" max="180" step="5" /><span>分钟</span></label><label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label><label class="wide">我的阶段目标<input v-model="planGoal" maxlength="120" /></label></div>
-        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。客观测评结果优先于自述。</span></div></section>
+        <section class="self-profile-inline"><label>我的学习经历（选填）<textarea v-model="selfDescription" rows="3" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新学习倾向" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。课程规划优先尊重明确的学习倾向，短测用于细调。</span></div></section>
         <div class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
         <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成今天的专属课程" }} <span>→</span></button>
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
@@ -1128,7 +1257,7 @@ onBeforeUnmount(() => {
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
-      <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="restartAssessment">{{ retakeEntryLabel }}</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
     </section>
 
     <section v-else-if="!learnerProfile && !props.genericMode" class="assessment-gate">
@@ -1138,10 +1267,10 @@ onBeforeUnmount(() => {
           <div><h1>先了解你的 Python 基础</h1><p>你可以先说说学习经历，也可以直接完成几道短题。助教会以客观测评为主、自述为辅，安排合适的起点、讲解节奏和后续练习。</p></div>
         </div>
         <section class="self-profile-card">
-          <header><div><b>先说说你现在会什么（选填）</b><span>可以填写学过的内容、做过的练习和容易卡住的地方，也可以直接开始测评；自述只作初判，测评会继续校正。</span></div><small>最多 1200 字</small></header>
+          <header><div><b>先说说你的学习起点与偏好（推荐填写）</b><span>课程规划智能体会优先参考这里；如果你说明自己是零基础，就从真正的起点开始，摸底题只用来辅助细调。</span></div><small>最多 1200 字</small></header>
           <div class="self-profile-presets"><button @click="useSelfDescriptionTemplate('我目前基本是零基础，没有系统学过 Python，希望从最基础的运行和输入输出开始。')">我基本没学过</button><button @click="useSelfDescriptionTemplate('我学过变量、if、for 和 while，能看懂简单代码，但自己写时容易卡住。')">学过基础语法</button><button @click="useSelfDescriptionTemplate('我学过列表、字典和函数，做过课程作业，希望加强调试、算法和项目能力。')">做过一些练习</button></div>
           <textarea v-model="selfDescription" rows="4" maxlength="1200" :placeholder="selfDescriptionFocused ? '' : SELF_DESCRIPTION_EXAMPLE" @focus="selfDescriptionFocused = true" @blur="selfDescriptionFocused = false" @input="updateSelfDescription"></textarea>
-          <footer><span v-if="!selfProfile">写得越具体，助教越容易找到合适起点；不填写也可以直接开始客观测评。</span><span v-else>自述初判：<b>{{ selfProfile.level_label }}</b> · {{ selfProfile.course_fit }}</span><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "助教正在判断…" : selfProfile ? "按新描述重新判断" : "让助教先判断" }}</button></footer>
+          <footer><span v-if="!selfProfile">写得越具体，助教越容易找到合适起点；不填写也可以继续，但课程个性化程度会降低。</span><span v-else>已识别学习倾向：<b>{{ selfProfile.level_label }}</b> · {{ selfProfile.course_fit }}</span><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "助教正在判断…" : selfProfile ? "按新描述重新判断" : "让助教先判断" }}</button></footer>
           <article v-if="selfProfile" class="self-profile-result"><div><small>推荐起点</small><b>{{ selfProfile.recommended_start }}</b></div><p>{{ selfProfile.advisor_message }}</p><small>识别线索：{{ selfProfile.signals.join('、') }} · 可信度 {{ { low: '较低', medium: '中等', high: '较高' }[selfProfile.confidence] }} · ✓ 质量监督已审核</small></article>
         </section>
         <div class="assessment-start-actions"><button class="text-button" @click="emit('requestGenericMode')">暂不测评，先看看课程</button><button class="primary" @click="beginAssessment">开始摸底测试 <span>→</span></button></div>
@@ -1202,12 +1331,12 @@ onBeforeUnmount(() => {
           <label>每天投入<input v-model.number="dailyMinutes" type="number" min="10" max="180" step="5" /><span>分钟</span></label>
           <label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label>
           <label class="plan-goal">本阶段目标<input v-model="planGoal" maxlength="120" /></label>
-          <button class="secondary" :disabled="diagnosticLoading" @click="learnerProfile ? restartAssessment() : startBaseline()">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (learnerProfile ? "重新测评" : "建立能力基线") : "重新载入诊断" }}</button>
+          <button class="secondary" :disabled="diagnosticLoading" @click="learnerProfile ? restartAssessment() : startBaseline()">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (learnerProfile ? retakeEntryLabel : "建立能力基线") : "重新载入诊断" }}</button>
           <button class="primary" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "规划中…" : "生成我的学习计划" }}</button>
         </div>
         <details class="self-profile-details">
           <summary><span>补充或修改我的学习经历</span><b>{{ selfProfile?.level_label ?? "待填写" }}</b></summary>
-          <section class="self-profile-inline"><label>告诉助教你学过什么、做过什么、哪里容易卡住<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="例如：学过 for 和列表，但遇到代码题不太会拆步骤。" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。自述只作初判，客观测评结果优先。</span></div></section>
+          <section class="self-profile-inline"><label>告诉助教你学过什么、做过什么、哪里容易卡住<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="例如：学过 for 和列表，但遇到代码题不太会拆步骤。" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新学习倾向" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。课程规划优先尊重明确的学习倾向，短测用于细调。</span></div></section>
         </details>
         <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status">
           <header><div><b>助教小程的安排</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header>
