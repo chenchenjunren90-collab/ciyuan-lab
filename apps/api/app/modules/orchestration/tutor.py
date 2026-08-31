@@ -8,6 +8,7 @@ from dataclasses import dataclass
 
 from app.modules.model_adapters.errors import ModelError
 from app.modules.model_adapters.ports import ChatMessage, ModelAdapter
+from app.modules.orchestration.structured_json import parse_strict_json_object
 from app.modules.rag.ports import SearchHit
 
 
@@ -44,8 +45,42 @@ class CourseTutor:
             return self._fallback(evidence)
         if response.provider == "mock":
             return self._fallback(evidence)
-        parsed = self._parse(response.content)
-        return parsed if parsed is not None else self._fallback(evidence)
+        parsed = self._parse(
+            response.content,
+            allowed_chunk_ids={hit.chunk_id for hit in evidence},
+        )
+        if parsed is not None:
+            return parsed
+
+        # Some OpenAI-compatible MaaS models occasionally wrap, truncate or
+        # otherwise violate the requested JSON contract.  Retry once with a
+        # narrow format-repair instruction before falling back to quoted
+        # evidence.  The second response still passes the same citation
+        # whitelist and the downstream quality supervisor, so format repair
+        # cannot bypass grounding or safety rules.
+        repair_messages = (
+            *messages,
+            ChatMessage(role="assistant", content=response.content[:4000]),
+            ChatMessage(
+                role="user",
+                content=(
+                    "上一条输出不符合接口格式。请重新回答，只输出一个完整 JSON 对象，"
+                    "键必须且只能是 answer 和 citation_chunk_ids；"
+                    "citation_chunk_ids 只能从证据中已有的 chunk_id 选择，禁止添加解释或代码围栏。"
+                ),
+            ),
+        )
+        try:
+            repaired_response = await self._model_adapter.complete(repair_messages)
+        except ModelError:
+            return self._fallback(evidence)
+        if repaired_response.provider == "mock":
+            return self._fallback(evidence)
+        repaired = self._parse(
+            repaired_response.content,
+            allowed_chunk_ids={hit.chunk_id for hit in evidence},
+        )
+        return repaired if repaired is not None else self._fallback(evidence)
 
     @staticmethod
     def _messages(
@@ -72,10 +107,13 @@ class CourseTutor:
         return (ChatMessage(role="system", content=system), ChatMessage(role="user", content=user))
 
     @staticmethod
-    def _parse(content: str) -> TutorDraft | None:
-        try:
-            payload = json.loads(content.strip())
-        except (json.JSONDecodeError, ValueError):
+    def _parse(
+        content: str,
+        *,
+        allowed_chunk_ids: set[str] | None = None,
+    ) -> TutorDraft | None:
+        payload = parse_strict_json_object(content)
+        if payload is None:
             return None
         if not isinstance(payload, dict) or set(payload) != {"answer", "citation_chunk_ids"}:
             return None
@@ -83,11 +121,18 @@ class CourseTutor:
         chunk_ids = payload.get("citation_chunk_ids")
         if not isinstance(answer, str) or not answer.strip() or len(answer) > 2000:
             return None
-        if not isinstance(chunk_ids, list) or not chunk_ids:
+        if not isinstance(chunk_ids, list) or not 1 <= len(chunk_ids) <= 8:
             return None
-        if not all(isinstance(item, str) and item.strip() for item in chunk_ids):
+        if not all(
+            isinstance(item, str) and item.strip() and len(item.strip()) <= 256
+            for item in chunk_ids
+        ):
             return None
         normalized_ids = tuple(dict.fromkeys(str(item).strip() for item in chunk_ids))
+        if allowed_chunk_ids is not None and any(
+            chunk_id not in allowed_chunk_ids for chunk_id in normalized_ids
+        ):
+            return None
         return TutorDraft(
             answer=answer.strip(),
             citation_chunk_ids=normalized_ids,

@@ -37,7 +37,11 @@ class RagQaService:
                 ],
             )
         draft = await self._tutor.draft(question=question, evidence=hits)
-        decision = self._supervisor.inspect(draft=draft, evidence=hits)
+        decision = await self._supervisor.review(
+            draft=draft,
+            evidence=hits,
+            learning_context=f"{course_id} 课程问答：{question}",
+        )
         trace = [
             AgentTraceStep(
                 component="retrieval",
@@ -66,8 +70,16 @@ class RagQaService:
         trace.append(
             AgentTraceStep(
                 component="quality_supervisor",
-                status="completed",
-                detail="引用、内容长度与安全规则检查通过。",
+                status="degraded" if decision.model_degraded else "completed",
+                detail=(
+                    "模型语义审核暂不可用；确定性引用与安全门禁检查通过。"
+                    if decision.model_degraded
+                    else (
+                        "模型语义审核与确定性引用、安全门禁均已通过。"
+                        if decision.model_reviewed
+                        else "确定性引用、内容长度与安全门禁检查通过。"
+                    )
+                ),
             )
         )
         return QaResponse(

@@ -21,6 +21,9 @@ class Citation(StrictModel):
     source_id: str
     chunk_id: str
     score: float = Field(ge=0, le=1)
+    source_type: Literal["course", "online"] = "course"
+    source_title: str | None = None
+    source_url: str | None = None
 
 
 class AgentTraceStep(StrictModel):

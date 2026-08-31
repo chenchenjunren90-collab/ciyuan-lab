@@ -13,6 +13,7 @@ from app.modules.course_content.models import CourseId
 from app.modules.learner_profile.models import LearnerProfile
 from app.modules.learning_flow import LearningFlowService
 from app.modules.learning_flow.diagnostics import (
+    DiagnosticAnalysis,
     DiagnosticPhase,
     DiagnosticQuiz,
     DiagnosticService,
@@ -83,6 +84,7 @@ class DiagnosticItemResult(StrictModel):
     exercise_id: str
     knowledge_point_id: str
     correct: bool
+    skill_atom_ids: list[str]
 
 
 class DiagnosticSubmissionResult(AssessmentResult):
@@ -90,6 +92,7 @@ class DiagnosticSubmissionResult(AssessmentResult):
     correct_count: int = Field(ge=0)
     total_count: int = Field(gt=0)
     item_results: list[DiagnosticItemResult]
+    analysis: DiagnosticAnalysis
 
 
 @router.get("/diagnostics", response_model=DiagnosticQuiz)
@@ -127,9 +130,11 @@ async def submit_diagnostic(
                 exercise_id=item.exercise_id,
                 knowledge_point_id=item.knowledge_point_id,
                 correct=item.correct,
+                skill_atom_ids=[atom.id for atom in item.skill_atoms],
             )
             for item in result.grades
         ],
+        analysis=result.analysis,
         profile=result.assessment.profile,
         plan=Plan(
             student_id=request.student_id,

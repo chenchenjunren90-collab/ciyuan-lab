@@ -50,9 +50,9 @@ class LearningRepository:
                 ):
                     existing.is_active = False
 
-            row = session.get(CourseVersionRow, (course.course_id, course.version))
-            if row is None:
-                row = CourseVersionRow(
+            session.execute(
+                insert(CourseVersionRow)
+                .values(
                     course_id=course.course_id,
                     version=course.version,
                     title=course.title,
@@ -60,12 +60,16 @@ class LearningRepository:
                     manifest_hash=course.manifest_hash,
                     is_active=course.is_active,
                 )
-                session.add(row)
-            else:
-                row.title = course.title
-                row.status = course.status
-                row.manifest_hash = course.manifest_hash
-                row.is_active = course.is_active
+                .on_conflict_do_update(
+                    index_elements=[CourseVersionRow.course_id, CourseVersionRow.version],
+                    set_={
+                        "title": course.title,
+                        "status": course.status,
+                        "manifest_hash": course.manifest_hash,
+                        "is_active": course.is_active,
+                    },
+                )
+            )
 
     def get_active_course_version(self, course_id: CourseId) -> CourseVersion | None:
         with self._session_factory() as session:
@@ -95,17 +99,21 @@ class LearningRepository:
     ) -> None:
         self._validate_student_id(student_id)
         with self._session_factory.begin() as session:
-            row = session.get(LearnerProfileRow, (student_id, course_id))
-            if row is None:
-                session.add(
-                    LearnerProfileRow(
-                        student_id=student_id,
-                        course_id=course_id,
-                        course_version=course_version,
-                    )
+            session.execute(
+                insert(LearnerProfileRow)
+                .values(
+                    student_id=student_id,
+                    course_id=course_id,
+                    course_version=course_version,
                 )
-            elif row.course_version != course_version:
-                row.course_version = course_version
+                .on_conflict_do_update(
+                    index_elements=[
+                        LearnerProfileRow.student_id,
+                        LearnerProfileRow.course_id,
+                    ],
+                    set_={"course_version": course_version},
+                )
+            )
 
     def store_mastery_snapshot(
         self,

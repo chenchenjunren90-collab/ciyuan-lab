@@ -49,20 +49,33 @@ def test_event_projection_is_atomic_idempotent_audited_and_reversible() -> None:
     rejected_event_id = uuid4()
     concurrent_event_ids = (uuid4(), uuid4())
     try:
-        repository.register_course_version(
-            CourseVersion(
-                course_id="python",
-                version="0.1.0",
-                title="Python程序设计",
-                status="draft",
-                manifest_hash="a" * 64,
-            )
-        )
-        repository.create_profile(
-            student_id=student_id,
+        course_version = CourseVersion(
             course_id="python",
-            course_version="0.1.0",
+            version="0.1.0",
+            title="Python程序设计",
+            status="draft",
+            manifest_hash="a" * 64,
         )
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            tuple(
+                executor.map(
+                    lambda _: repository.register_course_version(course_version),
+                    range(2),
+                )
+            )
+        active_course = repository.get_active_course_version("python")
+        assert active_course == course_version
+        with ThreadPoolExecutor(max_workers=2) as executor:
+            tuple(
+                executor.map(
+                    lambda _: repository.create_profile(
+                        student_id=student_id,
+                        course_id="python",
+                        course_version="0.1.0",
+                    ),
+                    range(2),
+                )
+            )
         first = LearningEvent(
             event_id=first_event_id,
             schema_version="0.1.0",

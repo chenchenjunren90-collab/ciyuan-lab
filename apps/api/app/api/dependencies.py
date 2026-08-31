@@ -12,6 +12,7 @@ from app.modules.learning_flow.diagnostics import DiagnosticService
 from app.modules.model_adapters.factory import (
     build_model_adapter,
 )
+from app.modules.model_adapters.limited import ConcurrencyLimitedModelAdapter
 from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.orchestration import CourseTutor, QualitySupervisor
 from app.modules.orchestration.classroom import (
@@ -28,6 +29,7 @@ from app.modules.practice.hints import ProgressiveHintService
 from app.modules.practice.projects import ProjectSubmissionService
 from app.modules.rag.pgvector_retriever import PgVectorKnowledgeRetriever
 from app.modules.rag.ports import KnowledgeRetriever
+from app.modules.rag.python_docs import PythonOfficialDocsRetriever
 from app.modules.rag.retriever import LexicalKnowledgeRetriever
 from app.modules.rag.service import RagQaService
 from app.modules.scenarios import ScenarioContextService, ScenarioProjectGenerator
@@ -47,7 +49,12 @@ def get_learning_repository() -> LearningRepository:
 
 @lru_cache
 def get_model_adapter() -> ModelAdapter:
-    return build_model_adapter(get_settings())
+    settings = get_settings()
+    return ConcurrencyLimitedModelAdapter(
+        build_model_adapter(settings),
+        max_concurrency=settings.model_max_concurrency,
+        queue_timeout_seconds=settings.model_queue_timeout_seconds,
+    )
 
 
 @lru_cache
@@ -65,14 +72,17 @@ def get_rag_qa_service() -> RagQaService:
     return RagQaService(
         retriever,
         CourseTutor(get_model_adapter()),
-        QualitySupervisor(),
+        QualitySupervisor(get_model_adapter()),
         top_k=settings.rag_top_k,
     )
 
 
 @lru_cache
 def get_classroom_lesson_service() -> ClassroomLessonService:
-    return ClassroomLessonService(get_course_repository())
+    return ClassroomLessonService(
+        get_course_repository(),
+        learning_context=get_learning_flow_service(),
+    )
 
 
 @lru_cache
@@ -88,9 +98,16 @@ def get_classroom_dialogue_service() -> ClassroomDialogueService:
     else:
         retriever = LexicalKnowledgeRetriever.from_repository(get_course_repository())
     return ClassroomDialogueService(
+        courses=get_course_repository(),
         retriever=retriever,
+        online_retriever=PythonOfficialDocsRetriever(
+            enabled=settings.python_online_search_enabled and settings.app_env != "test",
+            base_url=settings.python_docs_base_url,
+            timeout_seconds=settings.python_online_search_timeout_seconds,
+            max_pages=settings.python_online_search_max_pages,
+        ),
         tutor=CourseTutor(get_model_adapter()),
-        supervisor=QualitySupervisor(),
+        supervisor=QualitySupervisor(get_model_adapter()),
         top_k=settings.rag_top_k,
     )
 

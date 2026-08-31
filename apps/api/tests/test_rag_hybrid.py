@@ -26,7 +26,23 @@ def test_compound_question_produces_bounded_clause_variants() -> None:
         "BFS 为什么使用队列？Dijkstra 对权重有什么要求？",
         "BFS 为什么使用队列",
         "Dijkstra 对权重有什么要求",
+        "bfs",
+        "dijkstra",
+        "队列",
+        "权重",
     )
+
+
+def test_natural_language_question_keeps_code_identifier_as_its_own_variant() -> None:
+    variants = query_variants("我还没太懂 print 是什么意思，能再讲一下吗？")
+
+    assert "print" in variants
+
+
+def test_natural_language_question_keeps_cjk_technical_term_as_its_own_variant() -> None:
+    variants = query_variants("Python 字典是什么？")
+
+    assert "字典" in variants
 
 
 @pytest.mark.parametrize(

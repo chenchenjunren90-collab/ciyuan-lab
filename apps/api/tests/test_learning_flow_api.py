@@ -176,6 +176,42 @@ def test_profile_and_next_activity_are_available_after_assessment(
     assert next_activity.json()["activity_id"]
 
 
+def test_two_learners_keep_independent_profiles(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, store = client_and_store
+    for student_id, is_correct in (("learner-alpha", True), ("learner-beta", False)):
+        response = client.post(
+            "/api/v1/assessments",
+            json={
+                "student_id": student_id,
+                "course_id": "python",
+                "answers": [
+                    {"knowledge_point_id": "PY-BASE-01", "is_correct": is_correct}
+                ],
+            },
+        )
+        assert response.status_code == 200
+
+    alpha = client.get(
+        "/api/v1/profile",
+        params={"student_id": "learner-alpha", "course_id": "python"},
+    ).json()
+    beta = client.get(
+        "/api/v1/profile",
+        params={"student_id": "learner-beta", "course_id": "python"},
+    ).json()
+
+    assert alpha["student_id"] == "learner-alpha"
+    assert beta["student_id"] == "learner-beta"
+    assert alpha["mastery"][0]["score"] == 0.725
+    assert beta["mastery"][0]["score"] == 0.275
+    assert set(store.profiles) >= {
+        ("learner-alpha", "python"),
+        ("learner-beta", "python"),
+    }
+
+
 def test_assessment_rejects_unknown_knowledge_point(
     client_and_store: tuple[TestClient, MemoryLearningStore],
 ) -> None:
@@ -219,8 +255,9 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
     assert quiz_response.status_code == 200
     quiz = quiz_response.json()
     assert quiz["phase"] == "initial"
-    assert len(quiz["items"]) == 8
+    assert len(quiz["items"]) == 12
     assert all("accepted_answers" not in item for item in quiz["items"])
+    assert all(item["skill_atoms"] for item in quiz["items"])
     answers = [
         {"exercise_id": item["exercise_id"], "response": item["options"][0]["id"]}
         for item in quiz["items"]
@@ -238,12 +275,16 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
 
     assert result.status_code == 200
     payload = result.json()
-    assert payload["total_count"] == 8
+    assert payload["total_count"] == 12
     assert payload["correct_count"] == sum(
         item["correct"] for item in payload["item_results"]
     )
-    assert len(store.events) == 8
+    assert len(store.events) == 12
     assert payload["profile"]["mastery"]
+    assert payload["analysis"]["course_core_nodes"] == 40
+    assert payload["analysis"]["course_skill_atoms"] == 162
+    assert payload["analysis"]["assessed_skill_atoms"] > 0
+    assert payload["analysis"]["evidence_scope"] == "knowledge_point_proxy"
 
 
 def test_diagnostic_rejects_missing_or_invented_items(
@@ -263,3 +304,45 @@ def test_diagnostic_rejects_missing_or_invented_items(
 
     assert response.status_code == 422
     assert "must match the current quiz" in response.json()["detail"]
+
+
+def test_diagnostic_detects_later_skill_with_missing_prerequisite(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, _ = client_and_store
+    repository = CoursePackRepository()
+    quiz = client.get(
+        "/api/v1/diagnostics",
+        params={"course_id": "python", "phase": "initial"},
+    ).json()
+    answers = []
+    for item in quiz["items"]:
+        record = repository.get_practice_activity("python", item["exercise_id"])
+        accepted = set(record.evaluation["accepted_answers"])
+        response = next(iter(accepted))
+        if item["exercise_id"] == "PY-BASE-02-Q1":
+            response = next(
+                option["id"] for option in item["options"] if option["id"] not in accepted
+            )
+        answers.append({"exercise_id": item["exercise_id"], "response": response})
+
+    result = client.post(
+        "/api/v1/diagnostics/submissions",
+        json={
+            "student_id": "non-linear-student",
+            "course_id": "python",
+            "phase": "initial",
+            "answers": answers,
+        },
+    )
+
+    assert result.status_code == 200
+    analysis = result.json()["analysis"]
+    assert analysis["non_linear_profile"] is True
+    assert any(
+        gap["missing_prerequisite_id"] == "PY-BASE-02"
+        and gap["downstream_id"] in {"PY-BASE-03", "PY-BASE-04", "PY-LIST-01"}
+        for gap in analysis["prerequisite_gaps"]
+    )
+    assert analysis["focus_knowledge_point_ids"][0] == "PY-BASE-02"
+    assert analysis["learning_blocks"][0]["skill_atoms"]
