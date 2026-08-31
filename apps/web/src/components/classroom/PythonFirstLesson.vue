@@ -65,9 +65,11 @@ const practiceResult = ref<SubmissionResult | null>(null);
 const homeworkResult = ref<SubmissionResult | null>(null);
 const submitting = ref(false);
 const hint = ref("");
+const hintLoading = ref(false);
 const dialogueRole = ref<ClassroomRole>("teacher");
 const dialogueText = ref("");
 const dialogueLoading = ref(false);
+const dialogueComposer = ref<HTMLTextAreaElement | null>(null);
 const lessonComplete = ref(false);
 const learnerProfile = ref<LearnerProfile | null>(null);
 const diagnostic = ref<DiagnosticQuiz | null>(null);
@@ -99,6 +101,7 @@ const classroomView = ref<"lecture" | "discussion" | "code" | "materials">("lect
 const selectedMaterialId = ref("");
 const exitDialogOpen = ref(false);
 const isPaused = ref(false);
+const sessionBeatSnapshot = ref<ClassroomBeat[]>([]);
 const planBuildButton = ref<HTMLButtonElement | null>(null);
 const planProgressStep = ref(0);
 const PLAN_PROGRESS_LABELS = ["正在检索薄弱点", "正在组合课程", "正在进行质量审核"] as const;
@@ -166,7 +169,7 @@ const selectedMaterial = computed(() => {
   return blocks.find((block) => block.block_id === selectedMaterialId.value) ?? blocks[0] ?? null;
 });
 
-const personalizedBeats = computed<ClassroomBeat[]>(() => {
+const generatedPersonalizedBeats = computed<ClassroomBeat[]>(() => {
   if (!lesson.value) return [];
   if (lesson.value.delivery_mode === "adaptive") return lesson.value.beats;
   if (props.genericMode || averageMastery.value === null) return lesson.value.beats;
@@ -201,6 +204,9 @@ const personalizedBeats = computed<ClassroomBeat[]>(() => {
     : [...welcome, ...instruction, ...practice, ...closing];
   return assembled.filter((beat, index) => assembled.findIndex((item) => item.id === beat.id) === index);
 });
+const personalizedBeats = computed<ClassroomBeat[]>(() => (
+  sessionBeatSnapshot.value.length ? sessionBeatSnapshot.value : generatedPersonalizedBeats.value
+));
 const currentBeat = computed<ClassroomBeat | null>(() => personalizedBeats.value[currentIndex.value] ?? null);
 const activeRole = computed<ClassroomRole>(() => currentBeat.value?.speaker ?? "teacher");
 const progress = computed(() => {
@@ -508,6 +514,14 @@ async function submitBaseline(): Promise<void> {
 }
 
 async function beginAssessment(): Promise<void> {
+  if (!diagnostic.value) {
+    showFeedback("正在重新载入能力诊断…");
+    await loadDiagnosticContext();
+    if (!diagnostic.value) {
+      showFeedback("能力诊断暂时不可用，请稍后重试。");
+      return;
+    }
+  }
   if (selfDescription.value.trim().length >= 8 && !selfProfile.value) {
     await analyzeSelfDescription();
   }
@@ -517,7 +531,10 @@ async function beginAssessment(): Promise<void> {
 }
 
 async function restartAssessment(): Promise<void> {
-  if (diagnosticLoading.value || baselineLoading.value) return;
+  if (diagnosticLoading.value || baselineLoading.value) {
+    showFeedback("能力诊断正在准备或提交，请稍候。");
+    return;
+  }
   diagnosticLoading.value = true;
   assessmentResultVisible.value = false;
   assessmentStarted.value = true;
@@ -629,6 +646,7 @@ async function enterPersonalizedClassroom(): Promise<void> {
   localStorage.setItem(planConfirmationKey(), "true");
   savePlanPreferences();
   currentIndex.value = 0;
+  lockSessionBeats();
   messages.value = [];
   messageCounter.value = 0;
   announceBeat();
@@ -686,7 +704,14 @@ function resumeClassroom(): void {
 }
 
 async function generateLearningPlan(): Promise<void> {
-  if (!lesson.value || planLoading.value) return;
+  if (!lesson.value) {
+    showFeedback("课堂内容仍在载入，请稍候再生成学习计划。");
+    return;
+  }
+  if (planLoading.value) {
+    showFeedback(`${planProgressMessage.value}，请稍候。`);
+    return;
+  }
   if (!learnerProfile.value) {
     showFeedback("请先建立能力基线，助教才能量身安排学习节奏。");
     await startBaseline();
@@ -739,15 +764,28 @@ function useSuggestedPace(): void {
   showFeedback(`已采用助教建议：每天 ${dailyMinutes.value} 分钟、每周 ${weeklyDays.value} 天；你仍可继续修改。`);
 }
 
-function useConversationStarter(role: ClassroomRole, text: string): void {
+async function openDialogue(role: ClassroomRole, starter = ""): Promise<void> {
   dialogueRole.value = role;
-  dialogueText.value = text;
-  showFeedback(`可以继续补充你的想法，再发送给${roleMeta[role].name}。`);
+  if (starter) dialogueText.value = starter;
+  classroomView.value = "discussion";
+  showFeedback(`已打开与${roleMeta[role].name}的交流区，可以直接输入或补充你的想法。`);
+  await nextTick();
+  dialogueComposer.value?.scrollIntoView({ behavior: "smooth", block: "center" });
+  dialogueComposer.value?.focus({ preventScroll: true });
+}
+
+function useConversationStarter(role: ClassroomRole, text: string): void {
+  void openDialogue(role, text);
 }
 
 function selectDialogueRole(role: ClassroomRole): void {
-  dialogueRole.value = role;
-  showFeedback(`已切换为和${roleMeta[role].name}交流。`);
+  void openDialogue(role);
+}
+
+function lockSessionBeats(): void {
+  if (!sessionBeatSnapshot.value.length) {
+    sessionBeatSnapshot.value = [...generatedPersonalizedBeats.value];
+  }
 }
 
 function applyLesson(value: ClassroomLesson): void {
@@ -760,6 +798,8 @@ function applyLesson(value: ClassroomLesson): void {
   homeworkResult.value = null;
   lessonComplete.value = false;
   hint.value = "";
+  hintLoading.value = false;
+  sessionBeatSnapshot.value = [];
   messages.value = [];
   messageCounter.value = 0;
   practiceCode.value = value.practice.starter_code;
@@ -823,7 +863,24 @@ async function submitChoice(): Promise<void> {
 }
 
 function advance(): void {
-  if (!lesson.value || !canAdvance.value || currentIndex.value >= personalizedBeats.value.length - 1) return;
+  if (!lesson.value || !currentBeat.value) {
+    showFeedback("课堂内容仍在载入，请稍候再试。");
+    return;
+  }
+  lockSessionBeats();
+  if (!canAdvance.value) {
+    const requirement = currentBeat.value.action === "choice"
+      ? "请先完成本段理解检查。"
+      : currentBeat.value.action === "practice"
+        ? "请先运行代码并通过课堂任务。"
+        : "请先完成并通过课后作业。";
+    showFeedback(requirement);
+    return;
+  }
+  if (currentIndex.value >= personalizedBeats.value.length - 1) {
+    showFeedback("已经到达本次课堂的最后一个环节。");
+    return;
+  }
   currentIndex.value += 1;
   classroomView.value = ["practice", "homework"].includes(currentBeat.value?.action ?? "")
     ? "code"
@@ -836,9 +893,18 @@ function advance(): void {
 }
 
 async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homework = false): Promise<void> {
-  if (!sourceCode.trim() || submitting.value) return;
+  if (submitting.value) {
+    showFeedback("代码正在运行，请稍候查看测试结果。");
+    return;
+  }
+  if (!sourceCode.trim()) {
+    showFeedback("请先在代码区输入或补全代码，再运行提交。");
+    return;
+  }
+  lockSessionBeats();
   submitting.value = true;
   error.value = "";
+  showFeedback("代码已提交，正在隔离环境中运行公开样例和隐藏测试…");
   try {
     await ensureProfile(true);
     const result = await api.submit(props.studentId, "python", task.exercise_id, {
@@ -865,29 +931,58 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
         "reply",
       );
       if (homework) lessonComplete.value = true;
+      showFeedback(homework
+        ? "课后作业已通过，画像已更新，可以生成下一节个性化课程。"
+        : "课堂任务已通过，点击“进入课堂小结”继续。"
+      );
     } else {
       pushMessage("peer_debugger", "没关系，报错就是线索。我们先看公开测试和第一条诊断，再决定改哪一行。", "reply");
+      showFeedback("代码已经运行，但尚未通过全部测试；请查看诊断信息或向助教要提示。");
     }
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : "代码验证暂时不可用。";
+    showFeedback(error.value);
   } finally {
     submitting.value = false;
   }
 }
 
 async function requestHint(task: ClassroomCodeTaskData): Promise<void> {
+  if (hintLoading.value) {
+    showFeedback("助教正在分析当前题目，请稍候。");
+    return;
+  }
+  hintLoading.value = true;
+  error.value = "";
+  showFeedback("助教正在结合题目要求和你的当前进度准备提示…");
   try {
     const result = await api.hint(props.studentId, "python", task.exercise_id, 1);
     hint.value = result.hint;
     pushMessage("ta", result.hint, "reply");
+    showFeedback("助教提示已显示在公开样例下方。");
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : "提示暂时不可用。";
+    showFeedback(error.value);
+  } finally {
+    hintLoading.value = false;
   }
 }
 
 async function askRole(): Promise<void> {
   const text = dialogueText.value.trim();
-  if (!lesson.value || !currentBeat.value || !text || dialogueLoading.value) return;
+  if (!lesson.value || !currentBeat.value) {
+    showFeedback("课堂内容仍在载入，请稍候再发送。");
+    return;
+  }
+  if (dialogueLoading.value) {
+    showFeedback(`${roleMeta[dialogueRole.value].name}正在回复，请稍候。`);
+    return;
+  }
+  if (!text) {
+    showFeedback(`请先输入想对${roleMeta[dialogueRole.value].name}说的话。`);
+    dialogueComposer.value?.focus();
+    return;
+  }
   const recentTurns = messages.value.slice(-8).map((message) => ({
     role: message.role,
     content: message.content,
@@ -964,7 +1059,6 @@ onBeforeUnmount(() => {
       </div>
       <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在更新画像…" : "提交重测并更新路线" }}</button></div>
       <footer class="assessment-progress"><div><span>测试进度</span><b>{{ assessmentProgress }}%</b></div><i><span :style="{ width: `${assessmentProgress}%` }"></span></i><small>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已完成</small></footer>
-      <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
     </section>
 
     <section v-else-if="assessmentResultVisible && diagnosticResult" class="assessment-result-screen">
@@ -1004,7 +1098,7 @@ onBeforeUnmount(() => {
       <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
     </section>
 
-    <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed" class="returning-planner-gate">
+    <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed && !sessionBeatSnapshot.length" class="returning-planner-gate">
       <header><div><h2>先确认今天怎样学，再进入课堂</h2><p>你的时间、目标和学习偏好，会共同决定本次内容和节奏。</p></div><div class="profile-chip" data-ready="true"><b>{{ averageMastery ?? 0 }}%</b><span>当前掌握度</span></div></header>
       <section class="planning-studio">
         <header><div><span>助教小程 · 可随时修改</span><h3>我的学习设置</h3></div><button class="suggestion-button" @click="useSuggestedPace">采用助教建议</button></header>
@@ -1022,7 +1116,6 @@ onBeforeUnmount(() => {
         </section>
       </section>
       <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
-      <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
     </section>
 
     <section v-else-if="!learnerProfile && !props.genericMode" class="assessment-gate">
@@ -1049,7 +1142,6 @@ onBeforeUnmount(() => {
         <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在生成画像…" : "提交测评并生成路线" }}</button></div>
       </template>
       <footer class="assessment-progress"><div><span>测试进度</span><b>{{ assessmentProgress }}%</b></div><i><span :style="{ width: `${assessmentProgress}%` }"></span></i><small>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic?.items.length ?? 0 }} 已完成</small></footer>
-      <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
     </section>
 
     <section v-else-if="isPaused && lesson" class="paused-classroom">
@@ -1104,7 +1196,6 @@ onBeforeUnmount(() => {
           <summary><span>补充或修改我的学习经历</span><b>{{ selfProfile?.level_label ?? "待填写" }}</b></summary>
           <section class="self-profile-inline"><label>告诉助教你学过什么、做过什么、哪里容易卡住<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="例如：学过 for 和列表，但遇到代码题不太会拆步骤。" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新自述初判" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。自述只作初判，客观测评结果优先。</span></div></section>
         </details>
-        <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
         <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status">
           <header><div><b>助教小程的安排</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header>
           <SafeMarkdown :source="learningPlan.answer" />
@@ -1122,19 +1213,18 @@ onBeforeUnmount(() => {
       </section>
 
       <nav class="lesson-steps" aria-label="课堂进度">
-        <button
+        <div
             v-for="(beat, index) in personalizedBeats"
           :key="beat.id"
           :class="{ active: index === currentIndex, done: index < currentIndex }"
           :aria-current="index === currentIndex ? 'step' : undefined"
-          disabled
-        ><em>{{ String(index + 1).padStart(2, "0") }}</em><span>{{ beat.title }}</span></button>
+        ><em>{{ String(index + 1).padStart(2, "0") }}</em><span>{{ beat.title }}</span></div>
       </nav>
 
       <div v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="classroom-layout" :class="{ 'lecture-only': classroomView === 'lecture', 'discussion-only': classroomView === 'discussion' }">
         <section v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="teacher-lecture-card">
           <div class="teacher-portrait"><i>林</i></div>
-          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="selectDialogueRole('teacher'); dialogueText = '老师，我对刚才这一步的理解是：'">向老师提问</button></footer></div>
+          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="useConversationStarter('teacher', '老师，我对刚才这一步的理解是：')">向老师提问</button></footer></div>
         </section>
         <div v-if="classroomView === 'lecture'" class="classroom-scene" :data-phase="currentBeat.phase">
           <div class="sun-window"><span></span><i></i></div>
@@ -1183,7 +1273,7 @@ onBeforeUnmount(() => {
               <button class="teacher-pill" :class="{ active: dialogueRole === 'teacher' }" @click="selectDialogueRole('teacher')">问林老师</button>
               <button v-for="person in lesson.cast.filter((item) => peerRoles.includes(item.role))" :key="person.role" :class="{ active: dialogueRole === person.role }" @click="selectDialogueRole(person.role)">{{ person.display_name }}</button>
             </div>
-            <div class="talk-composer"><textarea v-model="dialogueText" rows="2" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : "发送" }}</button></div>
+            <div class="talk-composer"><textarea ref="dialogueComposer" v-model="dialogueText" rows="2" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : "发送" }}</button></div>
             <small>回答经过课程资料检索与质量监督</small>
           </footer>
         </aside>
@@ -1214,6 +1304,8 @@ onBeforeUnmount(() => {
             v-model="practiceCode"
             :result="practiceResult"
             :loading="submitting"
+            :hint="hint"
+            :hint-loading="hintLoading"
             label="随堂练习"
             @submit="submitCode(lesson.practice, practiceCode)"
             @hint="requestHint(lesson.practice)"
@@ -1238,6 +1330,8 @@ onBeforeUnmount(() => {
             v-model="homeworkCode"
             :result="homeworkResult"
             :loading="submitting"
+            :hint="hint"
+            :hint-loading="hintLoading"
             label="课后作业"
             @submit="submitCode(lesson.homework, homeworkCode, true)"
             @hint="requestHint(lesson.homework)"
@@ -1250,6 +1344,12 @@ onBeforeUnmount(() => {
         </template>
       </section>
     </template>
+
+    <Transition name="feedback-toast">
+      <div v-if="uiFeedback" class="global-action-feedback" role="status" aria-live="polite" aria-atomic="true">
+        <i></i><span>{{ uiFeedback }}</span><button aria-label="关闭反馈" @click="uiFeedback = ''">×</button>
+      </div>
+    </Transition>
 
     <div v-if="exitDialogOpen" class="class-exit-backdrop" role="presentation" @click.self="exitDialogOpen = false">
       <section role="dialog" aria-modal="true" aria-labelledby="class-exit-title"><span>离开前确认</span><h2 id="class-exit-title">为什么想提前下课？</h2><p>无论怎样选择，当前进度、讨论和代码草稿都会保存。</p><div><button @click="pauseClassroom(true)"><b>这部分我已经学过</b><span>记录为自述，之后用短题复核，不直接算作掌握</span></button><button @click="pauseClassroom(false)"><b>仍然退出课堂</b><span>暂停在当前位置，稍后可以继续</span></button></div><footer><button @click="exitDialogOpen = false">取消退出，继续学习</button></footer></section>
@@ -1266,7 +1366,7 @@ onBeforeUnmount(() => {
 .lesson-masthead { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 24px 28px; overflow: hidden; border: 1px solid #eadbdd; border-radius: 22px; background: radial-gradient(circle at 88% 10%, #ffe9d2 0 10%, transparent 35%), linear-gradient(135deg, #fffaf7, #fff 48%, #fff3f2); box-shadow: 0 18px 50px #7720330d; }
 .lesson-masthead p { margin: 0 0 6px; color: #b4233b; font: 800 9px Consolas, monospace; letter-spacing: .18em; }.lesson-masthead h2 { margin: 0; font-size: 26px; }.lesson-masthead div > span { display: block; margin-top: 7px; color: #796b70; font-size: 12px; }
 .lesson-masthead aside { width: 220px; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 5px 12px; }.lesson-masthead aside small { color: #8b7c81; }.lesson-masthead aside b { color: #b4233b; font-size: 22px; }.lesson-masthead aside i { grid-column: 1 / -1; height: 6px; overflow: hidden; border-radius: 99px; background: #f1dedf; }.lesson-masthead aside i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c51632, #e27765); transition: width .4s ease; }
-.lesson-steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }.lesson-steps button { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; }.lesson-steps button em { font: normal 8px Consolas; }.lesson-steps button span { overflow: hidden; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps button.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps button.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }
+.lesson-steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }.lesson-steps > div { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; }.lesson-steps > div em { font: normal 8px Consolas; }.lesson-steps > div span { overflow: hidden; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps > div.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps > div.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }
 .classroom-layout { min-height: 620px; display: grid; grid-template-columns: minmax(540px, 1.45fr) minmax(320px, .8fr); overflow: hidden; border: 1px solid #e4d9d8; border-radius: 24px; background: #fff; box-shadow: 0 22px 65px #3c1c250e; }
 .classroom-scene { position: relative; min-height: 620px; padding: 54px 34px 28px; overflow: hidden; border-right: 1px solid #e7dcda; background: linear-gradient(180deg, #fbf4e9 0 63%, #d9b99b 63% 65%, #c69671 65%); }
 .classroom-scene::after { content: ""; position: absolute; inset: 65% 0 0; opacity: .28; background-image: linear-gradient(90deg, #6f3d201c 1px, transparent 1px), linear-gradient(#6f3d201c 1px, transparent 1px); background-size: 48px 38px; transform: perspective(160px) rotateX(5deg); }
@@ -1294,7 +1394,7 @@ onBeforeUnmount(() => {
 .learning-tools { display: flex; align-items: center; gap: 9px; }.learning-tools > button { padding: 9px 11px; border: 1px solid #e2c6ca; border-radius: 9px; color: #962139; background: #fff9f9; font-size: 8px; font-weight: 800; white-space: nowrap; }.learning-tools > button:hover { border-color: #c85e70; background: #fff; transform: translateY(-1px); }.learning-tools > button span { margin-left: 5px; }
 .plan-controls { display: grid; grid-template-columns: 140px 140px minmax(230px, 1fr) auto auto; align-items: end; gap: 9px; }.plan-controls label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; color: #75696d; font-size: 8px; font-weight: 700; }.plan-controls label > input { grid-column: 1; width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #e2d7d8; border-radius: 8px; color: #3e3538; background: #fffdfc; outline: none; }.plan-controls label > span { grid-column: 2; grid-row: 2; color: #9a8d91; }.plan-controls .plan-goal { grid-template-columns: 1fr; }.plan-controls .plan-goal input { grid-column: 1; }.plan-controls input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.plan-controls button { min-height: 36px; padding: 8px 12px; border-radius: 8px; white-space: nowrap; font-size: 9px; font-weight: 800; }.plan-controls .secondary { border: 1px solid #d7aab1; color: #9e1930; background: #fff5f6; }
 .plan-controls .secondary:disabled { opacity: .58; cursor: wait; }
-.action-feedback { display: flex; align-items: center; gap: 8px; padding: 9px 11px; border-radius: 9px; color: #5d5356; background: #f7f3f2; font-size: 9px; }.action-feedback > i { width: 7px; height: 7px; border-radius: 50%; background: #4b9b6b; box-shadow: 0 0 0 4px #4b9b6b15; }.action-feedback button { margin-left: auto; border: 0; color: #9e9094; background: transparent; }
+.global-action-feedback { position: fixed; z-index: 90; right: 24px; bottom: 24px; width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; gap: 10px; padding: 13px 14px; border: 1px solid #e5d8d9; border-radius: 13px; color: #514649; background: #fffdfcf2; box-shadow: 0 18px 55px #3c101d26; backdrop-filter: blur(14px); font-size: 11px; line-height: 1.55; }.global-action-feedback > i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #4b9b6b; box-shadow: 0 0 0 4px #4b9b6b15; }.global-action-feedback > span { flex: 1; }.global-action-feedback button { flex: 0 0 auto; padding: 3px 6px; border: 0; color: #8f7d82; background: transparent; font-size: 15px; }.feedback-toast-enter-active, .feedback-toast-leave-active { transition: opacity .18s ease, transform .18s ease; }.feedback-toast-enter-from, .feedback-toast-leave-to { opacity: 0; transform: translateY(8px); }
 .plan-result { position: relative; padding: 16px 17px 30px; border: 1px solid #d9e5dc; border-radius: 14px; background: #f8fcf9; }.plan-result[data-status="insufficient_evidence"] { border-color: #ead9c0; background: #fffaf2; }.plan-result > header div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }.plan-result header b { font-size: 11px; }.plan-result header span { color: #8a9690; font-size: 8px; }.plan-result :deep(.safe-markdown) { color: #4f5c55; font-size: 10px; }.audit-mark, .message-audit { color: #8ba095; font-size: 7px; font-weight: 600; letter-spacing: .03em; opacity: .72; }.audit-mark { position: absolute; right: 14px; bottom: 10px; }
 .baseline-panel { scroll-margin-top: 20px; padding: 17px; border: 1px solid #e8cbd0; border-radius: 14px; background: #fff9f8; animation: panel-in .2s ease-out; }.baseline-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }.baseline-panel > header b, .baseline-panel > header span { display: block; }.baseline-panel > header b { font-size: 13px; }.baseline-panel > header span { margin-top: 4px; color: #8d7f84; font-size: 9px; }.baseline-panel > header button { border: 0; color: #9a5964; background: transparent; font-size: 9px; }.baseline-questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }.baseline-questions article { padding: 12px; border: 1px solid #ece2e2; border-radius: 11px; background: #fff; }.baseline-questions p { min-height: 38px; margin: 0 0 9px; font-size: 10px; line-height: 1.5; }.baseline-questions p em { margin-right: 7px; color: #ba2039; font: normal 8px Consolas; }.baseline-questions article > div { display: grid; gap: 5px; }.baseline-questions button { display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid transparent; border-radius: 7px; color: #62585b; background: #f6f3f3; text-align: left; font-size: 8px; }.baseline-questions button b { color: #a62a3e; }.baseline-questions button.selected { border-color: #d48b97; color: #951a2f; background: #fff0f2; box-shadow: inset 2px 0 #c51632; }.baseline-panel > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 13px; padding-top: 12px; border-top: 1px solid #eadfe0; }.baseline-panel > footer span { color: #8f8387; font-size: 9px; }
 .message-list article :deep(.safe-markdown) { margin-top: 5px; color: #4e4548; font-size: 11px; }.message-list .message-audit { display: block; margin-top: 7px; text-align: right; }
@@ -1336,5 +1436,5 @@ onBeforeUnmount(() => {
 .lesson-materials { min-height: 620px; display: grid; grid-template-columns: 290px minmax(0, 1fr); overflow: hidden; border: 1px solid #e5d9da; border-radius: 22px; background: #fff; box-shadow: 0 18px 55px #40101b0a; }.lesson-materials > aside { display: grid; align-content: start; gap: 7px; padding: 18px; border-right: 1px solid #eee4e5; background: #fbf8f8; }.lesson-materials aside header { margin-bottom: 7px; }.lesson-materials aside header b, .lesson-materials aside header span { display: block; }.lesson-materials aside header b { font-size: 13px; }.lesson-materials aside header span { margin-top: 4px; color: #928589; font-size: 8px; }.lesson-materials aside button { display: grid; gap: 4px; padding: 11px; border: 1px solid transparent; border-radius: 10px; color: #5f5558; background: transparent; text-align: left; }.lesson-materials aside button small { color: #a62a3e; font: 7px Consolas; }.lesson-materials aside button b { font-size: 10px; }.lesson-materials aside button span { color: #887b7f; font-size: 8px; line-height: 1.5; }.lesson-materials aside button.active { border-color: #dfbcc2; background: #fff; box-shadow: inset 3px 0 #bd1b35; }.lesson-materials > article { padding: clamp(24px, 4vw, 52px); }.lesson-materials article header span { color: #a3263b; font-size: 9px; }.lesson-materials article h2 { margin: 8px 0 20px; font-size: 28px; }.lesson-materials article > p { color: #5d5256; font-size: 13px; line-height: 1.9; }.lesson-materials article section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #eee5e6; }.lesson-materials article li { margin: 8px 0; color: #655b5e; font-size: 11px; line-height: 1.7; }.lesson-materials pre { padding: 16px; overflow: auto; border-radius: 11px; color: #f8ebdf; background: #1d2c29; }.lesson-materials article > small { display: block; margin-top: 24px; color: #9b8f92; font-size: 8px; text-align: right; }
 .code-standby, .paused-classroom { min-height: 500px; display: grid; place-items: center; align-content: center; gap: 12px; padding: 30px; border: 1px solid #e6dbdc; border-radius: 22px; background: #fff; text-align: center; }.code-standby b, .paused-classroom h2 { margin: 0; font-size: 24px; }.code-standby p, .paused-classroom p { max-width: 620px; margin: 0; color: #786c70; font-size: 11px; line-height: 1.75; }.code-standby .secondary { padding: 9px 13px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.paused-classroom > span { color: #a22037; font-size: 9px; font-weight: 800; }
 .class-exit-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: #24131880; backdrop-filter: blur(6px); }.class-exit-backdrop > section { width: min(100%, 560px); padding: 26px; border-radius: 20px; background: #fff; box-shadow: 0 30px 90px #16060a40; }.class-exit-backdrop > section > span { color: #a82239; font-size: 9px; font-weight: 800; }.class-exit-backdrop h2 { margin: 7px 0; font-size: 25px; }.class-exit-backdrop p { color: #776a6e; font-size: 10px; }.class-exit-backdrop section > div { display: grid; gap: 9px; margin: 20px 0; }.class-exit-backdrop section > div button { display: grid; gap: 4px; padding: 13px; border: 1px solid #e7dcde; border-radius: 11px; color: #493e42; background: #fff; text-align: left; }.class-exit-backdrop section > div button:hover { border-color: #d49ba5; background: #fff8f8; }.class-exit-backdrop section > div button b { font-size: 11px; }.class-exit-backdrop section > div button span { color: #8b7e82; font-size: 8px; }.class-exit-backdrop footer { text-align: right; }.class-exit-backdrop footer button { padding: 9px 12px; border: 0; border-radius: 8px; color: #fff; background: #ad1931; }
-@media (max-width: 760px) { .diagnostic-analysis > header { flex-direction: column; }.gap-list { grid-template-columns: 1fr; }.focus-toolbar { grid-template-columns: 1fr auto auto; }.focus-toolbar select { display: block; }.focus-view-buttons { display: none; }.lesson-materials { grid-template-columns: 1fr; }.lesson-materials > aside { border-right: 0; border-bottom: 1px solid #eee4e5; }.lesson-materials > aside button { display: none; }.lesson-materials > aside button.active { display: grid; } }
+@media (max-width: 760px) { .diagnostic-analysis > header { flex-direction: column; }.gap-list { grid-template-columns: 1fr; }.focus-toolbar { grid-template-columns: 1fr auto auto; }.focus-toolbar select { display: block; }.focus-view-buttons { display: none; }.lesson-materials { grid-template-columns: 1fr; }.lesson-materials > aside { border-right: 0; border-bottom: 1px solid #eee4e5; }.lesson-materials > aside button { display: none; }.lesson-materials > aside button.active { display: grid; }.global-action-feedback { right: 16px; bottom: 16px; } }
 </style>
