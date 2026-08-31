@@ -892,11 +892,11 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
           <div class="diagnostic-list">
             <article v-for="(item, index) in diagnostic.items" :key="item.exercise_id">
               <header><em>{{ String(index + 1).padStart(2, "0") }}</em><div><strong>{{ item.prompt }}</strong><small>{{ item.concept_ids.join(" · ") }}</small></div></header>
-              <div><button v-for="option in item.options" :key="option.id" :class="{ active: diagnosticAnswers[item.exercise_id] === option.id }" @click="diagnosticAnswers[item.exercise_id] = option.id"><b>{{ option.id }}</b>{{ option.text }}</button></div>
+              <div><button v-for="option in item.options" :key="option.id" :class="{ active: diagnosticAnswers[item.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="diagnosticAnswers[item.exercise_id] = option.id"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b>{{ option.text }}</button></div>
             </article>
           </div>
           <footer class="diagnostic-actions"><span>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已作答</span><button class="primary" :disabled="!diagnosticComplete || diagnosticSubmitting" @click="submitDiagnostic">{{ diagnosticSubmitting ? "正在生成个性化路径…" : diagnostic.phase === "initial" ? "提交诊断并生成路径" : "提交重测并更新画像" }}</button></footer>
-          <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据，画像和后续路径已经刷新。</span><button v-if="diagnosticResult.phase === 'initial'" @click="loadDiagnostic('reassessment')">准备阶段重测</button></div>
+          <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据；{{ diagnosticResult.unknown_count ? `“我不知道” ${diagnosticResult.unknown_count} 题已安排回补。` : "画像和后续路径已经刷新。" }}</span><button v-if="diagnosticResult.phase === 'initial'" @click="loadDiagnostic('reassessment')">准备阶段重测</button></div>
         </section>
         <section ref="knowledgeMapSection" class="panel knowledge-map-target">
           <header><div><span class="eyebrow">COURSE LEARNING ROADMAP</span><h2>{{ selectedCourse?.title ?? "课程" }} · 知识路线</h2></div><p>先看全局，再按前置关系逐步推进；每个节点都连接讲解、练习与学习证据。</p></header>

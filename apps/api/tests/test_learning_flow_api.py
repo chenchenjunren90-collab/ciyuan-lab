@@ -258,6 +258,13 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
     assert len(quiz["items"]) == 12
     assert all("accepted_answers" not in item for item in quiz["items"])
     assert all(item["skill_atoms"] for item in quiz["items"])
+    assert all(
+        item["options"][-1] == {
+            "id": "UNKNOWN",
+            "text": "我不知道 / 还没有学过",
+        }
+        for item in quiz["items"]
+    )
     answers = [
         {"exercise_id": item["exercise_id"], "response": item["options"][0]["id"]}
         for item in quiz["items"]
@@ -279,12 +286,45 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
     assert payload["correct_count"] == sum(
         item["correct"] for item in payload["item_results"]
     )
+    assert payload["unknown_count"] == 0
+    assert all(item["unknown"] is False for item in payload["item_results"])
     assert len(store.events) == 12
     assert payload["profile"]["mastery"]
     assert payload["analysis"]["course_core_nodes"] == 40
     assert payload["analysis"]["course_skill_atoms"] == 162
     assert payload["analysis"]["assessed_skill_atoms"] > 0
     assert payload["analysis"]["evidence_scope"] == "knowledge_point_proxy"
+
+
+def test_diagnostic_unknown_answers_are_not_counted_as_mastery(
+    client_and_store: tuple[TestClient, MemoryLearningStore],
+) -> None:
+    client, store = client_and_store
+    quiz = client.get(
+        "/api/v1/diagnostics",
+        params={"course_id": "python", "phase": "initial"},
+    ).json()
+
+    result = client.post(
+        "/api/v1/diagnostics/submissions",
+        json={
+            "student_id": "zero-basis-student",
+            "course_id": "python",
+            "phase": "initial",
+            "answers": [
+                {"exercise_id": item["exercise_id"], "response": "UNKNOWN"}
+                for item in quiz["items"]
+            ],
+        },
+    )
+
+    assert result.status_code == 200
+    payload = result.json()
+    assert payload["correct_count"] == 0
+    assert payload["unknown_count"] == payload["total_count"] == 12
+    assert all(item["unknown"] is True for item in payload["item_results"])
+    assert all(item["correct"] is False for item in payload["item_results"])
+    assert len(store.events) == 12
 
 
 def test_diagnostic_rejects_missing_or_invented_items(

@@ -88,6 +88,7 @@ const baselinePanel = ref<HTMLElement | null>(null);
 const assessmentStarted = ref(false);
 const assessmentIndex = ref(0);
 const assessmentResultVisible = ref(false);
+const retakeActive = ref(false);
 const selfDescription = ref("");
 const selfDescriptionFocused = ref(false);
 const selfProfile = ref<ClassroomSelfProfileResponse | null>(null);
@@ -461,7 +462,10 @@ async function startBaseline(): Promise<void> {
 
 function selectBaselineAnswer(exerciseId: string, response: string, index: number): void {
   diagnosticAnswers.value = { ...diagnosticAnswers.value, [exerciseId]: response };
-  showFeedback(`第 ${index + 1} 题已选择 ${response}，还可随时修改。`);
+  showFeedback(response === "UNKNOWN"
+    ? `第 ${index + 1} 题已记录为“我不知道”；这不会被误判为已经掌握。`
+    : `第 ${index + 1} 题已选择 ${response}，还可随时修改。`
+  );
 }
 
 async function submitBaseline(): Promise<void> {
@@ -488,7 +492,9 @@ async function submitBaseline(): Promise<void> {
     emit("profileUpdated", result.profile);
     emit("profileResolved", result.profile);
     baselineOpen.value = false;
+    retakeActive.value = false;
     assessmentResultVisible.value = true;
+    learningPlan.value = null;
     planConfirmed.value = false;
     localStorage.removeItem(planConfirmationKey());
     diagnosticAnswers.value = {};
@@ -508,6 +514,36 @@ async function beginAssessment(): Promise<void> {
   assessmentStarted.value = true;
   assessmentIndex.value = 0;
   showFeedback("摸底测试已开始；答案只用于生成你的学习路径。 ");
+}
+
+async function restartAssessment(): Promise<void> {
+  if (diagnosticLoading.value || baselineLoading.value) return;
+  diagnosticLoading.value = true;
+  assessmentResultVisible.value = false;
+  assessmentStarted.value = true;
+  retakeActive.value = true;
+  baselineOpen.value = false;
+  assessmentIndex.value = 0;
+  diagnosticAnswers.value = {};
+  planConfirmed.value = false;
+  localStorage.removeItem(planConfirmationKey());
+  showFeedback("正在准备一组新的阶段重测题…");
+  try {
+    diagnostic.value = await api.diagnostic("python", "reassessment");
+    showFeedback("阶段重测已重新开始；不确定时请选择“我不知道”，不要靠猜测作答。");
+  } catch (cause) {
+    retakeActive.value = false;
+    showFeedback(cause instanceof Error ? cause.message : "阶段重测载入失败，请稍后重试。");
+  } finally {
+    diagnosticLoading.value = false;
+  }
+}
+
+function cancelRetake(): void {
+  retakeActive.value = false;
+  diagnosticAnswers.value = {};
+  assessmentIndex.value = 0;
+  showFeedback("已退出本次重测，原有学习画像保持不变。");
 }
 
 function useSelfDescriptionTemplate(value: string): void {
@@ -918,11 +954,24 @@ onBeforeUnmount(() => {
     <div v-if="loading || diagnosticLoading" class="classroom-loading"><i></i><strong>正在读取课程与能力测评…</strong><span>只需几秒，我们先了解你的起点</span></div>
     <div v-else-if="error && !lesson" class="classroom-error"><strong>暂时没能进入教室</strong><p>{{ error }}</p><button @click="loadLesson()">重新准备</button></div>
 
+    <section v-else-if="retakeActive && diagnostic && currentDiagnosticItem" class="assessment-gate reassessment-gate">
+      <header><div><b>阶段能力重测</b><small>{{ diagnostic.items.length }} 道跨层级短题，不计入成绩</small></div><button class="text-button" @click="cancelRetake">稍后再测</button></header>
+      <p class="honest-answer-note">请按真实掌握情况作答；不确定时直接选“我不知道”，这样助教才不会把猜对误判为已经学会。</p>
+      <div class="single-question">
+        <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
+        <h2>{{ currentDiagnosticItem.prompt }}</h2>
+        <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+      </div>
+      <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在更新画像…" : "提交重测并更新路线" }}</button></div>
+      <footer class="assessment-progress"><div><span>测试进度</span><b>{{ assessmentProgress }}%</b></div><i><span :style="{ width: `${assessmentProgress}%` }"></span></i><small>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已完成</small></footer>
+      <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
+    </section>
+
     <section v-else-if="assessmentResultVisible && diagnosticResult" class="assessment-result-screen">
       <header><b>测评已完成</b></header>
       <div class="result-celebration"><i>✓</i><p>摸底完成</p><h2>现在，和助教一起把课表定下来</h2><span>测评只告诉我们你的起点；你的可用时间、目标和学习方式，同样决定课程内容。以下建议都可以修改。</span></div>
       <div class="result-summary">
-        <article><small>本次答对</small><strong>{{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong></article>
+        <article><small>本次答对</small><strong>{{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><em v-if="diagnosticResult.unknown_count">其中 {{ diagnosticResult.unknown_count }} 题选择“我不知道”</em></article>
         <article><small>当前掌握度</small><strong>{{ averageMastery ?? 0 }}%</strong></article>
         <article><small>建议路线</small><strong>{{ learningTrack.name }}</strong></article>
         <article><small>助教初始建议</small><strong>{{ learningTrack.pace }}</strong></article>
@@ -948,11 +997,11 @@ onBeforeUnmount(() => {
         <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
-          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
-      <footer><button class="secondary" @click="assessmentResultVisible = false; assessmentStarted = true; startBaseline()">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
     </section>
 
     <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed" class="returning-planner-gate">
@@ -968,11 +1017,11 @@ onBeforeUnmount(() => {
         <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
-          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
-      <footer><button class="secondary" @click="startBaseline">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
+      <footer><button class="secondary" @click="restartAssessment">重新测评</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
       <div v-if="uiFeedback" class="action-feedback" role="status" aria-live="polite"><i></i>{{ uiFeedback }}<button aria-label="关闭反馈" @click="uiFeedback = ''">×</button></div>
     </section>
 
@@ -995,7 +1044,7 @@ onBeforeUnmount(() => {
         <div class="single-question">
           <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
           <h2>{{ currentDiagnosticItem.prompt }}</h2>
-          <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+          <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
         </div>
         <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在生成画像…" : "提交测评并生成路线" }}</button></div>
       </template>
@@ -1048,7 +1097,7 @@ onBeforeUnmount(() => {
           <label>每天投入<input v-model.number="dailyMinutes" type="number" min="10" max="180" step="5" /><span>分钟</span></label>
           <label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" /><span>天</span></label>
           <label class="plan-goal">本阶段目标<input v-model="planGoal" maxlength="120" /></label>
-          <button class="secondary" :disabled="diagnosticLoading" @click="startBaseline">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (learnerProfile ? "重新测评" : "建立能力基线") : "重新载入诊断" }}</button>
+          <button class="secondary" :disabled="diagnosticLoading" @click="learnerProfile ? restartAssessment() : startBaseline()">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (learnerProfile ? "重新测评" : "建立能力基线") : "重新载入诊断" }}</button>
           <button class="primary" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "规划中…" : "生成我的学习计划" }}</button>
         </div>
         <details class="self-profile-details">
@@ -1066,7 +1115,7 @@ onBeforeUnmount(() => {
           <div v-if="currentDiagnosticItem" class="single-question">
             <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
             <h2>{{ currentDiagnosticItem.prompt }}</h2>
-            <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+            <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
           </div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
@@ -1257,8 +1306,11 @@ onBeforeUnmount(() => {
 .assessment-welcome { max-width: 760px; padding: 24px 0 12px; }.assessment-welcome h1 { margin: 0; font-size: clamp(30px, 4vw, 46px); line-height: 1.16; letter-spacing: -.045em; }.assessment-welcome p { max-width: 700px; margin: 18px 0 0; color: #665b5f; font-size: 14px; line-height: 1.85; }
 .assessment-start-actions, .assessment-navigation { width: min(100%, 760px); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; }.assessment-start-actions .text-button { padding: 9px 0; border: 0; color: #766a6e; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }.assessment-start-actions .primary, .assessment-navigation .primary, .assessment-result-screen footer .primary { padding: 12px 18px; font-size: 11px; }.assessment-navigation .secondary, .assessment-result-screen footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #655b5f; background: #fff; font-size: 11px; }.assessment-navigation .secondary:disabled { opacity: .45; }
 .single-question { max-width: 760px; width: 100%; margin: 4px auto; }.single-question > header { display: flex; align-items: center; }.single-question > header span { color: #a41d34; font-size: 12px; font-weight: 800; }.single-question h2 { margin: 14px 0 20px; font-size: clamp(24px, 3vw, 32px); line-height: 1.35; letter-spacing: -.025em; }.single-question > div { display: grid; gap: 10px; }.single-question button { display: grid; grid-template-columns: 38px 1fr 24px; align-items: center; gap: 12px; padding: 13px 16px; border: 1px solid #e9e1e2; border-radius: 12px; color: #4f4649; background: #fff; text-align: left; }.single-question button:hover { border-color: #d9aab2; transform: translateX(3px); box-shadow: 0 10px 25px #6813230a; }.single-question button b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #a42338; background: #fff1f2; font-size: 11px; }.single-question button span { font-size: 13px; line-height: 1.55; }.single-question button i { color: transparent; font-style: normal; }.single-question button.selected { border-color: #c96575; background: #fff5f5; box-shadow: inset 4px 0 #bf1934, 0 12px 30px #6813230d; }.single-question button.selected i { color: #3c9666; }
+.single-question button.unknown { border-style: dashed; color: #766c70; background: #fbf9f9; }.single-question button.unknown b { color: #6d6266; background: #f0ecec; }.single-question button.unknown.selected { border-style: solid; border-color: #9c858a; background: #f5f1f1; box-shadow: inset 4px 0 #817075, 0 12px 30px #3d30330d; }
+.honest-answer-note { width: min(100%, 760px); margin: 0 auto; padding: 11px 14px; border-left: 3px solid #b66b77; border-radius: 6px 10px 10px 6px; color: #705f64; background: #fff6f6; font-size: 10px; line-height: 1.7; }.reassessment-gate > header { display: flex; align-items: center; justify-content: space-between; }.reassessment-gate > header .text-button { border: 0; color: #8c777c; background: transparent; text-decoration: underline; text-underline-offset: 3px; }
 .assessment-progress { width: min(100%, 760px); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 15px; margin: 2px auto 0; padding-top: 16px; border-top: 1px solid #eee5e6; }.assessment-progress div { display: flex; justify-content: space-between; grid-column: 1 / -1; color: #786d71; font-size: 11px; }.assessment-progress div b { color: #ae1b34; font-size: 12px; }.assessment-progress > i { height: 7px; overflow: hidden; border-radius: 99px; background: #eee7e8; }.assessment-progress > i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #be1732, #ef7182); transition: width .35s ease; }.assessment-progress > small { color: #807579; font-size: 10px; }
 .assessment-result-screen > header b { color: #3b8c60; font: 800 18px Consolas; }.result-celebration { text-align: center; }.result-celebration i { width: 54px; height: 54px; display: grid; place-items: center; margin: 0 auto 15px; border-radius: 50%; color: #fff; background: #3d9867; box-shadow: 0 0 0 10px #3d986712; font-style: normal; }.result-celebration p { margin: 0 0 5px; color: #478461; font-size: 9px; font-weight: 800; }.result-celebration h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); }.result-celebration > span { display: block; max-width: 650px; margin: 12px auto 0; color: #776b6f; font-size: 11px; line-height: 1.75; }.result-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }.result-summary article { padding: 17px; border: 1px solid #e9e1e2; border-radius: 13px; background: #fff; }.result-summary small, .result-summary strong { display: block; }.result-summary small { color: #998e91; font-size: 8px; }.result-summary strong { margin-top: 8px; font-size: 15px; }.assessment-result-screen > section:not(.planning-studio) { padding: 20px; border-radius: 15px; background: #f8f6f6; }.assessment-result-screen > section:not(.planning-studio) h3 { margin: 0 0 7px; }.assessment-result-screen > section:not(.planning-studio) > p { color: #74696d; font-size: 10px; }.assessment-result-screen > section:not(.planning-studio) > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.assessment-result-screen > section:not(.planning-studio) span { display: grid; gap: 4px; padding: 11px; border-radius: 9px; color: #655c5f; background: #fff; font-size: 8px; }.assessment-result-screen > section:not(.planning-studio) span b { color: #a21b32; font-size: 9px; }.assessment-result-screen > footer { display: flex; justify-content: flex-end; gap: 10px; }
+.result-summary article > em { display: block; margin-top: 6px; color: #8a7277; font-size: 8px; font-style: normal; line-height: 1.5; }
 .generic-mode-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #efd8b8; border-radius: 12px; color: #735b36; background: #fffaf0; }.generic-mode-banner b, .generic-mode-banner span { display: block; }.generic-mode-banner b { font-size: 10px; }.generic-mode-banner span { margin-top: 3px; color: #907b5c; font-size: 8px; }.generic-mode-banner button { padding: 8px 11px; border: 1px solid #dfc49d; border-radius: 8px; color: #76531e; background: #fff; font-size: 8px; font-weight: 800; }
 .assessment-result-screen > .planning-studio, .returning-planner-gate .planning-studio { display: grid; gap: 15px; padding: 22px; border: 1px solid #e6d8db; border-radius: 18px; background: linear-gradient(145deg, #fff, #fff8f7); }.returning-planner-gate { min-height: 650px; display: grid; align-content: start; gap: 22px; padding: clamp(28px, 5vw, 56px); border: 1px solid #e8dfe1; border-radius: 28px; background: radial-gradient(circle at 90% 8%, #ffe8e6, transparent 28%), #fff; box-shadow: 0 26px 75px #5513220e; }.returning-planner-gate > header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee4e5; }.returning-planner-gate > header span { color: #b4233b; font: 800 9px Consolas; letter-spacing: .15em; }.returning-planner-gate > header h2 { margin: 8px 0; font-size: clamp(27px, 3.6vw, 42px); }.returning-planner-gate > header p { margin: 0; color: #766a6e; font-size: 10px; }.returning-planner-gate > footer { display: flex; justify-content: flex-end; gap: 10px; }.returning-planner-gate > footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #786c70; background: #fff; font-size: 9px; }.planning-studio > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }.planning-studio > header span { color: #b4233b; font: 800 8px Consolas; letter-spacing: .14em; }.planning-studio > header h3 { margin: 6px 0; font-size: 18px; }.planning-studio > header p { margin: 0; color: #827579; font-size: 9px; }.suggestion-button { padding: 8px 11px; border: 1px solid #dab7bd; border-radius: 8px; color: #9f2337; background: #fff; font-size: 8px; white-space: nowrap; }.preference-grid { display: grid; grid-template-columns: 150px 150px minmax(260px, 1fr); gap: 10px; }.preference-grid label { position: relative; display: grid; gap: 6px; color: #76696e; font-size: 8px; font-weight: 800; }.preference-grid input { min-width: 0; padding: 10px 12px; border: 1px solid #e2d5d7; border-radius: 9px; background: #fff; outline: none; }.preference-grid label > span { position: absolute; right: 10px; bottom: 11px; color: #9d9194; font-size: 8px; }.preference-grid input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.mode-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }.mode-picker > span { margin-right: 4px; color: #897b80; font-size: 8px; }.mode-picker button { padding: 7px 10px; border: 1px solid #e5dbdc; border-radius: 99px; color: #7c6f73; background: #fff; font-size: 8px; }.mode-picker button.active { color: #a51b32; border-color: #d58a96; background: #fff1f3; box-shadow: inset 0 0 0 1px #d58a9625; }.build-plan { justify-self: end; }.planning-studio .plan-result { padding: 15px 16px 28px; }.session-preview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #d7e6dc; border-radius: 12px; background: #f6fbf7; }.session-preview small, .session-preview b, .session-preview span { display: block; }.session-preview small { color: #5d8a6d; font-size: 7px; font-weight: 800; }.session-preview b { margin: 4px 0; font-size: 12px; }.session-preview span { color: #6f7f75; font-size: 8px; }.session-preview > strong { color: #3e7855; font-size: 11px; white-space: nowrap; }
 .classroom-layout > .teacher-lecture-card { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 15px; padding: 19px 22px; border-bottom: 1px solid #eadcdd; background: linear-gradient(105deg, #fff8f7, #fff 58%); }.teacher-portrait { display: grid; justify-items: center; align-content: center; gap: 5px; }.teacher-portrait i { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #cf203c, #901026); box-shadow: 0 9px 22px #8d10282c; font: normal 800 18px serif; }.teacher-portrait span { color: #9e7d84; font-size: 7px; }.teacher-lecture-card > div:last-child { min-width: 0; }.teacher-lecture-card header { display: flex; align-items: center; gap: 12px; }.teacher-lecture-card header span { color: #b4233b; font-size: 9px; font-weight: 800; }.teacher-lecture-card header b { color: #8c7b80; font-size: 8px; font-weight: 600; }.teacher-lecture-card :deep(.safe-markdown) { margin-top: 8px; color: #3d3337; font-size: 13px; line-height: 1.85; }.teacher-lecture-card footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed #eadcdd; }.teacher-lecture-card footer span { color: #998b90; font-size: 8px; }.teacher-lecture-card footer button { padding: 7px 10px; border: 1px solid #d9aeb5; border-radius: 8px; color: #9f1d33; background: #fff; font-size: 8px; font-weight: 800; }

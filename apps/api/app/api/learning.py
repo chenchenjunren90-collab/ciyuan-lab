@@ -84,12 +84,14 @@ class DiagnosticItemResult(StrictModel):
     exercise_id: str
     knowledge_point_id: str
     correct: bool
+    unknown: bool
     skill_atom_ids: list[str]
 
 
 class DiagnosticSubmissionResult(AssessmentResult):
     phase: DiagnosticPhase
     correct_count: int = Field(ge=0)
+    unknown_count: int = Field(ge=0)
     total_count: int = Field(gt=0)
     item_results: list[DiagnosticItemResult]
     analysis: DiagnosticAnalysis
@@ -124,12 +126,14 @@ async def submit_diagnostic(
     return DiagnosticSubmissionResult(
         phase=result.phase,
         correct_count=sum(item.correct for item in result.grades),
+        unknown_count=sum(item.unknown for item in result.grades),
         total_count=len(result.grades),
         item_results=[
             DiagnosticItemResult(
                 exercise_id=item.exercise_id,
                 knowledge_point_id=item.knowledge_point_id,
                 correct=item.correct,
+                unknown=item.unknown,
                 skill_atom_ids=[atom.id for atom in item.skill_atoms],
             )
             for item in result.grades

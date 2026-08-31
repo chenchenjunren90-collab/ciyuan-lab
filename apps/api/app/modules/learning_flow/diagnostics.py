@@ -13,6 +13,7 @@ from app.modules.learning_flow.models import AssessmentOutcome
 from app.modules.learning_flow.service import LearningFlowService
 
 DiagnosticPhase = Literal["initial", "reassessment"]
+UNKNOWN_DIAGNOSTIC_RESPONSE = "UNKNOWN"
 
 _PYTHON_INITIAL = (
     "PY-BASE-01-Q1",
@@ -117,6 +118,7 @@ class DiagnosticGrade:
     exercise_id: str
     knowledge_point_id: str
     correct: bool
+    unknown: bool
     skill_atoms: tuple[DiagnosticSkillAtom, ...]
 
 
@@ -158,6 +160,15 @@ class DiagnosticService:
             options = activity.evaluation.get("options")
             if activity.type != "objective" or not isinstance(options, list):
                 raise ValueError(f"diagnostic activity is not an objective item: {activity_id}")
+            public_options = [
+                DiagnosticOption.model_validate(option) for option in options
+            ]
+            public_options.append(
+                DiagnosticOption(
+                    id=UNKNOWN_DIAGNOSTIC_RESPONSE,
+                    text="我不知道 / 还没有学过",
+                )
+            )
             items.append(
                 DiagnosticItem(
                     exercise_id=activity.id,
@@ -165,7 +176,7 @@ class DiagnosticService:
                     prompt=activity.prompt or activity.title,
                     concept_ids=activity.concept_ids,
                     skill_atoms=list(self._skill_atoms(knowledge_point)),
-                    options=[DiagnosticOption.model_validate(option) for option in options],
+                    options=public_options,
                 )
             )
         return DiagnosticQuiz(
@@ -173,9 +184,12 @@ class DiagnosticService:
             phase=phase,
             title="初始能力诊断" if phase == "initial" else "阶段能力重测",
             instructions=(
-                "请独立完成全部题目。结果将作为学习路径的初始证据。"
+                "请独立完成全部题目；不确定时请直接选择“我不知道”，比猜答案更有助于安排合适起点。"
                 if phase == "initial"
-                else "请在不查看原学习材料的情况下完成，以检验能否迁移所学知识。"
+                else (
+                    "请在不查看原学习材料的情况下完成；"
+                    "不确定时请选择“我不知道”，系统会据此安排回补。"
+                )
             ),
             items=items,
         )
@@ -203,13 +217,21 @@ class DiagnosticService:
             accepted = record.evaluation.get("accepted_answers")
             if not isinstance(accepted, list) or not accepted:
                 raise ValueError(f"diagnostic answer key is incomplete: {item.exercise_id}")
-            correct = answer_map[item.exercise_id] in accepted
+            response = answer_map[item.exercise_id]
+            allowed_responses = {option.id for option in item.options}
+            if response not in allowed_responses:
+                raise ValueError(
+                    f"diagnostic response is not a public option: {item.exercise_id}"
+                )
+            unknown = response == UNKNOWN_DIAGNOSTIC_RESPONSE
+            correct = not unknown and response in accepted
             knowledge_point_id = record.concept_ids[0]
             grades.append(
                 DiagnosticGrade(
                     exercise_id=item.exercise_id,
                     knowledge_point_id=knowledge_point_id,
                     correct=correct,
+                    unknown=unknown,
                     skill_atoms=tuple(item.skill_atoms),
                 )
             )

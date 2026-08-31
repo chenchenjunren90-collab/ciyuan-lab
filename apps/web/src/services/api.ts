@@ -107,8 +107,8 @@ export interface DiagnosticQuiz {
   }>;
 }
 export interface DiagnosticSubmissionResult extends AssessmentResult {
-  phase: DiagnosticPhase; correct_count: number; total_count: number;
-  item_results: Array<{ exercise_id: string; knowledge_point_id: string; correct: boolean; skill_atom_ids: string[] }>;
+  phase: DiagnosticPhase; correct_count: number; unknown_count: number; total_count: number;
+  item_results: Array<{ exercise_id: string; knowledge_point_id: string; correct: boolean; unknown: boolean; skill_atom_ids: string[] }>;
   analysis: DiagnosticAnalysis;
 }
 export interface QaResponse {

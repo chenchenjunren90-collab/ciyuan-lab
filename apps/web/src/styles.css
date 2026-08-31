@@ -118,6 +118,7 @@ h1, h2, h3, p { margin-top: 0; }
 .diagnostic-list article button b { color: #9ca0ad; font: 10px Consolas, monospace; }
 .diagnostic-list article button.active { border-color: #efadba; color: var(--red-dark); background: #fff2f4; box-shadow: 0 5px 14px #df002826; }
 .diagnostic-list article button.active b { color: var(--red); }
+.diagnostic-list article button.unknown { border-style: dashed; color: #766c70; background: #faf8f8; }
 .diagnostic-actions { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
 .diagnostic-actions span { color: #8a8f9c; font-size: 10px; }
 .diagnostic-actions button:disabled { cursor: not-allowed; opacity: .45; box-shadow: none; }
