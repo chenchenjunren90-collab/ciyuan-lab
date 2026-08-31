@@ -86,6 +86,7 @@ const planGoal = ref("先打牢 Python 基础，再完成一项可运行的小�
 const preferredMode = ref<"step_by_step" | "example_first" | "practice_first">("step_by_step");
 const planConfirmed = ref(false);
 const uiFeedback = ref("");
+let feedbackDismissTimer: ReturnType<typeof setTimeout> | null = null;
 const baselinePanel = ref<HTMLElement | null>(null);
 const assessmentStarted = ref(false);
 const assessmentIndex = ref(0);
@@ -318,7 +319,18 @@ watch(() => messages.value.length, async () => {
 });
 
 function showFeedback(message: string): void {
+  if (feedbackDismissTimer) clearTimeout(feedbackDismissTimer);
   uiFeedback.value = message;
+  feedbackDismissTimer = setTimeout(() => {
+    uiFeedback.value = "";
+    feedbackDismissTimer = null;
+  }, 5_000);
+}
+
+function dismissFeedback(): void {
+  if (feedbackDismissTimer) clearTimeout(feedbackDismissTimer);
+  feedbackDismissTimer = null;
+  uiFeedback.value = "";
 }
 
 function savePlanPreferences(): void {
@@ -1040,6 +1052,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   clearPlanProgress();
+  if (feedbackDismissTimer) clearTimeout(feedbackDismissTimer);
   emit("focusChanged", false);
 });
 </script>
@@ -1347,7 +1360,7 @@ onBeforeUnmount(() => {
 
     <Transition name="feedback-toast">
       <div v-if="uiFeedback" class="global-action-feedback" role="status" aria-live="polite" aria-atomic="true">
-        <i></i><span>{{ uiFeedback }}</span><button aria-label="关闭反馈" @click="uiFeedback = ''">×</button>
+        <i></i><span>{{ uiFeedback }}</span><button aria-label="关闭反馈" @click="dismissFeedback">×</button>
       </div>
     </Transition>
 
