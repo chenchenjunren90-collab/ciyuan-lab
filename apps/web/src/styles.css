@@ -459,7 +459,7 @@ html .immersive-lesson :is(
 html .immersive-lesson :is(
   .single-question button.selected,.checkpoint-options button.selected,
   .mode-picker button.active,.role-pills button.active,.focus-view-buttons button.active,
-  .lesson-steps > div.active
+  .lesson-steps > button.active
 ) { border-color: color-mix(in srgb,var(--accent) 55%,var(--line)); background: var(--accent-soft); box-shadow: inset 3px 0 var(--accent); }
 html .immersive-lesson :is(
   .single-question button b,.checkpoint-options button b,.profile-chip,
@@ -484,7 +484,7 @@ html[data-theme="dark"] .immersive-lesson :is(
 html[data-theme="dark"] .immersive-lesson :is(
   .single-question button,.checkpoint-options button,.mode-picker button,
   .self-profile-presets button,.role-pills button,.discussion-prompts button,
-  .lesson-steps > div,.code-task .io-format article,.code-task .task-constraints li,
+  .lesson-steps > button,.code-task .io-format article,.code-task .task-constraints li,
   .code-task .code-workspace > aside article,.code-task .code-workspace aside code
 ) { color: var(--ink); border-color: var(--line); background: var(--surface-muted); }
 html[data-theme="dark"] .immersive-lesson :is(

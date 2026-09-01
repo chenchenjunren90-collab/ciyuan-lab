@@ -20,11 +20,16 @@ function memoryStorage(initial: Record<string, string> = {}): KeyValueStorage {
 function sessionDraft(): ClassroomSessionDraft {
   return {
     version: 1,
+    contentRevision: 2,
     savedAt: "2026-08-31T09:00:00.000Z",
     lessonId: "python-list-filter-01",
     currentIndex: 3,
+    furthestIndex: 4,
     selectedChoice: "B",
     checkpointResult: null,
+    checkpointDrafts: {
+      "beat-filter": { selectedChoice: "B", checkpointResult: null },
+    },
     messages: [{ id: 1, role: "student", name: "我", content: "我的理解是……", kind: "student" }],
     practiceCode: "print('保留草稿')",
     homeworkCode: "",

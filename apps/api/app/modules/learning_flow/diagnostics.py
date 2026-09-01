@@ -353,6 +353,7 @@ class DiagnosticService:
         lesson = detail.lesson
         worked_example = lesson.get("worked_example")
         example = worked_example if isinstance(worked_example, dict) else {}
+        common_mistakes = self._string_list(lesson.get("common_mistakes"))
         return DiagnosticLearningBlock(
             block_id=f"diagnostic-block-{knowledge_point_id.lower()}",
             knowledge_point_id=knowledge_point_id,
@@ -365,7 +366,10 @@ class DiagnosticService:
             estimated_minutes=max(6, min(18, detail.estimated_minutes // 3)),
             skill_atoms=list(self._skill_atoms(detail)),
             summary=str(lesson.get("summary") or detail.title),
-            key_points=self._string_list(lesson.get("key_points")),
+            key_points=[
+                *self._string_list(lesson.get("key_points")),
+                *[f"易错提醒：{item}" for item in common_mistakes[:2]],
+            ],
             example_problem=str(example.get("problem") or ""),
             example_steps=self._string_list(example.get("steps")),
             example_code=str(example.get("code") or ""),

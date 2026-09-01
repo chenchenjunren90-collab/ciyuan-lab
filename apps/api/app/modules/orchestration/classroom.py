@@ -2039,32 +2039,103 @@ def _build_adaptive_lesson(
         lesson = detail.lesson
         worked = lesson.get("worked_example")
         example = worked if isinstance(worked, dict) else {}
+        key_points = [
+            str(item)
+            for item in lesson.get("key_points", [])
+            if isinstance(item, str) and item.strip()
+        ]
+        common_mistakes = [
+            str(item)
+            for item in lesson.get("common_mistakes", [])
+            if isinstance(item, str) and item.strip()
+        ]
+        learning_sequence = [
+            item
+            for item in lesson.get("learning_sequence", [])
+            if isinstance(item, dict)
+        ]
+        sequence_content = [
+            str(item.get("content"))
+            for item in learning_sequence
+            if item.get("content")
+        ]
+        lesson_examples = [
+            str(item)
+            for item in lesson.get("examples", [])
+            if isinstance(item, str) and item.strip()
+        ]
+        summary = str(lesson.get("summary") or detail.title)
+        concept_explanation = sequence_content[0] if sequence_content else summary
+        example_problem = str(example.get("problem") or f"用一个最小例子验证“{detail.title}”。")
+        example_code = str(example.get("code") or (lesson_examples[0] if lesson_examples else ""))
+        example_steps = [
+            str(item)
+            for item in example.get("steps", [])
+            if isinstance(item, str) and item.strip()
+        ]
+        reflection = str(example.get("reflection") or "").strip()
         checkpoint = _objective_checkpoint(courses, detail.id)
+        beats.append(
+            ClassroomBeat(
+                id=f"adaptive-concept--{detail.id}",
+                phase="concept" if index == 1 else "discussion",
+                speaker="teacher",
+                eyebrow=f"第 {index} 组 · 第一步 · {detail.id}",
+                title=f"{detail.title}：先弄懂是什么",
+                message=(
+                    f"我们先不急着背结论，也不把“{detail.title}”当成一个大词。"
+                    "先看它解决什么问题、语法由哪些部分组成，再亲手预测一个最小例子的结果。"
+                ),
+                board_title="概念、用途与关键语法",
+                board_explanation=concept_explanation,
+                board_points=[
+                    *[f"学习目标：{item}" for item in detail.learning_objectives[:2]],
+                    f"核心术语：{'、'.join(detail.concepts[:4])}",
+                    *key_points[:2],
+                ],
+                board_code=lesson_examples[0] if lesson_examples else "",
+                board_trace=[
+                    "先说清它在程序里解决什么问题",
+                    "再辨认语法中的对象、操作与结果",
+                    "最后预测最小示例会输出什么",
+                ],
+                action="continue",
+            )
+        )
         beats.append(
             ClassroomBeat(
                 id=(
                     f"adaptive-checkpoint--{checkpoint[0]}"
                     if checkpoint
-                    else f"adaptive-concept--{detail.id}"
+                    else f"adaptive-example--{detail.id}"
                 ),
-                phase="concept" if index == 1 else "discussion",
+                phase="debug" if common_mistakes else "discussion",
                 speaker="teacher",
-                eyebrow=f"第 {index} 段 · {detail.id}",
-                title=detail.title,
-                message=str(lesson.get("summary") or detail.title),
-                board_title=detail.title,
-                board_explanation=str(lesson.get("summary") or detail.title),
+                eyebrow=f"第 {index} 组 · 第二步 · {detail.id}",
+                title=f"{detail.title}：跟着例子逐行看",
+                message=(
+                    f"现在把“{detail.title}”放进一段能运行的代码。"
+                    "不要只看最终答案，我们按执行顺序逐行追踪，并专门检查最容易混淆的地方。"
+                ),
+                board_title=example_problem,
+                board_explanation=(
+                    sequence_content[1]
+                    if len(sequence_content) > 1
+                    else (
+                        "先预测每一行执行后的变化，再运行代码核对；"
+                        "预测与实际不一致的地方，就是本段最值得学的部分。"
+                    )
+                ),
                 board_points=[
-                    str(item)
-                    for item in lesson.get("key_points", [])
-                    if isinstance(item, str)
-                ][:5],
-                board_code=str(example.get("code") or ""),
+                    f"关键语法：{'、'.join(detail.concepts[:4])}",
+                    *key_points[2:4],
+                    *[f"易错提醒：{item}" for item in common_mistakes[:2]],
+                ],
+                board_code=example_code,
                 board_trace=[
-                    str(item)
-                    for item in example.get("steps", [])
-                    if isinstance(item, str)
-                ][:5],
+                    *example_steps[:5],
+                    *([f"想一想：{reflection}"] if reflection else []),
+                ],
                 action="choice" if checkpoint else "continue",
                 checkpoint=checkpoint[1] if checkpoint else None,
             )

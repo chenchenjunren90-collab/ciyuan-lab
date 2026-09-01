@@ -47,10 +47,15 @@ const SECOND_LESSON_ID = "python-dict-lookup-02";
 const activeLessonId = ref(FIRST_LESSON_ID);
 const lesson = ref<ClassroomLesson | null>(null);
 const currentIndex = ref(0);
+const furthestIndex = ref(0);
 const loading = ref(true);
 const error = ref("");
 const selectedChoice = ref("");
 const checkpointResult = ref<ClassroomCheckpointResult | null>(null);
+const checkpointDrafts = ref<Record<string, {
+  selectedChoice: string;
+  checkpointResult: ClassroomCheckpointResult | null;
+}>>({});
 const messages = ref<ClassroomMessage[]>([]);
 const messageCounter = ref(0);
 const messageList = ref<HTMLElement | null>(null);
@@ -205,11 +210,16 @@ const personalizedBeats = computed<ClassroomBeat[]>(() => (
   sessionBeatSnapshot.value.length ? sessionBeatSnapshot.value : generatedPersonalizedBeats.value
 ));
 const currentBeat = computed<ClassroomBeat | null>(() => personalizedBeats.value[currentIndex.value] ?? null);
+const currentBoardMistakes = computed(() => currentBeat.value?.board_points
+  .filter((point) => point.startsWith("易错提醒："))
+  .map((point) => point.slice("易错提醒：".length)) ?? []);
+const currentBoardPoints = computed(() => currentBeat.value?.board_points
+  .filter((point) => !point.startsWith("易错提醒：")) ?? []);
 const activeRole = computed<ClassroomRole>(() => currentBeat.value?.speaker ?? "teacher");
 const progress = computed(() => {
   if (!personalizedBeats.value.length) return 0;
   if (lessonComplete.value) return 100;
-  return Math.round(currentIndex.value / personalizedBeats.value.length * 100);
+  return Math.round(furthestIndex.value / personalizedBeats.value.length * 100);
 });
 const isPracticeAccepted = computed(() => practiceResult.value?.verification?.accepted === true);
 const isHomeworkAccepted = computed(() => homeworkResult.value?.verification?.accepted === true);
@@ -299,7 +309,7 @@ const personalizedSession = computed(() => {
 });
 const latestTeacherMessage = computed(() => [...messages.value].reverse().find((message) => message.role === "teacher") ?? null);
 const latestTeacherQuestion = computed(() => [...messages.value].reverse().find((message) => (
-  message.role === "student" && message.target === "teacher"
+  message.role === "student" && message.target === "teacher" && message.kind === "student"
 )) ?? null);
 const communityMessages = computed(() => messages.value.filter((message) => (
   peerRoles.includes(message.role as ClassroomRole)
@@ -381,11 +391,14 @@ function buildSessionDraft(): ClassroomSessionDraft | null {
   if (!lesson.value) return null;
   return {
     version: 1,
+    contentRevision: 2,
     savedAt: new Date().toISOString(),
     lessonId: lesson.value.lesson_id,
     currentIndex: currentIndex.value,
+    furthestIndex: furthestIndex.value,
     selectedChoice: selectedChoice.value,
     checkpointResult: checkpointResult.value,
+    checkpointDrafts: checkpointDrafts.value,
     messages: messages.value.slice(-200),
     practiceCode: practiceCode.value,
     homeworkCode: homeworkCode.value,
@@ -421,11 +434,28 @@ function persistSession(): void {
 
 function restoreSession(draft: ClassroomSessionDraft): boolean {
   if (!lesson.value || lesson.value.lesson_id !== draft.lessonId) return false;
-  sessionBeatSnapshot.value = draft.sessionBeatSnapshot;
+  const oldBeat = draft.sessionBeatSnapshot[draft.currentIndex];
+  sessionBeatSnapshot.value = draft.contentRevision === 2 ? draft.sessionBeatSnapshot : [];
   const beatCount = sessionBeatSnapshot.value.length || generatedPersonalizedBeats.value.length;
-  currentIndex.value = Math.min(draft.currentIndex, Math.max(0, beatCount - 1));
+  const migratedIndex = oldBeat
+    ? generatedPersonalizedBeats.value.findIndex((beat) => beat.id === oldBeat.id)
+    : -1;
+  currentIndex.value = Math.min(
+    migratedIndex >= 0 ? migratedIndex : draft.currentIndex,
+    Math.max(0, beatCount - 1),
+  );
+  furthestIndex.value = Math.min(
+    Math.max(currentIndex.value, draft.furthestIndex ?? currentIndex.value),
+    Math.max(0, beatCount - 1),
+  );
   selectedChoice.value = draft.selectedChoice;
   checkpointResult.value = draft.checkpointResult;
+  checkpointDrafts.value = draft.checkpointDrafts ?? (oldBeat ? {
+    [oldBeat.id]: {
+      selectedChoice: draft.selectedChoice,
+      checkpointResult: draft.checkpointResult,
+    },
+  } : {});
   messages.value = draft.messages;
   messageCounter.value = draft.messages.reduce((maximum, message) => Math.max(maximum, message.id), 0);
   practiceCode.value = draft.practiceCode;
@@ -457,8 +487,10 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
 watch(() => ({
   lessonId: activeLessonId.value,
   currentIndex: currentIndex.value,
+  furthestIndex: furthestIndex.value,
   selectedChoice: selectedChoice.value,
   checkpointResult: checkpointResult.value,
+  checkpointDrafts: checkpointDrafts.value,
   messages: messages.value,
   practiceCode: practiceCode.value,
   homeworkCode: homeworkCode.value,
@@ -774,6 +806,10 @@ async function enterPersonalizedClassroom(): Promise<void> {
   localStorage.setItem(planConfirmationKey(), "true");
   savePlanPreferences();
   currentIndex.value = 0;
+  furthestIndex.value = 0;
+  checkpointDrafts.value = {};
+  selectedChoice.value = "";
+  checkpointResult.value = null;
   lockSessionBeats();
   messages.value = [];
   messageCounter.value = 0;
@@ -916,12 +952,52 @@ function lockSessionBeats(): void {
   }
 }
 
+function rememberCurrentCheckpoint(): void {
+  if (!currentBeat.value || currentBeat.value.action !== "choice") return;
+  checkpointDrafts.value = {
+    ...checkpointDrafts.value,
+    [currentBeat.value.id]: {
+      selectedChoice: selectedChoice.value,
+      checkpointResult: checkpointResult.value,
+    },
+  };
+}
+
+function restoreCheckpointForBeat(beat: ClassroomBeat): void {
+  const draft = checkpointDrafts.value[beat.id];
+  selectedChoice.value = draft?.selectedChoice ?? "";
+  checkpointResult.value = draft?.checkpointResult ?? null;
+}
+
+function lessonViewForBeat(beat: ClassroomBeat): ClassroomWorkspaceView {
+  return ["practice", "homework"].includes(beat.action) ? "code" : "lecture";
+}
+
+function goToLessonStep(index: number): void {
+  if (!personalizedBeats.value.length) return;
+  if (index < 0 || index > furthestIndex.value || index === currentIndex.value) {
+    if (index > furthestIndex.value) showFeedback("请先完成前面的学习环节，再进入这里。");
+    return;
+  }
+  rememberCurrentCheckpoint();
+  currentIndex.value = index;
+  const target = personalizedBeats.value[index];
+  if (!target) return;
+  restoreCheckpointForBeat(target);
+  hint.value = "";
+  classroomView.value = lessonViewForBeat(target);
+  announceBeat();
+  showFeedback(`已返回“${target.title}”。之前的答题、代码和学习进度都已保留。`);
+}
+
 function applyLesson(value: ClassroomLesson): void {
   activeLessonId.value = value.lesson_id;
   lesson.value = value;
   currentIndex.value = 0;
+  furthestIndex.value = 0;
   selectedChoice.value = "";
   checkpointResult.value = null;
+  checkpointDrafts.value = {};
   practiceResult.value = null;
   homeworkResult.value = null;
   lessonComplete.value = false;
@@ -977,12 +1053,13 @@ async function submitChoice(): Promise<void> {
   submitting.value = true;
   error.value = "";
   try {
-    pushMessage("student", currentBeat.value.checkpoint?.choices.find((item) => item.id === selectedChoice.value)?.text ?? selectedChoice.value, "student", undefined, undefined, "teacher");
+    pushMessage("student", currentBeat.value.checkpoint?.choices.find((item) => item.id === selectedChoice.value)?.text ?? selectedChoice.value, "checkpoint", undefined, undefined, "teacher");
     checkpointResult.value = await api.classroomCheckpoint(
       lesson.value.lesson_id,
       currentBeat.value.id,
       selectedChoice.value,
     );
+    rememberCurrentCheckpoint();
     pushMessage(checkpointResult.value.reply_role, checkpointResult.value.reply_message, "reply");
   } catch (cause) {
     error.value = cause instanceof Error ? cause.message : "理解检查提交失败。";
@@ -1010,12 +1087,13 @@ function advance(): void {
     showFeedback("已经到达本次课堂的最后一个环节。");
     return;
   }
+  rememberCurrentCheckpoint();
   currentIndex.value += 1;
-  classroomView.value = ["practice", "homework"].includes(currentBeat.value?.action ?? "")
-    ? "code"
-    : "lecture";
-  selectedChoice.value = "";
-  checkpointResult.value = null;
+  furthestIndex.value = Math.max(furthestIndex.value, currentIndex.value);
+  const nextBeat = personalizedBeats.value[currentIndex.value];
+  if (!nextBeat) return;
+  restoreCheckpointForBeat(nextBeat);
+  classroomView.value = lessonViewForBeat(nextBeat);
   hint.value = "";
   announceBeat();
   showFeedback(`林老师已进入“${currentBeat.value?.title ?? "下一环节"}”，课堂完成度同步更新。`);
@@ -1355,13 +1433,18 @@ onBeforeUnmount(() => {
       </section>
 
       <nav class="lesson-steps" aria-label="课堂进度">
-        <div
+        <button
             v-for="(beat, index) in personalizedBeats"
           :key="beat.id"
-          :class="{ active: index === currentIndex, done: index < currentIndex }"
+          type="button"
+          :class="{ active: index === currentIndex, done: index < currentIndex, visited: index <= furthestIndex }"
+          :disabled="index > furthestIndex"
           :aria-current="index === currentIndex ? 'step' : undefined"
-        ><em>{{ String(index + 1).padStart(2, "0") }}</em><span>{{ beat.title }}</span></div>
+          :aria-label="index === currentIndex ? `当前环节：${beat.title}` : index <= furthestIndex ? `返回环节：${beat.title}` : `尚未解锁：${beat.title}`"
+          @click="goToLessonStep(index)"
+        ><em>{{ String(index + 1).padStart(2, "0") }}</em><span>{{ beat.title }}</span></button>
       </nav>
+      <div class="lesson-history-actions"><button class="secondary" :disabled="currentIndex === 0" @click="goToLessonStep(currentIndex - 1)">← 返回上一环节</button><span>可点击上方已学环节回看，作答和代码不会丢失</span></div>
 
       <div v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="classroom-layout" :class="{ 'lecture-only': classroomView === 'lecture', 'discussion-only': classroomView === 'discussion' }">
         <section v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="teacher-lecture-card">
@@ -1375,9 +1458,10 @@ onBeforeUnmount(() => {
           <section class="smart-board">
             <header><span>{{ currentBeat.eyebrow }}</span><b>{{ currentBeat.board_title }}</b></header>
             <p v-if="currentBeat.board_explanation" class="board-explanation">{{ currentBeat.board_explanation }}</p>
-            <pre v-if="currentBeat.board_code"><code>{{ currentBeat.board_code }}</code></pre>
-            <ul><li v-for="point in currentBeat.board_points" :key="point">{{ point }}</li></ul>
-            <div v-if="currentBeat.board_trace.length" class="board-trace"><b>运行过程</b><span v-for="step in currentBeat.board_trace" :key="step">{{ step }}</span></div>
+            <section v-if="currentBoardPoints.length" class="board-key-points"><b>关键要点</b><ul><li v-for="point in currentBoardPoints" :key="point">{{ point }}</li></ul></section>
+            <section v-if="currentBeat.board_code" class="board-code-example"><b>示例代码</b><pre><code>{{ currentBeat.board_code }}</code></pre></section>
+            <div v-if="currentBeat.board_trace.length" class="board-trace"><b>逐步拆解</b><span v-for="step in currentBeat.board_trace" :key="step">{{ step }}</span></div>
+            <aside v-if="currentBoardMistakes.length" class="board-mistakes"><b>容易踩坑</b><span v-for="mistake in currentBoardMistakes" :key="mistake">{{ mistake }}</span></aside>
           </section>
 
           <div class="teacher-zone">
@@ -1508,13 +1592,13 @@ onBeforeUnmount(() => {
 .lesson-masthead { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 24px 28px; overflow: hidden; border: 1px solid #eadbdd; border-radius: 22px; background: radial-gradient(circle at 88% 10%, #ffe9d2 0 10%, transparent 35%), linear-gradient(135deg, #fffaf7, #fff 48%, #fff3f2); box-shadow: 0 18px 50px #7720330d; }
 .lesson-masthead p { margin: 0 0 6px; color: #b4233b; font: 800 9px Consolas, monospace; letter-spacing: .18em; }.lesson-masthead h2 { margin: 0; font-size: 26px; }.lesson-masthead div > span { display: block; margin-top: 7px; color: #796b70; font-size: 12px; }
 .lesson-masthead aside { width: 220px; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 5px 12px; }.lesson-masthead aside small { color: #8b7c81; }.lesson-masthead aside b { color: #b4233b; font-size: 22px; }.lesson-masthead aside i { grid-column: 1 / -1; height: 6px; overflow: hidden; border-radius: 99px; background: #f1dedf; }.lesson-masthead aside i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c51632, #e27765); transition: width .4s ease; }
-.lesson-steps { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 7px; }.lesson-steps > div { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; }.lesson-steps > div em { font: normal 8px Consolas; }.lesson-steps > div span { overflow: hidden; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps > div.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps > div.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }
+.lesson-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 7px; }.lesson-steps > button { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; cursor: default; }.lesson-steps > button.visited { cursor: pointer; }.lesson-steps > button:disabled { opacity: .58; }.lesson-steps > button em { font: normal 8px Consolas; }.lesson-steps > button span { overflow: hidden; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps > button.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps > button.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }.lesson-steps > button.visited:hover { transform: translateY(-1px); border-color: #cf8792; }.lesson-history-actions { display: flex; align-items: center; gap: 12px; margin-top: 9px; }.lesson-history-actions button { padding: 8px 11px; border: 1px solid #dfd2d4; border-radius: 9px; color: #8f2032; background: #fff; font-size: 9px; font-weight: 800; }.lesson-history-actions button:disabled { color: #b8adb0; cursor: not-allowed; }.lesson-history-actions span { color: #8e8286; font-size: 8px; }
 .classroom-layout { min-height: 620px; display: grid; grid-template-columns: minmax(540px, 1.45fr) minmax(320px, .8fr); overflow: hidden; border: 1px solid #e4d9d8; border-radius: 24px; background: #fff; box-shadow: 0 22px 65px #3c1c250e; }
 .classroom-scene { position: relative; min-height: 620px; padding: 54px 34px 28px; overflow: hidden; border-right: 1px solid #e7dcda; background: linear-gradient(180deg, #fbf4e9 0 63%, #d9b99b 63% 65%, #c69671 65%); }
 .classroom-scene::after { content: ""; position: absolute; inset: 65% 0 0; opacity: .28; background-image: linear-gradient(90deg, #6f3d201c 1px, transparent 1px), linear-gradient(#6f3d201c 1px, transparent 1px); background-size: 48px 38px; transform: perspective(160px) rotateX(5deg); }
 .sun-window { position: absolute; top: 24px; right: 25px; width: 160px; height: 112px; overflow: hidden; border: 8px solid #fff; border-radius: 5px 18px 5px 5px; background: linear-gradient(#bce0ea 0 58%, #b8c99d 58%); box-shadow: 0 10px 28px #6b543120; }.sun-window::before, .sun-window::after { content: ""; position: absolute; background: #fff; }.sun-window::before { left: 48%; width: 6px; height: 100%; }.sun-window::after { top: 51%; width: 100%; height: 6px; }.sun-window span { position: absolute; top: 12px; left: 18px; width: 30px; height: 30px; border-radius: 50%; background: #ffd881; box-shadow: 0 0 28px #ffc85c; }.sun-window i { position: absolute; right: -15px; bottom: -20px; width: 90px; height: 56px; border-radius: 50%; background: #769b6c; }.sun-window small { position: absolute; z-index: 2; right: 6px; bottom: 4px; padding: 3px 6px; border-radius: 5px; color: #635940; background: #fff9; font-size: 7px; }
 .wall-note { position: absolute; top: 25px; left: 32px; padding: 8px 12px; border: 1px solid #ead6bd; border-radius: 8px; color: #8a5e40; background: #fff8e9; font-size: 9px; transform: rotate(-1deg); }
-.smart-board { position: relative; z-index: 2; width: calc(100% - 170px); min-height: 255px; padding: 20px 22px; border: 10px solid #6e5140; border-radius: 10px; color: #edf8f0; background: linear-gradient(145deg, #23443b, #17352e); box-shadow: inset 0 0 35px #081b14, 0 14px 28px #60422a24; }.smart-board header span { display: block; color: #e4c999; font: 700 8px Consolas; letter-spacing: .12em; }.smart-board header b { display: block; margin-top: 7px; font-size: 17px; }.smart-board pre { margin: 14px 0 10px; padding: 12px 14px; overflow: auto; border: 1px solid #ffffff18; border-radius: 8px; background: #071f19a8; }.smart-board code { color: #fff4d4; font: 11px/1.65 Consolas, monospace; }.smart-board ul { margin: 12px 0 0; padding: 0; display: grid; gap: 7px; list-style: none; }.smart-board li { color: #d8ebe1; font-size: 10px; }.smart-board li::before { content: "·"; margin-right: 8px; color: #f0c76f; font-weight: 900; }
+.smart-board { position: relative; z-index: 2; width: calc(100% - 170px); min-height: 330px; padding: 20px 22px; border: 10px solid #6e5140; border-radius: 10px; color: #edf8f0; background: linear-gradient(145deg, #23443b, #17352e); box-shadow: inset 0 0 35px #081b14, 0 14px 28px #60422a24; }.smart-board header span { display: block; color: #e4c999; font: 700 8px Consolas; letter-spacing: .12em; }.smart-board header b { display: block; margin-top: 7px; font-size: 18px; }.smart-board pre { margin: 8px 0 0; padding: 12px 14px; overflow: auto; border: 1px solid #ffffff18; border-radius: 8px; background: #071f19a8; }.smart-board code { color: #fff4d4; font: 11px/1.65 Consolas, monospace; }.smart-board ul { margin: 8px 0 0; padding: 0; display: grid; gap: 7px; list-style: none; }.smart-board li { color: #d8ebe1; font-size: 10px; line-height: 1.55; }.smart-board li::before { content: "·"; margin-right: 8px; color: #f0c76f; font-weight: 900; }.board-key-points,.board-code-example { margin-top: 13px; }.board-key-points > b,.board-code-example > b { color: #f6caa2; font-size: 9px; }
 .teacher-zone { position: relative; z-index: 3; height: 122px; display: flex; align-items: end; justify-content: space-between; padding: 6px 34px 0 80px; }.teacher-desk { width: 125px; height: 52px; position: relative; border-radius: 5px 5px 2px 2px; color: #fbddaa; background: #855b3e; box-shadow: inset 0 -6px #70492f, 0 8px 14px #56341f28; }.teacher-desk span { position: absolute; top: -35px; left: 28px; width: 48px; height: 34px; display: grid; place-items: center; border: 4px solid #55525c; border-radius: 4px; color: #ffcad1; background: #22252c; font: 800 10px Consolas; }.teacher-desk i { position: absolute; right: 10px; top: -14px; width: 10px; height: 16px; border-radius: 2px 2px 5px 5px; background: #b8d4c4; }
 .desk-row { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; }.classmate { position: relative; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #b77c5548; border-radius: 12px 12px 5px 5px; color: #5b4032; background: linear-gradient(#f6dec7, #d7ae8c); box-shadow: inset 0 -5px #bd8967, 0 10px 15px #6b3c2222; text-align: left; }.classmate > i { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 3px solid #fff8; border-radius: 50%; color: #fff; background: #6f8d75; font: normal 800 12px serif; box-shadow: 0 3px 8px #4b2d1f24; }.classmate:nth-child(2) > i { background: #c76a4e; }.classmate:nth-child(3) > i { background: #8b7195; }.classmate.ta > i { background: #a06e43; }.classmate div { min-width: 0; }.classmate b, .classmate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.classmate b { font-size: 10px; }.classmate small { margin-top: 3px; color: #8b6957; font-size: 7px; }.classmate > span { position: absolute; top: -8px; right: 10px; width: 10px; height: 10px; border: 3px solid #fff; border-radius: 50%; background: #c8b7aa; }.classmate.speaking { border-color: #c51632; background: linear-gradient(#fff1df, #efc7a5); transform: translateY(-5px); box-shadow: 0 0 0 4px #c5163215, 0 16px 25px #6b3c2230; }.classmate.speaking > span { background: #d51c39; box-shadow: 0 0 0 5px #d51c3920; animation: pulse 1.5s infinite; }.classmate.teacher { width: 165px; background: linear-gradient(#f5e5d9, #d5b9a3); }
 .conversation-dock { min-height: 620px; display: grid; grid-template-rows: auto 1fr auto; background: #fffcfa; }.conversation-dock > header { display: flex; justify-content: space-between; gap: 15px; padding: 20px; border-bottom: 1px solid #eee2e0; }.conversation-dock header p { margin: 0 0 5px; color: #b4233b; font: 700 8px Consolas; letter-spacing: .14em; }.conversation-dock header h3 { margin: 0; font-size: 15px; }.conversation-dock header > span { height: fit-content; display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 99px; color: #65756b; background: #eef6f0; font-size: 8px; }.conversation-dock header > span i { width: 6px; height: 6px; border-radius: 50%; background: #49a26c; box-shadow: 0 0 0 4px #49a26c17; }
@@ -1564,7 +1648,7 @@ onBeforeUnmount(() => {
 .plan-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 11px; border: 1px solid #eadfe1; border-radius: 11px; background: #fffafa; }.plan-progress span { display: flex; align-items: center; gap: 7px; color: #9a8e92; font-size: 8px; }.plan-progress i { width: 20px; height: 20px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #9e8f93; background: #eee7e8; font-style: normal; font-weight: 800; }.plan-progress span.active { color: #a11c33; font-weight: 800; }.plan-progress span.active i { color: #fff; background: #bd1a34; box-shadow: 0 0 0 4px #bd1a3412; }.plan-progress span.done { color: #477158; }.plan-progress span.done i { color: #fff; background: #4e8b65; }
 .self-profile-details { overflow: hidden; border: 1px solid #e9dfe0; border-radius: 11px; background: #fff; }.self-profile-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #76696d; cursor: pointer; font-size: 9px; }.self-profile-details summary b { color: #a12338; }.self-profile-details[open] summary { border-bottom: 1px solid #eee4e5; background: #fff9f8; }.self-profile-details .self-profile-inline { border: 0; border-radius: 0; }
 .lesson-masthead aside button { grid-column: 1 / -1; justify-self: end; padding: 0; border: 0; color: #9e5763; background: transparent; font-size: 8px; text-decoration: underline; }.progress-explanation { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 42px 14px 14px; border: 1px solid #e6dadd; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px #4c0f1b0a; }.progress-explanation article { padding: 12px; border-radius: 10px; background: #faf7f7; }.progress-explanation b { color: #8f1c31; font-size: 11px; }.progress-explanation p { margin: 6px 0; color: #665b5f; font-size: 9px; line-height: 1.65; }.progress-explanation small { color: #8c7f83; font-size: 8px; }.progress-explanation > button { position: absolute; top: 9px; right: 12px; border: 0; color: #9b8c90; background: transparent; font-size: 18px; }.profile-chip { border: 0; text-align: left; cursor: pointer; }
-.smart-board .board-explanation { margin: 10px 0; color: #ede5dc; font-size: 11px; line-height: 1.75; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 9px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 9px/1.55 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }
+.smart-board .board-explanation { margin: 10px 0; color: #f1e9e0; font-size: 11px; line-height: 1.85; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 9px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 9px/1.65 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }.board-mistakes { display: grid; gap: 6px; margin-top: 12px; padding: 10px 12px; border: 1px solid #f3b58745; border-radius: 8px; background: #552f213d; }.board-mistakes b { color: #ffd2ae; font-size: 9px; }.board-mistakes span { color: #f1d9cb; font-size: 9px; line-height: 1.55; }.board-mistakes span::before { content: "!"; display: inline-grid; width: 14px; height: 14px; margin-right: 7px; place-items: center; border-radius: 50%; color: #40251c; background: #f0bd82; font-weight: 900; }
 .scope-notice { display: flex; align-items: flex-start; gap: 7px; margin: 7px 0 9px; padding: 8px 10px; border: 1px solid #e8cf9c; border-radius: 9px; background: #fff9ec; color: #765c2b; font-size: 8px; line-height: 1.55; }.scope-notice > b { flex: 0 0 auto; color: #a06017; font-size: 7px; letter-spacing: .04em; }.scope-notice.compact { margin: 5px 0 7px; padding: 6px 8px; }
 @media (max-width: 760px) { .assessment-gate, .assessment-result-screen { min-height: 600px; padding: 24px 18px; }.assessment-welcome { grid-template-columns: 1fr; gap: 24px; }.assessment-gate > header, .assessment-result-screen > header, .generic-mode-banner { align-items: flex-start; flex-direction: column; }.result-summary, .assessment-result-screen > section:not(.planning-studio) > div { grid-template-columns: 1fr 1fr; }.assessment-navigation { flex-wrap: wrap; }.assessment-navigation > span { width: 100%; order: -1; } }
 @media (max-width: 760px) { .returning-planner-gate { padding: 24px 18px; }.returning-planner-gate > header, .planning-studio > header { align-items: flex-start; flex-direction: column; }.preference-grid, .self-profile-result, .progress-explanation, .plan-progress { grid-template-columns: 1fr; }.self-profile-card > footer, .self-profile-inline { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; }.self-profile-inline > div { grid-column: auto; }.classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; }.teacher-portrait { justify-items: start; }.teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } }

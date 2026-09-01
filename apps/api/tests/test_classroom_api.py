@@ -144,6 +144,18 @@ def test_adaptive_session_repairs_prerequisite_gap_and_uses_real_code_tasks() ->
     assert lesson.practice.public_examples
     assert lesson.homework.public_examples
     assert {"practice", "homework"}.issubset({beat.action for beat in lesson.beats})
+    instructional_beats = [
+        beat for beat in lesson.beats
+        if beat.id.startswith(("adaptive-concept--", "adaptive-checkpoint--", "adaptive-example--"))
+    ]
+    assert len(instructional_beats) == len(lesson.knowledge_point_ids) * 2
+    assert all(beat.board_explanation for beat in instructional_beats)
+    assert all(beat.board_trace for beat in instructional_beats)
+    assert any(
+        point.startswith("易错提醒：")
+        for beat in instructional_beats
+        for point in beat.board_points
+    )
     assert "优先修复" in lesson.planning_reason
 
     restored = service.get_lesson(lesson.lesson_id)

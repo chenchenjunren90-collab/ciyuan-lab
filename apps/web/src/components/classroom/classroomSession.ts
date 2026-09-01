@@ -15,7 +15,7 @@ export interface PersistedClassroomMessage {
   role: ClassroomRole | "student";
   name: string;
   content: string;
-  kind: "lesson" | "reply" | "student";
+  kind: "lesson" | "reply" | "student" | "checkpoint";
   review?: "approved" | "limited";
   evidenceCount?: number;
   evidenceSource?: "course" | "online";
@@ -26,11 +26,17 @@ export interface PersistedClassroomMessage {
 
 export interface ClassroomSessionDraft {
   version: 1;
+  contentRevision?: number;
   savedAt: string;
   lessonId: string;
   currentIndex: number;
+  furthestIndex?: number;
   selectedChoice: string;
   checkpointResult: ClassroomCheckpointResult | null;
+  checkpointDrafts?: Record<string, {
+    selectedChoice: string;
+    checkpointResult: ClassroomCheckpointResult | null;
+  }>;
   messages: PersistedClassroomMessage[];
   practiceCode: string;
   homeworkCode: string;
