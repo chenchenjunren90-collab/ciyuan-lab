@@ -311,9 +311,8 @@ const latestTeacherMessage = computed(() => [...messages.value].reverse().find((
 const latestTeacherQuestion = computed(() => [...messages.value].reverse().find((message) => (
   message.role === "student" && message.target === "teacher" && message.kind === "student"
 )) ?? null);
-const communityMessages = computed(() => messages.value.filter((message) => (
-  peerRoles.includes(message.role as ClassroomRole)
-  || (message.role === "student" && message.target !== "teacher" && message.target !== "ta")
+const conversationMessages = computed(() => messages.value.filter((message) => (
+  message.kind === "student" || message.kind === "reply"
 )));
 const peerRoles: ClassroomRole[] = ["peer_cautious", "peer_debugger", "peer_summarizer"];
 
@@ -478,7 +477,7 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
   assessmentResultVisible.value = draft.assessmentResultVisible;
   retakeActive.value = draft.retakeActive && diagnostic.value?.phase === "reassessment";
   learningPlan.value = draft.learningPlan;
-  classroomView.value = draft.classroomView;
+  classroomView.value = draft.classroomView === "discussion" ? "lecture" : draft.classroomView;
   selectedMaterialId.value = draft.selectedMaterialId;
   isPaused.value = draft.isPaused;
   return true;
@@ -833,9 +832,10 @@ async function requestEnterPersonalizedClassroom(): Promise<void> {
 }
 
 function changeClassroomView(view: typeof classroomView.value): void {
-  classroomView.value = view;
-  const labels = { lecture: "老师主讲", discussion: "课堂交流", code: "代码练习", materials: "课程资料" } as const;
-  showFeedback(`已切换到${labels[view]}。学习进度和代码草稿不会丢失。`);
+  const normalizedView = view === "discussion" ? "lecture" : view;
+  classroomView.value = normalizedView;
+  const labels = { lecture: "课堂学习", code: "代码练习", materials: "课程资料" } as const;
+  showFeedback(`已切换到${labels[normalizedView]}。学习进度和代码草稿不会丢失。`);
 }
 
 function handleViewSelect(event: Event): void {
@@ -931,8 +931,8 @@ function useSuggestedPace(): void {
 async function openDialogue(role: ClassroomRole, starter = ""): Promise<void> {
   dialogueRole.value = role;
   if (starter) dialogueText.value = starter;
-  classroomView.value = "discussion";
-  showFeedback(`已打开与${roleMeta[role].name}的交流区，可以直接输入或补充你的想法。`);
+  classroomView.value = "lecture";
+  showFeedback(`已选择${roleMeta[role].name}。互动区就在黑板旁，可以边听边问。`);
   await nextTick();
   dialogueComposer.value?.scrollIntoView({ behavior: "smooth", block: "center" });
   dialogueComposer.value?.focus({ preventScroll: true });
@@ -1371,9 +1371,9 @@ onBeforeUnmount(() => {
     <template v-else-if="lesson && currentBeat">
       <div v-if="props.genericMode && !learnerProfile" class="generic-mode-banner"><div><b>正在使用通用课程</b><span>尚未建立能力画像，讲解顺序和练习难度无法按你的水平调整。</span></div><button @click="emit('requestAssessment')">现在去完成测评</button></div>
       <nav class="focus-toolbar" aria-label="课堂工作区切换">
-        <div><b>专注课堂</b><span>只保留当前学习所需工具</span></div>
-        <select :value="classroomView" aria-label="选择课堂工作区" @change="handleViewSelect"><option value="lecture">老师主讲</option><option value="discussion">课堂交流</option><option value="code">代码练习</option><option value="materials">课程资料</option></select>
-        <div class="focus-view-buttons"><button v-for="item in ([['lecture','听课'],['discussion','交流'],['code','写代码'],['materials','看资料']] as const)" :key="item[0]" :class="{ active: classroomView === item[0] }" @click="changeClassroomView(item[0])">{{ item[1] }}</button></div>
+        <div><b>专注课堂</b><span>讲解与互动在同一空间持续进行</span></div>
+        <select :value="classroomView" aria-label="选择课堂工作区" @change="handleViewSelect"><option value="lecture">课堂学习</option><option value="code">代码练习</option><option value="materials">课程资料</option></select>
+        <div class="focus-view-buttons"><button v-for="item in ([['lecture','课堂'],['code','写代码'],['materials','看资料']] as const)" :key="item[0]" :class="{ active: classroomView === item[0] }" @click="changeClassroomView(item[0])">{{ item[1] }}</button></div>
         <button class="exit-class" @click="requestEarlyExit">提前下课</button>
       </nav>
       <header class="lesson-masthead">
@@ -1446,12 +1446,12 @@ onBeforeUnmount(() => {
       </nav>
       <div class="lesson-history-actions"><button class="secondary" :disabled="currentIndex === 0" @click="goToLessonStep(currentIndex - 1)">← 返回上一环节</button><span>可点击上方已学环节回看，作答和代码不会丢失</span></div>
 
-      <div v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="classroom-layout" :class="{ 'lecture-only': classroomView === 'lecture', 'discussion-only': classroomView === 'discussion' }">
-        <section v-if="classroomView === 'lecture' || classroomView === 'discussion'" class="teacher-lecture-card">
+      <div v-if="classroomView === 'lecture'" class="classroom-layout integrated-learning">
+        <section class="teacher-lecture-card">
           <div class="teacher-portrait"><i>林</i></div>
           <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="useConversationStarter('teacher', '老师，我对刚才这一步的理解是：')">向老师提问</button></footer></div>
         </section>
-        <div v-if="classroomView === 'lecture'" class="classroom-scene" :data-phase="currentBeat.phase">
+        <div class="classroom-scene" :data-phase="currentBeat.phase">
           <div class="sun-window"><span></span><i></i></div>
           <div class="wall-note">慢慢来，每一次尝试都算数</div>
 
@@ -1484,12 +1484,12 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <aside v-if="classroomView === 'discussion'" class="conversation-dock">
-          <header><div><h3>{{ currentBeat.phase === "homework" ? "课后学习室" : "同学研讨桌" }}</h3><small>先听老师主讲，也欢迎把你的理解说给同学听。</small></div></header>
-          <div class="discussion-prompts"><button @click="useConversationStarter('peer_cautious', '我对这一步的理解是：')">分享我的理解</button><button @click="useConversationStarter('peer_debugger', '阿拓，我卡在这里，我们一起找找原因：')">一起找错误</button><button @click="useConversationStarter('peer_summarizer', '宁宁，请先听听我的总结，再帮我补充：')">互相做总结</button></div>
+        <aside class="conversation-dock" aria-label="课堂互动区">
+          <header><div><p>LIVE CLASS</p><h3>{{ currentBeat.phase === "homework" ? "课后互动区" : "课堂互动区" }}</h3><small>左侧黑板是主线。你可以随时向老师追问、让助教判断理解，或和同伴讨论。</small></div><span><i></i>围绕当前环节</span></header>
+          <div class="discussion-prompts"><button @click="useConversationStarter('teacher', '老师，请把黑板上的这一步再讲细一点：')">请老师讲细一点</button><button @click="useConversationStarter('ta', '助教，请判断我对当前内容的理解是否到位：')">请助教判断理解</button><button @click="useConversationStarter('peer_cautious', '我对这一步的理解是：')">分享我的理解</button><button @click="useConversationStarter('peer_debugger', '阿拓，我卡在这里，我们一起找找原因：')">一起找错误</button></div>
           <div ref="messageList" class="message-list" aria-live="polite">
-            <div v-if="!communityMessages.length" class="discussion-empty"><b>这里不是答案墙，而是你的思考空间</b><span>说出一个猜想、困惑或总结，同学会结合当前课堂环节回应你。</span></div>
-            <article v-for="message in communityMessages" :key="message.id" :class="[`role-${message.role}`, `kind-${message.kind}`]">
+            <div v-if="!conversationMessages.length" class="discussion-empty"><b>讲解和互动不再分开</b><span>先跟着左侧黑板学习；遇到不明白的地方，可以立即提问或说出自己的理解。</span></div>
+            <article v-for="message in conversationMessages" :key="message.id" :class="[`role-${message.role}`, `kind-${message.kind}`]">
               <i :style="{ background: roleMeta[message.role].color }">{{ roleMeta[message.role].icon }}</i>
               <div><b>{{ message.name }}</b><p v-if="message.scopeNotice" class="scope-notice compact"><b>本节外延伸</b>{{ message.scopeNotice }}</p><SafeMarkdown :source="message.content" /><small v-if="message.review" class="message-audit">{{ message.review === "approved" ? `✓ 已审核 · ${message.evidenceCount ?? 0} 条${message.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "△ 依据有限 · 保守回答" }}</small></div>
             </article>
@@ -1497,6 +1497,7 @@ onBeforeUnmount(() => {
           <footer>
             <div class="role-pills">
               <button class="teacher-pill" :class="{ active: dialogueRole === 'teacher' }" @click="selectDialogueRole('teacher')">问林老师</button>
+              <button :class="{ active: dialogueRole === 'ta' }" @click="selectDialogueRole('ta')">问助教小程</button>
               <button v-for="person in lesson.cast.filter((item) => peerRoles.includes(item.role))" :key="person.role" :class="{ active: dialogueRole === person.role }" @click="selectDialogueRole(person.role)">{{ person.display_name }}</button>
             </div>
             <div class="talk-composer"><textarea ref="dialogueComposer" v-model="dialogueText" rows="2" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : "发送" }}</button></div>
@@ -1658,7 +1659,7 @@ onBeforeUnmount(() => {
 .gap-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.gap-list article { padding: 12px; border-left: 3px solid #c2223b; border-radius: 7px 11px 11px 7px; background: #fff6f6; }.gap-list b, .gap-list span { display: block; font-size: 9px; }.gap-list span { margin-top: 5px; color: #9d2639; font-weight: 800; }.gap-list p { margin: 7px 0 0; color: #76686d; font-size: 8px; line-height: 1.6; }
 .block-list { display: flex; flex-wrap: wrap; gap: 7px; }.block-list span { display: grid; gap: 4px; padding: 9px 11px; border: 1px solid #e8dfe0; border-radius: 9px; color: #796d71; background: #fbf9f9; font-size: 8px; }.block-list b { color: #4a3e42; font-size: 9px; }.diagnostic-analysis > small { color: #8d8084; font-size: 8px; line-height: 1.6; }
 .focus-toolbar { position: sticky; z-index: 20; top: 10px; display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 14px; padding: 11px 13px; border: 1px solid #e5d7d9; border-radius: 14px; background: #fffefdf2; box-shadow: 0 12px 34px #45101c12; backdrop-filter: blur(14px); }.focus-toolbar > div:first-child b, .focus-toolbar > div:first-child span { display: block; }.focus-toolbar > div:first-child b { font-size: 11px; }.focus-toolbar > div:first-child span { margin-top: 2px; color: #918488; font-size: 7px; }.focus-toolbar select { display: none; padding: 8px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.focus-view-buttons { display: flex; justify-self: center; gap: 5px; padding: 4px; border-radius: 10px; background: #f4eff0; }.focus-view-buttons button { padding: 7px 12px; border: 0; border-radius: 7px; color: #75696d; background: transparent; font-size: 9px; }.focus-view-buttons button.active { color: #9f1730; background: #fff; box-shadow: 0 3px 10px #4e10200d; font-weight: 800; }.exit-class { padding: 7px 10px; border: 1px solid #e2cfd2; border-radius: 8px; color: #8d5660; background: #fff; font-size: 8px; }
-.classroom-layout.lecture-only, .classroom-layout.discussion-only { grid-template-columns: minmax(0, 1fr); }.classroom-layout.lecture-only .classroom-scene { border-right: 0; }.classroom-layout.discussion-only .conversation-dock { min-height: 600px; }.classroom-layout.discussion-only .message-list { min-height: 340px; max-height: 460px; }
+.classroom-layout.integrated-learning .conversation-dock { min-width: 0; }.classroom-layout.integrated-learning .message-list { min-height: 300px; }
 .lesson-materials { min-height: 620px; display: grid; grid-template-columns: 290px minmax(0, 1fr); overflow: hidden; border: 1px solid #e5d9da; border-radius: 22px; background: #fff; box-shadow: 0 18px 55px #40101b0a; }.lesson-materials > aside { display: grid; align-content: start; gap: 7px; padding: 18px; border-right: 1px solid #eee4e5; background: #fbf8f8; }.lesson-materials aside header { margin-bottom: 7px; }.lesson-materials aside header b, .lesson-materials aside header span { display: block; }.lesson-materials aside header b { font-size: 13px; }.lesson-materials aside header span { margin-top: 4px; color: #928589; font-size: 8px; }.lesson-materials aside button { display: grid; gap: 4px; padding: 11px; border: 1px solid transparent; border-radius: 10px; color: #5f5558; background: transparent; text-align: left; }.lesson-materials aside button small { color: #a62a3e; font: 7px Consolas; }.lesson-materials aside button b { font-size: 10px; }.lesson-materials aside button span { color: #887b7f; font-size: 8px; line-height: 1.5; }.lesson-materials aside button.active { border-color: #dfbcc2; background: #fff; box-shadow: inset 3px 0 #bd1b35; }.lesson-materials > article { padding: clamp(24px, 4vw, 52px); }.lesson-materials article header span { color: #a3263b; font-size: 9px; }.lesson-materials article h2 { margin: 8px 0 20px; font-size: 28px; }.lesson-materials article > p { color: #5d5256; font-size: 13px; line-height: 1.9; }.lesson-materials article section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #eee5e6; }.lesson-materials article li { margin: 8px 0; color: #655b5e; font-size: 11px; line-height: 1.7; }.lesson-materials pre { padding: 16px; overflow: auto; border-radius: 11px; color: #f8ebdf; background: #1d2c29; }.lesson-materials article > small { display: block; margin-top: 24px; color: #9b8f92; font-size: 8px; text-align: right; }
 .code-standby, .paused-classroom { min-height: 500px; display: grid; place-items: center; align-content: center; gap: 12px; padding: 30px; border: 1px solid #e6dbdc; border-radius: 22px; background: #fff; text-align: center; }.code-standby b, .paused-classroom h2 { margin: 0; font-size: 24px; }.code-standby p, .paused-classroom p { max-width: 620px; margin: 0; color: #786c70; font-size: 11px; line-height: 1.75; }.code-standby .secondary { padding: 9px 13px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.paused-classroom > span { color: #a22037; font-size: 9px; font-weight: 800; }
 .class-exit-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: #24131880; backdrop-filter: blur(6px); }.class-exit-backdrop > section { width: min(100%, 560px); padding: 26px; border-radius: 20px; background: #fff; box-shadow: 0 30px 90px #16060a40; }.class-exit-backdrop > section > span { color: #a82239; font-size: 9px; font-weight: 800; }.class-exit-backdrop h2 { margin: 7px 0; font-size: 25px; }.class-exit-backdrop p { color: #776a6e; font-size: 10px; }.class-exit-backdrop section > div { display: grid; gap: 9px; margin: 20px 0; }.class-exit-backdrop section > div button { display: grid; gap: 4px; padding: 13px; border: 1px solid #e7dcde; border-radius: 11px; color: #493e42; background: #fff; text-align: left; }.class-exit-backdrop section > div button:hover { border-color: #d49ba5; background: #fff8f8; }.class-exit-backdrop section > div button b { font-size: 11px; }.class-exit-backdrop section > div button span { color: #8b7e82; font-size: 8px; }.class-exit-backdrop footer { text-align: right; }.class-exit-backdrop footer button { padding: 9px 12px; border: 0; border-radius: 8px; color: #fff; background: #ad1931; }
