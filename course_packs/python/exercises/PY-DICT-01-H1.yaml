@@ -1,0 +1,92 @@
+id: PY-DICT-01-H1
+title: 课后练习：统计单词次数
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-DICT-01
+prompt: 读取一行单词，统计每个单词出现次数，并按单词字典序逐行输出“单词:次数”。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'words = input().split()
+
+    counts = {}
+
+    # 使用字典累计次数，再按键排序输出
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-normal
+    visibility: public
+    input: 'apple banana apple
+
+      '
+    expected_output: 'apple:2
+
+      banana:1
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: 'python
+
+      '
+    expected_output: 'python:1
+
+      '
+  - id: hidden-mixed
+    visibility: hidden
+    input: 'b a b c a b
+
+      '
+    expected_output: 'a:2
+
+      b:3
+
+      c:1
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 使用 counts.get(word, 0) 处理首次出现
+  - 每次出现加 1
+  - 遍历 sorted(counts) 保证稳定顺序
+  input_format: 一行一个或多个空格分隔的单词。
+  output_format: 按键排序后，每行输出 单词:次数。
+  constraints:
+  - 单词区分大小写
+  - 每个单词只输出一行
+  public_examples:
+  - input: 'apple banana apple
+
+      '
+    expected_output: 'apple:2
+
+      banana:1
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 字典累计题的核心是为“尚不存在的键”设计默认值。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: dicts / practice: inventory-style counting'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

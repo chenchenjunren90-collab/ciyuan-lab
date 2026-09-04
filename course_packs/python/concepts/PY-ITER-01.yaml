@@ -1,0 +1,64 @@
+id: PY-ITER-01
+title: 迭代器与生成器
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-FUNC-01
+- PY-LIST-01
+learning_objectives:
+- 能区分可迭代对象与迭代器
+- 能使用 yield 定义生成器函数
+concepts:
+- 迭代器
+- iter
+- next
+- 生成器
+- yield
+lesson:
+  summary: 理解可迭代对象与迭代器的关系，使用 iter/next 遍历，并通过 yield 定义生成器按需产出值。关键要点包括：iter() 获取迭代器，next() 逐个取出元素，耗尽抛出
+    StopIteration；含 yield 的函数是生成器函数，调用返回生成器对象；生成器按需惰性产出值，节省内存。
+  key_points:
+  - iter() 获取迭代器，next() 逐个取出元素，耗尽抛出 StopIteration
+  - 含 yield 的函数是生成器函数，调用返回生成器对象
+  - 生成器按需惰性产出值，节省内存
+  examples:
+  - "def gen():\n    yield 1\n    yield 2"
+  - '# 迭代器：it = iter([1, 2]) 获取可迭代对象的迭代器'
+  - 'it = iter([1, 2])  # iter 获取迭代器'
+  - 'next(it)  # next 逐个取出元素，耗尽抛出 StopIteration'
+  common_mistakes:
+  - 误以为迭代器可以在耗尽后自动回到开头重复使用
+  - 误以为生成器创建时会立即执行完整函数体并保存所有结果
+  learning_sequence:
+  - title: 先建立直觉
+    content: 理解可迭代对象与迭代器的关系，使用 iter/next 遍历，并通过 yield 定义生成器按需产出值。关键要点包括：iter() 获取迭代器，next() 逐个取出元素，耗尽抛出
+      StopIteration；含 yield 的函数是生成器函数，调用返回生成器对象；生成器按需惰性产出值，节省内存。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：用 yield 产生 0、1、2。
+  - title: 独立完成课后练习
+    content: 完成 PY-ITER-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 用 yield 产生 0、1、2。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def numbers():\n    for value in range(3):\n        yield value\nprint(*numbers())\n"
+    reflection: 生成器适合逐项处理数据；初学时先关注“需要一个，产生一个”。
+  checkpoint:
+    prompt: yield 与 return 在函数执行节奏上有什么不同？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-ITER-01-Q1
+- PY-ITER-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

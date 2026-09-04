@@ -1,0 +1,61 @@
+id: PY-BASE-07
+title: for 循环与 range
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用 for 遍历序列
+- 能使用 range 生成整数序列
+concepts:
+- for
+- range
+- 遍历
+- 步长
+lesson:
+  summary: 使用 for 循环遍历序列，借助 range 生成指定范围的整数序列，理解 range 的起止与步长参数。关键要点包括：for 直接遍历可迭代对象；range(start, stop,
+    step) 不包含 stop；需要索引时使用 enumerate，需要并行遍历时使用 zip，而不是手工维护多个下标；循环前明确空输入、步长方向和聚合初值，循环后验证边界结果。
+  key_points:
+  - for 直接遍历可迭代对象；range(start, stop, step) 不包含 stop。
+  - 需要索引时使用 enumerate，需要并行遍历时使用 zip，而不是手工维护多个下标。
+  - 循环前明确空输入、步长方向和聚合初值，循环后验证边界结果。
+  examples:
+  - 代码示例：total = sum(value for value in range(1, n + 1))
+  - "遍历：for item in [1, 2, 3]: print(item)  # 用 for 遍历列表"
+  - 步长：evens = list(range(0, 10, 2))  # range 第三个参数是步长
+  common_mistakes:
+  - 误以为range(1,5) 会同时产生 1、2、3、4、5
+  - 误以为在遍历列表时随意删除元素不会影响后续迭代位置
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 for 循环遍历序列，借助 range 生成指定范围的整数序列，理解 range 的起止与步长参数。关键要点包括：for 直接遍历可迭代对象；range(start, stop,
+      step) 不包含 stop；需要索引时使用 enumerate，需要并行遍历时使用 zip，而不是手工维护多个下标；循环前明确空输入、步长方向和聚合初值，循环后验证边界结果。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：输出 0 到 4。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-07-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 输出 0 到 4。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "for number in range(5):\n    print(number)\n"
+    reflection: 使用 range 前先写出期望得到的前三项和最后一项。
+  checkpoint:
+    prompt: range(2, n + 1, 2) 中为什么需要 n + 1？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-07-C1
+- PY-BASE-07-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

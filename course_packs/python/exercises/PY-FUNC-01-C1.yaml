@@ -1,0 +1,67 @@
+id: PY-FUNC-01-C1
+title: 阶乘计算
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-FUNC-01
+prompt: 从标准输入读取一个非负整数 n，输出 n 的阶乘（约定 0! = 1）。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-0
+    visibility: public
+    input: '0
+
+      '
+    expected_output: '1
+
+      '
+  - id: public-5
+    visibility: public
+    input: '5
+
+      '
+    expected_output: '120
+
+      '
+  - id: hidden-1
+    visibility: hidden
+    input: '1
+
+      '
+    expected_output: '1
+
+      '
+  - id: hidden-7
+    visibility: hidden
+    input: '7
+
+      '
+    expected_output: '5040
+
+      '
+  - id: hidden-10
+    visibility: hidden
+    input: '10
+
+      '
+    expected_output: '3628800
+
+      '
+status: draft

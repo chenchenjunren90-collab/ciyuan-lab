@@ -1,0 +1,25 @@
+id: DS-SET-01-Q1
+title: 概念判断：并查集
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-SET-01
+prompt: 关于“并查集”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 路径压缩在 find 后缩短访问路径，按秩或按大小合并避免高树。
+  - id: B
+    text: 并查集可以直接维护任意两点间的最短路径及其精确距离。
+  - id: C
+    text: union(x,y) 可以直接把 x 的父亲设为 y，无需先寻找双方代表元。
+  accepted_answers:
+  - A
+status: draft

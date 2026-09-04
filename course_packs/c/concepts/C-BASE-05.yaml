@@ -1,0 +1,32 @@
+id: C-BASE-05
+title: 算术、关系与逻辑运算
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-03
+learning_objectives:
+- 能判断与“算术、关系与逻辑运算”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“算术、关系与逻辑运算”的关键状态并验证边界
+concepts:
+- 算术、关系与逻辑运算
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解常用运算符、优先级和短路求值。关键要点包括：关系运算和逻辑运算产生 0 或 1，&& 与 || 按从左到右求值并具有短路行为；运算符优先级决定默认分组，复杂表达式应使用括号表达意图而不是依赖记忆；整数除法截断小数部分；算术前还要考虑整数提升、溢出和除数为零。
+  key_points:
+  - 关系运算和逻辑运算产生 0 或 1，&& 与 || 按从左到右求值并具有短路行为。
+  - 运算符优先级决定默认分组，复杂表达式应使用括号表达意图而不是依赖记忆。
+  - 整数除法截断小数部分；算术前还要考虑整数提升、溢出和除数为零。
+  common_mistakes:
+  - 误以为表达式 a < b < c 与数学中的连锁比较含义相同，可以直接判断 b 是否位于两者之间。
+  - 误以为&& 的右操作数始终会执行，因此不能用它保护空指针解引用或除零。
+  examples:
+  - 代码片段：if (p != NULL && *p > 0) puts("positive"); 当 p 为空时右侧不会求值。
+assessment_ids:
+- C-BASE-05-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

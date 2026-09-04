@@ -1,0 +1,25 @@
+id: C-BASE-05-Q1
+title: 概念判断：算术、关系与逻辑运算
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-BASE-05
+prompt: 关于“算术、关系与逻辑运算”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-BASE
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 运算符优先级决定默认分组，复杂表达式应使用括号表达意图而不是依赖记忆。
+  - id: B
+    text: 表达式 a < b < c 与数学中的连锁比较含义相同，可以直接判断 b 是否位于两者之间。
+  - id: C
+    text: '&& 的右操作数始终会执行，因此不能用它保护空指针解引用或除零。'
+  accepted_answers:
+  - A
+status: draft

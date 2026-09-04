@@ -1,0 +1,25 @@
+id: DS-GRAPH-06-Q1
+title: 概念判断：最小生成树
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-GRAPH-06
+prompt: 关于“最小生成树”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: Kruskal 按权重选择不成环的边，Prim 从已选顶点集合向外选择最轻跨边。
+  - id: B
+    text: 最小生成树等同于任意两点最短路径的并集，适用于有向图。
+  - id: C
+    text: 只要边权存在相同值，图就一定没有最小生成树。
+  accepted_answers:
+  - A
+status: draft

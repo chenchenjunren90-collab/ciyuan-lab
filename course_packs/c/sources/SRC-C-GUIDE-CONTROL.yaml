@@ -1,0 +1,18 @@
+id: SRC-C-GUIDE-CONTROL
+title: C 语言 MVP 教学提要：CONTROL
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 C 语言 CONTROL 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 分支应覆盖互斥条件和边界值。循环设计要明确初始化、不变量、终止条件和更新。函数通过清晰的参数、返回值与职责边界降低复杂度；C 默认按值传递。递归必须具有可到达的终止条件，并让每次调用缩小问题规模。
+status: reviewed

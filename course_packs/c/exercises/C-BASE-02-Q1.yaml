@@ -1,0 +1,25 @@
+id: C-BASE-02-Q1
+title: 概念判断：基本类型与取值范围
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-BASE-02
+prompt: 关于“基本类型与取值范围”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-BASE
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 无符号整数按模 2^N 运算；有符号溢出属于未定义行为，不能依赖回绕结果。
+  - id: B
+    text: int 在所有 C17 实现中都固定为 32 位，因此可以硬编码其最大值。
+  - id: C
+    text: 有符号整数超过最大值后必然像无符号整数一样按模回绕。
+  accepted_answers:
+  - A
+status: draft

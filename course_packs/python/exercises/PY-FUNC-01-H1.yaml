@@ -1,0 +1,68 @@
+id: PY-FUNC-01-H1
+title: 课后练习：封装问候函数
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-FUNC-01
+prompt: 定义 greet(name) 并返回“你好，name！”。读取姓名，调用函数并输出返回值；姓名需去除首尾空格。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "def greet(name):\n    # 返回问候语，不在函数内直接打印\n    pass\n\nname = input()\nprint(greet(name))\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-name
+    visibility: public
+    input: '小词
+
+      '
+    expected_output: '你好，小词！
+
+      '
+  - id: hidden-spaces
+    visibility: hidden
+    input: "  小元  \n"
+    expected_output: '你好，小元！
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - def 后写清参数 name
+  - 函数体中先清理 name
+  - 用 return 返回字符串
+  input_format: 一行姓名。
+  output_format: 一行问候语。
+  constraints:
+  - 函数必须有返回值
+  - 姓名去除首尾空格
+  public_examples:
+  - input: '小词
+
+      '
+    expected_output: '你好，小词！
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 函数优先返回结果，由调用者决定如何展示或继续计算。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: functions / definition and call'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

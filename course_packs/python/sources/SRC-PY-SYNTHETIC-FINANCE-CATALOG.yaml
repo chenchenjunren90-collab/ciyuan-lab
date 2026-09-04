@@ -1,0 +1,18 @@
+id: SRC-PY-SYNTHETIC-FINANCE-CATALOG
+title: Python课后财经综合项目合成场景目录
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编固定合成场景目录 v1
+rights:
+  basis: synthetic
+  note: 项目组原创教学场景，只借鉴已登记公开来源的字段类别；主体、编号、时间和数值均由固定规则生成。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 场景目录包含三类固定合成任务。信用还款质量审计使用虚构客户编号、账期、应还额、实还额、逾期状态和异常原因，人工注入缺失、负数、重复与状态冲突。银行营销统计使用虚构客户分群、联系渠道、活动批次和响应状态，要求分组、去重、聚合并说明样本偏差。金融投诉统计只使用虚构受理编号、产品类别、问题类别、受理日期、处理状态和是否按期回复，不包含叙述文本、公司名称、地址或身份字段。所有任务只考查Python解析、函数分解、容器、异常处理、统计与测试，不产生真实信用、营销或合规结论。
+status: reviewed

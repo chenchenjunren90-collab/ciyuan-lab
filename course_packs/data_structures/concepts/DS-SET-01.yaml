@@ -1,0 +1,33 @@
+id: DS-SET-01
+title: 并查集
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-TREE-01
+learning_objectives:
+- 能判断与“并查集”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“并查集”的关键状态并验证边界
+concepts:
+- 并查集
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用路径压缩和按秩合并维护动态连通性。关键要点包括：并查集用父指针森林表示不相交集合，find 返回代表元，union 合并两个代表元；路径压缩在 find 后缩短访问路径，按秩或按大小合并避免高树；两种优化结合时 m 次操作的摊还复杂度接近常数，通常写作
+    O(m alpha(n))。
+  key_points:
+  - 并查集用父指针森林表示不相交集合，find 返回代表元，union 合并两个代表元。
+  - 路径压缩在 find 后缩短访问路径，按秩或按大小合并避免高树。
+  - 两种优化结合时 m 次操作的摊还复杂度接近常数，通常写作 O(m alpha(n))。
+  common_mistakes:
+  - 误以为并查集可以直接维护任意两点间的最短路径及其精确距离。
+  - 误以为union(x,y) 可以直接把 x 的父亲设为 y，无需先寻找双方代表元。
+  examples:
+  - 轨迹示例：union(0,1)、union(1,2) 后 find(0)==find(2)；路径压缩会让沿途结点更接近根。
+assessment_ids:
+- DS-SET-01-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

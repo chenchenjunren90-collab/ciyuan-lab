@@ -1,0 +1,25 @@
+id: C-CTRL-05-Q1
+title: 概念判断：break、continue 与循环边界
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-CTRL-05
+prompt: 关于“break、continue 与循环边界”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-CONTROL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: continue 跳过本轮剩余语句；在 for 中随后执行更新表达式，在 while 中直接回到条件判断。
+  - id: B
+    text: 嵌套循环内执行一次 break 会同时终止所有外层循环。
+  - id: C
+    text: while 循环中的 continue 会自动执行写在循环体末尾的计数器更新。
+  accepted_answers:
+  - A
+status: draft

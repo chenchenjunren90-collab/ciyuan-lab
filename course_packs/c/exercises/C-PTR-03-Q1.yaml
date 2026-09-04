@@ -1,0 +1,25 @@
+id: C-PTR-03-Q1
+title: 概念判断：指针参数与输出参数
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-PTR-03
+prompt: 关于“指针参数与输出参数”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 只读输入可使用指向 const 的指针表达不可通过该接口修改数据的约束。
+  - id: B
+    text: 输出参数可以指向函数调用结束前已经离开生命周期的局部对象。
+  - id: C
+    text: 把参数声明为 const int * 会保证底层对象永远不可被任何代码修改。
+  accepted_answers:
+  - A
+status: draft

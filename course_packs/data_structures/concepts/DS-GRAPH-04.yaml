@@ -1,0 +1,32 @@
+id: DS-GRAPH-04
+title: 拓扑排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-GRAPH-03
+learning_objectives:
+- 能判断与“拓扑排序”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“拓扑排序”的关键状态并验证边界
+concepts:
+- 拓扑排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在有向无环图中生成满足依赖的线性次序。关键要点包括：拓扑序只对有向无环图定义，并要求每条边 u→v 中 u 出现在 v 之前；Kahn 算法反复取入度为零的顶点并删除其出边，需同步更新剩余入度；若最终输出顶点数少于 V，则剩余子图含有有向环，不存在拓扑序。
+  key_points:
+  - 拓扑序只对有向无环图定义，并要求每条边 u→v 中 u 出现在 v 之前。
+  - Kahn 算法反复取入度为零的顶点并删除其出边，需同步更新剩余入度。
+  - 若最终输出顶点数少于 V，则剩余子图含有有向环，不存在拓扑序。
+  common_mistakes:
+  - 误以为任意有向图都至少有一个拓扑序，只需从最小编号顶点开始。
+  - 误以为拓扑排序的结果唯一，因此不同的零入度选择策略不会改变序列。
+  examples:
+  - 示例：边 A→C、B→C 时 A 和 B 都可先出队，所以 A,B,C 与 B,A,C 都是合法拓扑序。
+assessment_ids:
+- DS-GRAPH-04-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

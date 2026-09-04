@@ -1,0 +1,34 @@
+id: C-IO-01
+title: 文本文件读写
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-STR-01
+learning_objectives:
+- 能判断与“文本文件读写”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“文本文件读写”的关键状态并验证边界
+concepts:
+- 文本文件读写
+- 边界条件
+- 可验证性
+lesson:
+  summary: 检查打开结果并用循环可靠处理文本记录。关键要点包括：fopen 可能因路径、权限或资源问题失败，任何读写前都必须检查返回的 FILE 指针；fgets 按容量读取并保留可能出现的换行符，解析前要区分完整行、截断行、文件结束和读取错误；写入完成后应检查输出操作与
+    fclose 的结果，确保错误路径也关闭已打开的流。
+  key_points:
+  - fopen 可能因路径、权限或资源问题失败，任何读写前都必须检查返回的 FILE 指针。
+  - fgets 按容量读取并保留可能出现的换行符，解析前要区分完整行、截断行、文件结束和读取错误。
+  - 写入完成后应检查输出操作与 fclose 的结果，确保错误路径也关闭已打开的流。
+  common_mistakes:
+  - 误以为用 while(!feof(fp)) 读取可以保证循环体每次都获得一条新的有效记录。
+  - 误以为fgets 总会去掉行末换行符，因此字符串可直接与不含换行的文本比较。
+  examples:
+  - 代码片段：FILE *in=fopen(path,"r"); if(!in) return OPEN_ERROR; while(fgets(line,sizeof line,in)){/* 解析完整记录 */}；最后检查 ferror(in)
+    并 fclose(in)。
+assessment_ids:
+- C-IO-01-C1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

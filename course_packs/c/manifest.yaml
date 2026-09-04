@@ -1,0 +1,20 @@
+schema_version: 0.1.0
+course:
+  id: c
+  title: C语言程序设计
+  status: draft
+  target_core_concepts: 42
+  implemented_core_concepts: 42
+content:
+  concepts_dir: concepts
+  exercises_dir: exercises
+  projects_dir: projects
+  sources_dir: sources
+features:
+  rag_qa: in_progress
+  adaptive_practice: in_progress
+  debug_tasks: in_progress
+  comprehensive_project: in_progress
+review:
+  content_owner: 王维庸
+  last_reviewed_at: null

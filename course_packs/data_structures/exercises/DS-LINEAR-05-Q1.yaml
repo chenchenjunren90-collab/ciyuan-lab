@@ -1,0 +1,25 @@
+id: DS-LINEAR-05-Q1
+title: 概念判断：线性表查找、插入与删除
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-LINEAR-05
+prompt: 关于“线性表查找、插入与删除”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 顺序表中间插入删除需要移动后续元素；链表在已知位置结点后只需调整链接。
+  - id: B
+    text: 链表在只给定下标时也能 O(1) 完成插入，因为结点不连续。
+  - id: C
+    text: 长度为 n 的线性表删除位置 n 是合法的，表示删除最后一个元素。
+  accepted_answers:
+  - A
+status: draft

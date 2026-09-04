@@ -1,0 +1,92 @@
+id: PY-STR-02-H1
+title: 课后练习：截取文本片段
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-STR-02
+prompt: 第一行读取字符串，第二行读取 start 和 end，输出字符串的 s[start:end]。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'text = input()
+
+    start, end = map(int, input().split())
+
+    # 输出半开区间切片
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-middle
+    visibility: public
+    input: 'python
+
+      1 4
+
+      '
+    expected_output: 'yth
+
+      '
+  - id: hidden-start
+    visibility: hidden
+    input: 'hello
+
+      0 2
+
+      '
+    expected_output: 'he
+
+      '
+  - id: hidden-empty
+    visibility: hidden
+    input: 'abc
+
+      2 2
+
+      '
+    expected_output: '
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 索引从 0 开始
+  - 切片写成 text[start:end]
+  - 用 start == end 检查空切片
+  input_format: 第一行字符串；第二行两个整数 start end。
+  output_format: 输出左闭右开的字符串切片。
+  constraints:
+  - 0 <= start <= end <= 字符串长度
+  - end 位置的字符不包含在结果中
+  public_examples:
+  - input: 'python
+
+      1 4
+
+      '
+    expected_output: 'yth
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 切片使用半开区间；长度通常等于 end - start。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'tutorial: Basic String Operations / slicing'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

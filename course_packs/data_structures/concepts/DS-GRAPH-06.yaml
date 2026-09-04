@@ -1,0 +1,32 @@
+id: DS-GRAPH-06
+title: 最小生成树
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-GRAPH-01
+learning_objectives:
+- 能判断与“最小生成树”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“最小生成树”的关键状态并验证边界
+concepts:
+- 最小生成树
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解连通无向图的 Kruskal 与 Prim 贪心选择。关键要点包括：最小生成树针对连通无向加权图，包含全部 V 个顶点且恰有 V-1 条边；Kruskal 按权重选择不成环的边，Prim 从已选顶点集合向外选择最轻跨边；切分性质支持选择某切分上的安全最轻边；权重相同时最小生成树可能不唯一。
+  key_points:
+  - 最小生成树针对连通无向加权图，包含全部 V 个顶点且恰有 V-1 条边。
+  - Kruskal 按权重选择不成环的边，Prim 从已选顶点集合向外选择最轻跨边。
+  - 切分性质支持选择某切分上的安全最轻边；权重相同时最小生成树可能不唯一。
+  common_mistakes:
+  - 误以为最小生成树等同于任意两点最短路径的并集，适用于有向图。
+  - 误以为只要边权存在相同值，图就一定没有最小生成树。
+  examples:
+  - 示例：三角形边权 AB=1、BC=2、AC=4，选择 AB 和 BC 得到总权重 3 的最小生成树。
+assessment_ids:
+- DS-GRAPH-06-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

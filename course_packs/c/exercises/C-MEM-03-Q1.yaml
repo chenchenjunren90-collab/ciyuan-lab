@@ -1,0 +1,25 @@
+id: C-MEM-03-Q1
+title: 概念判断：越界、未定义行为与内存诊断
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- C-MEM-03
+prompt: 关于“越界、未定义行为与内存诊断”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 未定义行为不能靠一次运行正常来证明安全，必须从对象边界、初始化和生命周期上排除。
+  - id: B
+    text: 越界读取只会得到一个不准确的值，不会影响优化或程序其他部分。
+  - id: C
+    text: 释放内存后只读取一次通常是安全的，只要尚未进行新的 malloc。
+  accepted_answers:
+  - A
+status: draft

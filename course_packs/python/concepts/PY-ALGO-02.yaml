@@ -1,0 +1,60 @@
+id: PY-ALGO-02
+title: 递归初步
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 50
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能理解递归的基本思想
+- 能实现阶乘、斐波那契等简单递归函数
+concepts:
+- 递归
+- 基线条件
+- 递归条件
+- 栈
+lesson:
+  summary: 理解递归的基线条件与递归条件，实现阶乘、斐波那契等简单递归函数。关键要点包括：递归函数直接或间接调用自身；基线条件是递归停止、不再调用自身的分支；缺少基线条件会导致无限递归与栈溢出。
+  key_points:
+  - 递归函数直接或间接调用自身
+  - 基线条件是递归停止、不再调用自身的分支
+  - 缺少基线条件会导致无限递归与栈溢出
+  examples:
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 前置条件：n 为非负整数'
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 基线条件：n == 0 返回 1，不再递归'
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 递归条件：n > 0 时递归调用 fact(n - 1)'
+  - 'fact(5)  # 栈：每次递归调用都向调用栈压入一层栈帧'
+  common_mistakes:
+  - 误以为递归函数只要调用自己就会自动在合适位置终止
+  - 误以为递归与循环必然占用相同的额外空间
+  learning_sequence:
+  - title: 先建立直觉
+    content: 理解递归的基线条件与递归条件，实现阶乘、斐波那契等简单递归函数。关键要点包括：递归函数直接或间接调用自身；基线条件是递归停止、不再调用自身的分支；缺少基线条件会导致无限递归与栈溢出。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：递归计算 1 到 n 的和。
+  - title: 独立完成课后练习
+    content: 完成 PY-ALGO-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 递归计算 1 到 n 的和。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def total(n):\n    if n == 0:\n        return 0\n    return n + total(n - 1)\n"
+    reflection: 先写递归出口，再确认每次调用都让问题规模变小。
+  checkpoint:
+    prompt: 如果没有递归出口，程序会发生什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-ALGO-02-Q1
+- PY-ALGO-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,60 @@
+id: PY-FUNC-03
+title: 可变参数
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 40
+prerequisites:
+- PY-FUNC-02
+learning_objectives:
+- 能使用 *args 接收任意数量位置参数
+- 能使用 **kwargs 接收关键字参数
+concepts:
+- '*args'
+- '**kwargs'
+- 参数解包
+lesson:
+  summary: 使用 *args 与 **kwargs 接收可变数量的参数，理解参数解包的用法。关键要点包括：*args 把任意数量位置参数打包为元组；**kwargs 把关键字参数打包为字典；*
+    也用于把可迭代对象解包为独立实参。
+  key_points:
+  - '*args 把任意数量位置参数打包为元组'
+  - '**kwargs 把关键字参数打包为字典'
+  - '* 也用于把可迭代对象解包为独立实参'
+  examples:
+  - 'def f(*args): return sum(args)'
+  - 'def f(**kwargs): return kwargs  # **kwargs 把关键字实参打包为字典'
+  - '# 参数解包：def add(a, b): return a + b; add(*[1, 2]) 把列表展开为两个实参'
+  common_mistakes:
+  - 误以为*args 是列表，**kwargs 的键可以不是字符串
+  - 误以为可变默认参数会在每次函数调用时重新创建
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 *args 与 **kwargs 接收可变数量的参数，理解参数解包的用法。关键要点包括：*args 把任意数量位置参数打包为元组；**kwargs 把关键字参数打包为字典；*
+      也用于把可迭代对象解包为独立实参。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：用 *args 接收任意数量的位置参数。
+  - title: 独立完成课后练习
+    content: 完成 PY-FUNC-03-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 用 *args 接收任意数量的位置参数。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def count_args(*args):\n    return len(args)\n\nprint(count_args(1, 2, 3))\n"
+    reflection: 可变参数适合数量不固定但角色相同的值，不应掩盖本应明确命名的参数。
+  checkpoint:
+    prompt: 函数定义中的 *values 与调用中的 *numbers 分别做什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FUNC-03-Q1
+- PY-FUNC-03-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

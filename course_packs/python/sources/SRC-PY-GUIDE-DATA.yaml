@@ -1,0 +1,31 @@
+id: SRC-PY-GUIDE-DATA
+title: Python MVP 教学提要：DATA
+course: python
+schema_version: 0.1.0
+version: 2
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 Python DATA 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: |
+      【文件读写】open() 返回文件对象。文本文件应明确编码，通常使用 encoding="utf-8"；读写模式 r、w、a 的行为不同，w 会截断原内容。with open(...) as file 会在代码块结束时关闭文件，即使发生异常也能执行清理。
+
+      【文本解析】read 读取全部内容，readline 读取一行，直接遍历文件对象适合逐行处理。解析前要明确换行、空白、分隔符和空行规则。对大文件宜逐行处理，避免一次性读取造成不必要的内存占用。
+
+      【CSV】csv 模块能按 CSV 规则处理引号和分隔符，比手写 split(',') 更可靠。DictReader 将每行映射为字段名字典，DictWriter 按字段写出。读取后仍需显式转换数值类型并校验缺失值、范围和重复记录。
+
+      【JSON】json.loads 解析字符串，json.load 从文件对象读取；dumps 与 dump 负责序列化。JSON 对象键是字符串，数组映射为列表，null 映射为 None。反序列化成功只说明语法有效，仍要校验字段类型和业务约束。
+
+      【数据清洗】稳定流程是：确认字段与数据字典，解析原始值，标准化格式，校验范围，处理缺失与重复，保留异常记录，再进行聚合和输出。清洗规则必须可解释，同一输入应得到可复现结果。
+
+      【综合数据处理】先用小规模样例验证筛选、分组、排序和聚合，再扩展到完整数据。字典适合按键汇总，集合适合去重，列表保留顺序。输出结论时同时记录样本数、过滤条件和异常数量，避免只给一个无法追溯的数字。
+
+      【错误与质量】异常不能被静默吞掉；捕获异常时应尽量针对具体类型，并保留行号、字段或原始值等定位信息。每条转换规则至少准备正常、边界和错误样例。财经背景只提供字段语义和约束，课程评价仍以程序结构、数据处理和测试证据为核心。
+status: reviewed

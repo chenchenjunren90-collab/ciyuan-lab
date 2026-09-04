@@ -1,0 +1,63 @@
+id: PY-OOP-01
+title: 类与对象
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 60
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能使用 class 定义类并创建实例对象
+- 能定义并使用 __init__ 方法与实例属性
+concepts:
+- 类
+- 对象
+- __init__
+- self
+- 实例属性
+lesson:
+  summary: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。关键要点包括：class 定义类，类名() 创建实例对象；__init__ 在实例化时自动调用，self
+    指向当前实例；实例属性通过 self.属性 访问和赋值。
+  key_points:
+  - class 定义类，类名() 创建实例对象
+  - __init__ 在实例化时自动调用，self 指向当前实例
+  - 实例属性通过 self.属性 访问和赋值
+  examples:
+  - "class Student:\n    def __init__(self, name):\n        self.name = name"
+  - "student = Student('小词')  # 对象：类名() 创建实例对象"
+  - "print(student.name)  # 实例属性：self.name 存的值通过 实例.属性 访问"
+  common_mistakes:
+  - 误以为实例属性必须预先在类体中声明后才能在 __init__ 赋值
+  - 误以为所有以双下划线开头和结尾的方法都由 Python 自动实现，无需定义
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 class 定义类、创建对象，理解 self 与 __init__ 初始化实例属性的作用。关键要点包括：class 定义类，类名() 创建实例对象；__init__ 在实例化时自动调用，self
+      指向当前实例；实例属性通过 self.属性 访问和赋值。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：定义一个保存名称的简单类。
+  - title: 独立完成课后练习
+    content: 完成 PY-OOP-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 定义一个保存名称的简单类。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "class Course:\n    def __init__(self, name):\n        self.name = name\ncourse = Course('Python')\n\
+      print(course.name)\n"
+    reflection: 类用于把相关数据和行为组织在一起，不要只为包装一个函数而建类。
+  checkpoint:
+    prompt: 为什么实例方法的第一个参数通常写作 self？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-OOP-01-Q1
+- PY-OOP-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

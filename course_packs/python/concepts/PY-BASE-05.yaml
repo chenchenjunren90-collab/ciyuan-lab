@@ -1,0 +1,62 @@
+id: PY-BASE-05
+title: 条件语句
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-03
+learning_objectives:
+- 能使用 if/elif/else 实现分支逻辑
+- 能构造多分支与嵌套判断
+concepts:
+- if
+- elif
+- else
+- 嵌套
+- 布尔表达式
+lesson:
+  summary: 使用 if/elif/else 根据条件选择执行路径，理解缩进对代码块的作用，并能构造多分支与嵌套判断。关键要点包括：if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块；区间判断可以使用链式比较，边界上的等号必须与题目契约一致；复杂条件优先拆成有含义的布尔变量，避免重复计算和难以测试的长表达式。
+  key_points:
+  - if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块。
+  - 区间判断可以使用链式比较，边界上的等号必须与题目契约一致。
+  - 复杂条件优先拆成有含义的布尔变量，避免重复计算和难以测试的长表达式。
+  - 布尔表达式：由比较或逻辑运算组成、结果为 True 或 False 的表达式，是 if/elif 的判断条件
+  examples:
+  - 代码示例：label = 'positive' if x > 0 else ('zero' if x == 0 else 'negative')
+  - "if x > 0:\n    sign = 1\nelif x < 0:\n    sign = -1\nelse:\n    sign = 0  # elif：if 不成立时继续判断下一个条件"
+  - "if score >= 60:\n    if score >= 85:\n        grade = 'A'  # 嵌套：if 内部再写 if 构成嵌套判断"
+  - 'is_adult = age >= 18  # 布尔表达式：比较运算的结果是 True 或 False'
+  common_mistakes:
+  - 误以为嵌套 if 的 else 会自动与缩进距离最近但不一定同层的 if 配对
+  - 误以为多层条件可以忽略互斥边界，因为 Python 会消除重叠分支
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 if/elif/else 根据条件选择执行路径，理解缩进对代码块的作用，并能构造多分支与嵌套判断。关键要点包括：if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块；区间判断可以使用链式比较，边界上的等号必须与题目契约一致；复杂条件优先拆成有含义的布尔变量，避免重复计算和难以测试的长表达式。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：根据温度判断是否需要带外套。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-05-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 根据温度判断是否需要带外套。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "temperature = 12\nif temperature < 15:\n    print(\"带外套\")\nelse:\n    print(\"无需外套\")\n"
+    reflection: 条件题最容易错在边界；编码前先把每个区间写在纸上。
+  checkpoint:
+    prompt: 如果先判断 score >= 60，再判断 score >= 85，会发生什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-05-C1
+- PY-BASE-05-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

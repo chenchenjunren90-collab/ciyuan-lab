@@ -1,0 +1,62 @@
+id: PY-MOD-01
+title: 模块与 import
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能使用 import 导入模块
+- 能使用 from...import 导入成员
+concepts:
+- import
+- 模块
+- 命名空间
+lesson:
+  summary: 掌握 import 与 from...import 的导入方式，理解模块的命名空间。关键要点包括：import 模块名 导入整个模块；from 模块 import 成员 导入指定成员；模块拥有独立命名空间，避免命名冲突。
+  key_points:
+  - import 模块名 导入整个模块
+  - from 模块 import 成员 导入指定成员
+  - 模块拥有独立命名空间，避免命名冲突
+  examples:
+  - import math
+  - "import math  # 模块：import 导入整个 math 模块"
+  - "import math  # 命名空间：成员需通过 math.sqrt(9) 这样的限定名访问"
+  common_mistakes:
+  - 误以为import 每出现一次都会无条件重新执行模块顶层代码
+  - 误以为from module import * 能稳定导入模块未来版本的全部内部名称
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握 import 与 from...import 的导入方式，理解模块的命名空间。关键要点包括：import 模块名 导入整个模块；from 模块 import 成员 导入指定成员；模块拥有独立命名空间，避免命名冲突。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：导入 math 并计算平方根。
+  - title: 独立完成课后练习
+    content: 完成 PY-MOD-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 导入 math 并计算平方根。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'import math
+
+      print(math.sqrt(9))
+
+      '
+    reflection: 导入方式应清晰表达名称来源，避免使用 import *。
+  checkpoint:
+    prompt: import math 与 from math import ceil 在调用写法上有何不同？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-MOD-01-Q1
+- PY-MOD-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

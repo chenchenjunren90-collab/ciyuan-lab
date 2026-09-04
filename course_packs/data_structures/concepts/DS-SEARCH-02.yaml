@@ -1,0 +1,32 @@
+id: DS-SEARCH-02
+title: 二分查找与边界
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-SEARCH-01
+learning_objectives:
+- 能够解释二分查找与边界的核心规则
+- 能够运用二分查找与边界解决边界明确的问题
+concepts:
+- 二分查找与边界
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在有序序列上维护不变量并避免区间错误。关键要点包括：二分查找只适用于按同一比较规则有序且支持随机访问的区间；采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间；查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。
+  key_points:
+  - 二分查找只适用于按同一比较规则有序且支持随机访问的区间。
+  - 采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间。
+  - 查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。
+  common_mistakes:
+  - 在无序数组上使用二分查找。
+  - 混用闭区间与半开区间公式，遗漏端点或形成死循环。
+  examples:
+  - 示例：在 [1,2,2,2,5] 查找首个2，相等时令 right=mid，最终得到下标1。
+assessment_ids:
+- DS-SEARCH-02-C1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

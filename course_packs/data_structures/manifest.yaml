@@ -1,0 +1,20 @@
+schema_version: 0.1.0
+course:
+  id: data_structures
+  title: 数据结构与算法
+  status: draft
+  target_core_concepts: 40
+  implemented_core_concepts: 40
+content:
+  concepts_dir: concepts
+  exercises_dir: exercises
+  projects_dir: projects
+  sources_dir: sources
+features:
+  rag_qa: in_progress
+  adaptive_practice: in_progress
+  debug_tasks: in_progress
+  comprehensive_project: in_progress
+review:
+  content_owner: 曾毅杨
+  last_reviewed_at: null

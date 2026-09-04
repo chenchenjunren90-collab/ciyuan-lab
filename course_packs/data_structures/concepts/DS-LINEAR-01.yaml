@@ -1,0 +1,33 @@
+id: DS-LINEAR-01
+title: 顺序表与随机访问
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-01
+learning_objectives:
+- 能够解释顺序表与随机访问的核心规则
+- 能够运用顺序表与随机访问解决边界明确的问题
+concepts:
+- 顺序表与随机访问
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解连续存储、索引访问和中间插入成本。关键要点包括：顺序表使用连续存储，通过下标常数时间访问元素；中间插入或删除需要移动后续元素，尾部扩展还可能触发整体重新分配；长度表示已有元素数量，容量表示可用槽位；合法访问区间始终是
+    0 到 length-1。
+  key_points:
+  - 顺序表使用连续存储，通过下标常数时间访问元素。
+  - 中间插入或删除需要移动后续元素，尾部扩展还可能触发整体重新分配。
+  - 长度表示已有元素数量，容量表示可用槽位；合法访问区间始终是 0 到 length-1。
+  common_mistakes:
+  - 把容量当作长度并读取尚未初始化的槽位。
+  - 从前向后移动元素完成插入，覆盖还没搬走的数据。
+  examples:
+  - 示例：长度5的顺序表在下标2插入元素，需要把原下标2到4的元素依次后移。
+assessment_ids:
+- DS-LINEAR-01-C1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

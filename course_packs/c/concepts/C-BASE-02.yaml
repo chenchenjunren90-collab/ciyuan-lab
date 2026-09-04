@@ -1,0 +1,32 @@
+id: C-BASE-02
+title: 基本类型与取值范围
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-01
+learning_objectives:
+- 能判断与“基本类型与取值范围”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“基本类型与取值范围”的关键状态并验证边界
+concepts:
+- 基本类型与取值范围
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分整数、浮点和字符类型，并根据问题选择类型。关键要点包括：C 只规定整数类型的最小取值范围与相对宽度，精确宽度应通过 limits.h、stdint.h 或 sizeof 核对；无符号整数按模 2^N 运算；有符号溢出属于未定义行为，不能依赖回绕结果；浮点数通常只能近似表示十进制小数，比较计算结果时应结合误差容限和问题尺度。
+  key_points:
+  - C 只规定整数类型的最小取值范围与相对宽度，精确宽度应通过 limits.h、stdint.h 或 sizeof 核对。
+  - 无符号整数按模 2^N 运算；有符号溢出属于未定义行为，不能依赖回绕结果。
+  - 浮点数通常只能近似表示十进制小数，比较计算结果时应结合误差容限和问题尺度。
+  common_mistakes:
+  - 误以为int 在所有 C17 实现中都固定为 32 位，因此可以硬编码其最大值。
+  - 误以为有符号整数超过最大值后必然像无符号整数一样按模回绕。
+  examples:
+  - 代码片段：printf("%zu %d\n", sizeof(int), INT_MAX); 用 sizeof 和 limits.h 在当前实现上观察 int 的宽度与上界。
+assessment_ids:
+- C-BASE-02-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

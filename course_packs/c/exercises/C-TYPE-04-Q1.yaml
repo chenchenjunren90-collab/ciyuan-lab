@@ -1,0 +1,25 @@
+id: C-TYPE-04-Q1
+title: 概念判断：typedef 与接口可读性
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- C-TYPE-04
+prompt: 关于“typedef 与接口可读性”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 别名可简化函数指针和平台相关类型，但接口仍应让所有权、可变性和单位清楚可见。
+  - id: B
+    text: typedef int UserId 会创建与 int 完全不兼容的新类型，编译器会阻止二者混用。
+  - id: C
+    text: 把指针隐藏在 typedef 中总能提升接口清晰度，不会掩盖所有权或 const 位置。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,64 @@
+id: PY-BASE-08
+title: break、continue 与循环 else
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-06
+- PY-BASE-07
+learning_objectives:
+- 能使用 break 提前终止循环
+- 能使用 continue 跳过本次迭代
+- 能理解循环 else 的执行时机
+concepts:
+- break
+- continue
+- else
+- 循环控制
+lesson:
+  summary: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。关键要点包括：break 立即终止整个循环；continue 跳过本次迭代，继续下一次；循环的
+    else 子句在没有被 break 中断时执行。
+  key_points:
+  - break 立即终止整个循环
+  - continue 跳过本次迭代，继续下一次
+  - 循环的 else 子句在没有被 break 中断时执行
+  - continue 与 break 共同构成循环控制：continue 跳过本轮，break 终止整个循环
+  examples:
+  - "for i in range(10):\n    if i == 3:\n        break"
+  - "for i in range(5):\n    if i == 2:\n        continue\n    print(i)"
+  - "for i in range(3):\n    if i == 2:\n        break  # 循环控制：break 提前终止整个循环"
+  common_mistakes:
+  - 误以为循环 else 在循环执行过至少一次时运行，与 break 无关
+  - 误以为continue 会跳过本轮后自动终止整个循环
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握 break、continue 对循环流程的控制，理解循环 else 在未发生 break 时执行。关键要点包括：break 立即终止整个循环；continue 跳过本次迭代，继续下一次；循环的
+      else 子句在没有被 break 中断时执行。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：在列表中找到第一个负数后停止。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-08-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 在列表中找到第一个负数后停止。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "for value in [3, 2, -1, -4]:\n    if value < 0:\n        print(value)\n        break\n"
+    reflection: 循环 else 的含义是“正常遍历完”，不是普通 if 的 else。
+  checkpoint:
+    prompt: 当 n=2 时 range(2, n) 为空，循环 else 会不会执行？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-08-Q1
+- PY-BASE-08-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

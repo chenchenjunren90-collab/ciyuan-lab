@@ -1,0 +1,290 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1350" viewBox="0 0 2400 1350" role="img" aria-labelledby="title desc">
+  <title id="title">词元研究所三周MVP总体架构图</title>
+  <desc id="desc">面向首都经济贸易大学计算机专业学生，以课程学习、代码训练和能力画像为核心，三类智能体按需协作；财经案例仅进入课后项目实战。</desc>
+  <defs>
+    <linearGradient id="headerGrad" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#123B72"/>
+      <stop offset="1" stop-color="#2563A7"/>
+    </linearGradient>
+    <linearGradient id="blueSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#F3F8FF"/>
+      <stop offset="1" stop-color="#E8F1FF"/>
+    </linearGradient>
+    <linearGradient id="orangeSoft" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF9EE"/>
+      <stop offset="1" stop-color="#FFF0D5"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="5" stdDeviation="10" flood-color="#17365D" flood-opacity="0.10"/>
+    </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="#17365D" flood-opacity="0.08"/>
+    </filter>
+    <marker id="arrowBlue" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#3573B9"/>
+    </marker>
+    <marker id="arrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L12,6 L0,12 Z" fill="#D78124"/>
+    </marker>
+    <style>
+      .cn { font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", sans-serif; }
+      .title { font-size: 49px; font-weight: 700; fill: #FFFFFF; letter-spacing: 1px; }
+      .subtitle { font-size: 25px; font-weight: 400; fill: #DCEBFF; }
+      .badgeText { font-size: 24px; font-weight: 700; fill: #123B72; }
+      .panelTitle { font-size: 27px; font-weight: 700; fill: #17365D; }
+      .layerNo { font-size: 20px; font-weight: 700; fill: #3573B9; letter-spacing: 1px; }
+      .layerTitle { font-size: 25px; font-weight: 700; fill: #17365D; }
+      .cardTitle { font-size: 24px; font-weight: 700; fill: #17365D; }
+      .body { font-size: 20px; font-weight: 400; fill: #34465A; }
+      .bodySmall { font-size: 18px; font-weight: 400; fill: #526477; }
+      .mini { font-size: 16px; font-weight: 400; fill: #607286; }
+      .whiteText { fill: #FFFFFF; }
+      .orangeText { fill: #A95D12; }
+      .greenText { fill: #267052; }
+      .center { text-anchor: middle; }
+      .right { text-anchor: end; }
+    </style>
+  </defs>
+
+  <!-- Background and header -->
+  <rect width="2400" height="1350" fill="#F4F7FB"/>
+  <rect x="0" y="0" width="2400" height="164" fill="url(#headerGrad)"/>
+  <circle cx="70" cy="70" r="26" fill="#FFFFFF" fill-opacity="0.18"/>
+  <circle cx="70" cy="70" r="12" fill="#FFFFFF"/>
+  <text x="115" y="70" class="cn title">词元研究所｜总体项目架构</text>
+  <text x="116" y="116" class="cn subtitle">多智能体协同驱动的计算机学科助学服务平台 · 三周 MVP 送审版</text>
+  <rect x="1990" y="49" rx="31" ry="31" width="335" height="64" fill="#FFFFFF" filter="url(#softShadow)"/>
+  <text x="2157" y="90" class="cn badgeText center">计算机专业为核心</text>
+
+  <!-- Main architecture panel -->
+  <rect x="55" y="190" width="1765" height="1095" rx="24" fill="#FFFFFF" stroke="#D3DEE9" stroke-width="2" filter="url(#shadow)"/>
+  <text x="88" y="231" class="cn panelTitle">总体技术架构与学习闭环</text>
+  <text x="1785" y="230" class="cn bodySmall right">实线：三周内实现　·　虚线：反馈/约束</text>
+
+  <!-- Layer 1 -->
+  <rect x="82" y="257" width="1710" height="102" rx="16" fill="url(#blueSoft)" stroke="#CAD9EA" stroke-width="1.5"/>
+  <rect x="82" y="257" width="202" height="102" rx="16" fill="#DCEBFF"/>
+  <text x="104" y="290" class="cn layerNo">01</text>
+  <text x="183" y="330" class="cn layerTitle center">使用者与入口</text>
+  <rect x="320" y="274" width="675" height="68" rx="13" fill="#FFFFFF" stroke="#AEC7E6" stroke-width="1.5"/>
+  <circle cx="360" cy="308" r="18" fill="#3573B9"/>
+  <text x="360" y="315" class="cn bodySmall whiteText center">学</text>
+  <text x="392" y="303" class="cn cardTitle">学生端</text>
+  <text x="392" y="329" class="cn bodySmall">课程地图 · 对话学习 · 做题/Debug · 项目实践 · 能力画像</text>
+  <rect x="1025" y="274" width="735" height="68" rx="13" fill="#FFFFFF" stroke="#AEC7E6" stroke-width="1.5"/>
+  <circle cx="1065" cy="308" r="18" fill="#2D8A68"/>
+  <text x="1065" y="315" class="cn bodySmall whiteText center">师</text>
+  <text x="1097" y="303" class="cn cardTitle">教师端（简版）</text>
+  <text x="1097" y="329" class="cn bodySmall">课程资源管理 · 学情概览 · 智能体质量与异常查看</text>
+
+  <!-- connector -->
+  <line x1="936" y1="359" x2="936" y2="377" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Layer 2 -->
+  <rect x="82" y="381" width="1710" height="195" rx="16" fill="#FFFFFF" stroke="#C8D7E8" stroke-width="1.5"/>
+  <rect x="82" y="381" width="202" height="195" rx="16" fill="#E8F2FF"/>
+  <text x="104" y="414" class="cn layerNo">02</text>
+  <text x="183" y="457" class="cn layerTitle center">学习业务闭环</text>
+  <rect x="111" y="480" width="144" height="39" rx="19" fill="#17365D"/>
+  <text x="183" y="506" class="cn mini whiteText center">计算机课程主线</text>
+
+  <!-- workflow steps -->
+  <g filter="url(#softShadow)">
+    <rect x="320" y="411" width="174" height="82" rx="13" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+    <rect x="529" y="411" width="174" height="82" rx="13" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+    <rect x="738" y="411" width="174" height="82" rx="13" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+    <rect x="947" y="411" width="174" height="82" rx="13" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+    <rect x="1156" y="411" width="174" height="82" rx="13" fill="#FFF8EC" stroke="#E5B66F" stroke-width="1.5"/>
+    <rect x="1365" y="411" width="174" height="82" rx="13" fill="#F2FBF7" stroke="#8FC7B1" stroke-width="1.5"/>
+    <rect x="1574" y="411" width="174" height="82" rx="13" fill="#F2FBF7" stroke="#8FC7B1" stroke-width="1.5"/>
+  </g>
+  <text x="407" y="444" class="cn body center">初始测评</text><text x="407" y="472" class="cn bodySmall center">定位起点</text>
+  <text x="616" y="444" class="cn body center">个性化计划</text><text x="616" y="472" class="cn bodySmall center">生成路径</text>
+  <text x="825" y="444" class="cn body center">课程学习</text><text x="825" y="472" class="cn bodySmall center">RAG + 引导</text>
+  <text x="1034" y="444" class="cn body center">代码练习</text><text x="1034" y="472" class="cn bodySmall center">Debug + 提示</text>
+  <text x="1243" y="444" class="cn body center">项目实战</text><text x="1243" y="472" class="cn bodySmall center">综合迁移</text>
+  <text x="1452" y="444" class="cn body center">画像更新</text><text x="1452" y="472" class="cn bodySmall center">记录证据</text>
+  <text x="1661" y="444" class="cn body center">进阶推荐</text><text x="1661" y="472" class="cn bodySmall center">下一任务</text>
+  <g stroke="#3573B9" stroke-width="3" fill="none" marker-end="url(#arrowBlue)">
+    <line x1="494" y1="452" x2="520" y2="452"/>
+    <line x1="703" y1="452" x2="729" y2="452"/>
+    <line x1="912" y1="452" x2="938" y2="452"/>
+    <line x1="1121" y1="452" x2="1147" y2="452"/>
+    <line x1="1330" y1="452" x2="1356" y2="452"/>
+    <line x1="1539" y1="452" x2="1565" y2="452"/>
+  </g>
+  <path d="M1660 505 C1660 552, 407 552, 407 505" fill="none" stroke="#6E93BE" stroke-width="2.5" stroke-dasharray="8 7" marker-end="url(#arrowBlue)"/>
+  <rect x="894" y="516" width="280" height="32" rx="16" fill="#EEF5FD"/>
+  <text x="1034" y="538" class="cn mini center">测评—学习—验证—再推荐</text>
+
+  <!-- connector -->
+  <line x1="936" y1="576" x2="936" y2="594" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Layer 3 -->
+  <rect x="82" y="598" width="1710" height="280" rx="16" fill="url(#blueSoft)" stroke="#C3D5E9" stroke-width="1.5"/>
+  <rect x="82" y="598" width="202" height="280" rx="16" fill="#DCEBFF"/>
+  <text x="104" y="631" class="cn layerNo">03</text>
+  <text x="183" y="674" class="cn layerTitle center">三智能体协作</text>
+  <text x="183" y="708" class="cn bodySmall center">职责隔离 · 按需调用</text>
+  <text x="183" y="741" class="cn bodySmall center">不是每次全部并行</text>
+  <rect x="112" y="780" width="142" height="48" rx="12" fill="#FFFFFF" stroke="#9CBCE0"/>
+  <text x="183" y="810" class="cn mini center">统一编排</text>
+
+  <rect x="320" y="620" width="1440" height="56" rx="13" fill="#17365D"/>
+  <text x="1040" y="655" class="cn body whiteText center">统一编排服务｜会话状态 · 任务路由 · 权限规则 · trace_id · 失败回退</text>
+
+  <g filter="url(#softShadow)">
+    <rect x="330" y="706" width="425" height="140" rx="16" fill="#FFFFFF" stroke="#8FB4DF" stroke-width="2"/>
+    <rect x="817" y="706" width="425" height="140" rx="16" fill="#FFFFFF" stroke="#5D91C9" stroke-width="2"/>
+    <rect x="1304" y="706" width="425" height="140" rx="16" fill="#FFFFFF" stroke="#6EA98F" stroke-width="2"/>
+  </g>
+  <circle cx="369" cy="745" r="23" fill="#3573B9"/><text x="369" y="753" class="cn cardTitle whiteText center">1</text>
+  <text x="405" y="744" class="cn cardTitle">学情规划智能体</text>
+  <text x="359" y="781" class="cn bodySmall">读取画像 · 制定计划 · 调整难度</text>
+  <text x="359" y="814" class="cn mini">边界：负责“学什么”，不直接完整授课</text>
+
+  <circle cx="856" cy="745" r="23" fill="#2563A7"/><text x="856" y="753" class="cn cardTitle whiteText center">2</text>
+  <text x="892" y="744" class="cn cardTitle">课程辅导智能体</text>
+  <text x="846" y="781" class="cn bodySmall">课程RAG · 苏格拉底引导 · 分级提示</text>
+  <text x="846" y="814" class="cn mini">边界：负责“怎么学”，不能自证代码正确</text>
+
+  <circle cx="1343" cy="745" r="23" fill="#2D8A68"/><text x="1343" y="753" class="cn cardTitle whiteText center">3</text>
+  <text x="1379" y="744" class="cn cardTitle">质量监督智能体</text>
+  <text x="1333" y="781" class="cn bodySmall">核查引用 · 测试结果 · 安全与难度</text>
+  <text x="1333" y="814" class="cn mini">权力：通过 / 退回重做 / 降级回答</text>
+
+  <line x1="755" y1="776" x2="808" y2="776" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <line x1="1242" y1="776" x2="1295" y2="776" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+  <path d="M1510 846 C1510 872, 1030 872, 1030 850" fill="none" stroke="#2D8A68" stroke-width="2.5" stroke-dasharray="7 6" marker-end="url(#arrowBlue)"/>
+  <text x="1265" y="870" class="cn mini greenText center">不合格则退回辅导环节</text>
+
+  <!-- connector -->
+  <line x1="936" y1="878" x2="936" y2="896" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Layer 4 -->
+  <rect x="82" y="900" width="1710" height="146" rx="16" fill="#FFFFFF" stroke="#C8D7E8" stroke-width="1.5"/>
+  <rect x="82" y="900" width="202" height="146" rx="16" fill="#E8F2FF"/>
+  <text x="104" y="933" class="cn layerNo">04</text>
+  <text x="183" y="976" class="cn layerTitle center">模型与工具</text>
+  <text x="183" y="1008" class="cn bodySmall center">Python SFT/LoRA</text>
+
+  <rect x="320" y="921" width="328" height="104" rx="14" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+  <text x="484" y="957" class="cn cardTitle center">讯飞通用大模型</text>
+  <text x="484" y="988" class="cn bodySmall center">优先MaaS/Agent平台</text>
+  <text x="484" y="1013" class="cn mini center">Prompt + 工具调用</text>
+
+  <rect x="674" y="921" width="328" height="104" rx="14" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
+  <text x="838" y="957" class="cn cardTitle center">计算机课程 RAG</text>
+  <text x="838" y="988" class="cn bodySmall center">混合检索 · 重排</text>
+  <text x="838" y="1013" class="cn mini center">答案附来源与版本</text>
+
+  <rect x="1028" y="921" width="328" height="104" rx="14" fill="#F2FBF7" stroke="#8FC7B1" stroke-width="1.5"/>
+  <text x="1192" y="957" class="cn cardTitle center">代码确定性验证</text>
+  <text x="1192" y="988" class="cn bodySmall center">沙箱 · 编译/运行</text>
+  <text x="1192" y="1013" class="cn mini center">单元测试优先于模型判断</text>
+
+  <rect x="1382" y="921" width="358" height="104" rx="14" fill="url(#orangeSoft)" stroke="#DDA356" stroke-width="1.8"/>
+  <text x="1561" y="957" class="cn cardTitle orangeText center">驼灵财经大模型 API</text>
+  <text x="1561" y="988" class="cn bodySmall center">仅带财经场景标签时调用</text>
+  <text x="1561" y="1013" class="cn mini center">提供业务背景/规则解释</text>
+
+  <!-- connector -->
+  <line x1="936" y1="1046" x2="936" y2="1064" stroke="#3573B9" stroke-width="3" marker-end="url(#arrowBlue)"/>
+
+  <!-- Layer 5 -->
+  <rect x="82" y="1068" width="1710" height="185" rx="16" fill="#F8FAFC" stroke="#C8D7E8" stroke-width="1.5"/>
+  <rect x="82" y="1068" width="202" height="185" rx="16" fill="#E8F2FF"/>
+  <text x="104" y="1101" class="cn layerNo">05</text>
+  <text x="183" y="1144" class="cn layerTitle center">数据与知识</text>
+  <text x="183" y="1176" class="cn bodySmall center">统一课程包标准</text>
+  <text x="183" y="1207" class="cn bodySmall center">可追溯 · 可扩展</text>
+
+  <rect x="320" y="1091" width="328" height="136" rx="14" fill="#FFFFFF" stroke="#B6C7D9" stroke-width="1.5"/>
+  <text x="484" y="1128" class="cn cardTitle center">结构化数据库</text>
+  <text x="484" y="1160" class="cn bodySmall center">学生画像 · 计划 · 任务</text>
+  <text x="484" y="1189" class="cn bodySmall center">提交 · 学习事件</text>
+  <text x="484" y="1216" class="cn mini center">PostgreSQL（MVP）</text>
+
+  <rect x="674" y="1091" width="328" height="136" rx="14" fill="#FFFFFF" stroke="#B6C7D9" stroke-width="1.5"/>
+  <text x="838" y="1128" class="cn cardTitle center">向量知识库</text>
+  <text x="838" y="1160" class="cn bodySmall center">培养方案 · 教材/讲义</text>
+  <text x="838" y="1189" class="cn bodySmall center">题库解析 · Bug模式</text>
+  <text x="838" y="1216" class="cn mini center">来源元数据与版本控制</text>
+
+  <rect x="1028" y="1091" width="328" height="136" rx="14" fill="#FFFFFF" stroke="#B6C7D9" stroke-width="1.5"/>
+  <text x="1192" y="1128" class="cn cardTitle center">课程插件包</text>
+  <text x="1192" y="1160" class="cn bodySmall center">知识点 · 先修关系</text>
+  <text x="1192" y="1189" class="cn bodySmall center">任务 · 提示 · 评分规则</text>
+  <text x="1192" y="1216" class="cn mini center">首期：C / Python / 数据结构</text>
+
+  <rect x="1382" y="1091" width="358" height="136" rx="14" fill="#FFFFFF" stroke="#B6C7D9" stroke-width="1.5"/>
+  <text x="1561" y="1128" class="cn cardTitle center">质量与评测数据</text>
+  <text x="1561" y="1160" class="cn bodySmall center">黄金问答 · 测试用例</text>
+  <text x="1561" y="1189" class="cn bodySmall center">引用率 · 错误率 · 日志</text>
+  <text x="1561" y="1216" class="cn mini center">支持复现与教师复核</text>
+
+  <!-- Right sidebar -->
+  <rect x="1845" y="190" width="500" height="1095" rx="24" fill="#FFFFFF" stroke="#D3DEE9" stroke-width="2" filter="url(#shadow)"/>
+
+  <!-- Finance boundary -->
+  <rect x="1873" y="218" width="444" height="388" rx="18" fill="url(#orangeSoft)" stroke="#E2AF68" stroke-width="1.8"/>
+  <rect x="1873" y="218" width="444" height="61" rx="18" fill="#D78124"/>
+  <text x="2095" y="257" class="cn panelTitle whiteText center">财经特色边界</text>
+
+  <rect x="1910" y="303" width="370" height="58" rx="12" fill="#FFFFFF" stroke="#E4B875"/>
+  <text x="2095" y="339" class="cn body center">授权 / 脱敏 / 仿真经管案例</text>
+  <line x1="2095" y1="361" x2="2095" y2="386" stroke="#D78124" stroke-width="3" marker-end="url(#arrowOrange)"/>
+  <rect x="1910" y="393" width="370" height="67" rx="12" fill="#FFFDF9" stroke="#D78124" stroke-width="2"/>
+  <text x="2095" y="422" class="cn cardTitle orangeText center">只进入课后项目实战</text>
+  <text x="2095" y="449" class="cn bodySmall center">或综合练习，不进入基础课主线</text>
+  <line x1="2095" y1="460" x2="2095" y2="485" stroke="#D78124" stroke-width="3" marker-end="url(#arrowOrange)"/>
+  <rect x="1910" y="492" width="370" height="63" rx="12" fill="#FFFFFF" stroke="#E4B875"/>
+  <text x="2095" y="520" class="cn body center">仍按计算机能力验收</text>
+  <text x="2095" y="546" class="cn mini center">代码正确 · 算法合理 · Debug有效</text>
+  <text x="2095" y="584" class="cn mini orangeText center">Python可做数据分析；C语言不强行财经化</text>
+
+  <!-- MVP scope -->
+  <rect x="1873" y="630" width="444" height="623" rx="18" fill="#F5F9FE" stroke="#AFC7E1" stroke-width="1.8"/>
+  <rect x="1873" y="630" width="444" height="61" rx="18" fill="#2563A7"/>
+  <text x="2095" y="669" class="cn panelTitle whiteText center">三周 MVP｜三门课程同步初版</text>
+
+  <g class="cn bodySmall">
+    <circle cx="1919" cy="724" r="10" fill="#2D8A68"/><path d="M1913 724 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="731">C语言 / Python / 数据结构三门同步</text>
+    <circle cx="1919" cy="762" r="10" fill="#2D8A68"/><path d="M1913 762 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="769">每门约40个核心知识点，统一课程包</text>
+    <circle cx="1919" cy="800" r="10" fill="#2D8A68"/><path d="M1913 800 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="807">每门均有RAG问答、分级练习与Debug</text>
+    <circle cx="1919" cy="838" r="10" fill="#2D8A68"/><path d="M1913 838 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="845">每门至少跑通1条完整学习流程</text>
+    <circle cx="1919" cy="876" r="10" fill="#2D8A68"/><path d="M1913 876 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="883">三智能体协作 + 动态画像 + 代码测试</text>
+    <circle cx="1919" cy="914" r="10" fill="#2D8A68"/><path d="M1913 914 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="921">每门1个综合项目；财经拓展按适配加入</text>
+    <circle cx="1919" cy="952" r="10" fill="#2D8A68"/><path d="M1913 952 l5 5 l9 -12" fill="none" stroke="#FFFFFF" stroke-width="3" stroke-linecap="round"/>
+    <text x="1944" y="959">学生关键页面 + 教师简版看板</text>
+  </g>
+  <line x1="1908" y1="986" x2="2282" y2="986" stroke="#C7D6E7"/>
+  <text x="1908" y="1019" class="cn bodySmall" font-weight="700">暂不进入本轮：</text>
+  <text x="1908" y="1047" class="cn mini">每个知识点的大规模题库 · 复杂知识图谱可视化</text>
+  <text x="1908" y="1072" class="cn mini">规模化部署 · 微服务拆分 · 模型微调</text>
+
+  <!-- Shared foundation for the three courses -->
+  <line x1="1908" y1="1103" x2="2282" y2="1103" stroke="#C7D6E7"/>
+  <text x="1908" y="1138" class="cn bodySmall" font-weight="700">三门课程共用同一套平台底座：</text>
+  <circle cx="1920" cy="1172" r="6" fill="#3573B9"/>
+  <text x="1940" y="1179" class="cn bodySmall">统一接口与课程包格式</text>
+  <circle cx="1920" cy="1205" r="6" fill="#3573B9"/>
+  <text x="1940" y="1212" class="cn bodySmall">统一学生画像与学习记录</text>
+  <circle cx="1920" cy="1238" r="6" fill="#3573B9"/>
+  <text x="1940" y="1245" class="cn bodySmall">统一RAG、智能体和代码验证流程</text>
+
+  <!-- cross-boundary connector -->
+  <path d="M1740 973 C1810 973, 1814 426, 1902 426" fill="none" stroke="#D78124" stroke-width="3" stroke-dasharray="9 7" marker-end="url(#arrowOrange)"/>
+  <rect x="1768" y="676" width="116" height="31" rx="15" fill="#FFF4E2"/>
+  <text x="1826" y="698" class="cn mini orangeText center">按标签调用</text>
+
+  <!-- Footer -->
+  <text x="70" y="1324" class="cn mini">核心原则：先证明计算机专业助学闭环有效，再用经管场景证明知识迁移；模型输出不能替代检索来源与代码测试。</text>
+  <text x="2330" y="1324" class="cn mini right">版本 V0.3 · 2026-08-10</text>
+</svg>

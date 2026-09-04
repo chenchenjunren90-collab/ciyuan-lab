@@ -1,0 +1,25 @@
+id: DS-MAP-01-Q1
+title: 概念判断：集合与映射抽象
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-MAP-01
+prompt: 关于“集合与映射抽象”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 映射维护唯一键到值的关联，重复键必须明确覆盖、拒绝或合并语义。
+  - id: B
+    text: 集合每插入一次相同元素都会增加一个副本和集合基数。
+  - id: C
+    text: 散列表中的集合或映射天然按键排序，因此范围查询一定比有序树更高效。
+  accepted_answers:
+  - A
+status: draft

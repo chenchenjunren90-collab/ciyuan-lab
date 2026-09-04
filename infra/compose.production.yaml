@@ -1,0 +1,99 @@
+name: ciyuan-lab-production
+
+services:
+  postgres:
+    image: docker.1panel.live/pgvector/pgvector:pg17
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ciyuan}
+      POSTGRES_USER: ${POSTGRES_USER:-ciyuan}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  redis:
+    image: docker.1panel.live/library/redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    image: ciyuan-lab-api:latest
+    build:
+      context: ..
+      dockerfile: infra/api.Dockerfile
+    environment:
+      APP_ENV: production
+      PYTHONPATH: /app/apps/api
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-ciyuan}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-ciyuan}?connect_timeout=5
+      REDIS_URL: redis://redis:6379/0
+      CORS_ORIGINS: '["http://${PUBLIC_HOST:-39.105.104.230}:${PUBLIC_PORT:-3004}"]'
+      RAG_BACKEND: pgvector
+      PYTHON_ONLINE_SEARCH_ENABLED: ${PYTHON_ONLINE_SEARCH_ENABLED:-true}
+      PYTHON_DOCS_BASE_URL: ${PYTHON_DOCS_BASE_URL:-https://docs.python.org/zh-cn/3.11/}
+      PYTHON_ONLINE_SEARCH_TIMEOUT_SECONDS: ${PYTHON_ONLINE_SEARCH_TIMEOUT_SECONDS:-8}
+      PYTHON_ONLINE_SEARCH_MAX_PAGES: ${PYTHON_ONLINE_SEARCH_MAX_PAGES:-2}
+      CODE_EXECUTION_ENABLED: "true"
+      SANDBOX_WORK_ROOT: ${SANDBOX_WORK_ROOT:?SANDBOX_WORK_ROOT is required}
+      SANDBOX_PYTHON_IMAGE: ${SANDBOX_PYTHON_IMAGE:-docker.1panel.live/library/python:3.11.15-alpine3.24}
+      SANDBOX_C_IMAGE: ${SANDBOX_C_IMAGE:-ciyuan-lab-c-sandbox:latest}
+      XFYUN_MAAS_BASE_URL: ${XFYUN_MAAS_BASE_URL:-https://maas-api.cn-huabei-1.xf-yun.com/v2}
+      XFYUN_MAAS_MODEL: ${XFYUN_MAAS_MODEL:-xopdeepseekv4flash0731}
+      XFYUN_MAAS_API_KEY: ${XFYUN_MAAS_API_KEY:-}
+      XFYUN_MAAS_MOCK_FALLBACK: "false"
+      XFYUN_SPARK_MOCK_FALLBACK: "false"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/local/bin/docker:ro
+      - ${SANDBOX_WORK_ROOT}:${SANDBOX_WORK_ROOT}
+    command:
+      - /bin/sh
+      - -ec
+      - |
+        python -m alembic upgrade head
+        python scripts/sync_knowledge_index.py
+        exec python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+    restart: unless-stopped
+
+  web:
+    image: ciyuan-lab-web:latest
+    build:
+      context: ..
+      dockerfile: infra/web.Dockerfile
+    ports:
+      - "0.0.0.0:${PUBLIC_PORT:-3004}:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:

@@ -1,0 +1,56 @@
+id: PY-FILE-02-D1
+title: 修复资源未用 with 关闭
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-FILE-02
+prompt: 修复程序：程序定义了一个资源上下文管理器，但使用方式错误导致资源未被正确关闭。请改用 with 语句，使程序依次输出 open 和 close（每行一个）。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  starter_code: |
+    class Resource:
+        def __enter__(self):
+            print("open")
+            return self
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            print("close")
+
+    r = Resource()
+    r.__enter__()
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-01
+    visibility: public
+    input: ''
+    expected_output: 'open
+
+      close
+
+      '
+  - id: hidden-01
+    visibility: hidden
+    input: 'ignored
+
+      '
+    expected_output: 'open
+
+      close
+
+      '
+status: draft

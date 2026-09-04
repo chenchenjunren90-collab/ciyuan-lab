@@ -1,0 +1,92 @@
+id: PY-BASE-10-H1
+title: 课后综合：温度统计
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: intermediate
+estimated_minutes: 20
+concept_ids:
+- PY-BASE-10
+prompt: 第一行读取整数 n，第二行读取 n 个整数温度。输出最低温、最高温和平均温度，三项以空格分隔，平均值保留 1 位小数。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'n = int(input())
+
+    temperatures = list(map(int, input().split()))
+
+    # 校验数量后完成统计
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-normal
+    visibility: public
+    input: '4
+
+      12 18 15 11
+
+      '
+    expected_output: '11 18 14.0
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: '1
+
+      -3
+
+      '
+    expected_output: '-3 -3 -3.0
+
+      '
+  - id: hidden-mixed
+    visibility: hidden
+    input: '3
+
+      -2 0 5
+
+      '
+    expected_output: '-2 5 1.0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 先完成输入转换，再做统计
+  - min/max 求边界，sum/n 求平均
+  - 用 n=1 检查最小输入
+  input_format: 第一行 n；第二行 n 个空格分隔的整数。
+  output_format: 最低温 最高温 平均温度。
+  constraints:
+  - 1 <= n <= 1000
+  - 第二行数字数量等于 n
+  public_examples:
+  - input: '4
+
+      12 18 15 11
+
+      '
+    expected_output: '11 18 14.0
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 综合题应分成输入、校验、处理、输出四段逐步验证。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'curriculum: review-python-basics / small project'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

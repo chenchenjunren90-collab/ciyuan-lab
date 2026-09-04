@@ -1,0 +1,32 @@
+id: C-ERR-01
+title: 错误处理与断言
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-02
+learning_objectives:
+- 能判断与“错误处理与断言”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“错误处理与断言”的关键状态并验证边界
+concepts:
+- 错误处理与断言
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分可恢复错误和程序不变量，传播明确错误状态。关键要点包括：可恢复错误应通过返回值、输出参数或错误码传播，调用者必须检查并决定恢复或终止；assert 用于验证程序内部不变量，发布构建可能禁用它，不能替代外部输入校验；发生错误时仍要释放已获得的文件和内存资源，并保留足够的诊断上下文。
+  key_points:
+  - 可恢复错误应通过返回值、输出参数或错误码传播，调用者必须检查并决定恢复或终止。
+  - assert 用于验证程序内部不变量，发布构建可能禁用它，不能替代外部输入校验。
+  - 发生错误时仍要释放已获得的文件和内存资源，并保留足够的诊断上下文。
+  common_mistakes:
+  - 误以为assert 适合检查用户输入是否合法，因为断言失败后能够向用户友好恢复。
+  - 误以为只要设置 errno，就可以忽略库函数返回值并直接判断调用成功或失败。
+  examples:
+  - 代码片段：FILE *fp=fopen(path,"r"); if(!fp){perror(path); return EXIT_FAILURE;} 使用前先检查句柄。
+assessment_ids:
+- C-ERR-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

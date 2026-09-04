@@ -1,0 +1,60 @@
+id: PY-FUNC-04
+title: 作用域
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 40
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能区分局部变量与全局变量
+- 能使用 global/nonlocal 重新绑定外层作用域中的名称
+concepts:
+- 作用域
+- 局部变量
+- 全局变量
+- global
+lesson:
+  summary: 理解局部与全局作用域，掌握 global 与 nonlocal 的适用场景。关键要点包括：函数内赋值的变量默认为局部变量；函数内只读访问全局变量无需声明；函数内重新绑定全局名称需先
+    global 声明；仅修改可变对象内部状态不属于名称重新绑定。
+  key_points:
+  - 函数内赋值的变量默认为局部变量
+  - 函数内只读访问全局变量无需声明
+  - 函数内重新绑定全局名称需先 global 声明；仅修改可变对象内部状态不属于名称重新绑定
+  examples:
+  - "def f():\n    global x\n    x = 1"
+  - '# 作用域：函数内赋值的变量默认是局部变量；def f(): x = 1'
+  common_mistakes:
+  - 误以为在函数内给同名变量赋值会自动修改全局变量
+  - 误以为nonlocal 可以引用任意模块级全局名称
+  learning_sequence:
+  - title: 先建立直觉
+    content: 理解局部与全局作用域，掌握 global 与 nonlocal 的适用场景。关键要点包括：函数内赋值的变量默认为局部变量；函数内只读访问全局变量无需声明；函数内重新绑定全局名称需先
+      global 声明；仅修改可变对象内部状态不属于名称重新绑定。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：比较局部变量与全局变量。
+  - title: 独立完成课后练习
+    content: 完成 PY-FUNC-04-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 比较局部变量与全局变量。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "value = 10\ndef show():\n    value = 2\n    return value\nprint(show(), value)\n"
+    reflection: 能通过参数传入、返回值传出的数据，不要优先使用 global。
+  checkpoint:
+    prompt: 同名局部变量会自动修改函数外的变量吗？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FUNC-04-Q1
+- PY-FUNC-04-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

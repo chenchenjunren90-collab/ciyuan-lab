@@ -1,0 +1,33 @@
+id: DS-HASH-01
+title: 散列表与散列函数
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-03
+learning_objectives:
+- 能判断与“散列表与散列函数”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“散列表与散列函数”的关键状态并验证边界
+concepts:
+- 散列表与散列函数
+- 边界条件
+- 可验证性
+lesson:
+  summary: 把键映射到桶并理解装载因子的影响。关键要点包括：散列函数把键映射到有限槽位，应与键的相等关系一致并尽量均匀分布；容量和装载因子影响冲突概率，扩容时通常需要按新容量重新散列已有键；查找的期望 O(1) 依赖合理分布和受控装载因子，最坏情况仍可退化到
+    O(n)。
+  key_points:
+  - 散列函数把键映射到有限槽位，应与键的相等关系一致并尽量均匀分布。
+  - 容量和装载因子影响冲突概率，扩容时通常需要按新容量重新散列已有键。
+  - 查找的期望 O(1) 依赖合理分布和受控装载因子，最坏情况仍可退化到 O(n)。
+  common_mistakes:
+  - 误以为两个键的散列值相同就说明它们必然相等，可以只比较散列值。
+  - 误以为散列表查找在所有输入下都严格为 O(1)，不受冲突或装载因子影响。
+  examples:
+  - 示例：容量 7、h(k)=k mod 7 时，键 10 和 17 都映射到槽 3，必须继续比较键并处理冲突。
+assessment_ids:
+- DS-HASH-01-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

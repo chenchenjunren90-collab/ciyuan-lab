@@ -1,0 +1,66 @@
+id: PY-BASE-04
+title: 输入与输出
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用 input 读取用户输入
+- 能使用 print 输出结果
+concepts:
+- input
+- print
+- 格式化输出
+- 类型转换
+lesson:
+  summary: 掌握 input 读取输入与 print 输出结果的方法，理解输入默认是字符串、必要时需进行类型转换。关键要点包括：input 每次返回去掉行尾的字符串，数值计算前必须完成显式转换；print
+    可通过 sep、end 和格式化字符串控制输出，评测输出必须严格匹配约定；解析失败应给出清晰错误或受控退出，不能让未校验数据进入后续计算。
+  key_points:
+  - input 每次返回去掉行尾的字符串，数值计算前必须完成显式转换。
+  - print 可通过 sep、end 和格式化字符串控制输出，评测输出必须严格匹配约定。
+  - 解析失败应给出清晰错误或受控退出，不能让未校验数据进入后续计算。
+  - '格式化输出：使用 f-string 或 str.format 把变量嵌入输出文本，如 print(f"值={x}")'
+  examples:
+  - 代码示例：count = int(input().strip()); print(f'count={count}')
+  - 'age = int("18")  # 类型转换：把字符串 "18" 转换为整数 18'
+  - 'print(f"{name}，你好")  # 格式化输出：把变量嵌入输出文本'
+  common_mistakes:
+  - 误以为elif 分支会在前面条件成立后继续逐项执行
+  - 误以为非空字符串 'False' 在条件判断中是假值
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握 input 读取输入与 print 输出结果的方法，理解输入默认是字符串、必要时需进行类型转换。关键要点包括：input 每次返回去掉行尾的字符串，数值计算前必须完成显式转换；print
+      可通过 sep、end 和格式化字符串控制输出，评测输出必须严格匹配约定；解析失败应给出清晰错误或受控退出，不能让未校验数据进入后续计算。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：读取一个整数并输出它的两倍。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-04-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 读取一个整数并输出它的两倍。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'number = int(input())
+
+      print(number * 2)
+
+      '
+    reflection: 调试输入问题时，把“读取、拆分、转换、计算、输出”分成五步检查。
+  checkpoint:
+    prompt: 为什么 input().split() 之后仍然需要 int()？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-04-Q1
+- PY-BASE-04-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

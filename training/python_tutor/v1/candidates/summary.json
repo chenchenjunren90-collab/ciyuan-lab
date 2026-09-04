@@ -1,0 +1,16 @@
+{
+  "dataset": "sharegpt-python-tutor-v1.jsonl",
+  "records": 280,
+  "categories": {
+    "peer_debug": 40,
+    "peer_discussion": 40,
+    "scope_refusal": 40,
+    "ta_misconception": 40,
+    "ta_progressive_hint": 40,
+    "teacher_explain": 40,
+    "test_boundary": 40
+  },
+  "review_status": "pending_human_review",
+  "review_queue": "review-queue.csv",
+  "pack_root": "course_packs/python"
+}

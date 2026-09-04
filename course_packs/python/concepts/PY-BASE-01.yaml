@@ -1,0 +1,66 @@
+id: PY-BASE-01
+title: 开发环境与第一个程序
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+- 能搭建 Python 本地运行环境
+- 能编写并运行输出一行文本的 Python 程序
+concepts:
+- 解释器
+- 源文件
+- print
+- 运行方式
+lesson:
+  summary: 了解 Python 解释器的安装与使用，掌握运行 .py 源文件的基本方式，并编写第一个输出文本的程序。关键要点包括：入门阶段通常直接由 Python 解释器运行 .py 文件；CPython
+    执行时会先编译为字节码，因此不能简单理解为“完全不编译”；print() 将内容输出到标准输出；源文件以 UTF-8 编码保存，扩展名为 .py。
+  key_points:
+  - 入门阶段通常直接由 Python 解释器运行 .py 文件；CPython 执行时会先编译为字节码，因此不能简单理解为“完全不编译”
+  - print() 将内容输出到标准输出
+  - 源文件以 UTF-8 编码保存，扩展名为 .py
+  - 运行方式：既可用 python 脚本.py 直接运行源文件，也可在交互式解释器中逐行执行
+  examples:
+  - print("Hello, world!")
+  - 'import sys; sys.executable  # 解释器：返回当前 Python 解释器的可执行文件路径'
+  - 'path = "hello.py"  # 源文件：以 UTF-8 编码保存、扩展名为 .py 的文本'
+  - '# 运行方式：在终端执行 python hello.py 运行源文件'
+  common_mistakes:
+  - 误以为Python 源文件必须先手工编译成机器码才能由解释器执行
+  - 误以为交互式环境执行成功就能证明脚本在干净环境中也拥有相同依赖
+  learning_sequence:
+  - title: 先建立直觉
+    content: 了解 Python 解释器的安装与使用，掌握运行 .py 源文件的基本方式，并编写第一个输出文本的程序。关键要点包括：入门阶段通常直接由 Python 解释器运行 .py 文件；CPython
+      执行时会先编译为字节码，因此不能简单理解为“完全不编译”；print() 将内容输出到标准输出；源文件以 UTF-8 编码保存，扩展名为 .py。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：先在脚本中输出一句固定的欢迎语。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 先在脚本中输出一句固定的欢迎语。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'message = "欢迎来到 Python"
+
+      print(message)
+
+      '
+    reflection: 程序成功运行只是第一步，还要逐字核对输出中的中文标点。
+  checkpoint:
+    prompt: 如果把 print 写在引号里面，Python 会把它当作指令还是普通文本？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-01-Q1
+- PY-BASE-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

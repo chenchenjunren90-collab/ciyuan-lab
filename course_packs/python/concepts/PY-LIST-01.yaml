@@ -1,0 +1,61 @@
+id: PY-LIST-01
+title: 列表创建与访问
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能创建列表并访问元素
+- 能对列表进行索引与切片
+concepts:
+- 列表
+- 索引
+- 切片
+- 可变性
+lesson:
+  summary: 掌握列表的创建、索引访问、切片以及列表可变的基本特性。关键要点包括：列表是有序、可变容器，索引范围为 -len(items) 到 len(items)-1；切片创建浅拷贝并使用半开区间，嵌套可变对象仍然可能被多个列表共享；空列表访问、越界和别名修改必须通过接口约定与测试显式处理。
+  key_points:
+  - 列表是有序、可变容器，索引范围为 -len(items) 到 len(items)-1。
+  - 切片创建浅拷贝并使用半开区间，嵌套可变对象仍然可能被多个列表共享。
+  - 空列表访问、越界和别名修改必须通过接口约定与测试显式处理。
+  - 可变性：列表是有序、可变容器，修改元素后原列表对象保持不变但内容改变。
+  examples:
+  - 代码示例：values = [3, 1, 4]; first, tail = values[0], values[1:]
+  - '# 索引：values[0] 取首元素，values[-1] 取末元素'
+  - 'nums = [1, 2]; nums[0] = 9  # 可变性：列表可以原地修改元素'
+  common_mistakes:
+  - 误以为访问列表下标 len(items) 会得到最后一个元素
+  - 误以为列表赋值 copy = original 会创建元素完全独立的副本
+  learning_sequence:
+  - title: 先建立容器模型
+    content: 把列表理解为有顺序、可修改的一组值，先区分元素值与元素位置。
+  - title: 再练索引与切片
+    content: 用边界表验证首项、末项、半开区间和空切片，避免只背语法。
+  - title: 最后处理边界
+    content: 主动测试空列表、越界访问和列表别名，说明程序应如何响应。
+  worked_example:
+    problem: 从一组温度读数中输出数量、最低值、最高值；空输入输出 EMPTY。
+    steps:
+    - 先判断列表是否为空，避免直接调用 min 或 max。
+    - 非空时分别计算 len、min 和 max，保持输出字段顺序固定。
+    - 用空列表、单元素列表和包含负数的列表验证边界。
+    code: "values = [18, 21, 17, 22]\nif not values:\n    print(\"EMPTY\")\nelse:\n    print(len(values),\
+      \ min(values), max(values))\n"
+    reflection: 如果把 values 直接赋给另一个变量，两个变量仍指向同一个列表；需要独立外层列表时可使用切片或 copy。
+  checkpoint:
+    prompt: 对列表 [4, 7, 9]，items[1:] 与 items[-1] 分别得到什么？空列表时上述访问是否都安全？
+    guidance: 先在纸上标出索引，再用最小代码验证；重点解释半开区间和越界差异。
+assessment_ids:
+- PY-LIST-01-Q1
+- PY-LIST-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,25 @@
+id: C-STR-02-Q1
+title: 概念判断：字符串库函数与边界
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-STR-02
+prompt: 关于“字符串库函数与边界”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 复制或拼接前要计算目标容量并为终止符留一字节，优先使用可检查结果的 snprintf 等接口。
+  - id: B
+    text: 长度为 n 的字符串只需要 n 字节数组，因为终止符不占存储空间。
+  - id: C
+    text: strncpy 总会写入终止空字符，因此目标缓冲区可直接交给 strlen。
+  accepted_answers:
+  - A
+status: draft

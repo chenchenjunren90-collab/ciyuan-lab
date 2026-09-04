@@ -1,0 +1,20 @@
+id: SRC-PY-OPEN-UCI-BANK
+title: UCI Bank Marketing 数据集说明
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: open_resource
+citation:
+  locator: UCI Machine Learning Repository，Bank Marketing，数据集编号 222
+  url: https://archive.ics.uci.edu/dataset/222/bank+marketing
+  publisher: UCI Machine Learning Repository
+rights:
+  basis: open_license
+  license: CC BY 4.0
+  note: 仅参考公开字段类别与营销统计任务，并保留数据集署名；本项目使用虚构客户编号和固定生成的合成记录。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

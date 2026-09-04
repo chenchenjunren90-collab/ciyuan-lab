@@ -1,0 +1,70 @@
+id: PY-FILE-01
+title: 文件读写基础
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-STR-03
+learning_objectives:
+- 能使用 open 打开文件
+- 能进行文本文件的读取与写入
+concepts:
+- open
+- read
+- write
+- 读写模式
+lesson:
+  summary: 使用 open 打开文件，掌握文本文件的读取与写入以及读写模式的区别。关键要点包括：open() 默认只读模式 r，写入用 w 或 a；read() 读取全部内容，write() 写入字符串；w
+    会覆盖原文件，a 在末尾追加。
+  key_points:
+  - open() 默认只读模式 r，写入用 w 或 a
+  - read() 读取全部内容，write() 写入字符串
+  - w 会覆盖原文件，a 在末尾追加
+  examples:
+  - f = open("data.txt", "r", encoding="utf-8")
+  - 'f = open("data.txt", "w", encoding="utf-8")  # 读写模式：w 覆盖，a 追加'
+  common_mistakes:
+  - 误以为以 w 模式打开已有文件会在原内容末尾继续追加
+  - 误以为读取文本时无需指定编码，因为所有平台默认编码相同
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 open 打开文件，掌握文本文件的读取与写入以及读写模式的区别。关键要点包括：open() 默认只读模式 r，写入用 w 或 a；read() 读取全部内容，write()
+      写入字符串；w 会覆盖原文件，a 在末尾追加。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：向内存文件写入 hello 并读回。
+  - title: 独立完成课后练习
+    content: 完成 PY-FILE-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 向内存文件写入 hello 并读回。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'from io import StringIO
+
+      file = StringIO()
+
+      file.write(''hello'')
+
+      file.seek(0)
+
+      print(file.read())
+
+      '
+    reflection: 初学阶段先理解文件指针；真实路径和权限问题留到项目环境练习。
+  checkpoint:
+    prompt: 写入后为什么直接 read() 可能得到空字符串？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FILE-01-Q1
+- PY-FILE-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,61 @@
+id: PY-FUNC-01
+title: 函数定义与调用
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-10
+learning_objectives:
+- 能使用 def 定义函数
+- 能调用函数并接收返回值
+concepts:
+- def
+- 调用
+- 返回值
+- 参数
+lesson:
+  summary: 使用 def 定义带参数和返回值的函数，理解函数封装可复用逻辑的意义。关键要点包括：def 创建函数对象并绑定名称，函数体只在调用时执行；参数接收输入，return 结束当前调用并返回结果；省略
+    return 时返回 None；函数应职责单一、输入输出明确，并尽量把文件和网络副作用留在边界层。
+  key_points:
+  - def 创建函数对象并绑定名称，函数体只在调用时执行。
+  - 参数接收输入，return 结束当前调用并返回结果；省略 return 时返回 None。
+  - 函数应职责单一、输入输出明确，并尽量把文件和网络副作用留在边界层。
+  examples:
+  - '代码示例：def add(a: int, b: int) -> int: return a + b'
+  - 'def double(n): return n * 2  # 返回值：return 把计算结果交给调用方'
+  - 'def add(a, b): return a + b  # 参数：a、b 接收调用传入的输入'
+  common_mistakes:
+  - 误以为函数体在执行 def 时立即运行一次
+  - 误以为函数没有显式 return 时会返回空字符串
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 def 定义带参数和返回值的函数，理解函数封装可复用逻辑的意义。关键要点包括：def 创建函数对象并绑定名称，函数体只在调用时执行；参数接收输入，return 结束当前调用并返回结果；省略
+      return 时返回 None；函数应职责单一、输入输出明确，并尽量把文件和网络副作用留在边界层。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：定义一个返回两倍值的函数。
+  - title: 独立完成课后练习
+    content: 完成 PY-FUNC-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 定义一个返回两倍值的函数。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def double(number):\n    return number * 2\n\nprint(double(3))\n"
+    reflection: 函数优先返回结果，由调用者决定如何展示或继续计算。
+  checkpoint:
+    prompt: return 与 print 的职责有什么不同？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FUNC-01-C1
+- PY-FUNC-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

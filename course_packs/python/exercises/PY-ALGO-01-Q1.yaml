@@ -1,0 +1,28 @@
+id: PY-ALGO-01-Q1
+title: 二分查找前提
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-ALGO-01
+prompt: 二分查找的前提条件是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 序列已有序
+  - id: B
+    text: 序列为字符串
+  - id: C
+    text: 序列长度固定为 2
+  - id: D
+    text: 序列不含重复值
+  accepted_answers:
+  - A
+status: draft

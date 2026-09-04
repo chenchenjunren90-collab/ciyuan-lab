@@ -1,0 +1,25 @@
+id: C-STYLE-01-Q1
+title: 概念判断：编码规范与程序组织
+course: c
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 6
+concept_ids:
+- C-STYLE-01
+prompt: 关于便于协作和验证的 C 程序组织，下列哪项做法更合理？
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 头文件只暴露必要声明，文件内辅助函数使用 static，具名常量替代魔法数，错误路径也明确释放资源。
+  - id: B
+    text: 为减少参数传递，应把所有状态定义为头文件中的可变全局对象，并由各模块任意修改。
+  - id: C
+    text: 把全部逻辑写入一个长 main 函数最容易维护，因为任何功能都不需要单独测试。
+  accepted_answers:
+  - A
+status: draft

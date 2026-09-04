@@ -1,0 +1,66 @@
+id: PY-FUNC-05
+title: lambda 与高阶函数
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-FUNC-01
+- PY-LIST-01
+learning_objectives:
+- 能使用 lambda 定义匿名函数
+- 能使用 map/filter 处理序列
+concepts:
+- lambda
+- map
+- filter
+- 高阶函数
+lesson:
+  summary: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。关键要点包括：lambda 用于定义简单的匿名函数，无需 def；map(f, seq) 对每个元素应用
+    f；filter(f, seq) 保留使 f 为真的元素。
+  key_points:
+  - lambda 用于定义简单的匿名函数，无需 def
+  - map(f, seq) 对每个元素应用 f
+  - filter(f, seq) 保留使 f 为真的元素
+  examples:
+  - 'map(lambda x: x * x, [1, 2, 3])'
+  - 'filter(lambda x: x > 0, [-1, 0, 2])  # filter 保留使函数为真的元素'
+  - '# 高阶函数：sorted(nums, key=abs) 把 abs 作为参数传给 sorted'
+  common_mistakes:
+  - 误以为lambda 可以包含任意数量的赋值和循环语句
+  - 误以为把函数传给 sorted 时 key 函数应返回两个元素的比较结果
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 lambda 定义简单匿名函数，掌握 map、filter 等高阶函数的用法。关键要点包括：lambda 用于定义简单的匿名函数，无需 def；map(f, seq) 对每个元素应用
+      f；filter(f, seq) 保留使 f 为真的元素。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：按绝对值排序数字。
+  - title: 独立完成课后练习
+    content: 完成 PY-FUNC-05-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 按绝对值排序数字。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'numbers = [-3, 1, -2]
+
+      print(sorted(numbers, key=lambda value: abs(value)))
+
+      '
+    reflection: lambda 适合短小的一次性规则；复杂逻辑应改用具名函数。
+  checkpoint:
+    prompt: 当 key 返回元组时，Python 依次如何比较其中字段？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FUNC-05-Q1
+- PY-FUNC-05-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,33 @@
+id: DS-FOUND-04
+title: 递归、递推式与调用栈
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-03
+learning_objectives:
+- 能判断与“递归、递推式与调用栈”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“递归、递推式与调用栈”的关键状态并验证边界
+concepts:
+- 递归、递推式与调用栈
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用规模递减证明终止并分析递归开销。关键要点包括：递归算法要说明基例、规模递减关系和每层额外工作，并据此建立递推式；调用栈保存每个未完成调用的参数与局部状态，最大递归深度决定栈空间；递推式解出的时间复杂度与栈深度是不同指标，例如二分递归深度为
+    O(log n)。
+  key_points:
+  - 递归算法要说明基例、规模递减关系和每层额外工作，并据此建立递推式。
+  - 调用栈保存每个未完成调用的参数与局部状态，最大递归深度决定栈空间。
+  - 递推式解出的时间复杂度与栈深度是不同指标，例如二分递归深度为 O(log n)。
+  common_mistakes:
+  - 误以为递归函数只要最终返回一个值，就一定有可达基例且不会栈溢出。
+  - 误以为递推式 T(n)=2T(n/2)+n 的时间复杂度是 O(n)，因为每层合并只需线性时间。
+  examples:
+  - 展开示例：T(n)=T(n-1)+1 连续展开 n-1 次到 T(1)，时间为 Θ(n)，调用栈深度也为 Θ(n)。
+assessment_ids:
+- DS-FOUND-04-C1
+source_refs:
+- SRC-DS-GUIDE-FOUND
+status: draft

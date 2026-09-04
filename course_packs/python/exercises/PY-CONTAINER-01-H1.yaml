@@ -1,0 +1,98 @@
+id: PY-CONTAINER-01-H1
+title: 课后练习：读取成绩矩阵的一列
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-CONTAINER-01
+prompt: 第一行读取行数 n 和列数 m，随后读取 n 行整数矩阵，最后读取列索引 k。按原行顺序输出第 k 列，元素以空格分隔。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'n, m = map(int, input().split())
+
+    matrix = []
+
+    # 读取每一行并保存，再读取 k
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-column
+    visibility: public
+    input: '3 3
+
+      1 2 3
+
+      4 5 6
+
+      7 8 9
+
+      1
+
+      '
+    expected_output: '2 5 8
+
+      '
+  - id: hidden-first
+    visibility: hidden
+    input: '2 2
+
+      5 6
+
+      7 8
+
+      0
+
+      '
+    expected_output: '5 7
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 外层列表保存每一行
+  - matrix[row][k] 访问第 row 行第 k 列
+  - 先用 2×2 矩阵检查下标
+  input_format: 第一行 n m；随后 n 行、每行 m 个整数；最后一行列索引 k。
+  output_format: 目标列的 n 个整数，以空格分隔。
+  constraints:
+  - 1 <= n,m <= 50
+  - 0 <= k < m
+  public_examples:
+  - input: '3 3
+
+      1 2 3
+
+      4 5 6
+
+      7 8 9
+
+      1
+
+      '
+    expected_output: '2 5 8
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 遇到嵌套容器时，先画出外层元素，再逐层写索引。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: nested lists / indexing'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

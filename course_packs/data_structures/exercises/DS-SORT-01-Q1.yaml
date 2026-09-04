@@ -1,0 +1,25 @@
+id: DS-SORT-01-Q1
+title: 概念判断：排序问题、稳定性与下界
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-SORT-01
+prompt: 关于“排序问题、稳定性与下界”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 只通过元素两两比较获取顺序的排序，在最坏情况下需要 Ω(n log n) 次比较。
+  - id: B
+    text: 稳定排序表示算法对相同输入每次耗时完全相同。
+  - id: C
+    text: Ω(n log n) 的比较下界适用于所有排序算法，包括已知小范围整数的计数排序。
+  accepted_answers:
+  - A
+status: draft

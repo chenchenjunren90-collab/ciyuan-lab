@@ -1,0 +1,33 @@
+id: C-STR-02
+title: 字符串库函数与边界
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-STR-01
+learning_objectives:
+- 能判断与“字符串库函数与边界”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“字符串库函数与边界”的关键状态并验证边界
+concepts:
+- 字符串库函数与边界
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在明确容量和终止符的前提下使用字符串函数。关键要点包括：C 字符串必须在可访问容量内包含 '\0'，所有字符串函数都依赖这一终止边界；复制或拼接前要计算目标容量并为终止符留一字节，优先使用可检查结果的 snprintf 等接口；strlen
+    返回终止符之前的字符数，不包含 '\0'，且要求输入已是合法终止字符串。
+  key_points:
+  - C 字符串必须在可访问容量内包含 '\0'，所有字符串函数都依赖这一终止边界。
+  - 复制或拼接前要计算目标容量并为终止符留一字节，优先使用可检查结果的 snprintf 等接口。
+  - strlen 返回终止符之前的字符数，不包含 '\0'，且要求输入已是合法终止字符串。
+  common_mistakes:
+  - 误以为长度为 n 的字符串只需要 n 字节数组，因为终止符不占存储空间。
+  - 误以为strncpy 总会写入终止空字符，因此目标缓冲区可直接交给 strlen。
+  examples:
+  - 代码片段：char dst[8]; int n=snprintf(dst,sizeof dst,"%s","hello"); n 为 5 且 dst 以空字符结束。
+assessment_ids:
+- C-STR-02-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

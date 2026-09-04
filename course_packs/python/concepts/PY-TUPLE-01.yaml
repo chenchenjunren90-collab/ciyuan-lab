@@ -1,0 +1,65 @@
+id: PY-TUPLE-01
+title: 元组
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能创建与访问元组
+- 能解释元组与列表的不可变区别
+concepts:
+- 元组
+- 不可变
+- 打包
+- 解包
+lesson:
+  summary: 掌握元组的创建与访问，理解其不可变性，并学会元组打包与解包。关键要点包括：元组用圆括号 () 创建，一旦创建不可修改；元组支持索引与切片，但不支持增删改；多个值逗号分隔可打包成元组，也可解包赋值。
+  key_points:
+  - 元组用圆括号 () 创建，一旦创建不可修改
+  - 元组支持索引与切片，但不支持增删改
+  - 多个值逗号分隔可打包成元组，也可解包赋值
+  examples:
+  - t = (1, 2, 3)；a, b, c = t
+  - "t = (1, 2, 3)  # 不可变：元组一旦创建就不能增删改元素"
+  - "t = 1, 2, 3  # 打包：逗号分隔的值自动打包成元组"
+  common_mistakes:
+  - 误以为只有写了圆括号才会创建元组，逗号本身不起作用
+  - 误以为元组不可变意味着元组内引用的列表内容也不能修改
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握元组的创建与访问，理解其不可变性，并学会元组打包与解包。关键要点包括：元组用圆括号 () 创建，一旦创建不可修改；元组支持索引与切片，但不支持增删改；多个值逗号分隔可打包成元组，也可解包赋值。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：交换两个变量的值。
+  - title: 独立完成课后练习
+    content: 完成 PY-TUPLE-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 交换两个变量的值。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'left, right = 1, 2
+
+      left, right = right, left
+
+      print(left, right)
+
+      '
+    reflection: 元组解包要求左右元素数量一致。
+  checkpoint:
+    prompt: 单元素元组为什么需要写成 (value,)？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-TUPLE-01-Q1
+- PY-TUPLE-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,25 @@
+id: DS-EVAL-01-Q1
+title: 概念判断：算法边界测试与性能验证
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-EVAL-01
+prompt: 关于“算法边界测试与性能验证”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-DESIGN
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 性能评估要固定输入规模、分布、实现与环境，区分理论复杂度和实测常数。
+  - id: B
+    text: 算法通过一个大规模随机样例后即可证明对所有输入都正确。
+  - id: C
+    text: 比较两个算法只需各运行一次，耗时更短者在所有规模和环境中都更优。
+  accepted_answers:
+  - A
+status: draft

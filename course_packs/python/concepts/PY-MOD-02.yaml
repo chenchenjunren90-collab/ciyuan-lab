@@ -1,0 +1,65 @@
+id: PY-MOD-02
+title: 常用标准库
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-MOD-01
+learning_objectives:
+- 能使用 math/random 处理数学与随机需求
+- 能使用 datetime 处理日期时间
+concepts:
+- math
+- random
+- datetime
+- 标准库
+lesson:
+  summary: 熟悉 math、random、datetime 等常用标准库的典型用法。关键要点包括：math 提供数学函数，如 sqrt、floor；random.randint(a, b) 生成
+    [a, b] 内的随机整数；datetime 处理日期时间对象。
+  key_points:
+  - math 提供数学函数，如 sqrt、floor
+  - random.randint(a, b) 生成 [a, b] 内的随机整数
+  - datetime 处理日期时间对象
+  examples:
+  - random.randint(1, 10)
+  - "import math  # math：math.sqrt(16) 返回 4.0"
+  - "import datetime  # datetime：datetime.date.today() 返回今天日期"
+  common_mistakes:
+  - 误以为random 模块生成的伪随机值适合直接用于密码和令牌
+  - 误以为标准库函数的参数、返回值和异常在所有 Python 版本中都不会变化
+  learning_sequence:
+  - title: 先建立直觉
+    content: 熟悉 math、random、datetime 等常用标准库的典型用法。关键要点包括：math 提供数学函数，如 sqrt、floor；random.randint(a, b)
+      生成 [a, b] 内的随机整数；datetime 处理日期时间对象。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：统计字符频次。
+  - title: 独立完成课后练习
+    content: 完成 PY-MOD-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 统计字符频次。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'from collections import Counter
+
+      print(Counter(''aba''))
+
+      '
+    reflection: 标准库能减少重复实现，但仍要读清返回结构和并列规则。
+  checkpoint:
+    prompt: 为什么最高频并列时还需要明确第二排序规则？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-MOD-02-Q1
+- PY-MOD-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

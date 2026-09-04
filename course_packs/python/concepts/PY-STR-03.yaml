@@ -1,0 +1,68 @@
+id: PY-STR-03
+title: 字符串方法与格式化
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-STR-01
+learning_objectives:
+- 能使用常见字符串方法处理文本
+- 能使用 f-string 格式化输出
+concepts:
+- 字符串方法
+- strip
+- split
+- join
+- f-string
+lesson:
+  summary: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。关键要点包括：strip() 去除首尾空白，split() 按分隔符拆分，join()
+    合并序列；f-string 用 f"{变量}" 内插变量值；replace() 替换子串，返回新字符串。
+  key_points:
+  - strip() 去除首尾空白，split() 按分隔符拆分，join() 合并序列
+  - f-string 用 f"{变量}" 内插变量值
+  - replace() 替换子串，返回新字符串
+  examples:
+  - 代码示例：price=12.3；f'{price:.2f}' 得到 '12.30'，格式说明只影响生成的字符串，不改变 price。
+  - "'  hi  '.strip()  # 字符串方法：strip() 去除首尾空白"
+  - "'a,b'.split(',')  # split：按分隔符拆成 ['a', 'b']"
+  - "','.join(['a', 'b'])  # join：用逗号合并序列得到 'a,b'"
+  - '# f-string: print(f"{x}")'
+  common_mistakes:
+  - 误以为f-string 会自动把任何数值按两位小数显示
+  - 误以为format 的字段顺序可以随意改变而不影响位置参数绑定
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握常用字符串方法（strip、split、join、replace 等）与 f-string 格式化。关键要点包括：strip() 去除首尾空白，split() 按分隔符拆分，join()
+      合并序列；f-string 用 f"{变量}" 内插变量值；replace() 替换子串，返回新字符串。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：将姓名两侧空格去掉并转成大写。
+  - title: 独立完成课后练习
+    content: 完成 PY-STR-03-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 将姓名两侧空格去掉并转成大写。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'name = "  xiao ci  "
+
+      print(name.strip().upper())
+
+      '
+    reflection: 字符串清洗应先定义规则，再组合最少且可测试的方法。
+  checkpoint:
+    prompt: 为什么直接 replace('  ', ' ') 可能无法一次处理三个以上连续空格？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-STR-03-Q1
+- PY-STR-03-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

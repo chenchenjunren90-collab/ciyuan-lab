@@ -1,0 +1,33 @@
+id: C-BASE-03
+title: 变量、常量与初始化
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-BASE-02
+learning_objectives:
+- 能判断与“变量、常量与初始化”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“变量、常量与初始化”的关键状态并验证边界
+concepts:
+- 变量、常量与初始化
+- 边界条件
+- 可验证性
+lesson:
+  summary: 正确声明、初始化和更新变量，避免读取未初始化对象。关键要点包括：定义对象会建立类型与存储期；自动存储期局部变量若未显式初始化，其值不确定；初始化发生在对象创建时，赋值发生在对象已存在之后，两者的语义和可用语法不同；const
+    限制通过该左值修改对象，但不等同于预处理常量，也不自动赋予编译期常量表达式资格。
+  key_points:
+  - 定义对象会建立类型与存储期；自动存储期局部变量若未显式初始化，其值不确定。
+  - 初始化发生在对象创建时，赋值发生在对象已存在之后，两者的语义和可用语法不同。
+  - const 限制通过该左值修改对象，但不等同于预处理常量，也不自动赋予编译期常量表达式资格。
+  common_mistakes:
+  - 误以为未初始化的局部 int 会自动得到 0，因此读取它可以作为默认值。
+  - '误以为const 对象与 #define 宏完全相同，二者都没有类型且都在预处理阶段替换。'
+  examples:
+  - 代码片段：int count = 0; const int limit = 10; count = limit; 此时 count 为 10，而对 limit 赋值会被诊断。
+assessment_ids:
+- C-BASE-03-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

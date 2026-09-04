@@ -1,0 +1,32 @@
+id: C-FUNC-01
+title: 函数声明、定义与调用
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-04
+learning_objectives:
+- 能够解释函数声明、定义与调用的核心规则
+- 能够运用函数声明、定义与调用解决边界明确的问题
+concepts:
+- 函数声明、定义与调用
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用函数原型拆分程序并理解调用关系。关键要点包括：函数原型让编译器在调用点检查参数数量、参数类型和返回类型；函数定义包含唯一实现，调用表达式建立新的调用帧并在返回后继续执行；一个函数应有单一、可测试的职责，并通过参数和返回值显式表达接口。
+  key_points:
+  - 函数原型让编译器在调用点检查参数数量、参数类型和返回类型。
+  - 函数定义包含唯一实现，调用表达式建立新的调用帧并在返回后继续执行。
+  - 一个函数应有单一、可测试的职责，并通过参数和返回值显式表达接口。
+  common_mistakes:
+  - 调用前没有可见原型，导致编译器无法进行完整类型检查。
+  - 声明和定义的参数或返回类型不一致，造成冲突接口。
+  examples:
+  - '代码示例：int max2(int a, int b); int max2(int a, int b) { return a > b ? a : b; }'
+assessment_ids:
+- C-FUNC-01-C1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

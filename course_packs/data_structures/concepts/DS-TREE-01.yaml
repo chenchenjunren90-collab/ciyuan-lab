@@ -1,0 +1,32 @@
+id: DS-TREE-01
+title: 树、结点关系与基本术语
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-01
+learning_objectives:
+- 能判断与“树、结点关系与基本术语”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“树、结点关系与基本术语”的关键状态并验证边界
+concepts:
+- 树、结点关系与基本术语
+- 边界条件
+- 可验证性
+lesson:
+  summary: 描述根、父子、深度、高度和子树。关键要点包括：树由根和互不相交的子树组成；除根外每个结点恰有一个父结点；深度通常从根到结点的边数计，结点高度从该结点到最深叶的边数计，需先统一约定；含 n 个结点的非空树有 n-1 条边，任一结点的后代构成一棵子树。
+  key_points:
+  - 树由根和互不相交的子树组成；除根外每个结点恰有一个父结点。
+  - 深度通常从根到结点的边数计，结点高度从该结点到最深叶的边数计，需先统一约定。
+  - 含 n 个结点的非空树有 n-1 条边，任一结点的后代构成一棵子树。
+  common_mistakes:
+  - 误以为树中一个非根结点可以同时拥有多个父结点，只要没有形成环。
+  - 误以为结点深度与高度始终相等，因为都表示该结点所在层数。
+  examples:
+  - 示例：A 为根，子结点 B、C，B 的子结点为 D；按边数计，D 深度2，B高度1，A高度2。
+assessment_ids:
+- DS-TREE-01-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

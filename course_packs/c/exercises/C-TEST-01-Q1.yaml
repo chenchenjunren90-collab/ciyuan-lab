@@ -1,0 +1,25 @@
+id: C-TEST-01-Q1
+title: 概念判断：边界测试与可验证程序设计
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- C-TEST-01
+prompt: 关于“边界测试与可验证程序设计”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 测试必须有确定性判定依据，分别记录输入、预期输出、实际输出和失败诊断。
+  - id: B
+    text: 随机运行一次没有崩溃即可证明程序对整个输入域正确。
+  - id: C
+    text: 边界值只包括允许范围的最大值，不需要测试空输入或边界外错误路径。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,32 @@
+id: C-CTRL-04
+title: for 循环与计数模式
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-03
+learning_objectives:
+- 能够解释for 循环与计数模式的核心规则
+- 能够运用for 循环与计数模式解决边界明确的问题
+concepts:
+- for 循环与计数模式
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用初始化、条件和更新表达确定次数的迭代。关键要点包括：for 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行；计数循环应明确闭区间或半开区间，数组遍历通常使用 0 <= i < n；循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。
+  key_points:
+  - for 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行。
+  - 计数循环应明确闭区间或半开区间，数组遍历通常使用 0 <= i < n。
+  - 循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。
+  common_mistakes:
+  - 把 i < n 写成 i <= n 后访问 a[n]，发生越界。
+  - 更新方向与终止条件相反，循环永远无法结束。
+  examples:
+  - 代码示例：long long sum = 0; for (int i = 1; i <= n; ++i) sum += i;
+assessment_ids:
+- C-CTRL-04-C1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

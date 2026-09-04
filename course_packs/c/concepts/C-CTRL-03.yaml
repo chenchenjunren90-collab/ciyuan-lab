@@ -1,0 +1,32 @@
+id: C-CTRL-03
+title: while 与 do-while
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-CTRL-01
+learning_objectives:
+- 能判断与“while 与 do-while”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“while 与 do-while”的关键状态并验证边界
+concepts:
+- while 与 do-while
+- 边界条件
+- 可验证性
+lesson:
+  summary: 根据先判断或后判断语义选择循环。关键要点包括：while 在每轮之前判断条件，可能一次也不执行；do-while 在末尾判断，至少执行一次；循环应明确初始化、继续条件和使状态趋近终止的更新步骤；设计边界时要分别检查空输入、单次迭代和恰好达到终止值的情况。
+  key_points:
+  - while 在每轮之前判断条件，可能一次也不执行；do-while 在末尾判断，至少执行一次。
+  - 循环应明确初始化、继续条件和使状态趋近终止的更新步骤。
+  - 设计边界时要分别检查空输入、单次迭代和恰好达到终止值的情况。
+  common_mistakes:
+  - 误以为do-while 与 while 在所有输入下执行次数完全相同，只是书写位置不同。
+  - 误以为循环体中只要修改了任意变量，就能保证循环条件最终为假。
+  examples:
+  - 轨迹示例：int n=3; while(n>0){printf("%d ",n); --n;} 依次输出 3 2 1，结束时 n 为 0。
+assessment_ids:
+- C-CTRL-03-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

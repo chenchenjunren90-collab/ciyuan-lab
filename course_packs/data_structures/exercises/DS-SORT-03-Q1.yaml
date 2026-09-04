@@ -1,0 +1,25 @@
+id: DS-SORT-03-Q1
+title: 概念判断：选择排序与冒泡排序
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-SORT-03
+prompt: 关于“选择排序与冒泡排序”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 冒泡排序通过交换相邻逆序对把大元素推向末端，使用严格比较时可以稳定。
+  - id: B
+    text: 选择排序只要交换相邻元素就天然稳定，且最好时间为 Θ(n)。
+  - id: C
+    text: 冒泡排序每轮选择未排序区的最小元素并与首元素交换。
+  accepted_answers:
+  - A
+status: draft

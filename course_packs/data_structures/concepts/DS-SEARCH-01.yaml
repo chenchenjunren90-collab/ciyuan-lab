@@ -1,0 +1,32 @@
+id: DS-SEARCH-01
+title: 顺序查找
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-01
+learning_objectives:
+- 能判断与“顺序查找”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“顺序查找”的关键状态并验证边界
+concepts:
+- 顺序查找
+- 边界条件
+- 可验证性
+lesson:
+  summary: 在无序序列中线性扫描并处理未命中。关键要点包括：顺序查找从一端逐项比较，不要求数据有序，最坏检查 n 个元素；找到目标后是否立即返回取决于需求：查任一位置可停止，查全部位置必须继续扫描；空序列、目标在首尾、重复目标和不存在目标是基本边界用例。
+  key_points:
+  - 顺序查找从一端逐项比较，不要求数据有序，最坏检查 n 个元素。
+  - 找到目标后是否立即返回取决于需求：查任一位置可停止，查全部位置必须继续扫描。
+  - 空序列、目标在首尾、重复目标和不存在目标是基本边界用例。
+  common_mistakes:
+  - 误以为顺序查找要求输入预先有序，否则会跳过可能的目标。
+  - 误以为目标不存在时顺序查找仍只需比较一次，因此最坏时间为 O(1)。
+  examples:
+  - 轨迹示例：在 [4,1,4] 中查找全部值4，比较三个位置并返回下标 [0,2]。
+assessment_ids:
+- DS-SEARCH-01-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

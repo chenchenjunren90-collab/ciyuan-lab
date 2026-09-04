@@ -1,0 +1,32 @@
+id: DS-STACK-01
+title: 栈及其不变量
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-LINEAR-01
+learning_objectives:
+- 能够解释栈及其不变量的核心规则
+- 能够运用栈及其不变量解决边界明确的问题
+concepts:
+- 栈及其不变量
+- 边界条件
+- 可验证性
+lesson:
+  summary: 实现后进先出操作并维护栈顶边界。关键要点包括：栈只在同一端压入和弹出，保持后进先出顺序；数组实现维护 top 边界，链式实现维护栈顶结点；空栈弹出必须有明确策略；调用栈、括号匹配和深度优先过程都依赖尚未完成任务的逆序恢复。
+  key_points:
+  - 栈只在同一端压入和弹出，保持后进先出顺序。
+  - 数组实现维护 top 边界，链式实现维护栈顶结点；空栈弹出必须有明确策略。
+  - 调用栈、括号匹配和深度优先过程都依赖尚未完成任务的逆序恢复。
+  common_mistakes:
+  - 遇到任意右括号都只弹栈，不检查括号类型。
+  - 空栈时仍读取栈顶元素。
+  examples:
+  - 示例：扫描 '([])' 时遇到左括号压栈，右括号必须与当前栈顶类型匹配。
+assessment_ids:
+- DS-STACK-01-C1
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+status: draft

@@ -1,0 +1,28 @@
+id: PY-STR-03-Q1
+title: strip 方法
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-STR-03
+prompt: '"  a b  ".strip() 的结果是？'
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: '"a b"'
+  - id: B
+    text: '"  a b  "'
+  - id: C
+    text: '"ab"'
+  - id: D
+    text: '" a b"'
+  accepted_answers:
+  - A
+status: draft

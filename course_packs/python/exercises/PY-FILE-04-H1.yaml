@@ -1,0 +1,77 @@
+id: PY-FILE-04-H1
+title: 课后练习：规范化 JSON
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 25
+concept_ids:
+- PY-FILE-04
+prompt: 读取一行 JSON 对象，使用 json.loads 解析，再使用 json.dumps 按键排序、紧凑输出；中文不得转义为 Unicode 编码。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'import json
+
+    text = input()
+
+    # 解析后按键排序，并关闭中文转义
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-order
+    visibility: public
+    input: '{"name":"小词","age":18}
+
+      '
+    expected_output: '{"age":18,"name":"小词"}
+
+      '
+  - id: hidden-bool
+    visibility: hidden
+    input: '{"ok":true,"count":2}
+
+      '
+    expected_output: '{"count":2,"ok":true}
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - json.loads 把文本转为 Python 对象
+  - json.dumps 完成反向序列化
+  - 设置 separators=(',', ':') 生成紧凑格式
+  input_format: 一行合法 JSON 对象。
+  output_format: 键已排序的紧凑 JSON。
+  constraints:
+  - 使用 ensure_ascii=False
+  - 使用 sort_keys=True
+  - 分隔符中不保留额外空格
+  public_examples:
+  - input: '{"name":"小词","age":18}
+
+      '
+    expected_output: '{"age":18,"name":"小词"}
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: JSON 是交换格式；不要用 eval 解析外部 JSON 文本。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: JSON serialization'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

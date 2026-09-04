@@ -1,0 +1,33 @@
+id: DS-SORT-03
+title: 选择排序与冒泡排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-SORT-01
+learning_objectives:
+- 能判断与“选择排序与冒泡排序”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“选择排序与冒泡排序”的关键状态并验证边界
+concepts:
+- 选择排序与冒泡排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 比较简单二次排序的交换行为和稳定性。关键要点包括：选择排序每轮从未排序区选择最小元素放到边界，比较次数始终为 Θ(n²)，通常不稳定；冒泡排序通过交换相邻逆序对把大元素推向末端，使用严格比较时可以稳定；冒泡排序记录一轮是否发生交换，可在已有序输入上提前停止并达到
+    Θ(n)。
+  key_points:
+  - 选择排序每轮从未排序区选择最小元素放到边界，比较次数始终为 Θ(n²)，通常不稳定。
+  - 冒泡排序通过交换相邻逆序对把大元素推向末端，使用严格比较时可以稳定。
+  - 冒泡排序记录一轮是否发生交换，可在已有序输入上提前停止并达到 Θ(n)。
+  common_mistakes:
+  - 误以为选择排序只要交换相邻元素就天然稳定，且最好时间为 Θ(n)。
+  - 误以为冒泡排序每轮选择未排序区的最小元素并与首元素交换。
+  examples:
+  - 对 [3,1,2] 冒泡：首轮交换3与1、再交换3与2得到 [1,2,3]；下一轮无交换后停止。
+assessment_ids:
+- DS-SORT-03-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

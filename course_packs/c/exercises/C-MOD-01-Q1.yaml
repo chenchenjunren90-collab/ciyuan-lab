@@ -1,0 +1,25 @@
+id: C-MOD-01-Q1
+title: 概念判断：头文件与模块化编程
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-MOD-01
+prompt: 关于“头文件与模块化编程”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 具有外部链接的对象或函数通常只在一个 .c 文件中定义，其他文件通过 extern 声明引用。
+  - id: B
+    text: 在头文件中定义普通全局变量并被多个 .c 文件包含，不会产生重复定义。
+  - id: C
+    text: '#include 会在运行时动态加载另一个源文件，因此不影响编译依赖。'
+  accepted_answers:
+  - A
+status: draft

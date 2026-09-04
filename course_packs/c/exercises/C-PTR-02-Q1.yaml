@@ -1,0 +1,25 @@
+id: C-PTR-02-Q1
+title: 概念判断：指针算术与数组关系
+course: c
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- C-PTR-02
+prompt: 关于“指针算术与数组关系”，下列哪项说法正确？
+source_refs:
+- SRC-C-GUIDE-MEMORY
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: p+i 按所指类型的元素大小移动，两个同数组指针相减得到 ptrdiff_t 类型的元素距离。
+  - id: B
+    text: 任意两个独立 malloc 块的指针都可以相减得到可靠的字节距离。
+  - id: C
+    text: int 指针 p 加一只前进一个字节，与元素类型大小无关。
+  accepted_answers:
+  - A
+status: draft

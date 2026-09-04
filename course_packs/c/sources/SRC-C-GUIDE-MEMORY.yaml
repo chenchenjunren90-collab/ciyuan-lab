@@ -1,0 +1,18 @@
+id: SRC-C-GUIDE-MEMORY
+title: C 语言 MVP 教学提要：MEMORY
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 C 语言 MEMORY 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 数组元素连续存储，任何下标或指针移动都必须留在合法对象范围。C 字符串以空字符终止，容量必须包含终止符。指针的有效性取决于所指对象的生命周期。动态内存需要明确所有权、失败检查和唯一释放点；越界、释放后使用与读取未初始化值可能导致未定义行为。
+status: reviewed

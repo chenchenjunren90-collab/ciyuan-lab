@@ -1,0 +1,96 @@
+id: PY-LIST-03-H1
+title: 课后作业：筛选并转为大写
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-LIST-03
+prompt: 从标准输入读取一行由空格分隔的单词，保留长度不少于 3 的单词并转为大写，按原顺序以空格分隔输出；若没有符合条件的单词则不输出任何内容。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-mixed
+    visibility: public
+    input: 'a sun python go
+
+      '
+    expected_output: 'SUN PYTHON
+
+      '
+  - id: public-boundary
+    visibility: public
+    input: 'to cat code
+
+      '
+    expected_output: 'CAT CODE
+
+      '
+  - id: hidden-empty-result
+    visibility: hidden
+    input: 'a to go
+
+      '
+    expected_output: '
+
+      '
+  - id: hidden-case
+    visibility: hidden
+    input: 'Data ai loop If
+
+      '
+    expected_output: 'DATA LOOP
+
+      '
+  - id: hidden-single
+    visibility: hidden
+    input: 'hello
+
+      '
+    expected_output: 'HELLO
+
+      '
+status: draft
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 先用普通循环写出筛选规则
+  - 把 append 的值放到推导式表达式位置
+  - 把长度判断写到 if 位置
+  input_format: 一行空格分隔的单词。
+  output_format: 筛选并转为大写后的单词，以空格分隔。
+  constraints:
+  - 保持原顺序
+  - 长度恰好为 3 的单词应保留
+  - 没有结果时只输出空行
+  public_examples:
+  - input: 'a sun python go
+
+      '
+    expected_output: 'SUN PYTHON
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 推导式应保持一眼可读；条件过多时改回普通循环。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: list comprehensions / filtering'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。

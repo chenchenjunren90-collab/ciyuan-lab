@@ -1,0 +1,39 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+htmlcov/
+*.egg-info/
+build/
+
+# Frontend
+apps/web/node_modules/
+apps/web/dist/
+apps/web/.vite/
+
+# IDE and operating system
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Runtime files
+.runtime/
+logs/
+tmp/
+*.log
+
+# Local handoff and submission packaging
+AI-HANDOFF.md
+_submit_staging/

@@ -1,0 +1,63 @@
+id: PY-EXC-01
+title: 异常处理
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-BASE-10
+learning_objectives:
+- 能使用 try/except 捕获异常
+- 能使用 finally 执行收尾操作
+concepts:
+- try
+- except
+- finally
+- 异常类型
+lesson:
+  summary: 使用 try/except 捕获并处理异常，理解 finally 的收尾语义与常见异常类型。关键要点包括：try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型；else
+    用于没有异常时的后续逻辑，finally 用于无论成功失败都必须执行的清理；异常信息应保留输入位置和操作上下文，但不得泄露密钥或学生敏感数据。
+  key_points:
+  - try 只包围可能失败的最小操作，except 捕获能够处理的具体异常类型。
+  - else 用于没有异常时的后续逻辑，finally 用于无论成功失败都必须执行的清理。
+  - 异常信息应保留输入位置和操作上下文，但不得泄露密钥或学生敏感数据。
+  examples:
+  - '代码示例：try: value = int(text)
+
+    except ValueError: value = None'
+  - "try: int('x')\nexcept ValueError: pass  # 异常类型：ValueError 表示值转换失败"
+  - "try: f.read()\nfinally: f.close()  # finally 无论异常与否都执行清理"
+  common_mistakes:
+  - 误以为except Exception 能捕获包括 KeyboardInterrupt 在内的所有 BaseException
+  - 误以为finally 只在没有异常时执行，出现异常后会被跳过
+  learning_sequence:
+  - title: 找出可能失败的最小操作
+    content: 先标记输入转换、文件访问等具体风险，不把整段业务逻辑都包进 try。
+  - title: 捕获可处理的异常
+    content: 针对 int 转换捕获 ValueError，并明确跳过、默认值或提示用户的策略。
+  - title: 区分 else 与 finally
+    content: 成功后的处理放在 else，成功失败都必须执行的清理放在 finally。
+  worked_example:
+    problem: 逐行读取文本，只汇总能被 int 转换的整数。
+    steps:
+    - 每次只把 int(text) 放入 try，避免掩盖其他程序错误。
+    - 捕获 ValueError 后跳过当前文本，不使用空 except。
+    - 最后输出有效整数数量与总和，并测试全部非法的输入。
+    code: "values = []\nfor text in [\"12\", \"bad\", \"-5\"]:\n    try:\n        value = int(text)\n\
+      \    except ValueError:\n        continue\n    values.append(value)\nprint(len(values), sum(values))\n"
+    reflection: 异常处理应恢复可预期的输入错误，不应吞掉编程错误；错误日志也不应包含密钥或敏感数据。
+  checkpoint:
+    prompt: 为什么把 append、统计和输出全部放进同一个 try/except Exception 会降低程序可靠性？
+    guidance: 从异常定位、错误掩盖和可测试性三个角度回答，再把 try 缩小到单个转换语句。
+assessment_ids:
+- PY-EXC-01-D1
+- PY-EXC-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

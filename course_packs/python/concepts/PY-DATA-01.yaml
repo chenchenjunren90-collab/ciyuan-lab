@@ -1,0 +1,67 @@
+id: PY-DATA-01
+title: 数据清洗基础
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 60
+prerequisites:
+- PY-FILE-03
+- PY-DICT-02
+learning_objectives:
+- 能识别并处理缺失值与异常值
+- 能进行去重与类型规范化
+concepts:
+- 缺失值
+- 异常值
+- 去重
+- 数据清洗
+lesson:
+  summary: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。关键要点包括：数据清洗先定义字段、类型、缺失值、重复记录和异常范围，再编写转换规则；每条规则保留原值、处理结果和失败原因，避免无法追溯的静默修改；课程中的财经字段只提供脱敏业务语义，评分仍以解析、校验、测试和代码结构为核心。
+  key_points:
+  - 数据清洗先定义字段、类型、缺失值、重复记录和异常范围，再编写转换规则。
+  - 每条规则保留原值、处理结果和失败原因，避免无法追溯的静默修改。
+  - 课程中的财经字段只提供脱敏业务语义，评分仍以解析、校验、测试和代码结构为核心。
+  examples:
+  - 示例：把空字符串收入标为 missing，把负成本记录为 invalid，并输出对应行号。
+  - 缺失值：clean = [v for v in vals if v is not None]  # 过滤缺失值
+  - 异常值：valid = [v for v in vals if 0 <= v <= 100]  # 过滤异常值
+  - 去重：list(dict.fromkeys(items))  # 保序去重
+  common_mistakes:
+  - 误以为清洗缺失值时统一替换为 0 不会改变任何统计含义
+  - 误以为删除重复记录只需比较单个字段，不需要先定义业务唯一键
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握缺失值、异常值的识别与处理，以及去重和类型规范化的基本清洗流程。关键要点包括：数据清洗先定义字段、类型、缺失值、重复记录和异常范围，再编写转换规则；每条规则保留原值、处理结果和失败原因，避免无法追溯的静默修改；课程中的财经字段只提供脱敏业务语义，评分仍以解析、校验、测试和代码结构为核心。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：从文本列表中去掉空字符串。
+  - title: 独立完成课后练习
+    content: 完成 PY-DATA-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 从文本列表中去掉空字符串。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'values = [''12'', '''', ''18'']
+
+      clean = [item for item in values if item]
+
+      print(clean)
+
+      '
+    reflection: 数据清洗要记录哪些值被丢弃，真实项目中不能悄悄忽略异常。
+  checkpoint:
+    prompt: 为什么应该先判断 NA，再做整数转换？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-DATA-01-C1
+- PY-DATA-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-DATA
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,48 @@
+id: PY-PROJ-STAGE-RELIABLE-01
+title: 可靠 CSV 数据质量检查器
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 150
+concept_ids:
+- PY-MOD-01
+- PY-FILE-03
+- PY-EXC-01
+- PY-DATA-01
+summary: 读取通用 CSV 文件，检查缺失值、重复行和字段类型，将问题记录与汇总结果写入独立报告。
+requirements:
+- 使用 csv 模块读取带表头文件，不手工按逗号拆分
+- 对文件不存在、编码错误、列缺失和非法数值给出明确反馈
+- 输出总行数、有效行数、重复行数、缺失字段和错误明细
+- 将读取、校验、汇总和报告拆分为可测试模块
+deliverables:
+- 可运行的 Python 3.11 程序
+- 正常、空文件、坏表头和非法字段自动化测试
+- 示例 CSV、质量报告与运行说明
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-DATA
+verification_exercise_ids:
+- PY-FILE-03-C1
+- PY-EXC-01-H1
+- PY-DATA-01-C1
+scenario_scope: none
+scenario_provider: none
+data_classification: public
+computer_science_objectives:
+- 使用文件、异常和模块化设计构建可靠数据处理程序
+- 用可复现测试覆盖正常路径与错误路径
+business_context_objectives: []
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 数据检查正确性与测试覆盖
+    points: 55
+  - criterion: 异常处理与错误可追溯性
+    points: 25
+  - criterion: 模块化、文档和可复现性
+    points: 20
+status: draft

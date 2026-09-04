@@ -1,0 +1,49 @@
+id: PY-PROJ-BANK-MARKETING-01
+title: 合成银行营销活动统计
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: intermediate
+estimated_minutes: 180
+concept_ids:
+- PY-FUNC-01
+- PY-DICT-02
+- PY-FILE-03
+- PY-DATA-01
+summary: 参考公开银行营销数据的字段类别，对固定生成的虚构活动记录完成解析、去重、分组统计和偏差说明。
+requirements:
+- 校验活动批次、客户分群、联系渠道和响应状态
+- 使用复合键识别重复记录并保留错误原因
+- 按渠道和分群汇总响应率，禁止输出个体画像或营销建议
+- 为正常、缺失、重复和非法类别编写测试
+deliverables:
+- 可运行的 Python 3.11 程序
+- 自动化测试
+- 字段字典、统计结果与限制说明
+source_refs:
+- SRC-PY-OPEN-UCI-BANK
+- SRC-PY-SYNTHETIC-FINANCE-CATALOG
+- SRC-PY-GUIDE-DATA
+verification_exercise_ids:
+- PY-DICT-02-C1
+- PY-FILE-03-C1
+scenario_scope: post_course_finance_practice
+scenario_provider: fixed_synthetic
+data_classification: synthetic
+computer_science_objectives:
+- 使用函数、字典和文件处理构建可测试统计流水线
+- 用复合键去重并验证分组聚合结果
+business_context_objectives:
+- 理解营销活动字段的统计含义
+- 识别样本选择限制，不生成真实客户营销结论
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 程序正确性与自动化测试
+    points: 55
+  - criterion: 去重、异常处理与可追溯性
+    points: 25
+  - criterion: 模块化与结果限制说明
+    points: 20
+status: draft

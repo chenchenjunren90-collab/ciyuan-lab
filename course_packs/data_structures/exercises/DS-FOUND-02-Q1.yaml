@@ -1,0 +1,25 @@
+id: DS-FOUND-02-Q1
+title: 概念判断：算法成本与输入规模
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-FOUND-02
+prompt: 关于“算法成本与输入规模”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-FOUND
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 时间、额外空间、最坏与平均情况回答不同问题，结论必须注明所采用的情形。
+  - id: B
+    text: 算法有两层循环就必然是 O(n²)，无需分析每层循环的实际范围。
+  - id: C
+    text: 只要两个算法同为 O(n)，它们在所有输入规模上的运行时间就完全相同。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,71 @@
+id: PY-FUNC-03-H1
+title: 课后练习：用可变参数求平均值
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-FUNC-03
+prompt: 定义 average(*values) 返回所有参数的平均值。读取一行一个或多个整数，解包后调用函数，输出 1 位小数。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "def average(*values):\n    # values 是一个元组\n    pass\n\nnumbers = list(map(int, input().split()))\n\
+    print(f'{average(*numbers):.1f}')\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-three
+    visibility: public
+    input: '2 4 6
+
+      '
+    expected_output: '4.0
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: '7
+
+      '
+    expected_output: '7.0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - '*values 在函数内是元组'
+  - 使用 sum 和 len
+  - 调用处的 * 将列表拆成位置参数
+  input_format: 一行一个或多个整数。
+  output_format: 平均值，保留 1 位小数。
+  constraints:
+  - 至少输入一个数
+  - 调用时使用 *numbers 解包
+  public_examples:
+  - input: '2 4 6
+
+      '
+    expected_output: '4.0
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 可变参数适合数量不固定但角色相同的值，不应掩盖本应明确命名的参数。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: variadic arguments / unpacking'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

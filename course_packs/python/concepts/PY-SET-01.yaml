@@ -1,0 +1,69 @@
+id: PY-SET-01
+title: 集合
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 35
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能创建集合并利用其去重特性
+- 能进行并集、交集、差集运算
+concepts:
+- 集合
+- 去重
+- 并集
+- 交集
+- 差集
+lesson:
+  summary: 掌握集合的创建、去重特性以及并集、交集、差集等运算。关键要点包括：集合元素唯一且无序，常用于去重；| 或 union 求并集，& 或 intersection 求交集；- 或 difference
+    求差集。
+  key_points:
+  - 集合元素唯一且无序，常用于去重
+  - '| 或 union 求并集，& 或 intersection 求交集'
+  - '- 或 difference 求差集'
+  examples:
+  - set([1, 1, 2]) 得到 {1, 2}
+  - "{1, 2} | {2, 3}  # 并集：| 返回 {1, 2, 3}"
+  - "{1, 2} & {2, 3}  # 交集：& 返回 {2}"
+  - "{1, 2} - {2, 3}  # 差集：- 返回 {1}"
+  common_mistakes:
+  - 误以为集合保留元素插入顺序，可通过下标稳定访问
+  - 误以为集合可以直接包含列表或字典作为元素
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握集合的创建、去重特性以及并集、交集、差集等运算。关键要点包括：集合元素唯一且无序，常用于去重；| 或 union 求并集，& 或 intersection 求交集；- 或 difference
+      求差集。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：找出两组课程名称的共同项。
+  - title: 独立完成课后练习
+    content: 完成 PY-SET-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 找出两组课程名称的共同项。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'left = {"Python", "C"}
+
+      right = {"Python", "数据结构"}
+
+      print(left & right)
+
+      '
+    reflection: 集合适合成员判断和去重；需要展示时通常还要排序。
+  checkpoint:
+    prompt: 集合可以保证每次迭代的显示顺序都相同吗？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-SET-01-Q1
+- PY-SET-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

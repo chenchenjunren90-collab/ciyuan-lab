@@ -1,0 +1,64 @@
+id: PY-DATA-02
+title: 综合数据处理
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 70
+prerequisites:
+- PY-DATA-01
+- PY-FUNC-03
+learning_objectives:
+- 能综合运用容器与函数处理结构化数据
+- 能对处理结果进行统计汇总
+concepts:
+- 结构化数据
+- 统计汇总
+- 聚合
+lesson:
+  summary: 综合运用容器、函数与文件操作处理结构化数据，并完成统计与汇总。关键要点包括：聚合是对数据做求和、平均、分组等汇总；用函数拆分清洗、统计、输出等职责；字典配合 defaultdict
+    便于分组累加。
+  key_points:
+  - 聚合是对数据做求和、平均、分组等汇总
+  - 用函数拆分清洗、统计、输出等职责
+  - 字典配合 defaultdict 便于分组累加
+  - 统计汇总：sum、len 与分组累加得到最终的统计汇总结果
+  examples:
+  - by_cat[cat]["amount"] += qty * price
+  - "结构化数据：rows = [{'name': 'A', 'qty': 2}, {'name': 'B', 'qty': 3}]  # 结构化数据"
+  - 聚合：total = sum(r['qty'] for r in rows)  # 聚合求总数
+  - 'total = sum(r["qty"] for r in rows); avg = total / len(rows)  # 统计汇总：求和与平均'
+  common_mistakes:
+  - 误以为聚合前无需验证类型，sum 会自动忽略字符串和 None
+  - 误以为分组结果可以直接解释为因果关系，无需说明样本和规则限制
+  learning_sequence:
+  - title: 先建立直觉
+    content: 综合运用容器、函数与文件操作处理结构化数据，并完成统计与汇总。关键要点包括：聚合是对数据做求和、平均、分组等汇总；用函数拆分清洗、统计、输出等职责；字典配合 defaultdict
+      便于分组累加。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：把同类商品的数量累加到字典。
+  - title: 独立完成课后练习
+    content: 完成 PY-DATA-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 把同类商品的数量累加到字典。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "totals = {}\nfor name, value in [('A', 2), ('A', 3)]:\n    totals[name] = totals.get(name,\
+      \ 0) + value\nprint(totals)\n"
+    reflection: 综合数据题按读取、清洗、汇总、排序、输出五步实现。
+  checkpoint:
+    prompt: 为什么分组汇总通常需要“键”和“累计值”两个角色？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-DATA-02-Q1
+- PY-DATA-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-DATA
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

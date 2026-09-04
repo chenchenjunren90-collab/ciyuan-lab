@@ -1,0 +1,25 @@
+id: DS-FOUND-01-Q1
+title: 概念判断：抽象数据类型与实现
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- DS-FOUND-01
+prompt: 关于“抽象数据类型与实现”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-FOUND
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 实现必须在每次公开操作前后维护表示不变量，例如 size 与实际元素数一致。
+  - id: B
+    text: 只要两个实现使用不同内存布局，它们就一定属于不同的抽象数据类型。
+  - id: C
+    text: 调用者可以依赖实现的私有字段，因为抽象接口不会随实现变化。
+  accepted_answers:
+  - A
+status: draft

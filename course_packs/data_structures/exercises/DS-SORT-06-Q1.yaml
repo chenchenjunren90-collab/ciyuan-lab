@@ -1,0 +1,25 @@
+id: DS-SORT-06-Q1
+title: 概念判断：堆排序
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: advanced
+estimated_minutes: 5
+concept_ids:
+- DS-SORT-06
+prompt: 关于“堆排序”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 最坏时间为 Θ(n log n)，数组实现只需 O(1) 额外空间，但通常不稳定。
+  - id: B
+    text: 自底向上建堆需要对每个结点执行 O(log n) 工作，因此总时间必然是 Θ(n log n)。
+  - id: C
+    text: 堆排序保持所有相等键的原相对顺序，所以属于稳定排序。
+  accepted_answers:
+  - A
+status: draft

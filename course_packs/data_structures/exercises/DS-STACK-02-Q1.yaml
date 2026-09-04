@@ -1,0 +1,25 @@
+id: DS-STACK-02-Q1
+title: 概念判断：栈的表达式与括号应用
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-STACK-02
+prompt: 关于“栈的表达式与括号应用”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-LINEAR
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 中缀转后缀时依据优先级和结合性弹出运算符，括号控制弹栈边界但不进入结果。
+  - id: B
+    text: 计算后缀表达式 a b - 时先弹出的 b 应作为左操作数，因此结果是 b-a。
+  - id: C
+    text: 括号匹配只需统计左右括号数量相同，无需检查类型和嵌套次序。
+  accepted_answers:
+  - A
+status: draft

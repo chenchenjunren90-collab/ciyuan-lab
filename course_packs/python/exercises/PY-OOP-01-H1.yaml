@@ -1,0 +1,78 @@
+id: PY-OOP-01-H1
+title: 课后练习：创建学生对象
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 25
+concept_ids:
+- PY-OOP-01
+prompt: 定义 Student 类，构造方法接收 name 和整数成绩列表，average() 返回平均分。读取姓名和一行成绩，创建对象并输出“姓名 平均分”，平均分保留 1 位。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: "class Student:\n    def __init__(self, name, scores):\n        # 保存实例属性\n        pass\n\
+    \n    def average(self):\n        pass\n\nname = input().strip()\nscores = list(map(int, input().split()))\n\
+    student = Student(name, scores)\nprint(f'{student.name} {student.average():.1f}')\n"
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-student
+    visibility: public
+    input: '小词
+
+      80 90 100
+
+      '
+    expected_output: '小词 90.0
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: 'A
+
+      60
+
+      '
+    expected_output: 'A 60.0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - __init__ 中写 self.name 和 self.scores
+  - average 中使用 self.scores
+  - 方法调用写 student.average()
+  input_format: 第一行姓名；第二行一个或多个整数成绩。
+  output_format: 姓名 平均分。
+  constraints:
+  - 成绩列表非空
+  - 实例属性通过 self 保存
+  public_examples:
+  - input: '小词
+
+      80 90 100
+
+      '
+    expected_output: '小词 90.0
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 类用于把相关数据和行为组织在一起，不要只为包装一个函数而建类。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: classes / objects / instance methods'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

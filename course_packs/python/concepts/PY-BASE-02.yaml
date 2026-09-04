@@ -1,0 +1,68 @@
+id: PY-BASE-02
+title: 变量与基本数据类型
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-01
+learning_objectives:
+- 能声明变量并赋值
+- 能区分整型、浮点型、字符串与布尔型
+concepts:
+- 变量
+- int
+- float
+- str
+- bool
+lesson:
+  summary: 学习变量的命名与赋值规则，认识整数、浮点数、字符串与布尔值等基本数据类型及其相互区别。关键要点包括：Python 名称绑定对象，赋值不会声明固定类型；对象类型决定可执行的操作；int、float、str、bool
+    的转换需要明确输入约定，失败时应处理 ValueError；使用 type 和 isinstance 观察类型，但程序接口更应通过行为和测试表达约束。
+  key_points:
+  - Python 名称绑定对象，赋值不会声明固定类型；对象类型决定可执行的操作。
+  - int、float、str、bool 的转换需要明确输入约定，失败时应处理 ValueError。
+  - 使用 type 和 isinstance 观察类型，但程序接口更应通过行为和测试表达约束。
+  examples:
+  - 代码示例：age_text = '20'; age = int(age_text); is_adult = age >= 18
+  - 'pi = 3.14  # float：浮点数，用于表示带小数的数值'
+  - 'flag = True  # bool：布尔类型只有 True 与 False 两个值'
+  common_mistakes:
+  - 误以为变量保存的是不可改变的固定类型存储槽，重新赋值不能绑定其他类型对象
+  - 误以为is 与 == 始终等价，都只比较两个对象的值
+  learning_sequence:
+  - title: 先建立直觉
+    content: 学习变量的命名与赋值规则，认识整数、浮点数、字符串与布尔值等基本数据类型及其相互区别。关键要点包括：Python 名称绑定对象，赋值不会声明固定类型；对象类型决定可执行的操作；int、float、str、bool
+      的转换需要明确输入约定，失败时应处理 ValueError；使用 type 和 isinstance 观察类型，但程序接口更应通过行为和测试表达约束。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：把字符串形式的年龄转换成整数后加一。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 把字符串形式的年龄转换成整数后加一。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'age_text = "18"
+
+      age = int(age_text)
+
+      print(age + 1)
+
+      '
+    reflection: 变量名应表达含义；转换前后的值最好使用不同名字，便于排错。
+  checkpoint:
+    prompt: input() 返回的年龄为什么不能直接和整数 1 相加？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-02-Q1
+- PY-BASE-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

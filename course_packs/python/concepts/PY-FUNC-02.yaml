@@ -1,0 +1,62 @@
+id: PY-FUNC-02
+title: 参数与返回值
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-FUNC-01
+learning_objectives:
+- 能使用位置、关键字与默认参数
+- 能返回单个或多个值
+concepts:
+- 位置参数
+- 关键字参数
+- 默认值
+- 多返回值
+lesson:
+  summary: 掌握位置参数、关键字参数、默认参数与多返回值的用法与调用规则。关键要点包括：位置参数按顺序绑定，关键字参数按名称绑定，调用必须满足函数签名；默认值在函数定义时求值，不能把可变对象直接作为会被修改的默认值；返回多个结果本质上是返回元组，调用方应明确每个位置的语义。
+  key_points:
+  - 位置参数按顺序绑定，关键字参数按名称绑定，调用必须满足函数签名。
+  - 默认值在函数定义时求值，不能把可变对象直接作为会被修改的默认值。
+  - 返回多个结果本质上是返回元组，调用方应明确每个位置的语义。
+  examples:
+  - '代码示例：def append_item(item, items=None): items = [] if items is None else items; items.append(item);
+    return items'
+  - '# 位置参数：按顺序绑定；def add(a, b): return a + b'
+  - '# 关键字参数：按名称绑定；def greet(name): return "hi " + name; greet(name="Ada")'
+  - '# 默认值：在定义时求值；def price(amount, discount=0.1): return amount * (1 - discount)'
+  - '# 多返回值：本质是返回元组；def divmod2(a, b): return a // b, a % b'
+  common_mistakes:
+  - 误以为位置参数可以无条件写在关键字参数之后
+  - 误以为返回多个值会创建多个独立返回通道，而不是一个元组对象
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握位置参数、关键字参数、默认参数与多返回值的用法与调用规则。关键要点包括：位置参数按顺序绑定，关键字参数按名称绑定，调用必须满足函数签名；默认值在函数定义时求值，不能把可变对象直接作为会被修改的默认值；返回多个结果本质上是返回元组，调用方应明确每个位置的语义。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：定义带默认折扣的价格函数。
+  - title: 独立完成课后练习
+    content: 完成 PY-FUNC-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 定义带默认折扣的价格函数。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def price(amount, discount=0.1):\n    return amount * (1 - discount)\n"
+    reflection: 参数设计要让默认行为清晰，同时允许调用者显式覆盖。
+  checkpoint:
+    prompt: 为什么默认参数通常放在非默认参数之后？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-FUNC-02-C1
+- PY-FUNC-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

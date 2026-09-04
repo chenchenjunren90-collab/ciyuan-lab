@@ -1,0 +1,66 @@
+id: PY-STR-01
+title: 字符串基础
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能创建字符串并使用转义字符
+- 能进行字符串拼接与重复
+concepts:
+- 字符串
+- 转义
+- 拼接
+- 重复
+lesson:
+  summary: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。关键要点包括：字符串用单引号或双引号包裹；+ 拼接字符串，* 重复字符串；\n、\t 等转义字符表示特殊字符。
+  key_points:
+  - 字符串用单引号或双引号包裹
+  - + 拼接字符串，* 重复字符串
+  - \n、\t 等转义字符表示特殊字符
+  examples:
+  - 代码示例：text='data' 时 text[1] 为 'a'、len(text) 为 4；尝试 text[0]='D' 会抛出 TypeError。
+  - "text = 'python'  # 字符串：用引号包裹的字符序列"
+  - "print('第一行')  # 转义：转义字符用反斜杠开头表示换行、制表等特殊字符"
+  - "'ab' * 3  # 重复：* 把字符串重复 3 次得到 'ababab'"
+  common_mistakes:
+  - 误以为字符串可以通过 text[0]='A' 原地修改字符
+  - 误以为len(text) 始终等于 UTF-8 编码后的字节数
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握字符串的创建、转义字符、拼接（+）与重复（*）等基本操作。关键要点包括：字符串用单引号或双引号包裹；+ 拼接字符串，* 重复字符串；\n、\t 等转义字符表示特殊字符。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：拼接姓和名，中间留一个空格。
+  - title: 独立完成课后练习
+    content: 完成 PY-STR-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 拼接姓和名，中间留一个空格。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'family_name = "陈"
+
+      given_name = "小词"
+
+      print(family_name + " " + given_name)
+
+      '
+    reflection: 拼接文本时要把内容和分隔符分别想清楚。
+  checkpoint:
+    prompt: 为什么用 join 比在循环中手动判断最后一个连字符更简单？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-STR-01-Q1
+- PY-STR-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

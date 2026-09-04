@@ -1,0 +1,19 @@
+id: SRC-PY-OFFICIAL-CFPB-COMPLAINT
+title: CFPB Consumer Complaint Database 字段与使用说明
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: official_documentation
+citation:
+  locator: Consumer Financial Protection Bureau，Consumer Complaint Database 与 How we share complaint data
+  url: https://www.consumerfinance.gov/complaint/data-use/
+  publisher: Consumer Financial Protection Bureau
+rights:
+  basis: open_license
+  note: CFPB说明其公开投诉数据可供使用、分析和再利用。本项目只参考结构化类别字段，不复制投诉叙述、公司名称、邮编或任何个人相关内容。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

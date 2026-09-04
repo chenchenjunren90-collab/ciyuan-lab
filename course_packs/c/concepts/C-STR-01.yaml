@@ -1,0 +1,32 @@
+id: C-STR-01
+title: 字符数组与 C 字符串
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- C-ARRAY-01
+learning_objectives:
+- 能够解释字符数组与 C 字符串的核心规则
+- 能够运用字符数组与 C 字符串解决边界明确的问题
+concepts:
+- 字符数组与 C 字符串
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解空字符终止约定和缓冲区容量。关键要点包括：C 字符串是以 '\0' 结尾的字符序列，缓冲区容量必须包含终止符位置；字符串长度不包含终止符，但复制和拼接时必须为终止符保留空间；读取和遍历必须设置上界，不能假设外部输入一定包含合法终止符。
+  key_points:
+  - C 字符串是以 '\0' 结尾的字符序列，缓冲区容量必须包含终止符位置。
+  - 字符串长度不包含终止符，但复制和拼接时必须为终止符保留空间。
+  - 读取和遍历必须设置上界，不能假设外部输入一定包含合法终止符。
+  common_mistakes:
+  - 为5个可见字符只分配 char s[5]，没有终止符空间。
+  - 用 == 比较两个字符数组内容，而不是使用受控的字符串比较。
+  examples:
+  - 代码示例：char name[16]; if (scanf("%15s", name) == 1) printf("%zu\n", strlen(name));
+assessment_ids:
+- C-STR-01-C1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

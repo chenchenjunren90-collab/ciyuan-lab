@@ -1,0 +1,63 @@
+id: PY-BASE-10
+title: 基础语法综合
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 60
+prerequisites:
+- PY-BASE-05
+- PY-BASE-07
+- PY-BASE-08
+learning_objectives:
+- 能综合运用条件与循环解决简单编程问题
+- 能编写可读、可运行的小程序
+concepts:
+- 综合运用
+- 程序设计
+lesson:
+  summary: 综合运用变量、条件、循环与输入输出解决简单计算问题，形成结构化程序设计的基本思路。关键要点包括：结构化程序设计以顺序、选择、循环三种结构为基础；先理清输入、处理、输出三部分再动手编码；用函数或注释拆分逻辑提高可读性。
+  key_points:
+  - 结构化程序设计以顺序、选择、循环三种结构为基础
+  - 先理清输入、处理、输出三部分再动手编码
+  - 用函数或注释拆分逻辑提高可读性
+  examples:
+  - 读入 n 个整数，累加并输出总和
+  - 综合运用：total = sum(x for x in data if x > 0)  # 条件与循环综合运用
+  - "程序设计：def mean(nums): return sum(nums) / len(nums)  # 结构化程序设计"
+  common_mistakes:
+  - 误以为只要一段语法可以运行，其变量作用域、异常和边界行为就无需再验证
+  - 误以为所有 Python 表达式都从左到右按书写顺序求值，不存在优先级
+  learning_sequence:
+  - title: 先建立直觉
+    content: 综合运用变量、条件、循环与输入输出解决简单计算问题，形成结构化程序设计的基本思路。关键要点包括：结构化程序设计以顺序、选择、循环三种结构为基础；先理清输入、处理、输出三部分再动手编码；用函数或注释拆分逻辑提高可读性。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：统计三个数字的最大值和平均值。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-10-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 统计三个数字的最大值和平均值。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'values = [2, 5, 8]
+
+      print(max(values), sum(values) / len(values))
+
+      '
+    reflection: 综合题应分成输入、校验、处理、输出四段逐步验证。
+  checkpoint:
+    prompt: 当列表只有一个元素时，最低、最高和平均值分别是什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-10-Q1
+- PY-BASE-10-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

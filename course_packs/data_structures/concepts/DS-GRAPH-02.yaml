@@ -1,0 +1,32 @@
+id: DS-GRAPH-02
+title: 广度优先搜索
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-GRAPH-01
+learning_objectives:
+- 能够解释广度优先搜索的核心规则
+- 能够运用广度优先搜索解决边界明确的问题
+concepts:
+- 广度优先搜索
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用队列按层访问并求无权最短路。关键要点包括：BFS 用队列保存已发现但尚未展开的顶点，按距离层次访问；顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入；在无权图中首次到达顶点的层数就是最少边数距离，并可用前驱数组恢复路径。
+  key_points:
+  - BFS 用队列保存已发现但尚未展开的顶点，按距离层次访问。
+  - 顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入。
+  - 在无权图中首次到达顶点的层数就是最少边数距离，并可用前驱数组恢复路径。
+  common_mistakes:
+  - 顶点出队时才标记，造成队列中大量重复顶点。
+  - 图不连通时只从一个起点运行却宣称遍历了整张图。
+  examples:
+  - 示例：从0出发，先将0入队；弹出0后把所有未访问邻点标记并依次入队。
+assessment_ids:
+- DS-GRAPH-02-C1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

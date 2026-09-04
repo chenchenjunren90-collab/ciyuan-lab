@@ -1,0 +1,70 @@
+id: PY-LIST-02
+title: 列表常用方法
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-LIST-01
+learning_objectives:
+- 能使用 append/insert/remove/pop 修改列表
+- 能使用 sort/reverse 排序列表
+concepts:
+- append
+- insert
+- remove
+- pop
+- sort
+lesson:
+  summary: 掌握列表的增删改查方法（append、insert、remove、pop、sort 等）及其返回值。关键要点包括：append(x) 在末尾追加，insert(i, x) 在指定位置插入；remove(x)
+    删除首个匹配值，pop() 删除并返回末尾元素；sort() 原地排序，注意它返回 None。
+  key_points:
+  - append(x) 在末尾追加，insert(i, x) 在指定位置插入
+  - remove(x) 删除首个匹配值，pop() 删除并返回末尾元素
+  - sort() 原地排序，注意它返回 None
+  examples:
+  - lst.append(4) 在末尾添加 4
+  - 'lst.insert(1, 9)  # insert 在指定位置插入 9'
+  - 'lst.remove(9)  # remove 删除首个匹配值'
+  - 'lst.pop()  # pop 删除并返回末尾元素'
+  - 'lst.sort()  # sort 原地排序并返回 None'
+  common_mistakes:
+  - 误以为list.sort 会返回排序后的新列表，原列表保持不变
+  - 误以为remove(x) 会删除列表中所有等于 x 的元素
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握列表的增删改查方法（append、insert、remove、pop、sort 等）及其返回值。关键要点包括：append(x) 在末尾追加，insert(i, x) 在指定位置插入；remove(x)
+      删除首个匹配值，pop() 删除并返回末尾元素；sort() 原地排序，注意它返回 None。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：在列表末尾添加一个元素。
+  - title: 独立完成课后练习
+    content: 完成 PY-LIST-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 在列表末尾添加一个元素。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'items = [1, 2]
+
+      items.append(3)
+
+      print(items)
+
+      '
+    reflection: 遇到 NoneType 报错时，检查是否误用了原地方法的返回值。
+  checkpoint:
+    prompt: append()、sort() 等原地方法通常返回什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-LIST-02-Q1
+- PY-LIST-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

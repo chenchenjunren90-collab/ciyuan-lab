@@ -1,0 +1,59 @@
+id: PY-LIST-03-C1
+title: 正数平方
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: intermediate
+estimated_minutes: 15
+concept_ids:
+- PY-LIST-03
+prompt: 从标准输入读取一行由空格分隔的整数，使用列表推导式，输出其中所有正数的平方（按原顺序、空格分隔）；若没有正数则不输出任何内容。
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-mixed
+    visibility: public
+    input: '-1 2 3
+
+      '
+    expected_output: '4 9
+
+      '
+  - id: public-single
+    visibility: public
+    input: '5
+
+      '
+    expected_output: '25
+
+      '
+  - id: hidden-zeros
+    visibility: hidden
+    input: '0 2 0 3
+
+      '
+    expected_output: '4 9
+
+      '
+  - id: hidden-negs
+    visibility: hidden
+    input: '-5 1 -2 4
+
+      '
+    expected_output: '1 16
+
+      '
+status: draft

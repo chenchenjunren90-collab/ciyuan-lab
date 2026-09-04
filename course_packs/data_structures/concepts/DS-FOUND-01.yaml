@@ -1,0 +1,31 @@
+id: DS-FOUND-01
+title: 抽象数据类型与实现
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+- 能判断与“抽象数据类型与实现”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“抽象数据类型与实现”的关键状态并验证边界
+concepts:
+- 抽象数据类型与实现
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分接口语义、数据表示和具体实现。关键要点包括：抽象数据类型用可观察操作和语义描述能力，不规定数组、链表等内部表示；实现必须在每次公开操作前后维护表示不变量，例如 size 与实际元素数一致；同一 ADT 可以有多种实现，选择取决于操作频率、空间限制和并发等需求。
+  key_points:
+  - 抽象数据类型用可观察操作和语义描述能力，不规定数组、链表等内部表示。
+  - 实现必须在每次公开操作前后维护表示不变量，例如 size 与实际元素数一致。
+  - 同一 ADT 可以有多种实现，选择取决于操作频率、空间限制和并发等需求。
+  common_mistakes:
+  - 误以为只要两个实现使用不同内存布局，它们就一定属于不同的抽象数据类型。
+  - 误以为调用者可以依赖实现的私有字段，因为抽象接口不会随实现变化。
+  examples:
+  - 示例：栈 ADT 只承诺 push、pop、top 和 empty；它既可用动态数组实现，也可用链表实现。
+assessment_ids:
+- DS-FOUND-01-Q1
+source_refs:
+- SRC-DS-GUIDE-FOUND
+status: draft

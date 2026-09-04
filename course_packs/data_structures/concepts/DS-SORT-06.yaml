@@ -1,0 +1,32 @@
+id: DS-SORT-06
+title: 堆排序
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- DS-HEAP-01
+learning_objectives:
+- 能判断与“堆排序”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“堆排序”的关键状态并验证边界
+concepts:
+- 堆排序
+- 边界条件
+- 可验证性
+lesson:
+  summary: 利用堆的选择性质实现原地 O(n log n) 排序。关键要点包括：堆排序先在线性时间建最大堆，再反复交换堆顶与末尾并对缩小后的堆下沉；最坏时间为 Θ(n log n)，数组实现只需 O(1) 额外空间，但通常不稳定；每轮结束后数组后缀已按最终位置有序，剩余前缀继续保持堆结构。
+  key_points:
+  - 堆排序先在线性时间建最大堆，再反复交换堆顶与末尾并对缩小后的堆下沉。
+  - 最坏时间为 Θ(n log n)，数组实现只需 O(1) 额外空间，但通常不稳定。
+  - 每轮结束后数组后缀已按最终位置有序，剩余前缀继续保持堆结构。
+  common_mistakes:
+  - 误以为自底向上建堆需要对每个结点执行 O(log n) 工作，因此总时间必然是 Θ(n log n)。
+  - 误以为堆排序保持所有相等键的原相对顺序，所以属于稳定排序。
+  examples:
+  - 轨迹示例：最大堆 [5,3,4,1] 将5与末尾1交换，对前三项下沉后得到 [4,3,1,5]，5已就位。
+assessment_ids:
+- DS-SORT-06-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

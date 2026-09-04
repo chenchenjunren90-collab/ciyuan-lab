@@ -1,0 +1,66 @@
+id: PY-LIST-03
+title: 列表推导式
+course: python
+schema_version: 0.1.0
+version: 4
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-LIST-01
+- PY-BASE-07
+learning_objectives:
+- 能用列表推导式生成列表
+- 能写出带条件过滤的列表推导式
+concepts:
+- 列表推导式
+- 条件过滤
+- 简洁语法
+lesson:
+  summary: 使用列表推导式以简洁语法构造列表，掌握带条件过滤的写法。关键要点包括：语法为 [表达式 for 变量 in 序列 if 条件]；if 条件用于过滤，表达式作用于满足条件的元素；可读性优先，复杂逻辑仍建议用普通循环。
+  key_points:
+  - 语法为 [表达式 for 变量 in 序列 if 条件]
+  - if 条件用于过滤，表达式作用于满足条件的元素
+  - 可读性优先，复杂逻辑仍建议用普通循环
+  examples:
+  - '[x * x for x in nums if x > 0]'
+  - '# 列表推导式：[x * x for x in nums] 用一行生成新列表'
+  - '# 条件过滤：[x for x in nums if x > 0] 只保留满足 if 条件的元素'
+  - '# 简洁语法：[x * 2 for x in nums] 用简洁语法替代多行循环'
+  common_mistakes:
+  - 误以为列表推导式的过滤条件写在表达式之前
+  - 误以为嵌套列表推导式中交换两个 for 的顺序不会改变结果顺序或含义
+  learning_sequence:
+  - title: 先写普通循环
+    content: 先把“遍历、判断、变换、追加”写成清晰循环，确认结果正确。
+  - title: 再压缩为推导式
+    content: 把 append 中的值放到最前面，把循环和过滤条件依次写在后面。
+  - title: 用可读性做取舍
+    content: 推导式超过一个复杂条件或包含副作用时，保留普通循环并拆分命名。
+  worked_example:
+    problem: 保留输入中的正偶数并输出它们的平方，保持原顺序。
+    steps:
+    - 过滤条件是 value > 0 且 value % 2 == 0。
+    - 变换表达式是 value * value。
+    - 推导式按原列表遍历，因此自然保留相对顺序。
+    code: 'values = [-3, 2, 5, 4, 0]
+
+      result = [value * value for value in values if value > 0 and value % 2 == 0]
+
+      print(result)
+
+      '
+    reflection: 先保证普通循环可读且正确，再决定是否改写为推导式；代码短不等于更容易维护。
+  checkpoint:
+    prompt: 把“保留长度不少于 3 的字符串并转为大写”先写成普通循环，再写成列表推导式。
+    guidance: 对比两版的遍历对象、过滤条件和变换表达式是否一一对应。
+assessment_ids:
+- PY-LIST-03-C1
+- PY-LIST-03-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

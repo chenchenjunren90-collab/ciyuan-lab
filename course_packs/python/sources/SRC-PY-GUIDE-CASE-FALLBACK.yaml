@@ -1,0 +1,18 @@
+id: SRC-PY-GUIDE-CASE-FALLBACK
+title: Python MVP 教学提要：CASE-FALLBACK
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 词元研究所项目组自编 Python CASE-FALLBACK 教学提要
+rights:
+  basis: synthetic
+  note: 项目组原创教学摘要，可用于课程展示与检索。
+data_classification: synthetic
+rag:
+  eligible: true
+  content:
+    mode: inline
+    text: 固定合成数据集包含月份、品类、收入、成本和状态字段；缺失收入、负成本和重复记录被人为注入，用于练习解析、校验、清洗、聚合与异常报告。所有主体与数值均为虚构，不得用于真实经营判断。
+status: reviewed

@@ -1,0 +1,32 @@
+id: DS-SORT-01
+title: 排序问题、稳定性与下界
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-03
+learning_objectives:
+- 能判断与“排序问题、稳定性与下界”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“排序问题、稳定性与下界”的关键状态并验证边界
+concepts:
+- 排序问题、稳定性与下界
+- 边界条件
+- 可验证性
+lesson:
+  summary: 明确排序键、稳定性、原地性和比较模型。关键要点包括：排序问题要明确键、升降序、稳定性和是否允许额外空间；稳定性关注相等键元素的相对次序；只通过元素两两比较获取顺序的排序，在最坏情况下需要 Ω(n log n) 次比较；计数排序等非比较算法可在附加键范围条件下突破比较下界，但需要额外假设和空间。
+  key_points:
+  - 排序问题要明确键、升降序、稳定性和是否允许额外空间；稳定性关注相等键元素的相对次序。
+  - 只通过元素两两比较获取顺序的排序，在最坏情况下需要 Ω(n log n) 次比较。
+  - 计数排序等非比较算法可在附加键范围条件下突破比较下界，但需要额外假设和空间。
+  common_mistakes:
+  - 误以为稳定排序表示算法对相同输入每次耗时完全相同。
+  - 误以为Ω(n log n) 的比较下界适用于所有排序算法，包括已知小范围整数的计数排序。
+  examples:
+  - 示例：记录 (90,A)、(80,B)、(90,C) 按分数降序稳定排序后，A 仍排在 C 前面。
+assessment_ids:
+- DS-SORT-01-Q1
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+status: draft

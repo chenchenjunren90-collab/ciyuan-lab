@@ -1,0 +1,61 @@
+id: PY-DICT-02
+title: 字典遍历与常用方法
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 45
+prerequisites:
+- PY-DICT-01
+learning_objectives:
+- 能遍历字典的键、值与键值对
+- 能使用 items/keys/values 方法
+concepts:
+- items
+- keys
+- values
+- 遍历
+lesson:
+  summary: 掌握字典的遍历方式与 items/keys/values 方法，能够按需遍历键值对。关键要点包括：keys() 返回键，values() 返回值，items() 返回键值对；for
+    k, v in d.items() 同时遍历键和值；Python 3.7+ 字典保持插入顺序。
+  key_points:
+  - keys() 返回键，values() 返回值，items() 返回键值对
+  - for k, v in d.items() 同时遍历键和值
+  - Python 3.7+ 字典保持插入顺序
+  examples:
+  - 'for word, cnt in counts.items(): print(word, cnt)'
+  - 'list(student.keys())  # keys 返回所有键'
+  - 'list(student.values())  # values 返回所有值'
+  common_mistakes:
+  - 误以为遍历字典时可以任意增删键而不会影响迭代器
+  - 误以为dict.update 只添加新键，遇到已有键时不会覆盖原值
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握字典的遍历方式与 items/keys/values 方法，能够按需遍历键值对。关键要点包括：keys() 返回键，values() 返回值，items() 返回键值对；for
+      k, v in d.items() 同时遍历键和值；Python 3.7+ 字典保持插入顺序。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：同时遍历字典的键和值。
+  - title: 独立完成课后练习
+    content: 完成 PY-DICT-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 同时遍历字典的键和值。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "scores = {\"小词\": 88, \"小元\": 95}\nfor name, score in scores.items():\n    print(name, score)\n"
+    reflection: 多条件排序时，先明确每个字段是升序还是降序。
+  checkpoint:
+    prompt: 为什么排序键中的成绩要取负数？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-DICT-02-C1
+- PY-DICT-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

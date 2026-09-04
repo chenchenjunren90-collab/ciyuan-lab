@@ -1,0 +1,61 @@
+id: PY-BASE-06
+title: while 循环
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 40
+prerequisites:
+- PY-BASE-03
+learning_objectives:
+- 能使用 while 实现重复执行
+- 能设计循环条件与终止条件以避免死循环
+concepts:
+- while
+- 循环条件
+- 计数器
+- 死循环
+lesson:
+  summary: 使用 while 在条件成立时重复执行代码块，掌握计数器与循环终止条件的写法。关键要点包括：while 先判断条件，条件为假时循环体一次也不执行；常用计数器变量在循环体内递增，直至条件不成立；条件始终为真且无终止路径会导致死循环。
+  key_points:
+  - while 先判断条件，条件为假时循环体一次也不执行
+  - 常用计数器变量在循环体内递增，直至条件不成立
+  - 条件始终为真且无终止路径会导致死循环
+  - 循环条件：while 后紧跟的布尔表达式，为假时循环终止
+  examples:
+  - "i = 0\nwhile i < 5:\n    print(i)\n    i += 1"
+  - "i = 0\nwhile i < 3:\n    print(i)\n    i += 1  # 计数器：i 每次加一，控制循环次数"
+  - "while True:\n    pass  # 死循环：条件恒为 True 且没有 break 终止"
+  - "count = 0\nwhile count < 5:  # 循环条件：count < 5 为真时继续\n    count += 1"
+  common_mistakes:
+  - 误以为while 条件在循环体执行后才判断，因此循环至少执行一次
+  - 误以为循环体修改任意变量就足以保证 while 最终终止
+  learning_sequence:
+  - title: 先建立直觉
+    content: 使用 while 在条件成立时重复执行代码块，掌握计数器与循环终止条件的写法。关键要点包括：while 先判断条件，条件为假时循环体一次也不执行；常用计数器变量在循环体内递增，直至条件不成立；条件始终为真且无终止路径会导致死循环。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：用 while 输出 1、2、3。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-06-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 用 while 输出 1、2、3。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "i = 1\nwhile i <= 3:\n    print(i)\n    i += 1\n"
+    reflection: while 循环应同时检查初始化、继续条件、状态更新三处。
+  checkpoint:
+    prompt: 循环体中的哪一步保证条件最终会变成 False？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-06-Q1
+- PY-BASE-06-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

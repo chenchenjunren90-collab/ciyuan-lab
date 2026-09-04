@@ -1,0 +1,32 @@
+id: C-PTR-03
+title: 指针参数与输出参数
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-02
+learning_objectives:
+- 能判断与“指针参数与输出参数”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“指针参数与输出参数”的关键状态并验证边界
+concepts:
+- 指针参数与输出参数
+- 边界条件
+- 可验证性
+lesson:
+  summary: 通过指针参数修改调用方对象并检查空指针。关键要点包括：输出参数通过指针让函数写入调用者对象，调用前必须保证指针非空且指向仍存活、类型匹配的对象；只读输入可使用指向 const 的指针表达不可通过该接口修改数据的约束；函数应通过返回值报告成功失败，只有成功时调用者才使用输出参数中的结果。
+  key_points:
+  - 输出参数通过指针让函数写入调用者对象，调用前必须保证指针非空且指向仍存活、类型匹配的对象。
+  - 只读输入可使用指向 const 的指针表达不可通过该接口修改数据的约束。
+  - 函数应通过返回值报告成功失败，只有成功时调用者才使用输出参数中的结果。
+  common_mistakes:
+  - 误以为输出参数可以指向函数调用结束前已经离开生命周期的局部对象。
+  - 误以为把参数声明为 const int * 会保证底层对象永远不可被任何代码修改。
+  examples:
+  - 代码片段：bool divide(int a,int b,int *out){if(!out||b==0)return false;*out=a/b;return true;}
+assessment_ids:
+- C-PTR-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

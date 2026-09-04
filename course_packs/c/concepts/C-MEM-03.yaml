@@ -1,0 +1,32 @@
+id: C-MEM-03
+title: 越界、未定义行为与内存诊断
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- C-MEM-02
+learning_objectives:
+- 能判断与“越界、未定义行为与内存诊断”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“越界、未定义行为与内存诊断”的关键状态并验证边界
+concepts:
+- 越界、未定义行为与内存诊断
+- 边界条件
+- 可验证性
+lesson:
+  summary: 识别越界和失效对象访问，借助工具定位问题。关键要点包括：数组越界、释放后使用和读取未初始化自动对象都可能触发未定义行为，结果不可作为程序约定；未定义行为不能靠一次运行正常来证明安全，必须从对象边界、初始化和生命周期上排除；编译器警告、地址消毒器和未定义行为消毒器可帮助定位，但不能替代代码审查与边界测试。
+  key_points:
+  - 数组越界、释放后使用和读取未初始化自动对象都可能触发未定义行为，结果不可作为程序约定。
+  - 未定义行为不能靠一次运行正常来证明安全，必须从对象边界、初始化和生命周期上排除。
+  - 编译器警告、地址消毒器和未定义行为消毒器可帮助定位，但不能替代代码审查与边界测试。
+  common_mistakes:
+  - 误以为越界读取只会得到一个不准确的值，不会影响优化或程序其他部分。
+  - 误以为释放内存后只读取一次通常是安全的，只要尚未进行新的 malloc。
+  examples:
+  - 诊断示例：gcc -std=c17 -Wall -Wextra -fsanitize=address,undefined demo.c -o demo；对越界样例运行可获得定位信息。
+assessment_ids:
+- C-MEM-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

@@ -1,0 +1,28 @@
+id: PY-BASE-09-Q1
+title: int 类型转换
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: beginner
+estimated_minutes: 5
+concept_ids:
+- PY-BASE-09
+prompt: int("42") 的结果及其类型是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: '"42"，字符串'
+  - id: B
+    text: 42，整数
+  - id: C
+    text: 42.0，浮点数
+  - id: D
+    text: 报错
+  accepted_answers:
+  - B
+status: draft

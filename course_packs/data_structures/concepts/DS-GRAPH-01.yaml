@@ -1,0 +1,32 @@
+id: DS-GRAPH-01
+title: 图与邻接表示
+course: data_structures
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- DS-FOUND-01
+learning_objectives:
+- 能判断与“图与邻接表示”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“图与邻接表示”的关键状态并验证边界
+concepts:
+- 图与邻接表示
+- 边界条件
+- 可验证性
+lesson:
+  summary: 根据稀疏程度选择邻接表或邻接矩阵。关键要点包括：邻接矩阵占用 Θ(V²) 空间并能 O(1) 判断边是否存在，适合较稠密的图；邻接表占用 Θ(V+E) 空间，遍历一个顶点邻边的成本与其度数成正比；有向图必须区分入边和出边；无向图在邻接表中通常为一条边保存两个邻接项。
+  key_points:
+  - 邻接矩阵占用 Θ(V²) 空间并能 O(1) 判断边是否存在，适合较稠密的图。
+  - 邻接表占用 Θ(V+E) 空间，遍历一个顶点邻边的成本与其度数成正比。
+  - 有向图必须区分入边和出边；无向图在邻接表中通常为一条边保存两个邻接项。
+  common_mistakes:
+  - 误以为邻接表判断任意两点是否相邻始终是 O(1)，与顶点度数无关。
+  - 误以为无论图多稀疏，邻接矩阵都只占用 Θ(V+E) 空间。
+  examples:
+  - 示例：4 个顶点、2 条无向边的邻接表保存 4 个邻接项；对应矩阵仍需要 4×4 个位置。
+assessment_ids:
+- DS-GRAPH-01-Q1
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+status: draft

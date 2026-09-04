@@ -1,0 +1,2122 @@
+openapi: 3.1.0
+info:
+  title: 词元研究所 API
+  version: 0.3.0
+  description: >-
+    三周 MVP 的最小学习闭环公共契约（ARCH-01 已冻结）。
+
+    覆盖「初始测评 → 学习画像 → 学习计划 → 知识点/问答 → 练习与确定性验证 → 画像更新 → 下一任务推荐」的完整闭环。
+
+    身份说明：本阶段无真实认证，`student_id` 为平台内部不透明标识（随机 ID），
+    不得使用姓名或明文学号；每个学习接口都显式携带 `student_id`，后续身份/认证边界单独记录为已知限制。
+servers:
+  - url: http://localhost:8000
+    description: 本地开发
+paths:
+  /health:
+    get:
+      operationId: rootHealth
+      summary: 服务存活检查
+      responses:
+        "200":
+          description: 服务可用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/health:
+    get:
+      operationId: apiHealth
+      summary: 版本化服务健康检查
+      responses:
+        "200":
+          description: 服务可用
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /api/v1/capabilities:
+    get:
+      operationId: listCapabilities
+      summary: 返回 MVP 已规划的平台能力模块
+      responses:
+        "200":
+          description: 模块清单；scaffold 不代表业务功能已完成
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CapabilitiesResponse"
+  /api/v1/courses:
+    get:
+      operationId: listCourses
+      summary: 返回三门课程及其真实建设状态
+      responses:
+        "200":
+          description: 课程清单
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/CourseSummary"
+  /api/v1/courses/{course_id}/knowledge-points:
+    get:
+      operationId: listKnowledgePoints
+      summary: 课程知识点目录（学习入口与知识卡来源）
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 该课程的知识点目录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgePointList"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/knowledge-points/{knowledge_point_id}:
+    get:
+      operationId: getKnowledgePoint
+      summary: 返回学生可见的完整知识卡
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: knowledge_point_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 知识点详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/KnowledgePointDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/activities:
+    get:
+      operationId: listActivities
+      summary: 返回练习、Debug与综合项目目录
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: knowledge_point_id
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: learning_stage
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [diagnostic, in_class, after_class, challenge]
+      responses:
+        "200":
+          description: 学习活动目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivitySummary"
+  /api/v1/courses/{course_id}/activities/{activity_id}:
+    get:
+      operationId: getActivity
+      summary: 返回学生可见活动内容，不包含答案和隐藏测试
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: activity_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 学习活动详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ActivityDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/courses/{course_id}/projects/{project_id}/scenario:
+    get:
+      operationId: getProjectScenario
+      summary: 返回受限课后项目的驼灵或固定合成场景背景
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 已授权的项目场景上下文
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ScenarioContext"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: 活动不是允许调用场景服务的课后综合项目
+  /api/v1/courses/{course_id}/scenario-projects/generate:
+    post:
+      operationId: generateSyntheticScenarioProject
+      summary: 在已审核模板边界内生成个性化课后综合项目
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ScenarioProjectNeed"
+      responses:
+        "200":
+          description: 受控生成或固定降级的合成项目
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedScenarioProject"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          description: 模板、课程或知识点不符合生成边界
+  /api/v1/courses/{course_id}/sources:
+    get:
+      operationId: listSources
+      summary: 返回课程已登记来源及RAG资格
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 来源目录
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SourceDetail"
+  /api/v1/courses/{course_id}/sources/{source_id}:
+    get:
+      operationId: getSource
+      summary: 返回一个可核验来源
+      parameters:
+        - name: course_id
+          in: path
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: source_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 来源详情
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SourceDetail"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/assessments:
+    post:
+      operationId: submitAssessment
+      summary: 提交测评并生成初始画像与阶段计划
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AssessmentRequest"
+      responses:
+        "200":
+          description: 测评结果，含画像快照与学情规划阶段计划
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AssessmentResult"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/diagnostics:
+    get:
+      operationId: getDiagnosticQuiz
+      summary: 获取不含答案的初始诊断或阶段重测题
+      parameters:
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+        - name: phase
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/DiagnosticPhase"
+      responses:
+        "200":
+          description: 公开诊断题；不返回答案键
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticQuiz"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/diagnostics/submissions:
+    post:
+      operationId: submitDiagnosticQuiz
+      summary: 由服务器判定诊断答案并更新画像与学习计划
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DiagnosticSubmissionRequest"
+      responses:
+        "200":
+          description: 诊断得分、逐题结果、画像与学习计划
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSubmissionResult"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/adaptive-problems/generate:
+    post:
+      operationId: generateAdaptiveProblem
+      summary: 根据 Python 学习画像生成确定性变式编程题
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateProblemRequest"
+      responses:
+        "200":
+          description: 不含隐藏测试的学生侧题面
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedCodeProblem"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/adaptive-problems/{problem_id}/submissions:
+    post:
+      operationId: submitAdaptiveProblem
+      summary: 使用隔离沙箱与隐藏测试验证个性化 Python 题
+      parameters:
+        - name: problem_id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GeneratedProblemSubmissionRequest"
+      responses:
+        "200":
+          description: 验证事实、更新后的画像与下一道变式题
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GeneratedProblemSubmissionResponse"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/qa:
+    post:
+      operationId: askQuestion
+      summary: 基于课程知识库的问答（RAG，带可核验来源）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QaRequest"
+      responses:
+        "200":
+          description: 回答；依据不足时 status=insufficient_evidence 且 answer 为空
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QaResponse"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/exercises/{exercise_id}/submissions:
+    post:
+      operationId: submitExercise
+      summary: 提交练习（客观题/简答/代码/Debug），返回确定性验证与反馈
+      parameters:
+        - name: exercise_id
+          in: path
+          required: true
+          description: 练习 ID（如 PY-FUNC-01-C1）
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubmissionRequest"
+      responses:
+        "200":
+          description: 验证结果、课程辅导反馈、画像更新与下一任务推荐
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubmissionResult"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+  /api/v1/profile:
+    get:
+      operationId: getProfile
+      summary: 查询学习画像与掌握度
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 学习画像
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearnerProfile"
+  /api/v1/next-activity:
+    get:
+      operationId: getNextActivity
+      summary: 获取下一任务推荐
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 下一活动（只引用已存在的知识点/练习 ID）
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NextActivity"
+  /api/v1/activities/{activity_id}/hint:
+    post:
+      operationId: createProgressiveHint
+      summary: 返回不泄露答案的三级递进提示
+      parameters:
+        - name: activity_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/HintRequest"
+      responses:
+        "200":
+          description: 当前层级提示
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HintResponse"
+  /api/v1/projects/{project_id}/submissions:
+    post:
+      operationId: recordProjectEvidence
+      summary: 记录综合项目材料与自测证据
+      parameters:
+        - name: project_id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProjectSubmissionRequest"
+      responses:
+        "200":
+          description: 已接收但尚未评分的评审记录
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProjectSubmissionResponse"
+  /api/v1/classroom/sessions/next:
+    get:
+      operationId: getNextClassroomSession
+      tags: [classroom]
+      parameters:
+        - in: query
+          name: student_id
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 128 }
+        - in: query
+          name: daily_minutes
+          required: false
+          schema: { type: integer, minimum: 20, maximum: 120, default: 30 }
+        - in: query
+          name: preferred_mode
+          required: false
+          schema:
+            type: string
+            enum: [step_by_step, example_first, practice_first]
+            default: step_by_step
+        - in: query
+          name: self_profile_level
+          required: false
+          description: 课程规划智能体识别出的学习起点；明确的零基础倾向优先于短测分数。
+          schema:
+            type: string
+            enum: [newcomer, beginner, developing, experienced]
+      responses:
+        "200":
+          description: 根据画像和课程图生成的下一节个性化课堂
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomLesson"
+        "404":
+          description: 尚未建立学习画像
+  /api/v1/classroom/lessons/{lesson_id}:
+    get:
+      operationId: getClassroomLesson
+      summary: 获取 Python 沉浸式课堂的教学脚本与公开任务
+      parameters:
+        - name: lesson_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: 课堂角色、教学节拍、理解检查与公开代码任务
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomLesson"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /api/v1/classroom/checkpoints:
+    post:
+      operationId: evaluateClassroomCheckpoint
+      summary: 对课堂理解检查进行确定性判定
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomCheckpointRequest"
+      responses:
+        "200":
+          description: 检查结果与对应课堂角色的反馈
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomCheckpointResult"
+  /api/v1/classroom/dialogue:
+    post:
+      operationId: answerClassroomDialogue
+      summary: 使用课程辅导智能体的课堂人格开展可溯源对话
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomDialogueRequest"
+      responses:
+        "200":
+          description: 经过课程检索与质量监督的角色化回答
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomDialogueResponse"
+  /api/v1/classroom/self-profile:
+    post:
+      operationId: assessClassroomSelfProfile
+      summary: 将学生自述与 Python 系统课程路线进行保守匹配
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClassroomSelfProfileRequest"
+      responses:
+        "200":
+          description: 经课程检索与质量监督的自述初判，仍需客观测评校正
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomSelfProfileResponse"
+components:
+  responses:
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: 请求校验失败
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    HTTPValidationError:
+      type: object
+      required: []
+      additionalProperties: null
+      properties:
+        detail:
+          type: array
+          items:
+            $ref: "#/components/schemas/ValidationError"
+    ValidationError:
+      type: object
+      required: [loc, msg, type]
+      additionalProperties: null
+      properties:
+        loc:
+          type: array
+          items:
+            anyOf:
+              - type: string
+              - type: integer
+        msg:
+          type: string
+        type:
+          type: string
+        input: {}
+        ctx:
+          type: object
+    HealthResponse:
+      type: object
+      additionalProperties: false
+      required: [status, service, version]
+      properties:
+        status:
+          type: string
+          const: ok
+        service:
+          type: string
+        version:
+          type: string
+    CapabilitiesResponse:
+      type: object
+      additionalProperties: false
+      required: [status, code_execution_enabled, tuoling_enabled, modules]
+      properties:
+        status:
+          type: string
+          const: mvp
+        code_execution_enabled:
+          type: boolean
+        tuoling_enabled:
+          type: boolean
+        modules:
+          type: array
+          items:
+            type: string
+            enum:
+              - orchestration
+              - rag
+              - learner_profile
+              - practice
+              - model_adapters
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      properties:
+        code:
+          type: string
+          description: 稳定的机器可读错误码（如 MODEL_TIMEOUT、NOT_FOUND、VALIDATION_ERROR）
+        message:
+          type: string
+          description: 面向学生的友好提示，不含堆栈或敏感原文
+    CourseId:
+      type: string
+      enum: [c, python, data_structures]
+    CourseSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - status
+        - target_core_concepts
+        - implemented_core_concepts
+        - features
+      properties:
+        id:
+          $ref: "#/components/schemas/CourseId"
+        title:
+          type: string
+        status:
+          type: string
+        target_core_concepts:
+          type: integer
+          minimum: 0
+        implemented_core_concepts:
+          type: integer
+          minimum: 0
+        features:
+          type: object
+          additionalProperties:
+            type: string
+    KnowledgePointSummary:
+      type: object
+      additionalProperties: false
+      required: [id, title, difficulty, prerequisites, concepts, source_refs]
+      properties:
+        id:
+          type: string
+          description: 稳定且全局唯一，如 C-PTR-01、PY-FUNC-01、DS-TREE-01
+        title:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        prerequisites:
+          type: array
+          items:
+            type: string
+        concepts:
+          type: array
+          description: 该核心节点下可展示与检索的细分技能单元
+          items:
+            type: string
+        source_refs:
+          type: array
+          description: 该知识点的来源 ID（可核验）
+          items:
+            type: string
+    KnowledgePointDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - difficulty
+        - estimated_minutes
+        - prerequisites
+        - learning_objectives
+        - concepts
+        - lesson
+        - assessment_ids
+        - source_refs
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        prerequisites:
+          type: array
+          items:
+            type: string
+        learning_objectives:
+          type: array
+          items:
+            type: string
+        concepts:
+          type: array
+          items:
+            type: string
+        lesson:
+          type: object
+        assessment_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        status:
+          type: string
+    KnowledgePointList:
+      type: object
+      additionalProperties: false
+      required: [course_id, items]
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/KnowledgePointSummary"
+    ActivitySummary:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - type
+        - difficulty
+        - estimated_minutes
+        - concept_ids
+        - source_refs
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        type:
+          type: string
+          enum: [objective, short_answer, code, debug, project]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        learning_stage:
+          type: [string, "null"]
+          enum: [diagnostic, in_class, after_class, challenge, null]
+    ActivityDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - type
+        - difficulty
+        - estimated_minutes
+        - concept_ids
+        - source_refs
+        - evaluation
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        type:
+          type: string
+          enum: [objective, short_answer, code, debug, project]
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        learning_stage:
+          type: [string, "null"]
+          enum: [diagnostic, in_class, after_class, challenge, null]
+        prompt:
+          type: [string, "null"]
+        summary:
+          type: [string, "null"]
+        requirements:
+          type: array
+          items:
+            type: string
+        deliverables:
+          type: array
+          items:
+            type: string
+        evaluation:
+          type: object
+          description: 学生可见判定说明，不包含答案、参考答案和隐藏测试
+        scenario_scope:
+          type: [string, "null"]
+        scenario_provider:
+          type: [string, "null"]
+        data_classification:
+          type: [string, "null"]
+        computer_science_objectives:
+          type: array
+          items:
+            type: string
+        business_context_objectives:
+          type: array
+          items:
+            type: string
+        fallback_source_refs:
+          type: array
+          items:
+            type: string
+        audience:
+          type: [string, "null"]
+        scaffolding:
+          type: array
+          items:
+            type: string
+        input_format:
+          type: [string, "null"]
+        output_format:
+          type: [string, "null"]
+        constraints:
+          type: array
+          items:
+            type: string
+        public_examples:
+          type: array
+          items:
+            $ref: "#/components/schemas/ActivityExample"
+        reflection_prompt:
+          type: [string, "null"]
+        source_adaptation:
+          type: object
+          additionalProperties:
+            type: string
+        status:
+          type: string
+    ActivityExample:
+      type: object
+      additionalProperties: false
+      required: [input, expected_output, explanation]
+      properties:
+        input:
+          type: string
+        expected_output:
+          type: string
+        explanation:
+          type: string
+    ScenarioContext:
+      type: object
+      additionalProperties: false
+      required:
+        - project_id
+        - course_id
+        - mode
+        - provider_status
+        - context
+        - constraints
+        - source_refs
+        - data_classification
+        - notice
+      properties:
+        project_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        mode:
+          type: string
+          enum: [tuoling, fixed_synthetic]
+        provider_status:
+          type: string
+          enum: [live, disabled, fallback]
+        context:
+          type: string
+          minLength: 1
+        constraints:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        data_classification:
+          type: string
+        notice:
+          type: string
+    ScenarioProjectNeed:
+      type: object
+      additionalProperties: false
+      required:
+        - course_id
+        - template_project_id
+        - learner_goal
+        - target_concept_ids
+        - difficulty
+        - estimated_minutes
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        template_project_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        learner_goal:
+          type: string
+          minLength: 5
+          maxLength: 500
+          description: 不得包含姓名、学号、手机号、邮箱、证件号或凭据值
+        target_concept_ids:
+          type: array
+          minItems: 1
+          maxItems: 8
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        estimated_minutes:
+          type: integer
+          minimum: 30
+          maximum: 480
+    SyntheticScenarioDataset:
+      type: object
+      additionalProperties: false
+      required: [filename, columns, rows, sha256]
+      properties:
+        filename:
+          type: string
+        columns:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+        rows:
+          type: array
+          minItems: 1
+          maxItems: 50
+          items:
+            type: object
+            additionalProperties: true
+        sha256:
+          type: string
+          pattern: "^[0-9a-f]{64}$"
+    GeneratedScenarioProject:
+      type: object
+      additionalProperties: false
+      required:
+        - title
+        - scenario_context
+        - tasks
+        - constraints
+        - deliverables
+        - source_refs
+        - computer_science_objectives
+        - ai_generated_notice
+        - provider
+        - model
+        - degraded
+        - dataset
+      properties:
+        title:
+          type: string
+        scenario_context:
+          type: string
+        tasks:
+          type: array
+          items:
+            type: string
+        constraints:
+          type: array
+          items:
+            type: string
+        deliverables:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        computer_science_objectives:
+          type: array
+          items:
+            type: string
+        data_classification:
+          type: string
+          const: synthetic
+        ai_generated_notice:
+          type: string
+        provider:
+          type: string
+        model:
+          type: string
+        degraded:
+          type: boolean
+        dataset:
+          $ref: "#/components/schemas/SyntheticScenarioDataset"
+    SourceDetail:
+      type: object
+      additionalProperties: false
+      required:
+        - id
+        - title
+        - course
+        - source_type
+        - citation
+        - rights
+        - data_classification
+        - rag_eligible
+        - status
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        course:
+          $ref: "#/components/schemas/CourseId"
+        source_type:
+          type: string
+        citation:
+          type: object
+        rights:
+          type: object
+        data_classification:
+          type: string
+        rag_eligible:
+          type: boolean
+        status:
+          type: string
+    MasteryState:
+      type: object
+      additionalProperties: false
+      required: [knowledge_point_id, score]
+      properties:
+        knowledge_point_id:
+          type: string
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        evidence_count:
+          type: integer
+          minimum: 0
+        updated_at:
+          type: string
+          format: date-time
+    LearnerProfile:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id]
+      properties:
+        student_id:
+          type: string
+          description: 平台内部不透明标识
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        mastery:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasteryState"
+    AssessmentAnswer:
+      type: object
+      additionalProperties: false
+      required: [knowledge_point_id, is_correct]
+      properties:
+        knowledge_point_id:
+          type: string
+        is_correct:
+          type: boolean
+          description: 该知识点的基线测评是否答对（仅用于确定初始掌握度）
+    AssessmentRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, answers]
+      properties:
+        student_id:
+          type: string
+          description: 平台内部不透明标识
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        answers:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssessmentAnswer"
+    PlanStage:
+      type: object
+      additionalProperties: false
+      required: [stage, objective, knowledge_point_ids, reason]
+      properties:
+        stage:
+          type: string
+          description: 阶段名称或序号
+        objective:
+          type: string
+        knowledge_point_ids:
+          type: array
+          description: 只引用当前课程已存在的知识点 ID
+          items:
+            type: string
+        reason:
+          type: string
+          description: 学情规划智能体的推荐理由
+    NextActivity:
+      type: object
+      additionalProperties: false
+      required: [activity_id, activity_type, reason]
+      properties:
+        activity_id:
+          type: string
+          description: 已存在的知识点或练习 ID
+        activity_type:
+          type: string
+          enum: [concept, objective, short_answer, code, debug, project]
+        reason:
+          type: string
+    Plan:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, stages, next_activity]
+      properties:
+        student_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        stages:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanStage"
+        next_activity:
+          $ref: "#/components/schemas/NextActivity"
+    AssessmentResult:
+      type: object
+      additionalProperties: false
+      required: [profile, plan]
+      properties:
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        plan:
+          $ref: "#/components/schemas/Plan"
+    DiagnosticPhase:
+      type: string
+      enum: [initial, reassessment]
+    DiagnosticOption:
+      type: object
+      additionalProperties: false
+      required: [id, text]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+    DiagnosticSkillAtom:
+      type: object
+      additionalProperties: false
+      required: [id, knowledge_point_id, label]
+      properties:
+        id:
+          type: string
+        knowledge_point_id:
+          type: string
+        label:
+          type: string
+    DiagnosticPrerequisiteGap:
+      type: object
+      additionalProperties: false
+      required: [downstream_id, downstream_title, missing_prerequisite_id, missing_prerequisite_title, reason]
+      properties:
+        downstream_id:
+          type: string
+        downstream_title:
+          type: string
+        missing_prerequisite_id:
+          type: string
+        missing_prerequisite_title:
+          type: string
+        reason:
+          type: string
+    DiagnosticLearningBlock:
+      type: object
+      additionalProperties: false
+      required: [block_id, knowledge_point_id, title, reason, estimated_minutes, skill_atoms, summary, key_points]
+      properties:
+        block_id:
+          type: string
+        knowledge_point_id:
+          type: string
+        title:
+          type: string
+        reason:
+          type: string
+        estimated_minutes:
+          type: integer
+          minimum: 1
+        skill_atoms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticSkillAtom"
+        summary:
+          type: string
+        key_points:
+          type: array
+          items:
+            type: string
+        example_problem:
+          type: string
+          default: ""
+        example_steps:
+          type: array
+          items:
+            type: string
+        example_code:
+          type: string
+          default: ""
+    DiagnosticAnalysis:
+      type: object
+      additionalProperties: false
+      required: [course_core_nodes, course_skill_atoms, assessed_core_nodes, assessed_skill_atoms, evidence_scope, non_linear_profile, prerequisite_gaps, demonstrated_knowledge_point_ids, focus_knowledge_point_ids, learning_blocks]
+      properties:
+        course_core_nodes:
+          type: integer
+          minimum: 1
+        course_skill_atoms:
+          type: integer
+          minimum: 1
+        assessed_core_nodes:
+          type: integer
+          minimum: 0
+        assessed_skill_atoms:
+          type: integer
+          minimum: 0
+        evidence_scope:
+          type: string
+          const: knowledge_point_proxy
+        non_linear_profile:
+          type: boolean
+        prerequisite_gaps:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticPrerequisiteGap"
+        demonstrated_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        focus_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        learning_blocks:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticLearningBlock"
+    DiagnosticItem:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, title, prompt, concept_ids, skill_atoms, options]
+      properties:
+        exercise_id:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        concept_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        skill_atoms:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticSkillAtom"
+        options:
+          type: array
+          minItems: 2
+          items:
+            $ref: "#/components/schemas/DiagnosticOption"
+    DiagnosticQuiz:
+      type: object
+      additionalProperties: false
+      required: [course_id, phase, title, instructions, items]
+      properties:
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        title:
+          type: string
+        instructions:
+          type: string
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/DiagnosticItem"
+    DiagnosticAnswer:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, response]
+      properties:
+        exercise_id:
+          type: string
+        response:
+          type: string
+    DiagnosticSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, phase, answers]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        answers:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/DiagnosticAnswer"
+    DiagnosticItemResult:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, knowledge_point_id, correct, unknown, skill_atom_ids]
+      properties:
+        exercise_id:
+          type: string
+        knowledge_point_id:
+          type: string
+        correct:
+          type: boolean
+        unknown:
+          type: boolean
+        skill_atom_ids:
+          type: array
+          items:
+            type: string
+    DiagnosticSubmissionResult:
+      type: object
+      additionalProperties: false
+      required: [phase, correct_count, unknown_count, total_count, item_results, analysis, profile, plan]
+      properties:
+        phase:
+          $ref: "#/components/schemas/DiagnosticPhase"
+        correct_count:
+          type: integer
+          minimum: 0
+        unknown_count:
+          type: integer
+          minimum: 0
+        total_count:
+          type: integer
+          minimum: 1
+        item_results:
+          type: array
+          items:
+            $ref: "#/components/schemas/DiagnosticItemResult"
+        analysis:
+          $ref: "#/components/schemas/DiagnosticAnalysis"
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        plan:
+          $ref: "#/components/schemas/Plan"
+    GenerateProblemRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        attempt_index:
+          type: integer
+          minimum: 1
+          maximum: 9999
+          default: 1
+    PublicExample:
+      type: object
+      additionalProperties: false
+      required: [input, expected_output]
+      properties:
+        input:
+          type: string
+        expected_output:
+          type: string
+    GeneratedCodeProblem:
+      type: object
+      additionalProperties: false
+      required: [problem_id, title, prompt, concept_ids, difficulty, constraints, public_examples, starter_code, hints, generation_notice]
+      properties:
+        problem_id:
+          type: string
+        course_id:
+          type: string
+          const: python
+        title:
+          type: string
+        prompt:
+          type: string
+        concept_ids:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        constraints:
+          type: array
+          minItems: 1
+          items:
+            type: string
+        public_examples:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/PublicExample"
+        starter_code:
+          type: string
+        hints:
+          type: array
+          minItems: 3
+          maxItems: 3
+          items:
+            type: string
+        generation_notice:
+          type: string
+    GeneratedProblemSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, source_code]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        source_code:
+          type: string
+          minLength: 1
+          maxLength: 100000
+    GeneratedProblemSubmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [problem, verification, feedback, profile, next_problem]
+      properties:
+        problem:
+          $ref: "#/components/schemas/GeneratedCodeProblem"
+        verification:
+          $ref: "#/components/schemas/VerificationResult"
+        feedback:
+          type: string
+        profile:
+          $ref: "#/components/schemas/LearnerProfile"
+        next_problem:
+          $ref: "#/components/schemas/GeneratedCodeProblem"
+    Citation:
+      type: object
+      additionalProperties: false
+      required: [source_id, chunk_id, score]
+      properties:
+        source_id:
+          type: string
+          description: 已登记课程来源（SRC-*）或 Python 官方文档白名单来源（WEB-PYDOC-*）
+        chunk_id:
+          type: string
+        score:
+          type: number
+        source_type:
+          type: string
+          enum: [course, online]
+          default: course
+        source_title:
+          type: [string, "null"]
+        source_url:
+          type: [string, "null"]
+          description: 仅联网白名单来源提供，当前只允许 docs.python.org
+    QaRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, course_id, question]
+      properties:
+        student_id:
+          type: string
+        course_id:
+          $ref: "#/components/schemas/CourseId"
+        question:
+          type: string
+    QaResponse:
+      type: object
+      additionalProperties: false
+      required: [status, answer, citations]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence]
+          description: insufficient_evidence 表示检索不足或冲突，answer 为空、不编造
+        answer:
+          type: string
+        citations:
+          type: array
+          description: 有依据回答必须携带可核验来源
+          items:
+            $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          description: 学生可见的组件执行审计，不包含隐藏思维过程
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"
+    AgentTraceStep:
+      type: object
+      additionalProperties: false
+      required: [component, status, detail]
+      properties:
+        component:
+          type: string
+          enum: [retrieval, course_tutor, quality_supervisor]
+        status:
+          type: string
+          enum: [completed, degraded, blocked]
+        detail:
+          type: string
+    HintRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, level]
+      properties:
+        student_id:
+          type: string
+        level:
+          type: integer
+          enum: [1, 2, 3]
+    HintResponse:
+      type: object
+      additionalProperties: false
+      required: [activity_id, level, hint, focus_concept_ids, source_refs]
+      properties:
+        activity_id:
+          type: string
+        level:
+          type: integer
+          enum: [1, 2, 3]
+        hint:
+          type: string
+        focus_concept_ids:
+          type: array
+          items:
+            type: string
+        source_refs:
+          type: array
+          items:
+            type: string
+        answer_revealed:
+          type: boolean
+          default: false
+    ProjectSubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, artifact_summary]
+      properties:
+        student_id:
+          type: string
+        artifact_summary:
+          type: string
+          minLength: 30
+          maxLength: 4000
+        repository_url:
+          anyOf:
+            - type: string
+              maxLength: 1000
+            - type: "null"
+        test_evidence:
+          type: array
+          maxItems: 20
+          items:
+            type: string
+    EvidenceCheck:
+      type: object
+      additionalProperties: false
+      required: [item, present, detail]
+      properties:
+        item:
+          type: string
+        present:
+          type: boolean
+        detail:
+          type: string
+    ProjectSubmissionResponse:
+      type: object
+      additionalProperties: false
+      required: [submission_id, project_id, status, feedback, evidence_checklist, mastery_unchanged]
+      properties:
+        submission_id:
+          type: string
+        project_id:
+          type: string
+        status:
+          type: string
+          const: evidence_recorded
+        feedback:
+          type: string
+        evidence_checklist:
+          type: array
+          items:
+            $ref: "#/components/schemas/EvidenceCheck"
+        mastery_unchanged:
+          type: array
+          items:
+            $ref: "#/components/schemas/MasteryState"
+    SubmissionRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id]
+      properties:
+        student_id:
+          type: string
+        response:
+          type: string
+          description: 客观题选项 ID 或简答题文本
+        language:
+          type: string
+          enum: [c, python]
+          description: 代码题/Debug 题的运行语言
+        source_code:
+          type: string
+          description: 代码题/Debug 题提交的源代码
+    VerificationResult:
+      type: object
+      additionalProperties: false
+      required: [accepted, passed_tests, total_tests, diagnostics]
+      properties:
+        accepted:
+          type: boolean
+        passed_tests:
+          type: integer
+        total_tests:
+          type: integer
+        diagnostics:
+          type: array
+          description: 脱敏、限长、可复现的诊断（隐藏测试不得泄露）
+          items:
+            type: string
+    SubmissionResult:
+      type: object
+      additionalProperties: false
+      required: [feedback, citations, mastery_updated, next_activity]
+      properties:
+        verification:
+          $ref: "#/components/schemas/VerificationResult"
+          description: 代码题/Debug 题的确定性验证结果；客观题/简答题为空
+        feedback:
+          type: string
+          description: 课程辅导智能体基于测试事实与检索片段的引导式反馈
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        mastery_updated:
+          type: array
+          description: 按证据规则更新后的掌握度（含依据与时间）
+          items:
+            $ref: "#/components/schemas/MasteryState"
+        next_activity:
+          $ref: "#/components/schemas/NextActivity"
+    ClassroomPersona:
+      type: object
+      additionalProperties: false
+      required: [role, display_name, tagline, tone]
+      properties:
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        display_name:
+          type: string
+        tagline:
+          type: string
+        tone:
+          type: string
+    ClassroomChoice:
+      type: object
+      additionalProperties: false
+      required: [id, text]
+      properties:
+        id:
+          type: string
+        text:
+          type: string
+    ClassroomCheckpoint:
+      type: object
+      additionalProperties: false
+      required: [prompt, choices]
+      properties:
+        prompt:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomChoice"
+    ClassroomBeat:
+      type: object
+      additionalProperties: false
+      required: [id, phase, speaker, eyebrow, title, message, board_title, action]
+      properties:
+        id:
+          type: string
+        phase:
+          type: string
+          enum: [welcome, concept, discussion, debug, practice, summary, homework]
+        speaker:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        eyebrow:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        board_title:
+          type: string
+        board_explanation:
+          type: string
+          default: ""
+        board_points:
+          type: array
+          items:
+            type: string
+        board_code:
+          type: string
+          default: ""
+        board_trace:
+          type: array
+          items:
+            type: string
+        action:
+          type: string
+          enum: [continue, choice, practice, homework, complete]
+        checkpoint:
+          anyOf:
+            - $ref: "#/components/schemas/ClassroomCheckpoint"
+            - type: "null"
+    ClassroomCodeTask:
+      type: object
+      additionalProperties: false
+      required: [exercise_id, title, prompt, difficulty, estimated_minutes, input_format, output_format, constraints, starter_code, public_examples]
+      properties:
+        exercise_id:
+          type: string
+        title:
+          type: string
+        prompt:
+          type: string
+        difficulty:
+          type: string
+        estimated_minutes:
+          type: integer
+        input_format:
+          type: string
+        output_format:
+          type: string
+        constraints:
+          type: array
+          items:
+            type: string
+        starter_code:
+          type: string
+        public_examples:
+          type: array
+          items:
+            type: object
+            additionalProperties:
+              type: string
+    ClassroomLesson:
+      type: object
+      additionalProperties: false
+      required: [lesson_id, course_id, title, subtitle, duration_minutes, knowledge_point_ids, unlock_title, cast, beats, practice, homework]
+      properties:
+        lesson_id:
+          type: string
+        course_id:
+          type: string
+          const: python
+        title:
+          type: string
+        subtitle:
+          type: string
+        duration_minutes:
+          type: integer
+        knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        unlock_title:
+          type: string
+        cast:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomPersona"
+        beats:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClassroomBeat"
+        practice:
+          $ref: "#/components/schemas/ClassroomCodeTask"
+        homework:
+          $ref: "#/components/schemas/ClassroomCodeTask"
+        delivery_mode:
+          type: string
+          enum: [scripted, adaptive]
+          default: scripted
+        stage_id:
+          type: string
+          default: ""
+        stage_index:
+          type: integer
+          default: 0
+        total_stages:
+          type: integer
+          default: 6
+        stage_title:
+          type: string
+          default: ""
+        stage_outcome:
+          type: string
+          default: ""
+        planning_reason:
+          type: string
+          default: ""
+        focus_skill_atoms:
+          type: array
+          items:
+            type: string
+        unlocked_project_ids:
+          type: array
+          items:
+            type: string
+    ClassroomCheckpointRequest:
+      type: object
+      additionalProperties: false
+      required: [lesson_id, beat_id, response]
+      properties:
+        lesson_id:
+          type: string
+        beat_id:
+          type: string
+        response:
+          type: string
+          minLength: 1
+          maxLength: 120
+    ClassroomCheckpointResult:
+      type: object
+      additionalProperties: false
+      required: [accepted, feedback, reply_role, reply_display_name, reply_message]
+      properties:
+        accepted:
+          type: boolean
+        feedback:
+          type: string
+        reply_role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        reply_display_name:
+          type: string
+        reply_message:
+          type: string
+    ClassroomDialogueRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, lesson_id, phase, role, message]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        lesson_id:
+          type: string
+        phase:
+          type: string
+          enum: [welcome, concept, discussion, debug, practice, summary, homework]
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        message:
+          type: string
+          minLength: 2
+          maxLength: 1000
+        recent_turns:
+          type: array
+          maxItems: 8
+          default: []
+          items:
+            $ref: "#/components/schemas/ClassroomDialogueTurn"
+    ClassroomDialogueTurn:
+      type: object
+      additionalProperties: false
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [student, teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        content:
+          type: string
+          minLength: 1
+          maxLength: 500
+    ClassroomDialogueResponse:
+      type: object
+      additionalProperties: false
+      required: [status, role, display_name, answer, question_scope, scope_notice, suggested_knowledge_point_ids, citations, trace]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence]
+        role:
+          type: string
+          enum: [teacher, ta, peer_cautious, peer_debugger, peer_summarizer]
+        display_name:
+          type: string
+        answer:
+          type: string
+        question_scope:
+          type: string
+          enum: [current_lesson, python_course_extension, outside_course, undetermined]
+        scope_notice:
+          type: [string, "null"]
+        suggested_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"
+    ClassroomSelfProfileRequest:
+      type: object
+      additionalProperties: false
+      required: [student_id, lesson_id, description]
+      properties:
+        student_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+        lesson_id:
+          type: string
+        description:
+          type: string
+          minLength: 8
+          maxLength: 1200
+    ClassroomSelfProfileResponse:
+      type: object
+      additionalProperties: false
+      required: [level, level_label, confidence, course_fit, recommended_start, matched_knowledge_point_ids, signals, advisor_message, citations, trace]
+      properties:
+        level:
+          type: string
+          enum: [newcomer, beginner, developing, experienced]
+        level_label:
+          type: string
+        confidence:
+          type: string
+          enum: [low, medium, high]
+        course_fit:
+          type: string
+        recommended_start:
+          type: string
+        matched_knowledge_point_ids:
+          type: array
+          items:
+            type: string
+        signals:
+          type: array
+          items:
+            type: string
+        advisor_message:
+          type: string
+        citations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Citation"
+        trace:
+          type: array
+          items:
+            $ref: "#/components/schemas/AgentTraceStep"

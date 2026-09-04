@@ -1,0 +1,47 @@
+id: PY-PROJ-STAGE-CONTAINER-01
+title: 文本词频与统计报告工具
+course: python
+schema_version: 0.1.0
+version: 1
+difficulty: beginner
+estimated_minutes: 120
+concept_ids:
+- PY-LIST-02
+- PY-DICT-02
+- PY-FUNC-02
+summary: 将一段文本清洗、切分并统计词频，使用函数拆分处理步骤，输出可复核的排序报告。
+requirements:
+- 清理大小写与常见标点，将文本转换为词语列表
+- 使用字典安全累计词频，不因首次出现的单词报错
+- 将清洗、统计和排序拆分为职责明确的函数
+- 对空文本、重复词、并列频次和中文空白编写测试
+deliverables:
+- 可运行的 Python 3.11 程序
+- 自动化测试和一组公开演示输入
+- 函数职责、数据结构选择与复杂度说明
+source_refs:
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-FUNCTIONS
+- SRC-PY-GUIDE-CURRICULUM
+verification_exercise_ids:
+- PY-DICT-02-C1
+- PY-FUNC-02-C1
+- PY-LIST-02-H1
+scenario_scope: none
+scenario_provider: none
+data_classification: public
+computer_science_objectives:
+- 使用列表、字典和排序完成结构化统计
+- 通过函数分解与自动化测试提高可维护性
+business_context_objectives: []
+evaluation:
+  mode: rubric
+  max_score: 100
+  rubric:
+  - criterion: 统计正确性与测试覆盖
+    points: 55
+  - criterion: 数据结构和函数设计
+    points: 30
+  - criterion: 复杂度与使用说明
+    points: 15
+status: draft

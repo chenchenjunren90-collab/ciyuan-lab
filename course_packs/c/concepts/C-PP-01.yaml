@@ -1,0 +1,32 @@
+id: C-PP-01
+title: 预处理、宏与条件编译
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-01
+learning_objectives:
+- 能判断与“预处理、宏与条件编译”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“预处理、宏与条件编译”的关键状态并验证边界
+concepts:
+- 预处理、宏与条件编译
+- 边界条件
+- 可验证性
+lesson:
+  summary: 安全使用头文件包含、对象宏和条件编译。关键要点包括：预处理在编译前执行文本层面的包含、条件选择和宏展开，不理解 C 的类型系统；带参数宏应给形参和整体表达式加括号，并避免让实参被求值多次；条件编译适合平台差异和可选诊断，但应保证每个配置都能独立编译测试。
+  key_points:
+  - 预处理在编译前执行文本层面的包含、条件选择和宏展开，不理解 C 的类型系统。
+  - 带参数宏应给形参和整体表达式加括号，并避免让实参被求值多次。
+  - 条件编译适合平台差异和可选诊断，但应保证每个配置都能独立编译测试。
+  common_mistakes:
+  - 误以为宏参数只会求值一次，因此 MAX(i++,j++) 与普通函数调用同样安全。
+  - 误以为#if 条件在程序运行时判断，可以根据用户输入选择编译哪一段代码。
+  examples:
+  - 展开示例：#define SQUARE(x) ((x)*(x))；SQUARE(a+1) 正确分组，但 SQUARE(i++) 仍会让 i 增加两次，应避免。
+assessment_ids:
+- C-PP-01-Q1
+source_refs:
+- SRC-C-GUIDE-ENGINEERING
+status: draft

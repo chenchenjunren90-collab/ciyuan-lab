@@ -1,0 +1,32 @@
+id: C-PTR-04
+title: 函数指针与回调
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 30
+prerequisites:
+- C-PTR-01
+learning_objectives:
+- 能判断与“函数指针与回调”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“函数指针与回调”的关键状态并验证边界
+concepts:
+- 函数指针与回调
+- 边界条件
+- 可验证性
+lesson:
+  summary: 用兼容签名的函数指针实现可替换策略。关键要点包括：函数指针类型包含返回类型和形参类型，回调函数签名必须兼容后才能安全调用；回调把可变策略注入通用流程，例如排序比较、遍历处理或事件通知；保存或调用回调前应检查空指针，并明确上下文、生命周期和错误传播约定。
+  key_points:
+  - 函数指针类型包含返回类型和形参类型，回调函数签名必须兼容后才能安全调用。
+  - 回调把可变策略注入通用流程，例如排序比较、遍历处理或事件通知。
+  - 保存或调用回调前应检查空指针，并明确上下文、生命周期和错误传播约定。
+  common_mistakes:
+  - 误以为所有函数地址都可以转换为同一种函数指针并用任意参数列表安全调用。
+  - 误以为回调函数只能访问全局变量，无法通过参数接收调用上下文。
+  examples:
+  - 代码片段：int apply(int x,int (*op)(int)){return op?op(x):x;}；传入 square 后 apply(3,square) 返回 9。
+assessment_ids:
+- C-PTR-04-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

@@ -1,0 +1,32 @@
+id: C-FUNC-03
+title: 作用域、生命周期与存储期
+course: c
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-FUNC-01
+learning_objectives:
+- 能判断与“作用域、生命周期与存储期”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“作用域、生命周期与存储期”的关键状态并验证边界
+concepts:
+- 作用域、生命周期与存储期
+- 边界条件
+- 可验证性
+lesson:
+  summary: 区分块作用域、文件作用域和对象存储期。关键要点包括：作用域决定名字在源代码中的可见范围，存储期决定对象存储何时存在，二者不是同一概念；自动局部对象通常每次进入块时创建；static 局部对象具有静态存储期并在多次调用间保留值；内层声明可以遮蔽外层同名标识符，应避免让读者误判实际访问的对象。
+  key_points:
+  - 作用域决定名字在源代码中的可见范围，存储期决定对象存储何时存在，二者不是同一概念。
+  - 自动局部对象通常每次进入块时创建；static 局部对象具有静态存储期并在多次调用间保留值。
+  - 内层声明可以遮蔽外层同名标识符，应避免让读者误判实际访问的对象。
+  common_mistakes:
+  - 误以为局部变量离开块后名字不可见，但保存其地址后对象仍然永久有效。
+  - 误以为static 局部变量每次调用函数都会重新初始化，因此不保存前一次状态。
+  examples:
+  - 代码片段：int next(void){static int n=0; return ++n;} 连续调用两次分别返回 1 和 2。
+assessment_ids:
+- C-FUNC-03-Q1
+source_refs:
+- SRC-C-GUIDE-CONTROL
+status: draft

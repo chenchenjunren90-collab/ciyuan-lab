@@ -1,0 +1,65 @@
+id: PY-STR-02
+title: 字符串索引与切片
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-STR-01
+learning_objectives:
+- 能通过索引访问单个字符
+- 能使用切片提取子串
+concepts:
+- 索引
+- 切片
+- 负索引
+- 步长
+lesson:
+  summary: 掌握字符串索引（含负索引）与切片操作，理解切片起止与步长的含义。关键要点包括：索引从 0 开始，负索引从末尾倒着数；切片 s[start:end] 为左闭右开区间；切片支持步长 s[start:end:step]。
+  key_points:
+  - 索引从 0 开始，负索引从末尾倒着数
+  - 切片 s[start:end] 为左闭右开区间
+  - 切片支持步长 s[start:end:step]
+  examples:
+  - 代码示例：text='algorithm' 时 text[1:6:2] 得到 'loi'，原字符串不会被切片操作修改。
+  - "'python'[0]  # 索引：下标从 0 开始，取到第一个字符 'p'"
+  - "'python'[-1]  # 负索引：-1 表示倒数第一个字符 'n'"
+  - "'python'[0:6:2]  # 步长：每隔 2 个字符取一个，得到 'pto'"
+  common_mistakes:
+  - 误以为切片 text[a:b] 会包含下标 b 对应的字符
+  - 误以为str.replace 会原地修改原字符串并返回 None
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握字符串索引（含负索引）与切片操作，理解切片起止与步长的含义。关键要点包括：索引从 0 开始，负索引从末尾倒着数；切片 s[start:end] 为左闭右开区间；切片支持步长
+      s[start:end:step]。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：取出单词 python 的前三个字符。
+  - title: 独立完成课后练习
+    content: 完成 PY-STR-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 取出单词 python 的前三个字符。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'word = "python"
+
+      print(word[0:3])
+
+      '
+    reflection: 切片使用半开区间；长度通常等于 end - start。
+  checkpoint:
+    prompt: s[1:4] 包含下标 4 对应的字符吗？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-STR-02-Q1
+- PY-STR-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

@@ -1,0 +1,32 @@
+id: C-BASE-01
+title: C 程序结构与编译运行
+course: c
+schema_version: 0.1.0
+version: 4
+difficulty: beginner
+estimated_minutes: 30
+prerequisites: []
+learning_objectives:
+- 能判断与“C 程序结构与编译运行”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“C 程序结构与编译运行”的关键状态并验证边界
+concepts:
+- C 程序结构与编译运行
+- 边界条件
+- 可验证性
+lesson:
+  summary: 理解源文件、预处理、编译、汇编、链接和执行的基本流程。关键要点包括：main 是托管环境 C 程序的入口，常用合法形式为 int main(void) 或 int main(int argc, char *argv[])；源文件先经预处理和编译生成汇编表示，再由汇编器形成目标文件，最后由链接器解析跨文件符号并生成可执行程序；编译成功不代表行为正确；警告、链接错误、退出状态和测试结果分别提供不同证据。
+  key_points:
+  - main 是托管环境 C 程序的入口，常用合法形式为 int main(void) 或 int main(int argc, char *argv[])。
+  - 源文件依次经过预处理、编译和汇编形成目标文件，最后由链接器解析跨文件符号并生成可执行程序。
+  - 编译成功不代表行为正确；警告、链接错误、退出状态和测试结果分别提供不同证据。
+  common_mistakes:
+  - 误以为C 程序可以把 main 声明为 void main，并认为所有标准实现都会接受且行为一致。
+  - 误以为只要单个源文件编译成功，链接阶段就不会再出现未定义引用或重复定义。
+  - 把语法或类型错误、未定义符号和运行时错误都笼统称为“编译错误”，导致定位阶段错误。
+  examples:
+  - 命令示例：gcc -std=c17 -Wall -Wextra main.c util.c -o app；若 util.c 未定义已声明的函数，链接阶段会报告未定义引用。
+assessment_ids:
+- C-BASE-01-Q1
+source_refs:
+- SRC-C-GUIDE-BASE
+status: draft

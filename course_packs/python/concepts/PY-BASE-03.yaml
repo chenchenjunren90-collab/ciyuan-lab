@@ -1,0 +1,68 @@
+id: PY-BASE-03
+title: 运算符与表达式
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 45
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用算术、比较与逻辑运算符构造表达式
+- 能解释运算符的优先级与结合性
+concepts:
+- 算术运算
+- 比较运算
+- 逻辑运算
+- 优先级
+lesson:
+  summary: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。关键要点包括：算术运算符包括 + - * / // % **，其中 // 是整除；比较运算符返回布尔值，逻辑运算符
+    and/or/not 用于组合条件；乘除优先级高于加减，可用括号显式改变求值顺序。
+  key_points:
+  - 算术运算符包括 + - * / // % **，其中 // 是整除
+  - 比较运算符返回布尔值，逻辑运算符 and/or/not 用于组合条件
+  - 乘除优先级高于加减，可用括号显式改变求值顺序
+  examples:
+  - 代码示例：-7 // 3 的结果为 -3，因为 // 向负无穷方向取整；-7 / 3 则得到浮点近似值。
+  - 'total = 3 + 4 * 2  # 算术运算：+ - * / // % **'
+  - 'ok = 3 < 5  # 比较运算：结果为布尔值 True'
+  - 'r = True and False  # 逻辑运算：and/or/not 用于组合条件'
+  - 'x = 2 + 3 * 4  # 优先级：先算乘法 3 * 4，再加 2，结果为 14'
+  common_mistakes:
+  - 误以为Python 的 // 总是向零截断，因此 -7 // 3 等于 -2
+  - 误以为and 与 or 必然返回 bool，而不会返回参与运算的对象
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握算术、比较与逻辑运算符的写法与优先级，能够构造并求值常见表达式。关键要点包括：算术运算符包括 + - * / // % **，其中 // 是整除；比较运算符返回布尔值，逻辑运算符
+      and/or/not 用于组合条件；乘除优先级高于加减，可用括号显式改变求值顺序。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：计算 11 除以 4 的商和余数。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-03-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 计算 11 除以 4 的商和余数。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'a, b = 11, 4
+
+      print(a // b, a % b)
+
+      '
+    reflection: 看到“整除”和“余数”时，先确认题目是否允许负数以及除数能否为零。
+  checkpoint:
+    prompt: 运算符 / 与 // 的结果类型和含义有什么不同？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-03-Q1
+- PY-BASE-03-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

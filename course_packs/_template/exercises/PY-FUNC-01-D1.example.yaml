@@ -1,0 +1,40 @@
+id: PY-FUNC-01-D1
+title: 修复缺少返回值的函数
+course: python
+schema_version: "0.1.0"
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+  - PY-FUNC-01
+prompt: 修复程序，使 add 函数正确返回两数之和。
+source_refs:
+  - SRC-PY-OUTLINE-01
+evaluation:
+  mode: tests
+  starter_code: |
+    def add(a, b):
+        print(a + b)
+
+    a, b = map(int, input().split())
+    print(add(a, b))
+  runtime:
+    language: python
+    version: "3.11"
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+    - id: public-01
+      visibility: public
+      input: "1 2\n"
+      expected_output: "3\n"
+    - id: hidden-zero
+      visibility: hidden
+      input: "0 0\n"
+      expected_output: "0\n"
+status: draft

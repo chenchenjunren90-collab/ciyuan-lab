@@ -1,0 +1,25 @@
+id: DS-GRAPH-03-Q1
+title: 概念判断：深度优先搜索
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-GRAPH-03
+prompt: 关于“深度优先搜索”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 必须在顶点首次发现时标记访问，否则含环图可能重复入栈并无法终止。
+  - id: B
+    text: DFS 使用先进先出队列，因此总是按与起点距离递增的层次访问。
+  - id: C
+    text: 在无向图中不需要 visited 标记，因为每条边只会被存储一次。
+  accepted_answers:
+  - A
+status: draft

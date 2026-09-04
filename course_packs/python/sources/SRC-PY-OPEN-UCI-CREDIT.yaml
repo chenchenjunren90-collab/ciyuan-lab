@@ -1,0 +1,20 @@
+id: SRC-PY-OPEN-UCI-CREDIT
+title: UCI Default of Credit Card Clients 数据集说明
+course: python
+schema_version: 0.1.0
+version: 1
+source_type: open_resource
+citation:
+  locator: UCI Machine Learning Repository，Default of Credit Card Clients，数据集编号 350
+  url: https://archive.ics.uci.edu/dataset/350/default+of+credit+card+clients
+  publisher: UCI Machine Learning Repository
+rights:
+  basis: open_license
+  license: CC BY 4.0
+  note: 仅参考公开字段结构与研究任务，并保留数据集署名；本项目不复制个人记录，演示数据由项目脚本重新合成。
+data_classification: public
+rag:
+  eligible: false
+  content:
+    mode: reference_only
+status: reviewed

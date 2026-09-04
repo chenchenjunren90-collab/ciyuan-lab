@@ -1,0 +1,64 @@
+id: PY-CONTAINER-01
+title: 容器嵌套与选择
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: intermediate
+estimated_minutes: 50
+prerequisites:
+- PY-LIST-02
+- PY-DICT-02
+- PY-SET-01
+learning_objectives:
+- 能构造嵌套容器（列表套字典等）
+- 能根据场景选择合适的容器类型
+concepts:
+- 嵌套结构
+- 容器选择
+lesson:
+  summary: 综合运用列表、字典、集合等容器构造嵌套结构，并能根据数据特点选择合适的容器。关键要点包括：列表保持顺序，字典按键取值，集合去重；可构造列表套字典等嵌套结构表达复杂数据；按键快速查找应选择字典。
+  key_points:
+  - 列表保持顺序，字典按键取值，集合去重
+  - 可构造列表套字典等嵌套结构表达复杂数据
+  - 按键快速查找应选择字典
+  - 容器选择：需要保持顺序用列表，需要按键查找用字典，需要去重用集合
+  examples:
+  - 'records = [{"name": "a", "score": 90}, ...]'
+  - "嵌套结构：grid = [{'row': 0, 'cells': [1, 2]}, {'row': 1, 'cells': [3, 4]}]  # 列表套字典的嵌套结构"
+  - '# 容器选择：需要保持顺序用列表，需要按键查找用字典，需要去重用集合'
+  common_mistakes:
+  - 误以为列表、元组、集合和字典只在括号写法上不同，操作复杂度完全一致
+  - 误以为嵌套列表用 [[0]*3]*2 创建的两行彼此独立
+  learning_sequence:
+  - title: 先建立直觉
+    content: 综合运用列表、字典、集合等容器构造嵌套结构，并能根据数据特点选择合适的容器。关键要点包括：列表保持顺序，字典按键取值，集合去重；可构造列表套字典等嵌套结构表达复杂数据；按键快速查找应选择字典。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：读取两行数字并输出第二行第一个元素。
+  - title: 独立完成课后练习
+    content: 完成 PY-CONTAINER-01-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 读取两行数字并输出第二行第一个元素。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'matrix = [[1, 2], [3, 4]]
+
+      print(matrix[1][0])
+
+      '
+    reflection: 遇到嵌套容器时，先画出外层元素，再逐层写索引。
+  checkpoint:
+    prompt: matrix[1][0] 中两个索引分别表示什么？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-CONTAINER-01-Q1
+- PY-CONTAINER-01-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

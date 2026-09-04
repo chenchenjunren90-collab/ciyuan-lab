@@ -1,0 +1,25 @@
+id: DS-HEAP-01-Q1
+title: 概念判断：二叉堆
+course: data_structures
+schema_version: 0.1.0
+version: 2
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- DS-HEAP-01
+prompt: 关于“二叉堆”，下列哪项说法正确？
+source_refs:
+- SRC-DS-GUIDE-TREEGRAPH
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 最大堆只保证每个父结点不小于子结点，不保证兄弟或不同子树之间全局有序。
+  - id: B
+    text: 最大堆数组从左到右已经按降序排列，可以直接作为完整排序结果。
+  - id: C
+    text: 在堆中查找任意给定值始终只需沿一条根到叶路径，因此是 O(log n)。
+  accepted_answers:
+  - A
+status: draft

@@ -1,0 +1,75 @@
+{"id": "c-a-01", "course_id": "c", "query": "C 程序从源文件到可执行程序经历哪些阶段", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-BASE"]}
+{"id": "c-a-02", "course_id": "c", "query": "变量为什么必须在第一次读取前初始化", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-BASE"]}
+{"id": "c-a-03", "course_id": "c", "query": "printf 格式说明符为什么要和实参类型一致", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-BASE"]}
+{"id": "c-a-04", "course_id": "c", "query": "表达式求值时如何处理优先级和短路求值", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-BASE"]}
+{"id": "c-a-05", "course_id": "c", "query": "C 语言分支测试为什么要覆盖边界值", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-CONTROL"]}
+{"id": "c-a-06", "course_id": "c", "query": "循环设计需要明确哪些组成部分", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-CONTROL"]}
+{"id": "c-a-07", "course_id": "c", "query": "函数怎样通过参数和返回值降低复杂度", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-CONTROL"]}
+{"id": "c-a-08", "course_id": "c", "query": "递归函数为什么必须有终止条件", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-CONTROL"]}
+{"id": "c-a-09", "course_id": "c", "query": "数组下标和指针移动为什么受存储范围限制", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-MEMORY"]}
+{"id": "c-a-10", "course_id": "c", "query": "C 字符串为什么必须以空字符终止", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-MEMORY"]}
+{"id": "c-a-11", "course_id": "c", "query": "动态内存管理为什么要明确所有权和释放点", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-MEMORY"]}
+{"id": "c-a-12", "course_id": "c", "query": "释放后使用指针会造成什么问题", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-MEMORY"]}
+{"id": "c-a-13", "course_id": "c", "query": "C 项目如何分离头文件公开声明与源文件实现", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-ENGINEERING"]}
+{"id": "c-a-14", "course_id": "c", "query": "调试 C 程序时怎样从最小失败输入开始", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-ENGINEERING"]}
+{"id": "c-a-15", "course_id": "c", "query": "C 程序测试应覆盖哪些正常边界与错误路径", "kind": "answerable", "expected_source_ids": ["SRC-C-GUIDE-ENGINEERING"]}
+{"id": "c-u-01", "course_id": "c", "query": "如何配置 Kubernetes 集群自动扩缩容", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "c-u-02", "course_id": "c", "query": "Transformer 注意力机制如何训练", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "c-u-03", "course_id": "c", "query": "中国古代诗词有哪些格律", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "c-u-04", "course_id": "c", "query": "如何诊断高血压并选择药物", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "c-u-05", "course_id": "c", "query": "量子纠缠实验怎样设计", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "c-x-01", "course_id": "c", "query": "Python 默认参数在什么时候求值", "kind": "cross_course", "expected_source_ids": []}
+{"id": "c-x-02", "course_id": "c", "query": "Python 生成器如何暂停和恢复", "kind": "cross_course", "expected_source_ids": []}
+{"id": "c-x-03", "course_id": "c", "query": "BFS 为什么使用队列", "kind": "cross_course", "expected_source_ids": []}
+{"id": "c-x-04", "course_id": "c", "query": "二分查找如何维护区间不变式", "kind": "cross_course", "expected_source_ids": []}
+{"id": "c-x-05", "course_id": "c", "query": "散列表冲突如何处理", "kind": "cross_course", "expected_source_ids": []}
+{"id": "python-a-01", "course_id": "python", "query": "Python 变量名绑定对象是什么意思", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-BASE"]}
+{"id": "python-a-02", "course_id": "python", "query": "选择列表集合字典时应考虑顺序唯一性和键值关系", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-BASE"]}
+{"id": "python-a-03", "course_id": "python", "query": "Python 条件和循环为什么要测试边界", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-BASE"]}
+{"id": "python-a-04", "course_id": "python", "query": "Python 函数怎样明确输入输出和副作用", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-FUNCTIONS"]}
+{"id": "python-a-05", "course_id": "python", "query": "默认参数在什么时候求值", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-FUNCTIONS"]}
+{"id": "python-a-06", "course_id": "python", "query": "迭代器和生成器怎样避免一次加载全部数据", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-FUNCTIONS"]}
+{"id": "python-a-07", "course_id": "python", "query": "Python 数据处理为什么先确认字段类型和缺失约定", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-DATA"]}
+{"id": "python-a-08", "course_id": "python", "query": "数据清洗规则应准备哪些正常边界错误样例", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-DATA"]}
+{"id": "python-a-09", "course_id": "python", "query": "异常数据为什么不能被静默吞掉", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-DATA"]}
+{"id": "python-a-10", "course_id": "python", "query": "可维护 Python 项目如何隔离文件和网络副作用", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-ENGINEERING"]}
+{"id": "python-a-11", "course_id": "python", "query": "调试 Python 代码为什么先固定失败输入", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-ENGINEERING"]}
+{"id": "python-a-12", "course_id": "python", "query": "为什么要增加回归测试防止缺陷再次出现", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-ENGINEERING"]}
+{"id": "python-a-13", "course_id": "python", "query": "合成经营数据集包含哪些字段", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-CASE-FALLBACK"]}
+{"id": "python-a-14", "course_id": "python", "query": "如何练习解析校验清洗聚合和异常报告", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-CASE-FALLBACK"]}
+{"id": "python-a-15", "course_id": "python", "query": "虚构经营数据为什么不能用于真实经营判断", "kind": "answerable", "expected_source_ids": ["SRC-PY-GUIDE-CASE-FALLBACK"]}
+{"id": "python-u-01", "course_id": "python", "query": "欧盟最新关税政策是什么", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "python-u-02", "course_id": "python", "query": "如何维修汽车变速箱", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "python-u-03", "course_id": "python", "query": "莫扎特交响曲的创作背景", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "python-u-04", "course_id": "python", "query": "建筑抗震规范如何计算", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "python-u-05", "course_id": "python", "query": "如何种植耐旱小麦", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "python-x-01", "course_id": "python", "query": "C 字符串为什么需要空字符终止", "kind": "cross_course", "expected_source_ids": []}
+{"id": "python-x-02", "course_id": "python", "query": "C 动态内存释放后为什么不能使用", "kind": "cross_course", "expected_source_ids": []}
+{"id": "python-x-03", "course_id": "python", "query": "栈为什么后进先出", "kind": "cross_course", "expected_source_ids": []}
+{"id": "python-x-04", "course_id": "python", "query": "递归算法如何用递推式分析", "kind": "cross_course", "expected_source_ids": []}
+{"id": "python-x-05", "course_id": "python", "query": "图的最短路依赖什么边权前提", "kind": "cross_course", "expected_source_ids": []}
+{"id": "data_structures-a-01", "course_id": "data_structures", "query": "抽象数据类型与具体实现有什么区别", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-FOUND"]}
+{"id": "data_structures-a-02", "course_id": "data_structures", "query": "算法分析为什么先定义输入规模和基本操作", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-FOUND"]}
+{"id": "data_structures-a-03", "course_id": "data_structures", "query": "递归算法如何证明终止性", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-FOUND"]}
+{"id": "data_structures-a-04", "course_id": "data_structures", "query": "如何用递推式估算递归算法时间成本", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-FOUND"]}
+{"id": "data_structures-a-05", "course_id": "data_structures", "query": "顺序表随机访问和中间插入的代价分别是什么", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-LINEAR"]}
+{"id": "data_structures-a-06", "course_id": "data_structures", "query": "链表为什么通过链接获得局部修改能力", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-LINEAR"]}
+{"id": "data_structures-a-07", "course_id": "data_structures", "query": "栈为什么是后进先出", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-LINEAR"]}
+{"id": "data_structures-a-08", "course_id": "data_structures", "query": "队列为什么是先进先出", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-LINEAR"]}
+{"id": "data_structures-a-09", "course_id": "data_structures", "query": "比较排序算法时要考虑哪些指标", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id": "data_structures-a-10", "course_id": "data_structures", "query": "二分查找为什么只适用于有序区间", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id": "data_structures-a-11", "course_id": "data_structures", "query": "二分查找如何维护答案所在区间不变式", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id": "data_structures-a-12", "course_id": "data_structures", "query": "散列表性能受哪些因素影响", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id": "data_structures-a-13", "course_id": "data_structures", "query": "BFS 为什么使用队列按层扩展", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-TREEGRAPH"]}
+{"id": "data_structures-a-14", "course_id": "data_structures", "query": "DFS 如何沿路径深入图结构", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-TREEGRAPH"]}
+{"id": "data_structures-a-15", "course_id": "data_structures", "query": "最短路算法为什么依赖边权前提", "kind": "answerable", "expected_source_ids": ["SRC-DS-GUIDE-TREEGRAPH"]}
+{"id": "data_structures-u-01", "course_id": "data_structures", "query": "公司年度审计报告如何出具意见", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "data_structures-u-02", "course_id": "data_structures", "query": "民法典关于租赁合同如何规定", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "data_structures-u-03", "course_id": "data_structures", "query": "蛋白质折叠实验有哪些步骤", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "data_structures-u-04", "course_id": "data_structures", "query": "如何绘制油画人物肖像", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "data_structures-u-05", "course_id": "data_structures", "query": "卫星轨道如何进行修正", "kind": "unanswerable", "expected_source_ids": []}
+{"id": "data_structures-x-01", "course_id": "data_structures", "query": "Python 变量名怎样绑定对象", "kind": "cross_course", "expected_source_ids": []}
+{"id": "data_structures-x-02", "course_id": "data_structures", "query": "Python 默认参数何时求值", "kind": "cross_course", "expected_source_ids": []}
+{"id": "data_structures-x-03", "course_id": "data_structures", "query": "C 头文件声明和源文件实现如何分离", "kind": "cross_course", "expected_source_ids": []}
+{"id": "data_structures-x-04", "course_id": "data_structures", "query": "C printf 格式说明符如何匹配类型", "kind": "cross_course", "expected_source_ids": []}
+{"id": "data_structures-x-05", "course_id": "data_structures", "query": "Python 数据异常为什么不能静默吞掉", "kind": "cross_course", "expected_source_ids": []}

@@ -1,0 +1,56 @@
+id: DS-SORT-04-C1
+title: 编程实践：归并排序
+course: data_structures
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: intermediate
+estimated_minutes: 20
+concept_ids:
+- DS-SORT-04
+prompt: 读取整数序列并用归并排序升序输出。
+source_refs:
+- SRC-DS-GUIDE-SORTSEARCH
+evaluation:
+  mode: tests
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: case-1
+    visibility: public
+    input: '6
+
+      9 1 8 2 7 3
+
+      '
+    expected_output: '1 2 3 7 8 9
+
+      '
+  - id: case-2
+    visibility: hidden
+    input: '2
+
+      1 0
+
+      '
+    expected_output: '0 1
+
+      '
+  - id: case-3
+    visibility: hidden
+    input: '4
+
+      -2 -5 -1 -3
+
+      '
+    expected_output: '-5 -3 -2 -1
+
+      '
+status: draft

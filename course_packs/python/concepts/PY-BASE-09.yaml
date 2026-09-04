@@ -1,0 +1,67 @@
+id: PY-BASE-09
+title: 类型转换与常用内置函数
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: beginner
+estimated_minutes: 35
+prerequisites:
+- PY-BASE-02
+learning_objectives:
+- 能使用 int/str/float 进行类型转换
+- 能使用 len/type/abs/round 等常用内置函数
+concepts:
+- 类型转换
+- int
+- str
+- len
+- type
+lesson:
+  summary: 掌握常见类型转换函数与常用内置函数（len、type、abs、round 等）的用法。关键要点包括：int()/float()/str() 用于类型之间的转换；len() 求长度，type()
+    查看类型，abs() 求绝对值；round() 对精确的中间值采用“最接近且偶数优先”的规则；二进制浮点表示还可能影响直觉结果。
+  key_points:
+  - int()/float()/str() 用于类型之间的转换
+  - len() 求长度，type() 查看类型，abs() 求绝对值
+  - round() 对精确的中间值采用“最接近且偶数优先”的规则；二进制浮点表示还可能影响直觉结果
+  examples:
+  - 代码示例：int('42') 得到整数 42，str(3.5) 得到字符串 '3.5'；int('3.5') 会抛出 ValueError。
+  - 类型转换：int('42') + 1  # 类型转换把字符串变成整数
+  - len：len([1, 2, 3])  # len 返回元素个数
+  - type：type(3.14)  # type 返回对象类型
+  common_mistakes:
+  - 误以为int('3.5') 会自动先转成浮点数再得到整数 3
+  - 误以为input 会根据输入内容自动返回 int 或 float
+  learning_sequence:
+  - title: 先建立直觉
+    content: 掌握常见类型转换函数与常用内置函数（len、type、abs、round 等）的用法。关键要点包括：int()/float()/str() 用于类型之间的转换；len() 求长度，type()
+      查看类型，abs() 求绝对值；round() 对精确的中间值采用“最接近且偶数优先”的规则；二进制浮点表示还可能影响直觉结果。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：把文本 3.5 转成浮点数并取绝对值。
+  - title: 独立完成课后练习
+    content: 完成 PY-BASE-09-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 把文本 3.5 转成浮点数并取绝对值。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: 'value = float("-3.5")
+
+      print(abs(value))
+
+      '
+    reflection: 计算精度和显示格式是两个问题；题目要求“保留两位”时要控制输出格式。
+  checkpoint:
+    prompt: round(value, 2) 与格式化为两位小数在显示效果上一定相同吗？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-BASE-09-Q1
+- PY-BASE-09-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-REF
+- SRC-PY-GUIDE-BASE
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

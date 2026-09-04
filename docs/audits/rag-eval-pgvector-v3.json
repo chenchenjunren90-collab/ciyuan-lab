@@ -1,0 +1,17 @@
+{
+  "dataset_size": 75,
+  "answerable_count": 45,
+  "recall_at_k": 0.9556,
+  "mean_reciprocal_rank": 0.9556,
+  "unanswerable_rejection_rate": 0.9333,
+  "cross_course_rejection_rate": 0.8,
+  "course_isolation_rate": 1.0,
+  "failures": [
+    "python-a-02:expected_source_not_retrieved",
+    "python-x-01:cross_course_query_not_rejected",
+    "python-x-02:cross_course_query_not_rejected",
+    "data_structures-a-09:expected_source_not_retrieved",
+    "data_structures-u-02:false_positive",
+    "data_structures-x-05:cross_course_query_not_rejected"
+  ]
+}

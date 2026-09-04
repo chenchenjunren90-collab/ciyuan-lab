@@ -1,0 +1,84 @@
+id: PY-MOD-01-H1
+title: 课后练习：使用 math 计算向上取整
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-MOD-01
+prompt: 读取路程和每箱可覆盖路程（均为正数），使用 math.ceil 计算至少需要多少箱并输出。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'import math
+
+    distance, capacity = map(float, input().split())
+
+    # 调用 math.ceil
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-fraction
+    visibility: public
+    input: '10 3
+
+      '
+    expected_output: '4
+
+      '
+  - id: hidden-exact
+    visibility: hidden
+    input: '12 3
+
+      '
+    expected_output: '4
+
+      '
+  - id: hidden-small
+    visibility: hidden
+    input: '1 5
+
+      '
+    expected_output: '1
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 先 import math
+  - 计算 distance / capacity
+  - 向上取整保证覆盖全部路程
+  input_format: 一行两个正数：总路程 单箱覆盖路程。
+  output_format: 至少需要的整数箱数。
+  constraints:
+  - 两个输入都大于 0
+  - 必须使用 math.ceil
+  public_examples:
+  - input: '10 3
+
+      '
+    expected_output: '4
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 导入方式应清晰表达名称来源，避免使用 import *。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: modules / import'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

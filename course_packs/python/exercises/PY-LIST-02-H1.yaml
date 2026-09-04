@@ -1,0 +1,84 @@
+id: PY-LIST-02-H1
+title: 课后 Debug：正确排序列表
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-LIST-02
+prompt: 程序应把输入整数升序输出，但错误地把 sort() 的返回值当成新列表。请修复。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'numbers = list(map(int, input().split()))
+
+    result = numbers.sort()
+
+    print(*result)
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-mixed
+    visibility: public
+    input: '3 1 2
+
+      '
+    expected_output: '1 2 3
+
+      '
+  - id: hidden-duplicates
+    visibility: hidden
+    input: '4 2 4 1
+
+      '
+    expected_output: '1 2 4 4
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: '7
+
+      '
+    expected_output: '7
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - list.sort() 原地修改列表并返回 None
+  - 可以排序后直接输出 numbers
+  - 也可以使用 sorted(numbers) 得到新列表
+  input_format: 一行一个或多个整数。
+  output_format: 升序排列后的整数，以空格分隔。
+  constraints:
+  - 保留重复元素
+  - 不得输出列表方括号和逗号
+  public_examples:
+  - input: '3 1 2
+
+      '
+    expected_output: '1 2 3
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 遇到 NoneType 报错时，检查是否误用了原地方法的返回值。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: list methods / sorting'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

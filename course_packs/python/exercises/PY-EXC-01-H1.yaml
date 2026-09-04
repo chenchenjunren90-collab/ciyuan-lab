@@ -1,0 +1,86 @@
+id: PY-EXC-01-H1
+title: 课后 Debug：安全完成除法
+course: python
+schema_version: 0.1.0
+version: 1
+type: debug
+difficulty: beginner
+estimated_minutes: 20
+concept_ids:
+- PY-EXC-01
+prompt: 读取两个文本。能转换为数字且除数不为零时输出商（保留 2 位小数）；输入非法输出“输入错误”，除数为零输出“不能除以零”。请用异常处理修复程序。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'a_text, b_text = input().split()
+
+    a = float(a_text)
+
+    b = float(b_text)
+
+    print(f''{a / b:.2f}'')
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-ok
+    visibility: public
+    input: '8 2
+
+      '
+    expected_output: '4.00
+
+      '
+  - id: public-zero
+    visibility: public
+    input: '8 0
+
+      '
+    expected_output: '不能除以零
+
+      '
+  - id: hidden-invalid
+    visibility: hidden
+    input: 'abc 2
+
+      '
+    expected_output: '输入错误
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 把转换和除法放入 try
+  - 为两类异常编写不同 except
+  - 正常结果放在 try 的成功路径
+  input_format: 一行两个文本。
+  output_format: 商、输入错误或不能除以零。
+  constraints:
+  - 分别处理 ValueError 与 ZeroDivisionError
+  - 不得输出异常堆栈
+  public_examples:
+  - input: '8 2
+
+      '
+    expected_output: '4.00
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 异常处理应捕获可预期错误，并给用户明确、有限的信息。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: exceptions / error handling'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

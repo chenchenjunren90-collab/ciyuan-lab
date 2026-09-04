@@ -1,0 +1,60 @@
+id: PY-EXC-02
+title: 自定义异常
+course: python
+schema_version: 0.1.0
+version: 3
+difficulty: advanced
+estimated_minutes: 40
+prerequisites:
+- PY-EXC-01
+learning_objectives:
+- 能定义自定义异常类
+- 能使用 raise 主动抛出异常
+concepts:
+- raise
+- 自定义异常
+- 异常继承
+lesson:
+  summary: 通过继承 Exception 定义自定义异常，并使用 raise 主动抛出。关键要点包括：自定义异常类通常继承 Exception；raise 主动抛出异常实例；抛出的自定义异常可被
+    except 捕获。
+  key_points:
+  - 自定义异常类通常继承 Exception
+  - raise 主动抛出异常实例
+  - 抛出的自定义异常可被 except 捕获
+  - 异常继承：自定义异常类通过继承 Exception 获得统一的捕获与传播语义
+  examples:
+  - 'class MyError(Exception): pass'
+  - 'class ScoreError(ValueError): pass  # 异常继承：自定义异常继承内置异常'
+  common_mistakes:
+  - 误以为自定义异常必须直接继承 BaseException，不能继承 Exception
+  - 误以为捕获自定义异常后无需保留导致失败的输入或上下文
+  learning_sequence:
+  - title: 先建立直觉
+    content: 通过继承 Exception 定义自定义异常，并使用 raise 主动抛出。关键要点包括：自定义异常类通常继承 Exception；raise 主动抛出异常实例；抛出的自定义异常可被
+      except 捕获。
+  - title: 跟着示例做
+    content: 先运行示例并逐行观察变量变化，再替换一个输入重新预测结果。示例任务：用 ValueError 表示参数值不符合约束。
+  - title: 独立完成课后练习
+    content: 完成 PY-EXC-02-H1。第一次只看题面；遇到困难时按顺序打开提示，不直接查看完整答案。
+  worked_example:
+    problem: 用 ValueError 表示参数值不符合约束。
+    steps:
+    - 写清输入、处理和输出三部分。
+    - 先完成最小可运行代码，再用一个正常输入验证。
+    - 补充边界输入，确认输出格式与预期一致。
+    code: "def require_positive(value):\n    if value <= 0:\n        raise ValueError('必须为正数')\n"
+    reflection: 自定义异常用于表达稳定的业务或领域错误，不要为每一行代码新建异常类。
+  checkpoint:
+    prompt: 什么情况下自定义异常比直接返回 False 更清晰？
+    guidance: 先用自己的话回答；如果不确定，回到示例逐行运行，再完成随堂检查和课后练习。
+assessment_ids:
+- PY-EXC-02-Q1
+- PY-EXC-02-H1
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+- SRC-PY-GUIDE-ENGINEERING
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+status: draft

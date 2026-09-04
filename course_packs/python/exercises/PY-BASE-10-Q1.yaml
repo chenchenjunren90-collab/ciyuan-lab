@@ -1,0 +1,28 @@
+id: PY-BASE-10-Q1
+title: 三种基本控制结构
+course: python
+schema_version: 0.1.0
+version: 1
+type: objective
+difficulty: intermediate
+estimated_minutes: 5
+concept_ids:
+- PY-BASE-10
+prompt: 结构化程序设计提倡的三种基本控制结构是？
+source_refs:
+- SRC-PY-OUTLINE-01
+- SRC-PY-OFFICIAL-TUTORIAL
+evaluation:
+  mode: exact
+  options:
+  - id: A
+    text: 顺序、选择、循环
+  - id: B
+    text: 顺序、跳转、递归
+  - id: C
+    text: 顺序、选择、goto
+  - id: D
+    text: 选择、循环、goto
+  accepted_answers:
+  - A
+status: draft

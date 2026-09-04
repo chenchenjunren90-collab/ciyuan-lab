@@ -1,0 +1,82 @@
+id: PY-STR-01-H1
+title: 课后练习：生成节奏口令
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 15
+concept_ids:
+- PY-STR-01
+prompt: 读取一个不含空格的单词和重复次数 n，用连字符连接并输出该单词 n 次。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'word, count_text = input().split()
+
+    # 例如 ha 3 输出 ha-ha-ha
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-three
+    visibility: public
+    input: 'ha 3
+
+      '
+    expected_output: 'ha-ha-ha
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: 'go 1
+
+      '
+    expected_output: 'go
+
+      '
+  - id: hidden-four
+    visibility: hidden
+    input: 'py 4
+
+      '
+    expected_output: 'py-py-py-py
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - 先构造包含 n 个单词的序列
+  - 使用 '-'.join(...) 避免多余分隔符
+  - 测试 n=1
+  input_format: 一行：单词 重复次数。
+  output_format: 用连字符连接的重复文本。
+  constraints:
+  - 1 <= n <= 20
+  - 开头和结尾不能多出连字符
+  public_examples:
+  - input: 'ha 3
+
+      '
+    expected_output: 'ha-ha-ha
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 拼接文本时要把内容和分隔符分别想清楚。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'tutorial: Basic String Operations'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft

@@ -1,0 +1,34 @@
+id: C-TYPE-03
+title: 枚举与联合
+course: c
+schema_version: 0.1.0
+version: 4
+difficulty: intermediate
+estimated_minutes: 30
+prerequisites:
+- C-TYPE-01
+learning_objectives:
+- 能判断与“枚举与联合”有关的合法操作、适用条件和结果
+- 能根据给定输入推演“枚举与联合”的关键状态并验证边界
+concepts:
+- 枚举与联合
+- 边界条件
+- 可验证性
+lesson:
+  summary: 使用枚举表达有限状态，理解联合共享存储。关键要点包括：枚举定义一组具名整型常量，未显式赋值的成员通常从前一值加一；不同枚举成员可以显式取相同值，因此不能依赖值唯一性反向确定名称；联合体各成员共享同一存储区；读取与最近写入成员不一致时要遵守有效类型和实现约束；工程中通常用额外枚举标签记录当前有效成员，构成可检查的带标签联合。
+  key_points:
+  - 枚举定义一组具名整型常量，未显式赋值的成员通常从前一值加一。
+  - 不同枚举成员可以显式取相同值，因此不能依赖值唯一性反向确定名称。
+  - 联合体各成员共享同一存储区；读取与最近写入成员不一致时要遵守有效类型和实现约束。
+  - 联合本身不记录当前有效成员；需要安全表达“多种可能之一”时，应由枚举标签与联合共同维护不变量。
+  common_mistakes:
+  - 误以为枚举成员在运行时是字符串，可以直接用 printf 的 %s 输出名称。
+  - 误以为联合体会同时为每个成员分配独立存储，因此其大小等于所有成员大小之和。
+  examples:
+  - 代码片段：enum State{IDLE=0,RUNNING=1,DONE=1}; RUNNING 与 DONE 数值相同，switch 中不能为二者写重复 case。
+  - 设计示例：struct Value 包含 enum ValueKind kind 和 union payload；访问 payload 前先根据 kind 分支检查。
+assessment_ids:
+- C-TYPE-03-Q1
+source_refs:
+- SRC-C-GUIDE-MEMORY
+status: draft

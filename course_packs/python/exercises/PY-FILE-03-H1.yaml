@@ -1,0 +1,93 @@
+id: PY-FILE-03-H1
+title: 课后练习：读取 CSV 成绩
+course: python
+schema_version: 0.1.0
+version: 1
+type: code
+difficulty: beginner
+estimated_minutes: 25
+concept_ids:
+- PY-FILE-03
+prompt: 第一行读取记录数 n，随后 n 行为“姓名,成绩”。使用 csv.reader 读取，输出平均成绩，保留 1 位小数。
+source_refs:
+- SRC-PY-GUIDE-CURRICULUM
+- SRC-PY-EXERCISM-TRACK
+- SRC-PY-INTERACTIVE-TUTORIALS
+evaluation:
+  mode: tests
+  starter_code: 'import csv
+
+    import sys
+
+
+    n = int(input())
+
+    # 使用 csv.reader 读取接下来的 n 行
+
+    '
+  runtime:
+    language: python
+    version: '3.11'
+    entrypoint: main.py
+    time_limit_ms: 2000
+    memory_limit_mb: 128
+    output_limit_kb: 64
+    network_access: false
+    filesystem_access: isolated
+  tests:
+  - id: public-three
+    visibility: public
+    input: '3
+
+      小词,80
+
+      小元,90
+
+      小码,70
+
+      '
+    expected_output: '80.0
+
+      '
+  - id: hidden-one
+    visibility: hidden
+    input: '1
+
+      A,100
+
+      '
+    expected_output: '100.0
+
+      '
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  scaffolding:
+  - csv.reader(sys.stdin) 可以继续读取标准输入
+  - 每行解包为 name 和 score_text
+  - 只累计前 n 条记录
+  input_format: 第一行 n；随后 n 行 CSV，每行姓名,整数成绩。
+  output_format: 平均成绩，保留 1 位小数。
+  constraints:
+  - 1 <= n <= 100
+  - 0 <= 成绩 <= 100
+  public_examples:
+  - input: '3
+
+      小词,80
+
+      小元,90
+
+      小码,70
+
+      '
+    expected_output: '80.0
+
+      '
+    explanation: 先按输入格式拆分数据，再逐步应用本节知识点；输出需与格式完全一致。
+  reflection_prompt: 结构化文件应优先使用标准解析器，而不是手写脆弱的分隔规则。
+  source_adaptation:
+    source_id: SRC-PY-EXERCISM-TRACK
+    source_scope: 'concept: CSV / standard library'
+    method: 保留能力目标与边界测试思路，使用中文重写题面、提示、样例和测试。
+status: draft
