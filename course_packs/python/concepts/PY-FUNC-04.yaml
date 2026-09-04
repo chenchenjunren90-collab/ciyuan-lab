@@ -24,6 +24,7 @@ lesson:
   - 函数内重新绑定全局名称需先 global 声明；仅修改可变对象内部状态不属于名称重新绑定
   examples:
   - "def f():\n    global x\n    x = 1"
+  - '# 作用域：函数内赋值的变量默认是局部变量；def f(): x = 1'
   common_mistakes:
   - 误以为在函数内给同名变量赋值会自动修改全局变量
   - 误以为nonlocal 可以引用任意模块级全局名称

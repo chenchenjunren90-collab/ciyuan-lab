@@ -50,6 +50,16 @@ class ProgressiveHintService:
         mastery = {
             item.knowledge_point_id: item.score for item in (profile.mastery if profile else [])
         }
+        if not activity.concept_ids:
+            hint = self._hint_text(activity, {}, level)
+            return HintResponse(
+                activity_id=activity_id,
+                level=level,
+                hint=hint,
+                focus_concept_ids=[],
+                source_refs=list(dict.fromkeys(activity.source_refs)),
+                answer_revealed=False,
+            )
         weakest = min(activity.concept_ids, key=lambda item: mastery.get(item, 0.5))
         focus = next((item for item in concepts if item.id == weakest), concepts[0])
         hint = self._hint_text(activity, focus.lesson, level)

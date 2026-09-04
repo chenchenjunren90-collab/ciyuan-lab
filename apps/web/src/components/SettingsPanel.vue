@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { AccentTone, LocalLearnerAccount, ThemeMode, UiPreferences } from "../uiPreferences";
+import type { DeviceMode, LocalLearnerAccount, ThemeMode, UiPreferences } from "../uiPreferences";
 
 const props = defineProps<{
   open: boolean;
@@ -23,11 +23,10 @@ const themes: { id: ThemeMode; label: string; icon: string }[] = [
   { id: "dark", label: "夜间", icon: "☾" },
   { id: "system", label: "跟随系统", icon: "◐" },
 ];
-const accents: { id: AccentTone; label: string }[] = [
-  { id: "crimson", label: "赤红" },
-  { id: "blue", label: "深蓝" },
-  { id: "teal", label: "青绿" },
-  { id: "violet", label: "紫罗兰" },
+const deviceModes: { id: DeviceMode; label: string; icon: string }[] = [
+  { id: "auto", label: "自动", icon: "◐" },
+  { id: "mobile", label: "手机", icon: "▯" },
+  { id: "desktop", label: "电脑", icon: "▢" },
 ];
 </script>
 
@@ -60,8 +59,8 @@ const accents: { id: AccentTone; label: string }[] = [
         </section>
 
         <section class="settings-section">
-          <div><b>主色调</b><span>改变按钮、进度与重点信息的强调色。</span></div>
-          <div class="accent-options"><button v-for="item in accents" :key="item.id" :class="[item.id, { active: preferences.accent === item.id }]" :aria-label="`${item.label}主题`" :aria-pressed="preferences.accent === item.id" @click="emit('update', { accent: item.id })"><i></i><span>{{ item.label }}</span></button></div>
+          <div><b>设备模式</b><span>选择移动端或电脑端布局；自动模式跟随屏幕宽度。</span></div>
+          <div class="theme-options"><button v-for="item in deviceModes" :key="item.id" :class="{ active: preferences.deviceMode === item.id }" :aria-pressed="preferences.deviceMode === item.id" @click="emit('update', { deviceMode: item.id })"><i>{{ item.icon }}</i><span>{{ item.label }}</span></button></div>
         </section>
 
         <section class="settings-section toggle-list">

@@ -31,6 +31,12 @@ class Settings(BaseSettings):
     xfyun_maas_base_url: str = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
     xfyun_maas_api_key: SecretStr = SecretStr("")
     xfyun_maas_model: str = "xopdeepseekv4flash0731"
+    # Optional MaaS SFT/LoRA route for the Python course tutor. Both values must
+    # be configured together and explicitly enabled before activation.
+    xfyun_maas_python_tutor_enabled: bool = False
+    xfyun_maas_python_tutor_api_key: SecretStr = SecretStr("")
+    xfyun_maas_python_tutor_model: str = ""
+    xfyun_maas_python_tutor_lora_id: str = ""
     xfyun_maas_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
     xfyun_maas_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_mock_fallback: bool = True

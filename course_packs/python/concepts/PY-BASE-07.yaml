@@ -24,6 +24,8 @@ lesson:
   - 循环前明确空输入、步长方向和聚合初值，循环后验证边界结果。
   examples:
   - 代码示例：total = sum(value for value in range(1, n + 1))
+  - "遍历：for item in [1, 2, 3]: print(item)  # 用 for 遍历列表"
+  - 步长：evens = list(range(0, 10, 2))  # range 第三个参数是步长
   common_mistakes:
   - 误以为range(1,5) 会同时产生 1、2、3、4、5
   - 误以为在遍历列表时随意删除元素不会影响后续迭代位置

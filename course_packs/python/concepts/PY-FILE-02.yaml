@@ -22,6 +22,7 @@ lesson:
   - 路径、权限和格式错误需要转成面向用户的受控诊断。
   examples:
   - '代码示例：with open(path, ''r'', encoding=''utf-8'') as stream: text = stream.read()'
+  - 'with open("data.txt") as f: text = f.read()  # 上下文管理器：with 块退出时自动关闭文件'
   common_mistakes:
   - 误以为with 块只有正常退出时才会关闭文件，异常时需要手工 close
   - 误以为同一个已关闭文件对象仍可继续 read，只是速度更慢

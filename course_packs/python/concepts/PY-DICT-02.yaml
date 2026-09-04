@@ -24,6 +24,8 @@ lesson:
   - Python 3.7+ 字典保持插入顺序
   examples:
   - 'for word, cnt in counts.items(): print(word, cnt)'
+  - 'list(student.keys())  # keys 返回所有键'
+  - 'list(student.values())  # values 返回所有值'
   common_mistakes:
   - 误以为遍历字典时可以任意增删键而不会影响迭代器
   - 误以为dict.update 只添加新键，遇到已有键时不会覆盖原值

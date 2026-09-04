@@ -25,6 +25,7 @@ lesson:
   - json.dump/load 直接读写文件
   examples:
   - 'json.dumps({"a": 1})'
+  - 'json.loads(''{"a": 1}'')  # loads 把 JSON 字符串解析为对象'
   common_mistakes:
   - 误以为JSON 能原样保存任意 Python 对象及其自定义类型
   - 误以为json.loads 接受文件对象并自动从文件读取文本

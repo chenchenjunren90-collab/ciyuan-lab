@@ -23,6 +23,9 @@ lesson:
   - 切片支持步长 s[start:end:step]
   examples:
   - 代码示例：text='algorithm' 时 text[1:6:2] 得到 'loi'，原字符串不会被切片操作修改。
+  - "'python'[0]  # 索引：下标从 0 开始，取到第一个字符 'p'"
+  - "'python'[-1]  # 负索引：-1 表示倒数第一个字符 'n'"
+  - "'python'[0:6:2]  # 步长：每隔 2 个字符取一个，得到 'pto'"
   common_mistakes:
   - 误以为切片 text[a:b] 会包含下标 b 对应的字符
   - 误以为str.replace 会原地修改原字符串并返回 None

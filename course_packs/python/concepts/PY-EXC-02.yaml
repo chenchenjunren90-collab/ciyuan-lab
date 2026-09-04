@@ -21,8 +21,10 @@ lesson:
   - 自定义异常类通常继承 Exception
   - raise 主动抛出异常实例
   - 抛出的自定义异常可被 except 捕获
+  - 异常继承：自定义异常类通过继承 Exception 获得统一的捕获与传播语义
   examples:
   - 'class MyError(Exception): pass'
+  - 'class ScoreError(ValueError): pass  # 异常继承：自定义异常继承内置异常'
   common_mistakes:
   - 误以为自定义异常必须直接继承 BaseException，不能继承 Exception
   - 误以为捕获自定义异常后无需保留导致失败的输入或上下文

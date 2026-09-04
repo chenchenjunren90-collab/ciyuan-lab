@@ -23,6 +23,8 @@ lesson:
   - '* 也用于把可迭代对象解包为独立实参'
   examples:
   - 'def f(*args): return sum(args)'
+  - 'def f(**kwargs): return kwargs  # **kwargs 把关键字实参打包为字典'
+  - '# 参数解包：def add(a, b): return a + b; add(*[1, 2]) 把列表展开为两个实参'
   common_mistakes:
   - 误以为*args 是列表，**kwargs 的键可以不是字符串
   - 误以为可变默认参数会在每次函数调用时重新创建

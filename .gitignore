@@ -33,3 +33,7 @@ Thumbs.db
 logs/
 tmp/
 *.log
+
+# Local handoff and submission packaging
+AI-HANDOFF.md
+_submit_staging/

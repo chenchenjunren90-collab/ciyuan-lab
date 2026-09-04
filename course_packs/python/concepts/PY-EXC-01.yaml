@@ -26,6 +26,8 @@ lesson:
   - '代码示例：try: value = int(text)
 
     except ValueError: value = None'
+  - "try: int('x')\nexcept ValueError: pass  # 异常类型：ValueError 表示值转换失败"
+  - "try: f.read()\nfinally: f.close()  # finally 无论异常与否都执行清理"
   common_mistakes:
   - 误以为except Exception 能捕获包括 KeyboardInterrupt 在内的所有 BaseException
   - 误以为finally 只在没有异常时执行，出现异常后会被跳过

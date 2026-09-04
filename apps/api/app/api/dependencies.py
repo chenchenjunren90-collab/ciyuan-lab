@@ -11,6 +11,7 @@ from app.modules.learning_flow import LearningFlowService
 from app.modules.learning_flow.diagnostics import DiagnosticService
 from app.modules.model_adapters.factory import (
     build_model_adapter,
+    build_python_tutor_model_adapter,
 )
 from app.modules.model_adapters.limited import ConcurrencyLimitedModelAdapter
 from app.modules.model_adapters.ports import ModelAdapter
@@ -58,6 +59,18 @@ def get_model_adapter() -> ModelAdapter:
 
 
 @lru_cache
+def get_python_tutor_model_adapter() -> ModelAdapter:
+    """Dedicated route for the reviewed Python SFT/LoRA model when enabled."""
+
+    settings = get_settings()
+    return ConcurrencyLimitedModelAdapter(
+        build_python_tutor_model_adapter(settings),
+        max_concurrency=settings.model_max_concurrency,
+        queue_timeout_seconds=settings.model_queue_timeout_seconds,
+    )
+
+
+@lru_cache
 def get_rag_qa_service() -> RagQaService:
     settings = get_settings()
     retriever: KnowledgeRetriever
@@ -71,7 +84,10 @@ def get_rag_qa_service() -> RagQaService:
         retriever = LexicalKnowledgeRetriever.from_repository(get_course_repository())
     return RagQaService(
         retriever,
-        CourseTutor(get_model_adapter()),
+        CourseTutor(
+            get_model_adapter(),
+            python_model_adapter=get_python_tutor_model_adapter(),
+        ),
         QualitySupervisor(get_model_adapter()),
         top_k=settings.rag_top_k,
     )
@@ -106,7 +122,10 @@ def get_classroom_dialogue_service() -> ClassroomDialogueService:
             timeout_seconds=settings.python_online_search_timeout_seconds,
             max_pages=settings.python_online_search_max_pages,
         ),
-        tutor=CourseTutor(get_model_adapter()),
+        tutor=CourseTutor(
+            get_model_adapter(),
+            python_model_adapter=get_python_tutor_model_adapter(),
+        ),
         supervisor=QualitySupervisor(get_model_adapter()),
         top_k=settings.rag_top_k,
     )

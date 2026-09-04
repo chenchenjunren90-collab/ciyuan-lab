@@ -23,6 +23,9 @@ lesson:
   - \n、\t 等转义字符表示特殊字符
   examples:
   - 代码示例：text='data' 时 text[1] 为 'a'、len(text) 为 4；尝试 text[0]='D' 会抛出 TypeError。
+  - "text = 'python'  # 字符串：用引号包裹的字符序列"
+  - "print('第一行')  # 转义：转义字符用反斜杠开头表示换行、制表等特殊字符"
+  - "'ab' * 3  # 重复：* 把字符串重复 3 次得到 'ababab'"
   common_mistakes:
   - 误以为字符串可以通过 text[0]='A' 原地修改字符
   - 误以为len(text) 始终等于 UTF-8 编码后的字节数

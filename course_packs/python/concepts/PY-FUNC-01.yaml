@@ -24,6 +24,8 @@ lesson:
   - 函数应职责单一、输入输出明确，并尽量把文件和网络副作用留在边界层。
   examples:
   - '代码示例：def add(a: int, b: int) -> int: return a + b'
+  - 'def double(n): return n * 2  # 返回值：return 把计算结果交给调用方'
+  - 'def add(a, b): return a + b  # 参数：a、b 接收调用传入的输入'
   common_mistakes:
   - 误以为函数体在执行 def 时立即运行一次
   - 误以为函数没有显式 return 时会返回空字符串

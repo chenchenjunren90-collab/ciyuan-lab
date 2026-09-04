@@ -24,6 +24,9 @@ lesson:
   - 课程中的财经字段只提供脱敏业务语义，评分仍以解析、校验、测试和代码结构为核心。
   examples:
   - 示例：把空字符串收入标为 missing，把负成本记录为 invalid，并输出对应行号。
+  - 缺失值：clean = [v for v in vals if v is not None]  # 过滤缺失值
+  - 异常值：valid = [v for v in vals if 0 <= v <= 100]  # 过滤异常值
+  - 去重：list(dict.fromkeys(items))  # 保序去重
   common_mistakes:
   - 误以为清洗缺失值时统一替换为 0 不会改变任何统计含义
   - 误以为删除重复记录只需比较单个字段，不需要先定义业务唯一键

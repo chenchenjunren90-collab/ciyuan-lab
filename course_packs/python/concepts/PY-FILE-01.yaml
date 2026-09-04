@@ -24,6 +24,7 @@ lesson:
   - w 会覆盖原文件，a 在末尾追加
   examples:
   - f = open("data.txt", "r", encoding="utf-8")
+  - 'f = open("data.txt", "w", encoding="utf-8")  # 读写模式：w 覆盖，a 追加'
   common_mistakes:
   - 误以为以 w 模式打开已有文件会在原内容末尾继续追加
   - 误以为读取文本时无需指定编码，因为所有平台默认编码相同

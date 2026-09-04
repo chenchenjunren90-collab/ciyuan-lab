@@ -25,6 +25,8 @@ lesson:
   - 使用 type 和 isinstance 观察类型，但程序接口更应通过行为和测试表达约束。
   examples:
   - 代码示例：age_text = '20'; age = int(age_text); is_adult = age >= 18
+  - 'pi = 3.14  # float：浮点数，用于表示带小数的数值'
+  - 'flag = True  # bool：布尔类型只有 True 与 False 两个值'
   common_mistakes:
   - 误以为变量保存的是不可改变的固定类型存储槽，重新赋值不能绑定其他类型对象
   - 误以为is 与 == 始终等价，都只比较两个对象的值

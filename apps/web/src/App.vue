@@ -95,6 +95,7 @@ const qaLoading = ref(false);
 const answer = ref("");
 const code = ref("");
 const submission = ref<SubmissionResult | null>(null);
+const submitting = ref(false);
 const scenario = ref<ScenarioContext | null>(null);
 const generatedProject = ref<GeneratedScenarioProject | null>(null);
 const projectGoal = ref("希望重点练习数据解析、异常处理、模块化设计和自动化测试");
@@ -105,6 +106,7 @@ const projectSummary = ref("");
 const projectRepository = ref("");
 const projectTests = ref("");
 const projectSubmission = ref<ProjectSubmissionResponse | null>(null);
+const projectSubmitting = ref(false);
 const knowledgeQuery = ref("");
 const activityFilter = ref<ActivityFilter>("all");
 const activitySort = ref<ActivitySort>("recommended");
@@ -129,6 +131,7 @@ let assessmentWarningReturnFocus: HTMLElement | null = null;
 const pendingLearningTab = ref<"classroom" | "practice" | "projects">("classroom");
 const classroomFocusMode = ref(false);
 const savedProjectIds = ref<string[]>([]);
+const workedExampleExpanded = ref(false);
 
 const greeting = computed(() => {
   const hour = new Date().getHours();
@@ -210,6 +213,19 @@ watch(uiPreferences, (value) => {
   applyUiPreferences(document.documentElement, value, systemPrefersDark.value);
 }, { deep: true, immediate: true });
 
+const viewportIsMobile = ref(window.innerWidth < 768);
+function syncViewport(): void {
+  viewportIsMobile.value = window.innerWidth < 768;
+}
+const resolvedDevice = computed(() => (
+  uiPreferences.deviceMode === "auto"
+    ? (viewportIsMobile.value ? "mobile" : "desktop")
+    : uiPreferences.deviceMode
+));
+watch(resolvedDevice, (value) => {
+  document.documentElement.dataset.deviceResolved = value;
+}, { immediate: true });
+
 watch(displayName, (value) => {
   const normalized = value.trim() || "新同学";
   localStorage.setItem(DISPLAY_NAME_KEY, normalized);
@@ -217,6 +233,12 @@ watch(displayName, (value) => {
     account.id === studentId.value ? { ...account, displayName: normalized } : account
   ));
   saveLocalAccounts(localStorage, localAccounts.value);
+});
+
+let noticeTimer: ReturnType<typeof setTimeout> | undefined;
+watch(notice, (value) => {
+  if (noticeTimer) clearTimeout(noticeTimer);
+  if (value) noticeTimer = setTimeout(() => { notice.value = ""; }, 5000);
 });
 
 const selectedCourse = computed(() => courses.value.find((item) => item.id === courseId.value));
@@ -678,9 +700,14 @@ async function submitAdaptiveProblem(): Promise<void> {
 }
 
 async function ask(): Promise<void> {
-  if (!question.value.trim()) return;
+  const trimmed = question.value.trim();
+  if (!trimmed) return;
+  if (trimmed.length < 2) {
+    notice.value = "问题太短，请补充一点描述后再提问。";
+    return;
+  }
   qaLoading.value = true; qa.value = null;
-  try { qa.value = await api.ask(studentId.value, courseId.value, question.value.trim()) }
+  try { qa.value = await api.ask(studentId.value, courseId.value, trimmed) }
   catch (error) { fail(error) } finally { qaLoading.value = false }
 }
 
@@ -760,22 +787,35 @@ async function requestHint(): Promise<void> {
 }
 
 async function submitProject(): Promise<void> {
-  if (!activity.value || activity.value.type !== "project") return;
+  if (!activity.value || activity.value.type !== "project" || projectSubmitting.value) return;
+  if (projectSummary.value.trim().length < 30) {
+    notice.value = "实现与验证说明至少需要 30 个字，请补充后再提交。";
+    return;
+  }
+  projectSubmitting.value = true;
   try {
     projectSubmission.value = await api.submitProject(
       studentId.value, courseId.value, activity.value.id,
       {
         artifact_summary: projectSummary.value,
         ...(projectRepository.value.trim() ? { repository_url: projectRepository.value.trim() } : {}),
-        test_evidence: projectTests.value.split("\n").map((item) => item.trim()).filter(Boolean)
+        test_evidence: projectTests.value.split("\n").map((item) => item.trim()).filter(Boolean).slice(0, 20)
       }
     );
     notice.value = "项目证据已记录，质量检查结果已显示在下方。";
-  } catch (error) { fail(error) }
+  } catch (error) { fail(error) } finally { projectSubmitting.value = false }
 }
 
 async function generatePersonalizedProject(): Promise<void> {
-  if (!activity.value || activity.value.type !== "project" || !projectGoal.value.trim()) return;
+  if (!activity.value || activity.value.type !== "project") return;
+  if (!projectGoal.value.trim()) {
+    notice.value = "请先填写你希望重点提升的目标。";
+    return;
+  }
+  if (projectGoal.value.trim().length < 5) {
+    notice.value = "目标描述太短，请写清楚希望重点提升什么（至少 5 个字）。";
+    return;
+  }
   const supportedDifficulty = ["beginner", "intermediate", "advanced"] as const;
   const requestedDifficulty = supportedDifficulty.includes(activity.value.difficulty as typeof supportedDifficulty[number])
     ? activity.value.difficulty as typeof supportedDifficulty[number]
@@ -797,19 +837,29 @@ async function generatePersonalizedProject(): Promise<void> {
 }
 
 async function submit(): Promise<void> {
-  if (!activity.value) return;
+  if (!activity.value || submitting.value) return;
   const isCode = activity.value.type === "code" || activity.value.type === "debug";
+  if (isCode && !code.value.trim()) {
+    notice.value = "请先编写代码再提交验证。";
+    return;
+  }
+  if (!isCode && !answer.value.trim()) {
+    notice.value = "请先输入你的回答再提交。";
+    return;
+  }
+  submitting.value = true;
   try {
     submission.value = await api.submit(studentId.value, courseId.value, activity.value.id,
       isCode ? { language: activity.value.evaluation.runtime?.language, source_code: code.value } : { response: answer.value });
     profile.value = { student_id: studentId.value, course_id: courseId.value, mastery: submission.value.mastery_updated };
     next.value = submission.value.next_activity;
     notice.value = submission.value.verification?.accepted ? "验证通过，学习画像已更新。" : "已返回可操作的验证反馈，请继续修改。";
-  } catch (error) { fail(error) }
+  } catch (error) { fail(error) } finally { submitting.value = false }
 }
 
 onMounted(async () => {
   systemThemeQuery.addEventListener("change", syncSystemTheme);
+  window.addEventListener("resize", syncViewport);
   try {
     await fetchApiHealth(); connection.value = "online";
     courses.value = await api.courses(); await loadCourse(courseId.value);
@@ -817,15 +867,20 @@ onMounted(async () => {
   finally { loading.value = false }
 });
 
-onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemTheme));
+onBeforeUnmount(() => {
+  systemThemeQuery.removeEventListener("change", syncSystemTheme);
+  window.removeEventListener("resize", syncViewport);
+});
 </script>
 
 <template>
   <WelcomeExperience
     v-if="welcomeOpen"
     :display-name="displayName"
+    :device-mode="uiPreferences.deviceMode"
     @start="finishWelcome"
     @settings="settingsOpen = true"
+    @update-device="updateUiPreferences({ deviceMode: $event })"
   />
   <SettingsPanel
     :open="settingsOpen"
@@ -841,7 +896,7 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
     @replay="replayWelcome"
     @reset="resetUiPreferences"
   />
-  <div v-if="!welcomeOpen" class="app-shell" :class="{ 'classroom-focus': classroomFocusMode }">
+  <div v-if="!welcomeOpen" class="app-shell" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
     <aside v-if="!classroomFocusMode" class="sidebar">
       <div class="brand"><span>&lt;/&gt;</span><div><strong>词元研究所</strong></div></div>
       <nav class="course-nav">
@@ -852,7 +907,6 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
         </button>
       </nav>
       <div class="sidebar-progress"><div><span>课程进度</span><strong>{{ masteredCount }}/{{ knowledge.length }}</strong></div><i><span :style="{ width: `${knowledge.length ? masteredCount / knowledge.length * 100 : 0}%` }"></span></i><small>由测评、练习和代码验证持续更新</small></div>
-      <div class="school-note"><b>AI + 经管实践</b><p>计算机课程是核心，财经场景仅进入课后综合项目。</p></div>
       <div class="connection" :data-state="connection"><i></i> API {{ connection === "online" ? "服务正常" : connection === "offline" ? "未连接" : "连接中" }}</div>
     </aside>
 
@@ -936,7 +990,7 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
             <section class="lesson-concepts"><b>本节点包含 {{ selectedKnowledge.concepts.length }} 项细分技能</b><div><span v-for="concept in selectedKnowledge.concepts" :key="concept">{{ concept }}</span></div></section>
             <div><article><b>学习目标</b><ul><li v-for="item in selectedKnowledge.learning_objectives" :key="item">{{ item }}</li></ul></article><article><b>关键要点</b><ul><li v-for="item in selectedKnowledge.lesson.key_points" :key="item">{{ item }}</li></ul></article><article><b>常见误区</b><ul><li v-for="item in selectedKnowledge.lesson.common_mistakes" :key="item">{{ item }}</li></ul></article></div>
             <section v-if="selectedKnowledge.lesson.learning_sequence?.length" class="lesson-sequence"><b>建议学习顺序</b><ol><li v-for="step in selectedKnowledge.lesson.learning_sequence" :key="step.title"><strong>{{ step.title }}</strong><span>{{ step.content }}</span></li></ol></section>
-            <section v-if="selectedKnowledge.lesson.worked_example" class="worked-example"><header><b>分步例题</b><span>{{ selectedKnowledge.lesson.worked_example.problem }}</span></header><ol><li v-for="step in selectedKnowledge.lesson.worked_example.steps" :key="step">{{ step }}</li></ol><pre><code>{{ selectedKnowledge.lesson.worked_example.code }}</code></pre><p>{{ selectedKnowledge.lesson.worked_example.reflection }}</p></section>
+            <section v-if="selectedKnowledge.lesson.worked_example" class="worked-example" :class="{ expanded: workedExampleExpanded }"><header><b>分步例题</b><span>{{ selectedKnowledge.lesson.worked_example.problem }}</span></header><ol><li v-for="step in selectedKnowledge.lesson.worked_example.steps" :key="step">{{ step }}</li></ol><div class="code-heading"><b>示例代码</b><button class="code-expand" @click="workedExampleExpanded = !workedExampleExpanded">{{ workedExampleExpanded ? "收起" : "展开" }}</button></div><pre><code>{{ selectedKnowledge.lesson.worked_example.code }}</code></pre><p>{{ selectedKnowledge.lesson.worked_example.reflection }}</p></section>
             <section v-if="selectedKnowledge.lesson.checkpoint" class="lesson-checkpoint"><b>立即检验</b><p>{{ selectedKnowledge.lesson.checkpoint.prompt }}</p><small>{{ selectedKnowledge.lesson.checkpoint.guidance }}</small></section>
             <section v-if="selectedHomework" class="lesson-homework-link"><div><b>与本节匹配的课后练习</b><h4>{{ selectedHomework.title }}</h4><span>{{ selectedHomework.estimated_minutes }} 分钟 · {{ difficulty(selectedHomework.difficulty) }} · 含公开样例与隐藏测试</span></div><button class="primary" @click="openActivity(selectedHomework.id)">去完成本节作业 <b>→</b></button></section>
           </section>
@@ -958,7 +1012,7 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
         <section class="tutor-layout">
           <div class="panel tutor"><header><div><h2>有依据的课程辅导</h2></div><p>回答必须来自已审核课程资料；依据不足时明确拒答。</p></header>
             <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qa.status === "answered" ? "已通过质量监督" : "依据不足" }}</b><p>{{ qa.answer || "当前资料不足以支持这个问题，我不会编造答案。" }}</p><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_id }} · {{ Math.round(citation.score * 100) }}%</span></div><ol class="trace"><li v-for="step in qa.trace" :key="`${step.component}-${step.status}`" :data-status="step.status"><b>{{ step.component }}</b><span>{{ step.detail }}</span></li></ol></article></div>
-            <div class="composer"><textarea v-model="question" rows="3"></textarea><button class="primary" :disabled="qaLoading" @click="ask">{{ qaLoading ? "检索中…" : "发送问题" }}</button></div>
+            <div class="composer"><textarea v-model="question" rows="3" maxlength="1000"></textarea><button class="primary" :disabled="qaLoading" @click="ask">{{ qaLoading ? "检索中…" : "发送问题" }}</button></div>
           </div>
             <aside class="agent-stack"><div class="agent-title"><b>智能体协作状态</b></div><article><em>01</em><div><strong>学情规划智能体</strong><p>选择合法的下一活动</p></div><i>待命</i></article><article class="active"><em>02</em><div><strong>课程辅导智能体</strong><p>根据课程资料组织讲解</p></div><i>工作中</i></article><article><em>03</em><div><strong>质量监督智能体</strong><p>检查引用、安全与事实</p></div><i>监督中</i></article></aside>
         </section>
@@ -993,8 +1047,8 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
           <div class="project-brief"><section><b>你要完成</b><ol><li v-for="item in activity.requirements" :key="item">{{ item }}</li></ol></section><section><b>提交成果</b><ul><li v-for="item in activity.deliverables" :key="item">{{ item }}</li></ul></section></div>
           <section class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
           <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>不包含真实个人或业务数据</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span v-for="source in scenario.source_refs" :key="source">{{ source }}</span><small>{{ scenario.notice }}</small></footer></section>
-          <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>AI 生成内容</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
-          <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" @click="submitProject">记录项目证据</button></section>
+          <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3" maxlength="500"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>AI 生成内容</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
+          <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
           <div v-if="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? '✓' : '!' }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
         </section>
       </template>
@@ -1028,15 +1082,15 @@ onBeforeUnmount(() => systemThemeQuery.removeEventListener("change", syncSystemT
           <div class="panel activity-workspace"><template v-if="activity"><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
             <section v-if="activity.learning_stage === 'after_class'" class="beginner-task-brief"><header><div><small>本节知识 → 课后迁移</small><h3>先读懂任务，再开始写代码</h3></div><b>中文初学者版</b></header><div class="task-io"><article><span>输入是什么</span><p>{{ activity.input_format }}</p></article><article><span>需要输出</span><p>{{ activity.output_format }}</p></article></div><div v-if="activity.public_examples.length" class="task-examples"><b>先看一个公开样例</b><article v-for="(example, index) in activity.public_examples" :key="index"><div><code>输入\n{{ example.input }}</code><code>输出\n{{ example.expected_output }}</code></div><p>{{ example.explanation }}</p></article></div><ul class="task-constraints"><li v-for="item in activity.constraints" :key="item">{{ item }}</li></ul></section>
             <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>经管背景只服务课程综合实践</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span v-for="source in scenario.source_refs" :key="source">{{ source }}</span><small>{{ scenario.notice }}</small></footer></section>
-            <section v-if="activity.type === 'project'" class="project-generator"><header><div><h3>按当前能力生成综合项目</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? "生成中…" : "生成我的项目" }}</button>
+            <section v-if="activity.type === 'project'" class="project-generator"><header><div><h3>按当前能力生成综合项目</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3" maxlength="500"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? "生成中…" : "生成我的项目" }}</button>
               <article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? "固定安全版本" : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>AI生成内容</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div><div class="dataset-preview"><strong>固定合成数据 · {{ generatedProject.dataset.filename }}</strong><div><table><thead><tr><th v-for="column in generatedProject.dataset.columns" :key="column">{{ column }}</th></tr></thead><tbody><tr v-for="(row, index) in generatedProject.dataset.rows" :key="index"><td v-for="column in generatedProject.dataset.columns" :key="column">{{ row[column] ?? "—" }}</td></tr></tbody></table></div><small>SHA-256：{{ generatedProject.dataset.sha256 }}</small></div><footer><span v-for="source in generatedProject.source_refs" :key="source">{{ source }}</span><small>{{ generatedProject.ai_generated_notice }}</small></footer></article>
             </section>
             <section v-if="activity.type === 'project'" class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
             <div v-if="activity.evaluation.options" class="options"><label v-for="option in activity.evaluation.options" :key="option.id" :class="{ selected: answer === option.id }"><input v-model="answer" type="radio" :value="option.id" /><b>{{ option.id }}</b><span>{{ option.text }}</span></label></div>
             <div v-else-if="activity.type === 'code' || activity.type === 'debug'" class="editor"><header><i></i><i></i><i></i><b>{{ activity.evaluation.runtime?.language }} · 隔离运行环境</b></header><textarea v-model="code" spellcheck="false"></textarea></div>
             <section v-if="activity.learning_stage === 'after_class' && activity.scaffolding.length" class="local-scaffolding"><header><div><b>卡住时再看提示</b><span>提示逐级展开，不直接给完整答案</span></div><button @click="revealNextScaffold" :disabled="practiceScaffoldLevel >= activity.scaffolding.length">{{ practiceScaffoldLevel ? '再看一步' : '看第一步' }}</button></header><ol v-if="practiceScaffoldLevel"><li v-for="(step, index) in activity.scaffolding.slice(0, practiceScaffoldLevel)" :key="step"><em>{{ index + 1 }}</em><span>{{ step }}</span></li></ol></section>
-            <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" @click="submitProject">记录项目证据</button></section>
-            <textarea v-else v-model="answer" class="answer-box" rows="7" placeholder="输入你的回答…"></textarea><button v-if="activity.type !== 'project'" class="primary" @click="submit">提交并验证</button>
+            <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
+            <textarea v-else v-model="answer" class="answer-box" rows="7" placeholder="输入你的回答…"></textarea><button v-if="activity.type !== 'project'" class="primary" :disabled="submitting" @click="submit">{{ submitting ? "验证中…" : "提交并验证" }}</button>
             <section class="hint-box"><button @click="requestHint">{{ hint ? `继续提示（${hintLevel}/3）` : "获取分层提示" }}</button><p v-if="hint"><b>第 {{ hint.level }} 层提示</b>{{ hint.hint }}</p></section>
             <div v-if="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><strong>{{ submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
             <section v-if="submission && activity.reflection_prompt" class="practice-reflection"><b>提交后复盘</b><p>{{ activity.reflection_prompt }}</p><span>先用一句话说明本次错误或通过的关键原因，再进入下一题。</span></section>

@@ -25,6 +25,9 @@ lesson:
   - round() 对精确的中间值采用“最接近且偶数优先”的规则；二进制浮点表示还可能影响直觉结果
   examples:
   - 代码示例：int('42') 得到整数 42，str(3.5) 得到字符串 '3.5'；int('3.5') 会抛出 ValueError。
+  - 类型转换：int('42') + 1  # 类型转换把字符串变成整数
+  - len：len([1, 2, 3])  # len 返回元素个数
+  - type：type(3.14)  # type 返回对象类型
   common_mistakes:
   - 误以为int('3.5') 会自动先转成浮点数再得到整数 3
   - 误以为input 会根据输入内容自动返回 int 或 float

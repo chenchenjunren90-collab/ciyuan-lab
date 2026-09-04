@@ -35,7 +35,6 @@ describe("UI preferences", () => {
     const preferences = {
       ...DEFAULT_UI_PREFERENCES,
       theme: "dark" as const,
-      accent: "teal" as const,
       reducedMotion: true,
       highContrast: true,
     };
@@ -43,16 +42,30 @@ describe("UI preferences", () => {
     expect(loadUiPreferences(storage)).toEqual(preferences);
   });
 
+  it("ignores the retired accent setting from older browsers", () => {
+    const storage = memoryStorage({
+      [UI_PREFERENCES_KEY]: JSON.stringify({
+        ...DEFAULT_UI_PREFERENCES,
+        accent: "blue",
+        deviceMode: "desktop",
+      }),
+    });
+    expect(loadUiPreferences(storage)).toEqual({
+      ...DEFAULT_UI_PREFERENCES,
+      deviceMode: "desktop",
+    });
+  });
+
   it("resolves the system theme and applies root data attributes", () => {
     expect(resolveTheme("system", true)).toBe("dark");
-    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
-    applyUiPreferences(root, { ...DEFAULT_UI_PREFERENCES, accent: "blue" }, false);
+    const root = { dataset: { accent: "blue" }, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, DEFAULT_UI_PREFERENCES, false);
     expect(root.dataset).toMatchObject({
       theme: "light",
-      accent: "blue",
       motion: "full",
       contrast: "standard",
     });
+    expect(root.dataset.accent).toBeUndefined();
   });
 
   it("creates one stable anonymous learner identity per browser", () => {

@@ -1,9 +1,9 @@
 export type ThemeMode = "light" | "dark" | "system";
-export type AccentTone = "crimson" | "blue" | "teal" | "violet";
+export type DeviceMode = "auto" | "mobile" | "desktop";
 
 export interface UiPreferences {
   theme: ThemeMode;
-  accent: AccentTone;
+  deviceMode: DeviceMode;
   reducedMotion: boolean;
   highContrast: boolean;
   welcomeOnLaunch: boolean;
@@ -29,14 +29,14 @@ export const LOCAL_ACCOUNTS_KEY = "ciyuan-local-accounts-v1";
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
   theme: "system",
-  accent: "crimson",
+  deviceMode: "auto",
   reducedMotion: false,
   highContrast: false,
   welcomeOnLaunch: false,
 };
 
 const THEMES: ThemeMode[] = ["light", "dark", "system"];
-const ACCENTS: AccentTone[] = ["crimson", "blue", "teal", "violet"];
+const DEVICE_MODES: DeviceMode[] = ["auto", "mobile", "desktop"];
 
 export function loadUiPreferences(storage: KeyValueStorage): UiPreferences {
   try {
@@ -47,9 +47,9 @@ export function loadUiPreferences(storage: KeyValueStorage): UiPreferences {
       theme: THEMES.includes(candidate.theme as ThemeMode)
         ? candidate.theme as ThemeMode
         : DEFAULT_UI_PREFERENCES.theme,
-      accent: ACCENTS.includes(candidate.accent as AccentTone)
-        ? candidate.accent as AccentTone
-        : DEFAULT_UI_PREFERENCES.accent,
+      deviceMode: DEVICE_MODES.includes(candidate.deviceMode as DeviceMode)
+        ? candidate.deviceMode as DeviceMode
+        : DEFAULT_UI_PREFERENCES.deviceMode,
       reducedMotion: candidate.reducedMotion === true,
       highContrast: candidate.highContrast === true,
       welcomeOnLaunch: candidate.welcomeOnLaunch === true,
@@ -74,7 +74,8 @@ export function applyUiPreferences(
   prefersDark: boolean,
 ): void {
   root.dataset.theme = resolveTheme(preferences.theme, prefersDark);
-  root.dataset.accent = preferences.accent;
+  delete root.dataset.accent;
+  root.dataset.device = preferences.deviceMode;
   root.dataset.motion = preferences.reducedMotion ? "reduced" : "full";
   root.dataset.contrast = preferences.highContrast ? "high" : "standard";
   root.style.colorScheme = root.dataset.theme;

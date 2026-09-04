@@ -25,6 +25,10 @@ lesson:
   - replace() 替换子串，返回新字符串
   examples:
   - 代码示例：price=12.3；f'{price:.2f}' 得到 '12.30'，格式说明只影响生成的字符串，不改变 price。
+  - "'  hi  '.strip()  # 字符串方法：strip() 去除首尾空白"
+  - "'a,b'.split(',')  # split：按分隔符拆成 ['a', 'b']"
+  - "','.join(['a', 'b'])  # join：用逗号合并序列得到 'a,b'"
+  - '# f-string: print(f"{x}")'
   common_mistakes:
   - 误以为f-string 会自动把任何数值按两位小数显示
   - 误以为format 的字段顺序可以随意改变而不影响位置参数绑定

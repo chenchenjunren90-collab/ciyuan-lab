@@ -16,7 +16,8 @@ class XfyunMaaSAdapter(ModelAdapter):
     MaaS inference services use the same bearer-token, chat-completions request
     and response shape. Composition keeps retries, error mapping and secret
     handling in one implementation while exposing the actual provider name.
-    No ``lora_id`` header is sent because this project does not use fine-tuning.
+    A configured ``lora_id`` is transmitted only for a reviewed MaaS LoRA route;
+    the default general-model route remains header-free.
     """
 
     def __init__(
@@ -25,16 +26,19 @@ class XfyunMaaSAdapter(ModelAdapter):
         base_url: str,
         api_key: str,
         model: str,
+        lora_id: str = "",
         timeout_seconds: float = 30.0,
         max_retries: int = 2,
         client: httpx.AsyncClient | None = None,
     ) -> None:
+        normalized_lora_id = lora_id.strip()
         self._delegate = XfyunSparkAdapter(
             base_url=base_url,
             api_password=api_key,
             model=model,
             timeout_seconds=timeout_seconds,
             max_retries=max_retries,
+            extra_headers={"lora_id": normalized_lora_id} if normalized_lora_id else None,
             client=client,
         )
 

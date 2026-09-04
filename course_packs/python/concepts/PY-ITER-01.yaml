@@ -26,6 +26,9 @@ lesson:
   - 生成器按需惰性产出值，节省内存
   examples:
   - "def gen():\n    yield 1\n    yield 2"
+  - '# 迭代器：it = iter([1, 2]) 获取可迭代对象的迭代器'
+  - 'it = iter([1, 2])  # iter 获取迭代器'
+  - 'next(it)  # next 逐个取出元素，耗尽抛出 StopIteration'
   common_mistakes:
   - 误以为迭代器可以在耗尽后自动回到开头重复使用
   - 误以为生成器创建时会立即执行完整函数体并保存所有结果

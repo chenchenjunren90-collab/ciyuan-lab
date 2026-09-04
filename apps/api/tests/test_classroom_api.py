@@ -132,7 +132,7 @@ def test_adaptive_session_repairs_prerequisite_gap_and_uses_real_code_tasks() ->
     lesson = asyncio.run(
         service.next_session(
             student_id=profile.student_id,
-            daily_minutes=25,
+            daily_minutes=45,
             preferred_mode="step_by_step",
         )
     )
@@ -185,7 +185,7 @@ def test_zero_basis_self_report_overrides_guessed_diagnostic_mastery() -> None:
 
     lesson = asyncio.run(service.next_session(
         student_id=profile.student_id,
-        daily_minutes=25,
+        daily_minutes=45,
         preferred_mode="step_by_step",
         self_profile_level="newcomer",
     ))
@@ -193,6 +193,55 @@ def test_zero_basis_self_report_overrides_guessed_diagnostic_mastery() -> None:
     assert lesson.knowledge_point_ids == ["PY-BASE-01", "PY-BASE-02"]
     assert "零基础" in lesson.planning_reason
     assert "不会因猜对而跳级" in lesson.planning_reason
+
+
+def test_adaptive_session_scales_content_with_daily_budget() -> None:
+    profile = LearnerProfile(
+        student_id="tier-student",
+        course_id="python",
+        mastery=[
+            MasteryState(knowledge_point_id="PY-BASE-01", score=0.8, evidence_count=2),
+            MasteryState(knowledge_point_id="PY-BASE-02", score=0.8, evidence_count=2),
+        ],
+    )
+    service = ClassroomLessonService(
+        CoursePackRepository(),
+        learning_context=_AdaptiveLearningContext(
+            profile,
+            PlannedActivity(
+                activity_id="PY-BASE-03-Q1",
+                activity_type="objective",
+                reason="按薄弱点继续推进",
+            ),
+        ),
+    )
+
+    light = asyncio.run(service.next_session(
+        student_id=profile.student_id,
+        daily_minutes=20,
+        preferred_mode="step_by_step",
+    ))
+    assert len(light.knowledge_point_ids) == 1
+    assert len(light.beats) == 6
+    assert "轻量课堂" in light.subtitle
+
+    standard = asyncio.run(service.next_session(
+        student_id=profile.student_id,
+        daily_minutes=45,
+        preferred_mode="step_by_step",
+    ))
+    assert len(standard.knowledge_point_ids) == 2
+    assert len(standard.beats) == 8
+    assert "标准课堂" in standard.subtitle
+
+    deep = asyncio.run(service.next_session(
+        student_id=profile.student_id,
+        daily_minutes=120,
+        preferred_mode="step_by_step",
+    ))
+    assert len(deep.knowledge_point_ids) == 3
+    assert len(deep.beats) == 10
+    assert "深度课堂" in deep.subtitle
 
 
 def test_classroom_dialogue_uses_persona_and_traceable_python_evidence() -> None:

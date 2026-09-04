@@ -36,7 +36,7 @@ class RagQaService:
                     )
                 ],
             )
-        draft = await self._tutor.draft(question=question, evidence=hits)
+        draft = await self._tutor.draft(question=question, evidence=hits, course_id=course_id)
         decision = await self._supervisor.review(
             draft=draft,
             evidence=hits,

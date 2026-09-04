@@ -24,6 +24,8 @@ lesson:
   - 遍历 items 可同时获得键和值，插入顺序不等于业务排序规则。
   examples:
   - 代码示例：counts = {}; counts[word] = counts.get(word, 0) + 1
+  - "键值对：student = {'name': 'Alice', 'age': 18}  # 每个元素是一个键值对"
+  - "键唯一：d = {'a': 1}; d['a'] = 2  # 键唯一，重复赋值覆盖旧值"
   common_mistakes:
   - 误以为字典允许把列表直接作为键，因为列表内容可以比较
   - 误以为访问不存在的键时 dict[key] 与 dict.get(key) 都返回 None

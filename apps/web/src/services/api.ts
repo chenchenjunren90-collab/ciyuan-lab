@@ -232,8 +232,17 @@ async function request<T>(
     if (!response.ok) {
       let message = `请求失败（${response.status}）`;
       try {
-        const payload = (await response.json()) as { detail?: string };
-        if (payload.detail) message = payload.detail;
+        const payload = (await response.json()) as { detail?: unknown };
+        if (typeof payload.detail === "string") {
+          message = payload.detail;
+        } else if (
+          Array.isArray(payload.detail) && payload.detail.length
+          && typeof payload.detail[0] === "object" && payload.detail[0] !== null
+          && "msg" in payload.detail[0]
+          && typeof (payload.detail[0] as { msg: unknown }).msg === "string"
+        ) {
+          message = `参数不合法：${(payload.detail[0] as { msg: string }).msg}`;
+        }
       } catch { /* Keep a stable message for non-JSON failures. */ }
       throw new ApiError(response.status, message);
     }

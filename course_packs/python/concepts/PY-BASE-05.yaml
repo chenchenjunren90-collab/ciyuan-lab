@@ -22,8 +22,12 @@ lesson:
   - if、elif、else 按顺序选择第一条为真的路径，缩进定义分支代码块。
   - 区间判断可以使用链式比较，边界上的等号必须与题目契约一致。
   - 复杂条件优先拆成有含义的布尔变量，避免重复计算和难以测试的长表达式。
+  - 布尔表达式：由比较或逻辑运算组成、结果为 True 或 False 的表达式，是 if/elif 的判断条件
   examples:
   - 代码示例：label = 'positive' if x > 0 else ('zero' if x == 0 else 'negative')
+  - "if x > 0:\n    sign = 1\nelif x < 0:\n    sign = -1\nelse:\n    sign = 0  # elif：if 不成立时继续判断下一个条件"
+  - "if score >= 60:\n    if score >= 85:\n        grade = 'A'  # 嵌套：if 内部再写 if 构成嵌套判断"
+  - 'is_adult = age >= 18  # 布尔表达式：比较运算的结果是 True 或 False'
   common_mistakes:
   - 误以为嵌套 if 的 else 会自动与缩进距离最近但不一定同层的 if 配对
   - 误以为多层条件可以忽略互斥边界，因为 Python 会消除重叠分支

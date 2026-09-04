@@ -22,8 +22,14 @@ class TutorDraft:
 class CourseTutor:
     """Turns retrieved facts into a concise answer; it cannot create citations."""
 
-    def __init__(self, model_adapter: ModelAdapter) -> None:
+    def __init__(
+        self,
+        model_adapter: ModelAdapter,
+        *,
+        python_model_adapter: ModelAdapter | None = None,
+    ) -> None:
         self._model_adapter = model_adapter
+        self._python_model_adapter = python_model_adapter or model_adapter
 
     async def draft(
         self,
@@ -31,6 +37,7 @@ class CourseTutor:
         question: str,
         evidence: Sequence[SearchHit],
         system_prompt: str | None = None,
+        course_id: str | None = None,
     ) -> TutorDraft:
         if not evidence:
             return TutorDraft(answer="", citation_chunk_ids=(), degraded=True)
@@ -40,7 +47,7 @@ class CourseTutor:
             system_prompt=system_prompt,
         )
         try:
-            response = await self._model_adapter.complete(messages)
+            response = await self._adapter_for(course_id).complete(messages)
         except ModelError:
             return self._fallback(evidence)
         if response.provider == "mock":
@@ -71,7 +78,7 @@ class CourseTutor:
             ),
         )
         try:
-            repaired_response = await self._model_adapter.complete(repair_messages)
+            repaired_response = await self._adapter_for(course_id).complete(repair_messages)
         except ModelError:
             return self._fallback(evidence)
         if repaired_response.provider == "mock":
@@ -81,6 +88,11 @@ class CourseTutor:
             allowed_chunk_ids={hit.chunk_id for hit in evidence},
         )
         return repaired if repaired is not None else self._fallback(evidence)
+
+    def _adapter_for(self, course_id: str | None) -> ModelAdapter:
+        """Route only the reviewed Python course to its optional LoRA model."""
+
+        return self._python_model_adapter if course_id == "python" else self._model_adapter
 
     @staticmethod
     def _messages(

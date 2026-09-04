@@ -307,7 +307,7 @@ def test_diagnostic_hides_answers_and_server_grades_submission(
     assert len(store.events) == 12
     assert payload["profile"]["mastery"]
     assert payload["analysis"]["course_core_nodes"] == 40
-    assert payload["analysis"]["course_skill_atoms"] == 162
+    assert payload["analysis"]["course_skill_atoms"] == 158
     assert payload["analysis"]["assessed_skill_atoms"] > 0
     assert payload["analysis"]["evidence_scope"] == "knowledge_point_proxy"
 

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -56,6 +56,7 @@ class XfyunSparkAdapter(ModelAdapter):
         model: str,
         timeout_seconds: float = 30.0,
         max_retries: int = 2,
+        extra_headers: Mapping[str, str] | None = None,
         client: httpx.AsyncClient | None = None,
     ) -> None:
         normalized_base_url = base_url.strip().rstrip("/")
@@ -80,12 +81,31 @@ class XfyunSparkAdapter(ModelAdapter):
             raise ModelConfigurationError("timeout_seconds must be greater than zero")
         if max_retries < 0:
             raise ModelConfigurationError("max_retries must not be negative")
+        normalized_headers: dict[str, str] = {}
+        for name, value in (extra_headers or {}).items():
+            normalized_name = name.strip()
+            normalized_value = value.strip()
+            if (
+                not normalized_name
+                or not normalized_value
+                or "\r" in normalized_name
+                or "\n" in normalized_name
+                or "\r" in normalized_value
+                or "\n" in normalized_value
+            ):
+                raise ModelConfigurationError(
+                    "extra model headers must be non-empty single-line values"
+                )
+            if normalized_name.lower() in {"authorization", "content-type"}:
+                raise ModelConfigurationError("extra model headers cannot override authentication")
+            normalized_headers[normalized_name] = normalized_value
 
         self._base_url = normalized_base_url
         self._token = token
         self._model = model.strip()
         self._timeout_seconds = timeout_seconds
         self._max_retries = int(max_retries)
+        self._extra_headers = normalized_headers
         self._client = client
 
     async def complete(self, messages: Sequence[ChatMessage]) -> ModelResponse:
@@ -97,6 +117,7 @@ class XfyunSparkAdapter(ModelAdapter):
         headers = {
             "Authorization": f"Bearer {self._token}",
             "Content-Type": "application/json",
+            **self._extra_headers,
         }
 
         attempts = self._max_retries + 1

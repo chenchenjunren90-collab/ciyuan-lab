@@ -85,6 +85,32 @@ def test_tutor_accepts_only_structured_model_output(
     assert QualitySupervisor().inspect(draft=draft, evidence=evidence).accepted is True
 
 
+def test_tutor_routes_only_python_course_to_the_optional_lora_adapter(
+    evidence: tuple[SearchHit, ...],
+) -> None:
+    general = FixedAdapter(
+        '{"answer":"通用模型回答。",'
+        '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
+    )
+    python_tutor = FixedAdapter(
+        '{"answer":"Python 垂类模型回答。",'
+        '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
+    )
+    tutor = CourseTutor(general, python_model_adapter=python_tutor)
+
+    python_draft = asyncio.run(
+        tutor.draft(question="如何处理缺失值？", evidence=evidence, course_id="python")
+    )
+    other_draft = asyncio.run(
+        tutor.draft(question="如何处理缺失值？", evidence=evidence, course_id="c")
+    )
+
+    assert python_draft.answer == "Python 垂类模型回答。"
+    assert other_draft.answer == "通用模型回答。"
+    assert python_tutor.calls == 1
+    assert general.calls == 1
+
+
 def test_tutor_accepts_one_complete_json_markdown_fence(
     evidence: tuple[SearchHit, ...],
 ) -> None:
@@ -99,6 +125,38 @@ def test_tutor_accepts_one_complete_json_markdown_fence(
 
     assert draft.degraded is False
     assert draft.citation_chunk_ids == (evidence[0].chunk_id,)
+
+
+def test_tutor_accepts_json_after_an_empty_qwen_thinking_marker(
+    evidence: tuple[SearchHit, ...],
+) -> None:
+    tutor = CourseTutor(
+        FixedAdapter(
+            '<think>\n\n</think>\n\n{"answer":"先确认字段约定，再标记缺失。",'
+            '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
+        )
+    )
+
+    draft = asyncio.run(tutor.draft(question="如何处理缺失值？", evidence=evidence))
+
+    assert draft.degraded is False
+    assert draft.citation_chunk_ids == (evidence[0].chunk_id,)
+
+
+def test_tutor_rejects_nonempty_thinking_before_json(
+    evidence: tuple[SearchHit, ...],
+) -> None:
+    tutor = CourseTutor(
+        FixedAdapter(
+            '<think>此处内容不应由解析器静默丢弃。</think>'
+            '{"answer":"先确认字段约定，再标记缺失。",'
+            '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
+        )
+    )
+
+    draft = asyncio.run(tutor.draft(question="如何处理缺失值？", evidence=evidence))
+
+    assert draft.degraded is True
 
 
 def test_tutor_repairs_invalid_maas_format_once(

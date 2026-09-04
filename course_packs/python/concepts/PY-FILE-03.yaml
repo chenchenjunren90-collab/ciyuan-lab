@@ -25,6 +25,7 @@ lesson:
   - csv 模块正确处理逗号、引号等分隔细节
   examples:
   - csv.DictReader(f) 读取带表头的 CSV
+  - 'csv.writer(f).writerow(["name", "score"])  # writer 写入一行字段'
   common_mistakes:
   - 误以为CSV 字段可以始终用逗号 split，引用字段和换行不会造成差异
   - 误以为csv.reader 会自动把数字字段转换为 int 或 float

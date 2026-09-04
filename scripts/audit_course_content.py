@@ -105,6 +105,118 @@ def repeated_lesson_items(concepts: list[dict[str, Any]]) -> tuple[str, ...]:
     return tuple(repeated)
 
 
+# --- 声明-覆盖一致性审计 -----------------------------------------------------
+# 每个知识点的 ``concepts`` 是“声明层”，lesson 内容是“落实层”。把“覆盖”拆成三档：
+#   ① 声明：出现在 concepts 列表；
+#   ② 术语锚定：概念词出现在讲解正文（summary/key_points/示例/例题/学习序列）；
+#   ③ 具体实例化：概念词出现在“具体”内容（示例/例题/学习序列），或命中下面登记的
+#      字面量/调用形态。
+# 只查“数量”（≥1 个示例、≥3 个关键点）会漏过“目标列了 int/float/str/bool、正文却只
+# 具体讲了 int”这类缺口。
+_CONCEPT_CODE_PATTERNS: dict[str, tuple[str, ...]] = {
+    "int": (r"\b\d+\b", r"\bint\s*\("),
+    "float": (r"\b\d+\.\d+\b", r"\bfloat\s*\("),
+    "str": (r"""["'][^"']*["']""", r"\bstr\s*\("),
+    "bool": (r"\b(?:True|False)\b", r"\bbool\s*\("),
+    "list": (r"\[[^\]]*\]", r"\blist\s*\("),
+    "dict": (r"\{[^}]*:[^}]*\}", r"\bdict\s*\("),
+    "set": (r"\bset\s*\(",),
+    "tuple": (r"\btuple\s*\(",),
+    "range": (r"\brange\s*\(",),
+    "len": (r"\blen\s*\(",),
+    "type": (r"\btype\s*\(",),
+    "isinstance": (r"\bisinstance\s*\(",),
+    "input": (r"\binput\s*\(",),
+    "print": (r"\bprint\s*\(",),
+    "open": (r"\bopen\s*\(",),
+    "for": (r"\bfor\b",),
+    "while": (r"\bwhile\b",),
+    "if": (r"\bif\b",),
+    "def": (r"\bdef\b",),
+    "return": (r"\breturn\b",),
+}
+
+
+def _text_from(lesson: dict[str, Any], field: str) -> str:
+    value = lesson.get(field)
+    if isinstance(value, str):
+        return value
+    if isinstance(value, list):
+        return "\n".join(str(item) for item in value if isinstance(item, str))
+    return ""
+
+
+def _worked_example_text(value: object) -> str:
+    if not isinstance(value, dict):
+        return ""
+    parts = [
+        str(value.get(key))
+        for key in ("problem", "code", "reflection")
+        if isinstance(value.get(key), str)
+    ]
+    steps = value.get("steps")
+    if isinstance(steps, list):
+        parts.extend(str(step) for step in steps if isinstance(step, str))
+    return "\n".join(parts)
+
+
+def _learning_sequence_text(value: object) -> str:
+    if not isinstance(value, list):
+        return ""
+    parts: list[str] = []
+    for step in value:
+        if isinstance(step, dict):
+            parts.extend(
+                str(step.get(key))
+                for key in ("title", "content")
+                if isinstance(step.get(key), str)
+            )
+    return "\n".join(parts)
+
+
+def _matches_code_pattern(term: str, text: str) -> bool:
+    patterns = _CONCEPT_CODE_PATTERNS.get(term)
+    if not patterns:
+        return False
+    return any(re.search(pattern, text) for pattern in patterns)
+
+
+def _concept_coverage_gaps(concept: dict[str, Any]) -> list[str]:
+    declared = string_list(concept.get("concepts"))
+    if not declared:
+        return []
+    lesson_value = concept.get("lesson")
+    lesson = cast(dict[str, Any], lesson_value) if isinstance(lesson_value, dict) else {}
+    # “具体”内容只取示例与例题：学习序列里的“先建立直觉”等步骤通常只是复述摘要，
+    # 若把它们也算作实例化，就会把“只被点名”的概念误判为“已具体讲解”。
+    concrete_text = "\n".join(
+        (
+            _text_from(lesson, "examples"),
+            _worked_example_text(lesson.get("worked_example")),
+        )
+    )
+    all_text = "\n".join(
+        (
+            _text_from(lesson, "summary"),
+            _text_from(lesson, "key_points"),
+            concrete_text,
+            _learning_sequence_text(lesson.get("learning_sequence")),
+        )
+    )
+    all_folded = all_text.casefold()
+    concrete_folded = concrete_text.casefold()
+    gaps: list[str] = []
+    for term in declared:
+        folded = term.casefold()
+        anchored = folded in all_folded
+        instantiated = folded in concrete_folded or _matches_code_pattern(term, concrete_text)
+        if not anchored:
+            gaps.append(f"概念“{term}”未在讲解正文中出现")
+        elif not instantiated:
+            gaps.append(f"概念“{term}”仅被提及、未在示例或例题中具体实例化")
+    return gaps
+
+
 def audit_concept(
     concept: dict[str, Any], repeated_texts: set[str], source_status: dict[str, tuple[str, bool]]
 ) -> ConceptGap:
@@ -146,6 +258,8 @@ def audit_concept(
         gaps.append(f"包含模板化重复条目 {len(repeated)} 条")
     if concept.get("status") != "reviewed":
         gaps.append("知识点尚未人工审核")
+
+    gaps.extend(_concept_coverage_gaps(concept))
 
     return ConceptGap(
         concept_id=str(concept.get("id", "UNKNOWN")),

@@ -21,8 +21,12 @@ lesson:
   - while 先判断条件，条件为假时循环体一次也不执行
   - 常用计数器变量在循环体内递增，直至条件不成立
   - 条件始终为真且无终止路径会导致死循环
+  - 循环条件：while 后紧跟的布尔表达式，为假时循环终止
   examples:
   - "i = 0\nwhile i < 5:\n    print(i)\n    i += 1"
+  - "i = 0\nwhile i < 3:\n    print(i)\n    i += 1  # 计数器：i 每次加一，控制循环次数"
+  - "while True:\n    pass  # 死循环：条件恒为 True 且没有 break 终止"
+  - "count = 0\nwhile count < 5:  # 循环条件：count < 5 为真时继续\n    count += 1"
   common_mistakes:
   - 误以为while 条件在循环体执行后才判断，因此循环至少执行一次
   - 误以为循环体修改任意变量就足以保证 while 最终终止

@@ -23,6 +23,9 @@ lesson:
   - 可读性优先，复杂逻辑仍建议用普通循环
   examples:
   - '[x * x for x in nums if x > 0]'
+  - '# 列表推导式：[x * x for x in nums] 用一行生成新列表'
+  - '# 条件过滤：[x for x in nums if x > 0] 只保留满足 if 条件的元素'
+  - '# 简洁语法：[x * 2 for x in nums] 用简洁语法替代多行循环'
   common_mistakes:
   - 误以为列表推导式的过滤条件写在表达式之前
   - 误以为嵌套列表推导式中交换两个 for 的顺序不会改变结果顺序或含义

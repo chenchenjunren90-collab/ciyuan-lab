@@ -21,8 +21,12 @@ lesson:
   - 入门阶段通常直接由 Python 解释器运行 .py 文件；CPython 执行时会先编译为字节码，因此不能简单理解为“完全不编译”
   - print() 将内容输出到标准输出
   - 源文件以 UTF-8 编码保存，扩展名为 .py
+  - 运行方式：既可用 python 脚本.py 直接运行源文件，也可在交互式解释器中逐行执行
   examples:
   - print("Hello, world!")
+  - 'import sys; sys.executable  # 解释器：返回当前 Python 解释器的可执行文件路径'
+  - 'path = "hello.py"  # 源文件：以 UTF-8 编码保存、扩展名为 .py 的文本'
+  - '# 运行方式：在终端执行 python hello.py 运行源文件'
   common_mistakes:
   - 误以为Python 源文件必须先手工编译成机器码才能由解释器执行
   - 误以为交互式环境执行成功就能证明脚本在干净环境中也拥有相同依赖

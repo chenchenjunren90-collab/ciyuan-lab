@@ -25,6 +25,8 @@ lesson:
   - 二分查找必须维护半开或闭区间不变量，并明确重复元素时返回哪一个位置。
   examples:
   - '代码示例：ordered = sorted(records, key=lambda item: (item[''score''], item[''id'']))'
+  - 'nums = [3, 1, 2]; nums.sort()  # 排序：list.sort 原地修改列表'
+  - 'nums = [1, 2, 3]; i = nums.index(2)  # 线性查找：从头逐个比较元素直到命中'
   common_mistakes:
   - 误以为只看代码行数就能确定时间复杂度，无需定义输入规模
   - 误以为两个同为 O(n) 的程序在所有数据规模上运行时间都相同

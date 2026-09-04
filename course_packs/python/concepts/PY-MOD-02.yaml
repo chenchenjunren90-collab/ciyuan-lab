@@ -24,6 +24,8 @@ lesson:
   - datetime 处理日期时间对象
   examples:
   - random.randint(1, 10)
+  - "import math  # math：math.sqrt(16) 返回 4.0"
+  - "import datetime  # datetime：datetime.date.today() 返回今天日期"
   common_mistakes:
   - 误以为random 模块生成的伪随机值适合直接用于密码和令牌
   - 误以为标准库函数的参数、返回值和异常在所有 Python 版本中都不会变化

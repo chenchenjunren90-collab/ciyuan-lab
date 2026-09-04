@@ -24,8 +24,11 @@ lesson:
   - break 立即终止整个循环
   - continue 跳过本次迭代，继续下一次
   - 循环的 else 子句在没有被 break 中断时执行
+  - continue 与 break 共同构成循环控制：continue 跳过本轮，break 终止整个循环
   examples:
   - "for i in range(10):\n    if i == 3:\n        break"
+  - "for i in range(5):\n    if i == 2:\n        continue\n    print(i)"
+  - "for i in range(3):\n    if i == 2:\n        break  # 循环控制：break 提前终止整个循环"
   common_mistakes:
   - 误以为循环 else 在循环执行过至少一次时运行，与 break 无关
   - 误以为continue 会跳过本轮后自动终止整个循环

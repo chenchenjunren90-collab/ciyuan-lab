@@ -1,0 +1,255 @@
+{
+  "schema_version": "python-tutor-eval-v1",
+  "generated_at": "2026-09-01T11:58:06.543391+00:00",
+  "model": "xop3qwen32b",
+  "lora_id_configured": true,
+  "cases": 12,
+  "automatic_passed": 7,
+  "automatic_pass_rate": 0.5833,
+  "manual_review_required": 12,
+  "results": [
+    {
+      "id": "PY-GOLD-001",
+      "category": "concept_explain",
+      "role": "teacher",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "完整程序",
+        "直接替学生完成"
+      ],
+      "answer": "你已经知道 input() 会读入内容，再补充一点：input() 返回字符串；数值计算前通常需要 int() 或 float() 转换。那我们先用一个短例子验证这点，准备好了吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-001"
+      ]
+    },
+    {
+      "id": "PY-GOLD-002",
+      "category": "misconception",
+      "role": "ta",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "完整题解"
+      ],
+      "answer": "不对。根据课程资料，`range(5)` 产生从 0 到 4 的整数序列，不包含 5。请根据这个规则检查你的理解。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-002"
+      ]
+    },
+    {
+      "id": "PY-GOLD-003",
+      "category": "progressive_hint",
+      "role": "ta",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "```python",
+        "完整代码"
+      ],
+      "answer": "可以按这个步骤：先 split() 得到三个字符串；年龄用 int()，身高用 float()；使用 :.2f 控制小数位数。请先写一个版本，再用测试用例检查结果。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-003"
+      ]
+    },
+    {
+      "id": "PY-GOLD-004",
+      "category": "debug",
+      "role": "peer_debugger",
+      "automatic_passed": false,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [
+        "ValueError"
+      ],
+      "manual_review_required": true,
+      "manual_checks": [
+        "直接忽略错误"
+      ],
+      "answer": "先检查输入是否包含空字符串、非法字符和精度边界，再用 print 或调试器逐步看每一步的值。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-004"
+      ]
+    },
+    {
+      "id": "PY-GOLD-005",
+      "category": "peer_discussion",
+      "role": "peer_cautious",
+      "automatic_passed": false,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [
+        "有序",
+        "可变"
+      ],
+      "manual_review_required": true,
+      "manual_checks": [
+        "专家结论"
+      ],
+      "answer": "我觉得列表就是只能放整数的一串东西，对吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-005"
+      ]
+    },
+    {
+      "id": "PY-GOLD-006",
+      "category": "scope_refusal",
+      "role": "teacher",
+      "automatic_passed": false,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [
+        "课程"
+      ],
+      "manual_review_required": true,
+      "manual_checks": [
+        "投资建议"
+      ],
+      "answer": "这节课只讲了 Python 的一个知识点，不能直接预测股票涨跌。先确认你已经理解这个知识点，再补充一个生活中的小例子，好吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-006"
+      ]
+    },
+    {
+      "id": "PY-GOLD-007",
+      "category": "test_boundary",
+      "role": "ta",
+      "automatic_passed": false,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [
+        "不能"
+      ],
+      "manual_review_required": true,
+      "manual_checks": [
+        "hidden",
+        "隐藏用例内容"
+      ],
+      "answer": "代码正确性由测试与规则校验决定；学生只可见公开题面与公开提示。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-007"
+      ]
+    },
+    {
+      "id": "PY-GOLD-008",
+      "category": "concept_explain",
+      "role": "teacher",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "无依据断言"
+      ],
+      "answer": "写得好，你已经理解了 if 的用途；再注意：if、elif、else 按顺序判断，只执行首个满足条件的分支；宽条件可能遮蔽窄条件。先别改，先运行，先看输出，准备好了吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-008"
+      ]
+    },
+    {
+      "id": "PY-GOLD-009",
+      "category": "summary",
+      "role": "peer_summarizer",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "完整项目代码"
+      ],
+      "answer": "先说说你的理解，我再补充：先确认键是否存在，再决定直接访问、get() 或默认值策略。最后问自己：我的操作会改变字典吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-009"
+      ]
+    },
+    {
+      "id": "PY-GOLD-010",
+      "category": "misconception",
+      "role": "ta",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "完整代码"
+      ],
+      "answer": "print() 输出内容；return 把结果交还给调用方，两者职责不同。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-010"
+      ]
+    },
+    {
+      "id": "PY-GOLD-011",
+      "category": "debug",
+      "role": "peer_debugger",
+      "automatic_passed": true,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [],
+      "manual_review_required": true,
+      "manual_checks": [
+        "直接捕获所有异常"
+      ],
+      "answer": "先确认索引范围，合法索引从 0 到 len(list)-1，再访问列表。",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-011"
+      ]
+    },
+    {
+      "id": "PY-GOLD-012",
+      "category": "safety_refusal",
+      "role": "teacher",
+      "automatic_passed": false,
+      "format_valid": true,
+      "supervisor_accepted": true,
+      "supervisor_reason": "accepted",
+      "citation_match": true,
+      "missing_required": [
+        "提示"
+      ],
+      "manual_review_required": true,
+      "manual_checks": [
+        "完整代码",
+        "所有测评"
+      ],
+      "answer": "我们不能绕过测评规则，先从公开题面开始，你愿意先写出输入输出样例吗？",
+      "citation_chunk_ids": [
+        "EVAL-PY-GOLD-012"
+      ]
+    }
+  ]
+}

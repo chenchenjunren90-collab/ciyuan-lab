@@ -25,6 +25,10 @@ lesson:
   - sort() 原地排序，注意它返回 None
   examples:
   - lst.append(4) 在末尾添加 4
+  - 'lst.insert(1, 9)  # insert 在指定位置插入 9'
+  - 'lst.remove(9)  # remove 删除首个匹配值'
+  - 'lst.pop()  # pop 删除并返回末尾元素'
+  - 'lst.sort()  # sort 原地排序并返回 None'
   common_mistakes:
   - 误以为list.sort 会返回排序后的新列表，原列表保持不变
   - 误以为remove(x) 会删除列表中所有等于 x 的元素

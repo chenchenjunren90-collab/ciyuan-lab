@@ -659,7 +659,7 @@ class ClassroomLessonService:
                 self._courses,
                 adaptive_ids,
                 planning_reason="恢复上次保存的个性化课堂",
-                daily_minutes=30,
+                daily_minutes={1: 30, 2: 45, 3: 90}.get(len(adaptive_ids), 45),
                 preferred_mode="step_by_step",
                 profile=None,
             )
@@ -689,6 +689,7 @@ class ClassroomLessonService:
             profile,
             planned,
             self_profile_level=self_profile_level,
+            point_count=_adaptive_point_count(daily_minutes),
         )
         planning_reason = planned.reason
         if self_profile_level == "newcomer":
@@ -868,6 +869,7 @@ class ClassroomDialogueService:
         draft = await self._tutor.draft(
             question=model_question,
             evidence=hits,
+            course_id="python",
             system_prompt=(
                 _ROLE_PROMPTS[request.role]
                 + scope_instruction
@@ -1042,6 +1044,7 @@ class ClassroomDialogueService:
                     "短测只补充断层证据；若学生明确表示零基础，不得因短测猜对而跳级。"
                 ),
                 evidence=hits,
+                course_id="python",
                 system_prompt=(
                     _ROLE_PROMPTS["ta"]
                     + "面向编程基础较弱的学生，先肯定已有经验，再指出一个最合适的起点；"
@@ -1533,7 +1536,9 @@ def _fit_role_answer(role: ClassroomRole, answer: str) -> str:
 
 
 def _citation_from_hit(hit: SearchHit) -> Citation:
-    source_type = "online" if hit.metadata.get("source_type") == "online" else "course"
+    source_type: Literal["course", "online"] = (
+        "online" if hit.metadata.get("source_type") == "online" else "course"
+    )
     title = hit.metadata.get("title")
     url = hit.metadata.get("url")
     safe_url = (
@@ -1855,17 +1860,32 @@ def _prerequisite_gaps(
     return sorted(set(gaps), key=order.index)
 
 
+def _adaptive_point_count(daily_minutes: int) -> int:
+    """Map the daily budget to the number of knowledge points in one session.
+
+    20-35 分钟安排 1 个知识点（轻量），36-70 分钟安排 2 个（标准），
+    71-120 分钟安排 3 个（深度），保证内容量与时间预算匹配。
+    """
+
+    if daily_minutes <= 35:
+        return 1
+    if daily_minutes >= 71:
+        return 3
+    return 2
+
+
 def _select_adaptive_knowledge_points(
     courses: CoursePackRepository,
     profile: LearnerProfile,
     planned: PlannedActivity,
     *,
     self_profile_level: SelfProfileLevel | None = None,
+    point_count: int = 2,
 ) -> tuple[str, ...]:
     if self_profile_level == "newcomer":
         # Explicit zero-basis self-report outweighs a short objective sample:
         # guessed answers must never skip the learner over the true starting point.
-        return ("PY-BASE-01", "PY-BASE-02")
+        return ("PY-BASE-01", "PY-BASE-02", "PY-BASE-03")[:point_count]
     mastered = _mastered_ids(profile)
     score_by_id = {item.knowledge_point_id: item.score for item in profile.mastery}
     planned_id = _planned_knowledge_point_id(courses, planned)
@@ -1879,19 +1899,14 @@ def _select_adaptive_knowledge_points(
     priority = [*gaps, *(item for item in [planned_id] if item), *stage_ids]
     priority = [item for item in dict.fromkeys(priority) if item in stage_ids]
     unmastered = [item for item in priority if item not in mastered]
-    selected = unmastered[:2]
-    if not selected:
-        selected = sorted(
-            stage_ids,
+    selected = unmastered[:point_count]
+    if len(selected) < point_count:
+        remaining = [item for item in stage_ids if item not in selected]
+        remaining = sorted(
+            remaining,
             key=lambda item: (score_by_id.get(item, 1.0), stage_ids.index(item)),
-        )[:2]
-    elif len(selected) == 1:
-        companion = next(
-            (item for item in stage_ids if item != selected[0] and item not in mastered),
-            None,
         )
-        companion = companion or next(item for item in stage_ids if item != selected[0])
-        selected.append(companion)
+        selected.extend(remaining[: point_count - len(selected)])
     return tuple(selected)
 
 
@@ -2017,6 +2032,18 @@ def _build_adaptive_lesson(
     details = [courses.get_knowledge_point("python", item) for item in knowledge_point_ids]
     stage_index, stage_id, stage_title, stage_outcome, _ = _stage_for(knowledge_point_ids[0])
     focus_atoms = [atom for detail in details for atom in detail.concepts[:2]][:4]
+    detail_titles = [detail.title for detail in details]
+    if len(detail_titles) == 1:
+        focus_message = (
+            f"今天不照固定章节顺序走。助教根据已有证据选择了“{detail_titles[0]}”。"
+            "我每讲一小步都会停下来，最后用真实代码验证。"
+        )
+    else:
+        focus_message = (
+            "今天不照固定章节顺序走。助教根据已有证据选择了"
+            f"“{'”“'.join(detail_titles[:-1])}”和“{detail_titles[-1]}”。"
+            "我每讲一小步都会停下来，最后用真实代码验证。"
+        )
     beats = [
         ClassroomBeat(
             id="adaptive-welcome",
@@ -2024,10 +2051,7 @@ def _build_adaptive_lesson(
             speaker="teacher",
             eyebrow=f"个性化课堂 · 第 {stage_index} 阶段",
             title=f"从你的当前缺口出发：{details[0].title}",
-            message=(
-                f"今天不照固定章节顺序走。助教根据已有证据选择了“{details[0].title}”"
-                f"和“{details[1].title}”。我每讲一小步都会停下来，最后用真实代码验证。"
-            ),
+            message=focus_message,
             board_title="本次学习目标",
             board_explanation=planning_reason,
             board_points=[item for detail in details for item in detail.learning_objectives][:4],
@@ -2206,11 +2230,12 @@ def _build_adaptive_lesson(
         "example_first": "例题先行",
         "practice_first": "先练后讲",
     }[preferred_mode]
+    tier_label = {1: "轻量课堂", 2: "标准课堂", 3: "深度课堂"}.get(len(details), "标准课堂")
     return ClassroomLesson(
         lesson_id=_ADAPTIVE_LESSON_PREFIX + "--".join(knowledge_point_ids),
         course_id="python",
-        title=f"{details[0].title} × {details[1].title}",
-        subtitle=f"{mode_label} · 每天 {daily_minutes} 分钟 · 根据画像动态组合",
+        title=" × ".join(detail_titles),
+        subtitle=f"{mode_label} · {tier_label} · 每天 {daily_minutes} 分钟 · 根据画像动态组合",
         duration_minutes=daily_minutes,
         knowledge_point_ids=list(knowledge_point_ids),
         unlock_title=f"完成重测后继续第 {stage_index} 阶段，或进入已解锁项目",

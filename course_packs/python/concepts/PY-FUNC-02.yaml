@@ -24,6 +24,10 @@ lesson:
   examples:
   - '代码示例：def append_item(item, items=None): items = [] if items is None else items; items.append(item);
     return items'
+  - '# 位置参数：按顺序绑定；def add(a, b): return a + b'
+  - '# 关键字参数：按名称绑定；def greet(name): return "hi " + name; greet(name="Ada")'
+  - '# 默认值：在定义时求值；def price(amount, discount=0.1): return amount * (1 - discount)'
+  - '# 多返回值：本质是返回元组；def divmod2(a, b): return a // b, a % b'
   common_mistakes:
   - 误以为位置参数可以无条件写在关键字参数之后
   - 误以为返回多个值会创建多个独立返回通道，而不是一个元组对象

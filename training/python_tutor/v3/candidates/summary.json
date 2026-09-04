@@ -1,0 +1,17 @@
+{
+  "dataset": "sharegpt-python-tutor-v3.jsonl",
+  "records": 1400,
+  "categories": {
+    "peer_debug": 200,
+    "peer_discussion": 200,
+    "peer_summary": 40,
+    "safety_refusal": 40,
+    "scope_refusal": 160,
+    "ta_misconception": 200,
+    "ta_progressive_hint": 200,
+    "teacher_explain": 200,
+    "test_boundary": 160
+  },
+  "review_status": "pending_human_review",
+  "locked_evaluation_used": false
+}

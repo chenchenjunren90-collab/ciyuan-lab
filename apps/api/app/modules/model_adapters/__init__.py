@@ -9,6 +9,7 @@ from app.modules.model_adapters.errors import (
 )
 from app.modules.model_adapters.factory import (
     build_model_adapter,
+    build_python_tutor_model_adapter,
     build_tuoling_scenario_adapter,
 )
 from app.modules.model_adapters.limited import ConcurrencyLimitedModelAdapter
@@ -39,5 +40,6 @@ __all__ = [
     "TuolingScenarioRequest",
     "TuolingScenarioResponse",
     "build_model_adapter",
+    "build_python_tutor_model_adapter",
     "build_tuoling_scenario_adapter",
 ]

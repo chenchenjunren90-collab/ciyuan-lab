@@ -23,6 +23,9 @@ lesson:
   - 缺少基线条件会导致无限递归与栈溢出
   examples:
   - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 前置条件：n 为非负整数'
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 基线条件：n == 0 返回 1，不再递归'
+  - 'def fact(n): return 1 if n == 0 else n * fact(n - 1)  # 递归条件：n > 0 时递归调用 fact(n - 1)'
+  - 'fact(5)  # 栈：每次递归调用都向调用栈压入一层栈帧'
   common_mistakes:
   - 误以为递归函数只要调用自己就会自动在合适位置终止
   - 误以为递归与循环必然占用相同的额外空间

@@ -25,6 +25,8 @@ lesson:
   - filter(f, seq) 保留使 f 为真的元素
   examples:
   - 'map(lambda x: x * x, [1, 2, 3])'
+  - 'filter(lambda x: x > 0, [-1, 0, 2])  # filter 保留使函数为真的元素'
+  - '# 高阶函数：sorted(nums, key=abs) 把 abs 作为参数传给 sorted'
   common_mistakes:
   - 误以为lambda 可以包含任意数量的赋值和循环语句
   - 误以为把函数传给 sorted 时 key 函数应返回两个元素的比较结果

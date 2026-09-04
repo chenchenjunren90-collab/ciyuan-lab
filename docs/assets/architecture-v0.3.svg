@@ -166,7 +166,7 @@
   <rect x="82" y="900" width="202" height="146" rx="16" fill="#E8F2FF"/>
   <text x="104" y="933" class="cn layerNo">04</text>
   <text x="183" y="976" class="cn layerTitle center">模型与工具</text>
-  <text x="183" y="1008" class="cn bodySmall center">不做模型微调</text>
+  <text x="183" y="1008" class="cn bodySmall center">Python SFT/LoRA</text>
 
   <rect x="320" y="921" width="328" height="104" rx="14" fill="#F7FAFE" stroke="#9CBCE0" stroke-width="1.5"/>
   <text x="484" y="957" class="cn cardTitle center">讯飞通用大模型</text>

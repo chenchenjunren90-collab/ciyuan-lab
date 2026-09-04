@@ -12,7 +12,6 @@ learning_objectives:
 - 能使用 from...import 导入成员
 concepts:
 - import
-- from import
 - 模块
 - 命名空间
 lesson:
@@ -23,6 +22,8 @@ lesson:
   - 模块拥有独立命名空间，避免命名冲突
   examples:
   - import math
+  - "import math  # 模块：import 导入整个 math 模块"
+  - "import math  # 命名空间：成员需通过 math.sqrt(9) 这样的限定名访问"
   common_mistakes:
   - 误以为import 每出现一次都会无条件重新执行模块顶层代码
   - 误以为from module import * 能稳定导入模块未来版本的全部内部名称

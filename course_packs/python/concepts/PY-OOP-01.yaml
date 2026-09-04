@@ -25,6 +25,8 @@ lesson:
   - 实例属性通过 self.属性 访问和赋值
   examples:
   - "class Student:\n    def __init__(self, name):\n        self.name = name"
+  - "student = Student('小词')  # 对象：类名() 创建实例对象"
+  - "print(student.name)  # 实例属性：self.name 存的值通过 实例.属性 访问"
   common_mistakes:
   - 误以为实例属性必须预先在类体中声明后才能在 __init__ 赋值
   - 误以为所有以双下划线开头和结尾的方法都由 Python 自动实现，无需定义
