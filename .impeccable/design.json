@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-05T09:50:00+08:00",
+  "title": "词元研究所：学习索引设计系统",
+  "extensions": {
+    "northStar": "学习索引 / 可核验学习主机",
+    "visualDirection": "哑光 mainframe 与 instrument panel；中性表面、精确 1px 分隔和高信息密度。",
+    "themes": ["dark", "light", "system"],
+    "deviceModes": ["auto", "mobile", "desktop"],
+    "colorMeta": {
+      "dark": {
+        "ink": "#eff2f3",
+        "muted": "#98a1aa",
+        "line": "#2c333b",
+        "surface": "#0b0d10",
+        "surfaceRaised": "#11151a",
+        "surfaceMuted": "#171c22",
+        "code": "#080b0e"
+      },
+      "light": {
+        "ink": "#172126",
+        "muted": "#606d73",
+        "line": "#cbd4d8",
+        "surface": "#eef2f3",
+        "surfaceRaised": "#f8faf9",
+        "surfaceMuted": "#e5ebed",
+        "code": "#101519"
+      },
+      "ionDark": {
+        "accent": "#34beca",
+        "dark": "#1aa5b0",
+        "bright": "#5be4ea",
+        "soft": "#12383c",
+        "pale": "#0f2528",
+        "ink": "#66eaf0",
+        "contrast": "#061214"
+      },
+      "pulseDark": {
+        "accent": "#e24b5f",
+        "dark": "#ba2c43",
+        "bright": "#ff7283",
+        "soft": "#3a1920",
+        "pale": "#251318",
+        "ink": "#ff8290",
+        "contrast": "#180307"
+      },
+      "solarDark": {
+        "accent": "#e9a83c",
+        "dark": "#bf7a12",
+        "bright": "#ffc966",
+        "soft": "#3b2b12",
+        "pale": "#271d10",
+        "ink": "#ffd37f",
+        "contrast": "#1a1002"
+      },
+      "ionLight": {
+        "accent": "#007f8a",
+        "dark": "#00636c",
+        "bright": "#0aa6b4",
+        "soft": "#dceff1",
+        "pale": "#edf8f8",
+        "ink": "#005b63",
+        "contrast": "#ffffff"
+      },
+      "pulseLight": {
+        "accent": "#c32842",
+        "dark": "#9c1930",
+        "bright": "#df4058",
+        "soft": "#f6e1e5",
+        "pale": "#fbf0f2",
+        "ink": "#8d1429",
+        "contrast": "#ffffff"
+      },
+      "solarLight": {
+        "accent": "#9a5b00",
+        "dark": "#794500",
+        "bright": "#c27a0d",
+        "soft": "#f5e8cf",
+        "pale": "#fbf5e9",
+        "ink": "#704100",
+        "contrast": "#ffffff"
+      },
+      "semantic": {
+        "success": "#54c991",
+        "warning": "#efb44d",
+        "danger": "#f06b72"
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "family": "Bahnschrift, Segoe UI Variable, PingFang SC, Microsoft YaHei, sans-serif",
+        "usage": "任务台标题和主层级标题"
+      },
+      "body": {
+        "family": "Aptos, Segoe UI, PingFang SC, Microsoft YaHei, system-ui, sans-serif",
+        "usage": "正文、任务说明和交互标签"
+      },
+      "data": {
+        "family": "Cascadia Mono, Cascadia Code, Consolas, monospace",
+        "usage": "课程 ID、状态、比例、来源和代码标签"
+      }
+    },
+    "shapeMeta": {
+      "radii": ["6px", "8px", "12px"],
+      "structuralBorder": "1px solid var(--line)",
+      "shadowPolicy": "静态学习表面无阴影；只为主操作、说话者和设置抽屉保留轻量阴影。"
+    },
+    "layoutMeta": {
+      "courseRail": "116px",
+      "taskbar": "106px desktop; 88px compact",
+      "breakpoints": {
+        "deviceAuto": "768px",
+        "shellCollapse": "820px",
+        "compactMobile": "520px"
+      },
+      "responsiveRule": "窄屏重排而不删除课程、来源、验证、主操作或六项功能导航。"
+    },
+    "accessibilityMeta": {
+      "focus": "3px accent ring with 2px offset; high contrast uses 4px.",
+      "highContrast": "加粗交互边界、增强文字与焦点对比。",
+      "reducedMotion": "动画和过渡缩短至 0.01ms，脚本滚动改为 auto。",
+      "settingsAccess": "mobile、desktop 和强制设备模式均保留 UI 设置入口。"
+    },
+    "reliabilityMeta": {
+      "offlineTone": "danger",
+      "unloadedValue": "—",
+      "rule": "服务未连接时明确显示未载入，不把缺失数据伪装成 0。"
+    }
+  },
+  "components": [
+    {
+      "name": "Accent Switch",
+      "kind": "control-group",
+      "description": "Ion 青、Pulse 红、Solar 金三种互斥的全局信号色切换。",
+      "html": "<div role=\"group\"><button aria-pressed=\"true\">青</button></div>",
+      "css": "border:1px solid var(--line);background:var(--accent-pale);"
+    },
+    {
+      "name": "Taskbar",
+      "kind": "header",
+      "description": "显示课程上下文、服务状态、信号色和设置入口的顶部任务栏。",
+      "html": "<header class=\"topbar\"><h1>学习任务台</h1></header>",
+      "css": "min-height:106px;border-bottom:1px solid var(--line);"
+    },
+    {
+      "name": "Course Rail",
+      "kind": "navigation",
+      "description": "116px 深色课程索引，容纳 C、Python、数据结构与服务状态。",
+      "html": "<aside class=\"sidebar\"><nav class=\"course-nav\"></nav></aside>",
+      "css": "width:116px;color:#eff2f3;background:#090c10;"
+    },
+    {
+      "name": "Function Tabs",
+      "kind": "navigation",
+      "description": "学习总览、沉浸课堂、个性路径、课程辅导、练习工坊、项目实战。",
+      "html": "<nav class=\"tabs\"><button aria-current=\"page\">学习总览</button></nav>",
+      "css": "border-bottom:1px solid var(--line);"
+    },
+    {
+      "name": "Instrument Panel",
+      "kind": "container",
+      "description": "承载高密度学习内容和证据的中性面板。",
+      "html": "<section class=\"panel\"></section>",
+      "css": "border:1px solid var(--line);border-radius:12px;box-shadow:none;"
+    },
+    {
+      "name": "Primary Action",
+      "kind": "button",
+      "description": "当前最重要的学习操作，使用唯一激活的信号色。",
+      "html": "<button class=\"primary\">继续学习</button>",
+      "css": "color:var(--accent-contrast);background:var(--accent);"
+    },
+    {
+      "name": "Settings Drawer",
+      "kind": "dialog",
+      "description": "主题、信号色、设备模式和无障碍偏好的右侧抽屉。",
+      "html": "<aside class=\"settings-panel\" role=\"dialog\"></aside>",
+      "css": "width:min(520px,100%);border-left:1px solid var(--line);"
+    },
+    {
+      "name": "Classroom Surface",
+      "kind": "learning-surface",
+      "description": "讲解、对话、资料、测评和代码验证共用的中性课堂表面。",
+      "html": "<section class=\"immersive-lesson\"></section>",
+      "css": "color:var(--ink);background:var(--surface-raised);"
+    },
+    {
+      "name": "Service State",
+      "kind": "status",
+      "description": "使用 danger 语义说明服务未连接，并提供重新载入操作。",
+      "html": "<section class=\"service-state\" role=\"alert\"></section>",
+      "css": "border-color:var(--danger);background:var(--surface-raised);"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "description": "中性表面的紧凑字段，聚焦时使用当前信号色。",
+      "html": "<input aria-label=\"搜索知识节点\">",
+      "css": "border:1px solid var(--line);background:var(--surface-muted);"
+    }
+  ],
+  "narrative": {
+    "northStar": "学习索引 / 可核验学习主机",
+    "overview": "界面以课程索引、任务栏和六项功能导航组织原产品的完整学习密度。",
+    "principles": [
+      "中性表面承载内容，信号色只标记动作与激活状态。",
+      "Ion、Pulse、Solar 一次只激活一套，并真正作用于全局界面。",
+      "success、warning、danger 保持独立事实语义，不随信号色重映射。",
+      "响应式只重排和压缩 chrome，不删除核心学习功能。",
+      "来源、证据和确定性验证优先于装饰性科技效果。",
+      "服务离线时使用 danger，并以破折号表示未载入数值。"
+    ],
+    "donts": [
+      "不要恢复固定红框或单一红色主题。",
+      "不要用多层阴影、霓虹光晕或装饰仪表制造虚假层级。",
+      "不要把未载入数据呈现为真实的 0。",
+      "不要在窄屏隐藏设置入口或六项顶层学习导航。"
+    ]
+  }
+}
