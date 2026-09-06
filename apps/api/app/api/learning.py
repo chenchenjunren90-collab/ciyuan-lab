@@ -77,7 +77,8 @@ class DiagnosticSubmissionRequest(StrictModel):
     student_id: str = Field(min_length=1, max_length=128)
     course_id: CourseId
     phase: DiagnosticPhase
-    answers: list[DiagnosticAnswer] = Field(min_length=1, max_length=12)
+    # Python 阶段重测题集为 13 题（初始诊断 12 题），上限取两者的最大值。
+    answers: list[DiagnosticAnswer] = Field(min_length=1, max_length=13)
 
 
 class DiagnosticItemResult(StrictModel):
