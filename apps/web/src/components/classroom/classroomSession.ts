@@ -2,6 +2,7 @@ import type {
   ClassroomBeat,
   ClassroomCheckpointResult,
   ClassroomDialogueResponse,
+  ClassroomLesson,
   ClassroomRole,
   DiagnosticSubmissionResult,
   SubmissionResult,
@@ -38,6 +39,8 @@ export interface ClassroomSessionDraft {
     checkpointResult: ClassroomCheckpointResult | null;
   }>;
   messages: PersistedClassroomMessage[];
+  dialogueText?: string;
+  dialogueRole?: ClassroomRole;
   practiceCode: string;
   homeworkCode: string;
   practiceResult: SubmissionResult | null;
@@ -52,6 +55,7 @@ export interface ClassroomSessionDraft {
   assessmentResultVisible: boolean;
   retakeActive: boolean;
   learningPlan: ClassroomDialogueResponse | null;
+  plannedLesson?: ClassroomLesson | null;
   classroomView: ClassroomWorkspaceView;
   selectedMaterialId: string;
   isPaused: boolean;
@@ -59,6 +63,26 @@ export interface ClassroomSessionDraft {
 }
 
 const WORKSPACE_VIEWS: ClassroomWorkspaceView[] = ["lecture", "discussion", "code", "materials"];
+
+/** Refresh lecture material without changing the saved order or answered questions. */
+export function refreshSessionLectures(saved: ClassroomBeat[], current: ClassroomBeat[]): ClassroomBeat[] {
+  const latest = new Map(current.map((beat) => [beat.id, beat]));
+  return saved.map((beat) => {
+    const replacement = latest.get(beat.id);
+    if (!replacement || beat.action !== "continue" || beat.phase === "welcome"
+      || replacement.action !== beat.action || replacement.phase !== beat.phase) return beat;
+    return { ...beat, ...replacement };
+  });
+}
+
+/** A saved lesson keeps its own order; remap only when migrating its content. */
+export function restoredSessionIndex(draft: ClassroomSessionDraft, beats: ClassroomBeat[]): number {
+  const savedBeat = draft.sessionBeatSnapshot[draft.currentIndex];
+  const activeBeats = draft.contentRevision === 2 && draft.sessionBeatSnapshot.length
+    ? draft.sessionBeatSnapshot : beats;
+  const mapped = savedBeat ? activeBeats.findIndex((beat) => beat.id === savedBeat.id) : -1;
+  return Math.min(Math.max(0, mapped >= 0 ? mapped : draft.currentIndex), Math.max(0, activeBeats.length - 1));
+}
 
 export function classroomSessionKey(studentId: string): string {
   return `ciyuan-classroom-session-v1:${studentId}:python`;

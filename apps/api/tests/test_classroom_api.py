@@ -3,8 +3,10 @@
 import asyncio
 from typing import Any, cast
 
+import pytest
 from fastapi.testclient import TestClient
 
+from app.api.dependencies import get_classroom_lesson_service
 from app.main import app
 from app.modules.course_content import CoursePackRepository
 from app.modules.learner_profile.models import LearnerProfile, MasteryState
@@ -157,9 +159,32 @@ def test_adaptive_session_repairs_prerequisite_gap_and_uses_real_code_tasks() ->
         for point in beat.board_points
     )
     assert "优先修复" in lesson.planning_reason
+    assert "后续目标" in lesson.planning_reason
+    assert "本节先学习" in lesson.planning_reason
+    assert "前置" in lesson.planning_reason
 
     restored = service.get_lesson(lesson.lesson_id)
     assert restored.knowledge_point_ids == lesson.knowledge_point_ids
+
+
+@pytest.mark.parametrize(("knowledge_id", "expected_trace"), [
+    ("PY-BASE-05", "12 < 15"),
+    ("PY-BASE-07", "0、1、2、3、4"),
+])
+def test_adaptive_lectures_include_runnable_examples_and_concrete_recap(
+    knowledge_id: str, expected_trace: str,
+) -> None:
+    payload = client.get(f"/api/v1/classroom/lessons/python-adaptive--{knowledge_id}").json()
+    lectures = [beat for beat in payload["beats"] if beat["phase"] == "concept"]
+    assert lectures
+    for beat in lectures:
+        assert beat["board_explanation"]
+        assert beat["board_code"]
+        compile(beat["board_code"], "public-lesson", "exec")
+    assert any(expected_trace in " ".join(beat["board_trace"]) for beat in payload["beats"])
+    recap = next(beat for beat in payload["beats"] if beat["phase"] == "summary")
+    assert len(recap["board_points"]) >= 2
+    assert "先写预测再运行" in " ".join(recap["board_trace"])
 
 
 def test_zero_basis_self_report_overrides_guessed_diagnostic_mastery() -> None:
@@ -268,6 +293,72 @@ def test_classroom_dialogue_uses_persona_and_traceable_python_evidence() -> None
         "course_tutor",
         "quality_supervisor",
     ]
+
+
+@pytest.mark.parametrize(
+    "minutes,count", [(20, 1), (30, 1), (35, 1), (36, 2), (45, 2), (70, 2), (71, 3), (120, 3)],
+)
+def test_generated_adaptive_session_works_across_classroom_endpoints(
+    monkeypatch: pytest.MonkeyPatch, minutes: int, count: int,
+) -> None:
+    profile = LearnerProfile(student_id="adaptive-round-trip", course_id="python", mastery=[])
+    service = ClassroomLessonService(
+        CoursePackRepository(),
+        learning_context=_AdaptiveLearningContext(
+            profile,
+            PlannedActivity(activity_id="PY-BASE-01", activity_type="concept", reason="基础复核"),
+        ),
+    )
+    monkeypatch.setitem(app.dependency_overrides, get_classroom_lesson_service, lambda: service)
+    generated = client.get("/api/v1/classroom/sessions/next", params={
+        "student_id": profile.student_id, "daily_minutes": minutes,
+    })
+    assert generated.status_code == 200
+    lesson = generated.json()
+    assert len(lesson["knowledge_point_ids"]) == count
+    restored = client.get(f"/api/v1/classroom/lessons/{lesson['lesson_id']}")
+    assert restored.status_code == 200
+    assert restored.json()["knowledge_point_ids"] == lesson["knowledge_point_ids"]
+    checkpoint = next(beat for beat in lesson["beats"] if beat["checkpoint"])
+    checked = client.post("/api/v1/classroom/checkpoints", json={
+        "lesson_id": lesson["lesson_id"], "beat_id": checkpoint["id"],
+        "response": checkpoint["checkpoint"]["choices"][0]["id"],
+    })
+    assert checked.status_code == 200
+    assert checked.json()["reply_message"]
+    dialogue = client.post("/api/v1/classroom/dialogue", json={
+        "student_id": profile.student_id, "lesson_id": lesson["lesson_id"],
+        "phase": "concept", "role": "teacher", "message": "Python 解释器怎样运行 print 程序？",
+    })
+    assert dialogue.status_code == 200
+    assert dialogue.json()["answer"]
+    assert dialogue.json()["citations"]
+    self_profile = client.post("/api/v1/classroom/self-profile", json={
+        "student_id": profile.student_id, "lesson_id": lesson["lesson_id"],
+        "description": "我有 Python 基础，会变量和 print，想用练习检验理解。",
+    })
+    assert self_profile.status_code == 200
+    assert self_profile.json()["advisor_message"]
+
+
+@pytest.mark.parametrize("suffix", [
+    "", "--", "PY-BASE-01--", "--PY-BASE-01", "PY-BASE-01----PY-BASE-02",
+    "PY-BASE-01--PY-BASE-01", "PY-BASE-01--PY-BASE-02--PY-BASE-03--PY-BASE-04",
+    "PY-MISSING-01", "PY-BASE-01--PY-MISSING-01", "PY-BASE-01--PY-BASE-02--PY-MISSING-01",
+])
+def test_invalid_adaptive_ids_remain_rejected_at_every_entry_point(suffix: str) -> None:
+    lesson_id = "python-adaptive--" + suffix
+    assert client.get(f"/api/v1/classroom/lessons/{lesson_id}").status_code == 404
+    for endpoint, extra in [
+        ("checkpoints", {"beat_id": "adaptive-checkpoint--PY-BASE-01-Q1", "response": "A"}),
+        ("dialogue", {"student_id": "invalid-id-test", "phase": "concept",
+                      "role": "teacher", "message": "Python print 怎么用？"}),
+        ("self-profile", {"student_id": "invalid-id-test", "description": "我有 Python 基础。"}),
+    ]:
+        response = client.post(
+            f"/api/v1/classroom/{endpoint}", json={"lesson_id": lesson_id, **extra},
+        )
+        assert response.status_code == 404
 
 
 def test_unknown_classroom_lesson_is_not_silently_substituted() -> None:

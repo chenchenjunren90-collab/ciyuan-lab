@@ -85,30 +85,21 @@ def test_tutor_accepts_only_structured_model_output(
     assert QualitySupervisor().inspect(draft=draft, evidence=evidence).accepted is True
 
 
-def test_tutor_routes_only_python_course_to_the_optional_lora_adapter(
+def test_tutor_uses_one_model_adapter_for_every_course(
     evidence: tuple[SearchHit, ...],
 ) -> None:
-    general = FixedAdapter(
+    adapter = FixedAdapter(
         '{"answer":"通用模型回答。",'
         '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
     )
-    python_tutor = FixedAdapter(
-        '{"answer":"Python 垂类模型回答。",'
-        '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
-    )
-    tutor = CourseTutor(general, python_model_adapter=python_tutor)
-
-    python_draft = asyncio.run(
-        tutor.draft(question="如何处理缺失值？", evidence=evidence, course_id="python")
-    )
-    other_draft = asyncio.run(
-        tutor.draft(question="如何处理缺失值？", evidence=evidence, course_id="c")
-    )
-
-    assert python_draft.answer == "Python 垂类模型回答。"
-    assert other_draft.answer == "通用模型回答。"
-    assert python_tutor.calls == 1
-    assert general.calls == 1
+    tutor = CourseTutor(adapter)
+    for course_id in ("python", "c", "data_structures", None):
+        draft = asyncio.run(
+            tutor.draft(question="如何处理缺失值？", evidence=evidence, course_id=course_id)
+        )
+        assert draft.answer == "通用模型回答。"
+        assert not draft.degraded
+    assert adapter.calls == 4
 
 
 def test_tutor_accepts_one_complete_json_markdown_fence(
@@ -256,7 +247,9 @@ def test_model_supervisor_approves_only_after_rules(
     assert payload["student_question"] == "缺失值应该怎样处理？"
     assert payload["role"] == "ta"
     assert payload["phase"] == "practice"
-    assert "仅当 phase 为 debug、practice 或 homework" in adapter.last_messages[0].content
+    assert "根据学生的实际请求与题目用途判断答案泄露" in adapter.last_messages[0].content
+    assert "学生明确要求完整答案也不能豁免" in adapter.last_messages[0].content
+    assert "解释单个概念的最小教学示例不属于答案泄露" in adapter.last_messages[0].content
 
 
 def test_model_supervisor_can_block_semantically_unsupported_answer(

@@ -120,7 +120,7 @@ def client_and_store() -> Generator[tuple[TestClient, MemoryLearningStore]]:
         app.dependency_overrides.clear()
 
 
-def test_assessment_updates_profile_and_returns_plan(
+def test_self_report_initializes_profile_without_inventing_objective_evidence(
     client_and_store: tuple[TestClient, MemoryLearningStore],
 ) -> None:
     client, store = client_and_store
@@ -143,10 +143,13 @@ def test_assessment_updates_profile_and_returns_plan(
         item["knowledge_point_id"]: item["score"]
         for item in payload["profile"]["mastery"]
     }
-    assert scores == {"PY-BASE-01": 0.725, "PY-BASE-02": 0.275}
+    assert scores == {}
+    assert "未计入客观学习证据或更新掌握度" in payload["plan"]["next_activity"]["reason"]
     assert payload["plan"]["stages"]
     assert payload["plan"]["next_activity"]["activity_id"]
     assert len(store.events) == 2
+    assert all(event.payload["objective_evidence"] is False for event in store.events.values())
+    assert all("is_correct" not in event.payload for event in store.events.values())
     assert store.versions[-1].course_id == "python"
 
 
@@ -171,7 +174,7 @@ def test_profile_and_next_activity_are_available_after_assessment(
     )
 
     assert profile.status_code == 200
-    assert profile.json()["mastery"][0]["evidence_count"] == 1
+    assert profile.json()["mastery"] == []
     assert next_activity.status_code == 200
     assert next_activity.json()["activity_id"]
 
@@ -204,8 +207,8 @@ def test_two_learners_keep_independent_profiles(
 
     assert alpha["student_id"] == "learner-alpha"
     assert beta["student_id"] == "learner-beta"
-    assert alpha["mastery"][0]["score"] == 0.725
-    assert beta["mastery"][0]["score"] == 0.275
+    assert alpha["mastery"] == []
+    assert beta["mastery"] == []
     assert set(store.profiles) >= {
         ("learner-alpha", "python"),
         ("learner-beta", "python"),

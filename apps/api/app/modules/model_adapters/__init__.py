@@ -9,7 +9,7 @@ from app.modules.model_adapters.errors import (
 )
 from app.modules.model_adapters.factory import (
     build_model_adapter,
-    build_python_tutor_model_adapter,
+    build_reranker,
     build_tuoling_scenario_adapter,
 )
 from app.modules.model_adapters.limited import ConcurrencyLimitedModelAdapter
@@ -22,10 +22,16 @@ from app.modules.model_adapters.tuoling import (
 )
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
 from app.modules.model_adapters.xfyun_maas import XfyunMaaSAdapter
+from app.modules.model_adapters.xfyun_maas_reranker import (
+    DocumentReranker,
+    RankedDocument,
+    XfyunMaaSReranker,
+)
 
 __all__ = [
     "ChatMessage",
     "ConcurrencyLimitedModelAdapter",
+    "DocumentReranker",
     "MockAdapter",
     "ModelAdapter",
     "ModelConfigurationError",
@@ -36,10 +42,12 @@ __all__ = [
     "ModelUpstreamError",
     "XfyunSparkAdapter",
     "XfyunMaaSAdapter",
+    "XfyunMaaSReranker",
+    "RankedDocument",
     "TuolingScenarioAdapter",
     "TuolingScenarioRequest",
     "TuolingScenarioResponse",
     "build_model_adapter",
-    "build_python_tutor_model_adapter",
+    "build_reranker",
     "build_tuoling_scenario_adapter",
 ]

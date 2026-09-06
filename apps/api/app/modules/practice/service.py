@@ -79,14 +79,15 @@ class PracticeSubmissionService:
             language=language,
             source_code=source_code,
         )
-        event = self._event(
-            activity=activity,
-            student_id=student_id,
-            accepted=accepted,
-            verification=verification,
-        )
-        if self._repository.append_event(event):
-            self._repository.project_event(event_id=event.event_id, policy=self._policy)
+        if verification is None or verification.evidence_available:
+            event = self._event(
+                activity=activity,
+                student_id=student_id,
+                accepted=accepted,
+                verification=verification,
+            )
+            if self._repository.append_event(event):
+                self._repository.project_event(event_id=event.event_id, policy=self._policy)
 
         updated = self._repository.get_profile(student_id=student_id, course_id=course_id)
         if updated is None:  # pragma: no cover - repository invariant
@@ -201,6 +202,8 @@ class PracticeSubmissionService:
         accepted: bool,
         verification: DomainVerificationResult | None,
     ) -> str:
+        if verification is not None and not verification.evidence_available:
+            return "验证服务暂不可用，本次未判定代码正确性，也未更新掌握度。请稍后重试。"
         if accepted:
             return f"{activity.id} 已通过确定性判定。请回顾关键边界，并继续下一项活动。"
         if verification and verification.diagnostics:

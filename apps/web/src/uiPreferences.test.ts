@@ -24,6 +24,30 @@ function memoryStorage(initial: Record<string, string> = {}): KeyValueStorage {
 }
 
 describe("UI preferences", () => {
+  it("opens a new learner workspace in white mode", () => {
+    expect(loadUiPreferences(memoryStorage()).theme).toBe("light");
+    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, loadUiPreferences(memoryStorage()), true);
+    expect(root.dataset.theme).toBe("light");
+    expect(root.style.colorScheme).toBe("light");
+  });
+
+  it("lets a white-mode link override the saved dark theme without losing other preferences", () => {
+    const storage = memoryStorage();
+    saveUiPreferences(storage, { ...DEFAULT_UI_PREFERENCES, theme: "dark", accent: "solar", reducedMotion: true });
+    const linked = loadUiPreferences(storage, "light");
+    expect(linked).toMatchObject({ theme: "light", accent: "solar", reducedMotion: true });
+    saveUiPreferences(storage, linked);
+    expect(loadUiPreferences(storage).theme).toBe("light");
+  });
+
+  it("preserves a chosen dark theme and ignores unsupported theme links", () => {
+    const storage = memoryStorage();
+    saveUiPreferences(storage, { ...DEFAULT_UI_PREFERENCES, theme: "dark" });
+    expect(loadUiPreferences(storage).theme).toBe("dark");
+    expect(loadUiPreferences(storage, "unknown").theme).toBe("dark");
+    expect(loadUiPreferences(storage, "system").theme).toBe("system");
+  });
   it("keeps defaults when stored preferences are invalid", () => {
     const storage = memoryStorage({ [UI_PREFERENCES_KEY]: "not-json" });
     expect(loadUiPreferences(storage)).toEqual(DEFAULT_UI_PREFERENCES);
@@ -35,6 +59,7 @@ describe("UI preferences", () => {
     const preferences = {
       ...DEFAULT_UI_PREFERENCES,
       theme: "dark" as const,
+      accent: "solar" as const,
       reducedMotion: true,
       highContrast: true,
     };
@@ -42,11 +67,11 @@ describe("UI preferences", () => {
     expect(loadUiPreferences(storage)).toEqual(preferences);
   });
 
-  it("ignores the retired accent setting from older browsers", () => {
+  it("falls back when an unsupported accent setting is stored", () => {
     const storage = memoryStorage({
       [UI_PREFERENCES_KEY]: JSON.stringify({
         ...DEFAULT_UI_PREFERENCES,
-        accent: "blue",
+        accent: "violet",
         deviceMode: "desktop",
       }),
     });
@@ -56,16 +81,27 @@ describe("UI preferences", () => {
     });
   });
 
+  it("persists and applies the selected color style", () => {
+    const storage = memoryStorage();
+    const preferences = { ...DEFAULT_UI_PREFERENCES, accent: "pulse" as const };
+    saveUiPreferences(storage, preferences);
+    expect(loadUiPreferences(storage).accent).toBe("pulse");
+
+    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, preferences, false);
+    expect(root.dataset.accent).toBe("pulse");
+  });
+
   it("resolves the system theme and applies root data attributes", () => {
     expect(resolveTheme("system", true)).toBe("dark");
-    const root = { dataset: { accent: "blue" }, style: {} } as unknown as HTMLElement;
-    applyUiPreferences(root, DEFAULT_UI_PREFERENCES, false);
+    const root = { dataset: { accent: "pulse" }, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, { ...DEFAULT_UI_PREFERENCES, theme: "system" }, false);
     expect(root.dataset).toMatchObject({
       theme: "light",
       motion: "full",
       contrast: "standard",
     });
-    expect(root.dataset.accent).toBeUndefined();
+    expect(root.dataset.accent).toBe("ion");
   });
 
   it("creates one stable anonymous learner identity per browser", () => {

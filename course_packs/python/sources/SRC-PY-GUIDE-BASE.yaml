@@ -2,7 +2,7 @@ id: SRC-PY-GUIDE-BASE
 title: Python MVP 教学提要：BASE
 course: python
 schema_version: 0.1.0
-version: 2
+version: 3
 source_type: synthetic
 citation:
   locator: 词元研究所项目组自编 Python BASE 教学提要
@@ -24,6 +24,10 @@ rag:
       【输入与输出】input() 返回字符串，因此数值计算前通常需要 int() 或 float() 转换。一次读取多个数据时，可先 split() 分词，再逐项转换。print() 可用 sep 控制分隔符、end 控制结尾；格式化输出优先使用 f-string。题目中的“空行”“空格分隔”和“小数位数”都是可测试的输出契约。
 
       【条件语句】if、elif、else 按顺序判断分支，只执行首个满足条件的分支。区间问题应先确定边界是否包含，分支顺序应避免宽条件遮蔽窄条件。布尔值、零、空字符串和空容器具有真假语义，但关键业务判断宜写得明确。
+
+      【elif 与 else if 的区别】Python 同层多分支使用 elif，不能写成 else if；else: 换行后缩进写 if 是嵌套结构，不是同层 elif。
+
+      【if 嵌套】if 可以嵌套：在外层 if 的缩进代码块中再写 if，只有外层条件成立才检查内层条件；else 与同一缩进层级的 if 配对。
 
       【while 循环】while 适合循环次数事先不确定、由条件决定是否继续的任务。循环必须包含可使条件变化的步骤，否则可能无限运行。设计时应写清初始化、继续条件、循环体和状态更新，并测试零次执行、一次执行和多次执行。
 

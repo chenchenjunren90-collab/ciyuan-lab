@@ -9,6 +9,7 @@ from app.modules.model_adapters.ports import ModelAdapter
 from app.modules.model_adapters.tuoling import TuolingScenarioAdapter
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
 from app.modules.model_adapters.xfyun_maas import XfyunMaaSAdapter
+from app.modules.model_adapters.xfyun_maas_reranker import DocumentReranker, XfyunMaaSReranker
 
 
 def build_model_adapter(settings: Settings) -> ModelAdapter:
@@ -49,41 +50,20 @@ def build_model_adapter(settings: Settings) -> ModelAdapter:
     raise ModelConfigurationError("Model adapter is not configured and Mock fallback is disabled")
 
 
-def build_python_tutor_model_adapter(settings: Settings) -> ModelAdapter:
-    """Build the explicitly enabled Python LoRA route, or reuse the general model.
-
-    The training model is intentionally inactive until an operator enables it
-    and both its served model ID and the MaaS resource ID are present. This
-    avoids silently sending classroom traffic to an unfinished or regressing
-    model merely because its deployment identifiers exist locally.
-    """
-
-    if not settings.xfyun_maas_python_tutor_enabled:
-        return build_model_adapter(settings)
-    model = settings.xfyun_maas_python_tutor_model.strip()
-    lora_id = settings.xfyun_maas_python_tutor_lora_id.strip()
-    if not model and not lora_id:
-        return build_model_adapter(settings)
-    if not model or not lora_id:
-        raise ModelConfigurationError(
-            "XFYUN_MAAS_PYTHON_TUTOR_MODEL and XFYUN_MAAS_PYTHON_TUTOR_LORA_ID "
-            "must be configured together"
-        )
-    api_key = settings.xfyun_maas_python_tutor_api_key.get_secret_value().strip()
+def build_reranker(settings: Settings) -> DocumentReranker | None:
+    """Use MaaS relevance scoring only when its published service is configured."""
+    if not settings.xfyun_maas_reranker_enabled:
+        return None
+    api_key = settings.xfyun_maas_reranker_api_key.get_secret_value().strip()
     if not api_key:
         api_key = settings.xfyun_maas_api_key.get_secret_value().strip()
-    if not api_key:
-        raise ModelConfigurationError(
-            "XFYUN_MAAS_PYTHON_TUTOR_API_KEY or XFYUN_MAAS_API_KEY is required "
-            "for the Python tutor LoRA route"
-        )
-    return XfyunMaaSAdapter(
+    return XfyunMaaSReranker(
         base_url=settings.xfyun_maas_base_url,
         api_key=api_key,
-        model=model,
-        lora_id=lora_id,
-        timeout_seconds=settings.xfyun_maas_timeout_seconds,
-        max_retries=settings.xfyun_maas_max_retries,
+        model=settings.xfyun_maas_reranker_model,
+        candidate_limit=settings.xfyun_maas_reranker_candidate_limit,
+        timeout_seconds=settings.xfyun_maas_reranker_timeout_seconds,
+        max_retries=settings.xfyun_maas_reranker_max_retries,
     )
 
 

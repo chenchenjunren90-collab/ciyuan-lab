@@ -4,7 +4,7 @@ from app.modules.course_content import CourseId
 from app.modules.orchestration.supervisor import QualitySupervisor
 from app.modules.orchestration.tutor import CourseTutor
 from app.modules.rag.models import AgentTraceStep, Citation, QaResponse
-from app.modules.rag.ports import KnowledgeRetriever
+from app.modules.rag.ports import KnowledgeRetrievalError, KnowledgeRetriever
 
 
 class RagQaService:
@@ -22,7 +22,21 @@ class RagQaService:
         self._top_k = top_k
 
     async def answer(self, *, course_id: CourseId, question: str) -> QaResponse:
-        hits = await self._retriever.search(question, course_id, self._top_k)
+        try:
+            hits = await self._retriever.search(question, course_id, self._top_k)
+        except KnowledgeRetrievalError:
+            return QaResponse(
+                status="insufficient_evidence",
+                answer="课程资料检索暂时不可用，请稍后重试。",
+                citations=[],
+                trace=[
+                    AgentTraceStep(
+                        component="retrieval",
+                        status="degraded",
+                        detail="知识索引连接或查询失败，未调用模型生成无依据的回答。",
+                    )
+                ],
+            )
         if not hits:
             return QaResponse(
                 status="insufficient_evidence",
@@ -58,15 +72,44 @@ class RagQaService:
                 ),
             ),
         ]
+        rerank_statuses = {hit.metadata.get("rerank_status") for hit in hits}
+        if "degraded" in rerank_statuses:
+            trace.insert(
+                1,
+                AgentTraceStep(
+                    component="retrieval",
+                    status="degraded",
+                    detail="语义重排暂不可用，已保留原始课程证据检索结果。",
+                ),
+            )
+        elif "completed" in rerank_statuses:
+            trace.insert(
+                1,
+                AgentTraceStep(
+                    component="retrieval",
+                    status="completed",
+                    detail="已通过讯飞 MaaS 对候选课程证据进行语义重排。",
+                ),
+            )
         if not decision.accepted:
+            unavailable = decision.model_degraded
             trace.append(
                 AgentTraceStep(
                     component="quality_supervisor",
-                    status="blocked",
-                    detail=f"质量门禁未通过：{decision.reason_code}。",
+                    status="degraded" if unavailable else "blocked",
+                    detail=(
+                        "质量审核暂时不可用，回答草稿未发布。"
+                        if unavailable
+                        else f"质量门禁未通过：{decision.reason_code}。"
+                    ),
                 )
             )
-            return QaResponse(status="insufficient_evidence", answer="", citations=[], trace=trace)
+            return QaResponse(
+                status="insufficient_evidence",
+                answer="质量审核暂时不可用，请稍后重试。" if unavailable else "",
+                citations=[],
+                trace=trace,
+            )
         trace.append(
             AgentTraceStep(
                 component="quality_supervisor",
