@@ -21,6 +21,7 @@ _QUERY_IDENTIFIER_STOP_WORDS = frozenset(
 )
 
 _CJK_TECHNICAL_QUERY_TERMS = (
+    "解释器",
     "输入",
     "输出",
     "变量",

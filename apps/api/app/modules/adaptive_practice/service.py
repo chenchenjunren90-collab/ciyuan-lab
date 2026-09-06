@@ -93,13 +93,17 @@ class AdaptiveProblemService:
             },
             evidence_summary="个性化生成题的确定性隐藏测试结果",
         )
-        if self._repository.append_event(event):
+        if result.evidence_available and self._repository.append_event(event):
             self._repository.project_event(event_id=event.event_id, policy=self._policy)
         profile = self._require_profile(student_id, "python")
-        next_problem = self.generate(
-            student_id=student_id,
-            course_id="python",
-            attempt_index=min(9999, attempt_index + 1),
+        next_problem = (
+            self.generate(
+                student_id=student_id,
+                course_id="python",
+                attempt_index=min(9999, attempt_index + 1),
+            )
+            if result.evidence_available
+            else bundle.public
         )
         verification = VerificationResult(
             accepted=result.accepted,
@@ -112,6 +116,8 @@ class AdaptiveProblemService:
             if result.accepted
             else "尚未通过全部测试。请根据公开示例和分级提示定位边界，再次提交。"
         )
+        if not result.evidence_available:
+            feedback = "验证服务暂不可用，本次未判定代码正确性，也未更新掌握度。请稍后重试本题。"
         return AdaptiveProblemSubmission(
             problem=bundle.public,
             verification=verification,
@@ -244,9 +250,7 @@ def _list_summary(*, problem_id: str, seed: int) -> GeneratedProblemBundle:
         concept_id="PY-LIST-01",
         constraints=["0 ≤ n ≤ 100", "输入整数范围为 -10^4 到 10^4", "输出格式必须精确"],
         starter_code=(
-            "n = int(input())\n"
-            "values = list(map(int, input().split())) if n else []\n"
-            "# 在此完成\n"
+            "n = int(input())\nvalues = list(map(int, input().split())) if n else []\n# 在此完成\n"
         ),
         hints=[
             "先单独处理空列表。",

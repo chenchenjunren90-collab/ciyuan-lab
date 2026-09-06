@@ -1,0 +1,75 @@
+/* Theme roles shared by navigation, reading surfaces and editable code. */
+html[data-theme] .sidebar { color:var(--ink); border-color:var(--line); background:var(--surface-raised); }
+html[data-theme] .sidebar :is(.brand strong,.sidebar-progress strong) { color:var(--ink); }
+html[data-theme] .sidebar :is(.brand small,.course-nav > p,.course-nav button,.course-nav button small,.sidebar-progress > div,.connection) { color:var(--muted); }
+html[data-theme] .course-nav button:hover { color:var(--ink); border-color:var(--line); background:var(--surface-muted); }
+html[data-theme] .course-nav button.active { color:var(--accent-ink); border-color:var(--accent); background:var(--accent-pale); }
+html[data-theme] .course-nav button > b { color:var(--ink); border-color:var(--line); background:var(--surface-muted); }
+html[data-theme] .course-nav button.active > b { color:var(--accent-contrast); border-color:var(--accent); background:var(--accent); }
+html[data-theme] .sidebar-progress { border-color:var(--line); }
+html[data-theme] :is(.sidebar-progress > i,.lesson-masthead aside > i,.assessment-progress > i) { background:var(--line); }
+html[data-theme] .lesson-masthead aside > small { color:var(--muted); }
+
+html[data-theme] :is(.diagnostic-list article button b,.diagnostic-actions > span,.knowledge-chapter > header aside span,.knowledge-lane button > footer span,.project-save-note,.activity-search > span,.activity-sort button,.activity-filters button) { color:var(--muted); }
+html[data-theme] :is(.diagnostic-list article header em,.diagnostic-list article button.active b,.activity-sort button.active,.activity-filters button.active,.activity-scroll > button > span) { color:var(--accent-ink); }
+html[data-theme="light"] :is(.knowledge-lane .state-mastered,.knowledge-legend [data-state="mastered"]) { --state:var(--green); }
+html[data-theme="light"] :is(.knowledge-lane .state-learning,.knowledge-legend [data-state="learning"]) { --state:var(--warning); }
+html[data-theme="light"] :is(.knowledge-lane .state-recommended,.knowledge-legend [data-state="recommended"]) { --state:var(--accent-ink); }
+html[data-theme="light"] :is(.knowledge-lane .state-ready,.knowledge-legend [data-state="ready"]) { --state:#285d9d; }
+html[data-theme="light"] :is(.knowledge-lane .state-locked,.knowledge-legend [data-state="locked"]) { --state:#655d70; }
+html[data-theme="light"] :is(.knowledge-lane .state-unassessed,.knowledge-legend [data-state="unassessed"]) { --state:#625271; }
+html[data-theme] :is(.knowledge-map-summary span,.knowledge-legend span) { color:var(--muted); }
+html[data-theme] .knowledge-chapter > header aside strong { color:var(--ink); }
+html[data-theme] .knowledge-toolbar label { border-color:var(--line); background:var(--surface-raised); }
+html[data-theme] .knowledge-toolbar label > span { color:var(--muted); }
+html[data-theme="dark"] :is(.knowledge-lane .state-mastered,.knowledge-legend [data-state="mastered"]) { --state:var(--green); }
+html[data-theme="dark"] :is(.knowledge-lane .state-learning,.knowledge-legend [data-state="learning"]) { --state:var(--warning); }
+html[data-theme="dark"] :is(.knowledge-lane .state-recommended,.knowledge-legend [data-state="recommended"]) { --state:var(--accent-ink); }
+html[data-theme="dark"] :is(.knowledge-lane .state-ready,.knowledge-legend [data-state="ready"]) { --state:#89b7ee; }
+html[data-theme="dark"] :is(.knowledge-lane .state-locked,.knowledge-legend [data-state="locked"]) { --state:#b7afc1; }
+html[data-theme="dark"] :is(.knowledge-lane .state-unassessed,.knowledge-legend [data-state="unassessed"]) { --state:#c1afd7; }
+html[data-theme="dark"] :is(.knowledge-lane button > header span,.knowledge-subskills b) { background:color-mix(in srgb,var(--state) 10%,var(--surface-raised)); }
+html[data-theme="dark"] .knowledge-subskills span { color:var(--muted); background:var(--surface-raised); }
+
+.taskbar-appearance,.focus-actions { display:flex; align-items:center; gap:8px; }
+.taskbar-appearance .settings-trigger { min-height:44px; }
+html[data-theme] :is(input,textarea)::placeholder { color:var(--muted); opacity:1; }
+html[data-theme] :is(input,textarea) { caret-color:var(--accent-ink); }
+
+html[data-theme] :is(.editor,.code-task .code-editor,.worked-example pre,.lesson-materials pre,.material-empty pre) { color:var(--code-ink); border-color:var(--code-line); background:var(--code); box-shadow:none; }
+html[data-theme] :is(.editor > header,.code-task .code-editor > header) { border-color:var(--code-line); background:var(--code); }
+html[data-theme] :is(.editor > header b,.code-task .code-editor > header b) { color:var(--code-ink); }
+html[data-theme] .code-task .code-editor > header span { color:var(--code-muted); }
+html[data-theme] :is(.editor textarea,.code-task .code-editor textarea,.lesson-materials pre code,.material-empty pre code,.worked-example pre code) { color:var(--code-ink); background-color:var(--code); caret-color:var(--accent-ink); }
+html[data-theme] .task-examples { color:var(--code-ink); border:1px solid var(--code-line); background:var(--code); }
+html[data-theme] .task-examples code { color:var(--code-ink); background:var(--surface-raised); }
+html[data-theme] .task-examples article p { color:var(--code-muted); }
+html[data-theme] .immersive-lesson .conversation-dock footer > small { color:var(--muted); }
+html[data-theme] .immersive-lesson .ready-card button.primary > span { color:var(--accent-contrast); }
+
+/* The light classroom uses a whiteboard with dark writing. */
+html[data-theme="light"] .immersive-lesson .smart-board { color:var(--ink); border-color:#c2cbd2; background:#fff; box-shadow:0 10px 22px #3042501a; }
+html[data-theme="light"] .immersive-lesson .smart-board :is(h3,.board-explanation,.board-key-points li,.board-trace span) { color:var(--ink); }
+html[data-theme="light"] .immersive-lesson .smart-board :is(header span,.board-key-points > b,.board-trace > b,.board-code-example > b,.board-mistakes > b) { color:var(--accent-ink); }
+html[data-theme="light"] .immersive-lesson .smart-board :is(.board-trace,.board-code-example,.board-mistakes) { border-color:var(--line); }
+html[data-theme="light"] .immersive-lesson .smart-board :is(.board-code-example pre,.board-code-example pre code) { color:var(--code-ink); background:var(--code); }
+html[data-theme="light"] .immersive-lesson .board-mistakes { color:var(--warning); background:#fff7e9; }
+html[data-theme="light"] .immersive-lesson .board-mistakes span { color:var(--warning); }
+html[data-theme="light"] .immersive-lesson .smart-board .code-expand { color:var(--accent-ink); border-color:var(--line); background:var(--accent-pale); }
+html[data-theme="light"] .immersive-lesson .smart-board .board-trace span::before { color:var(--accent-ink); }
+
+/* Semantic feedback remains legible independently of the selected accent. */
+html[data-theme="light"] :is(.verification,.task-result,.diagnostic-result,.checkpoint-feedback,.hint-box,.code-task .hint-card) { color:var(--ink); border-color:var(--line); background:var(--surface-muted); }
+html[data-theme="light"] :is(.verification p,.task-result span,.task-result small,.diagnostic-result span,.checkpoint-feedback p,.hint-box p,.code-task .hint-card p) { color:var(--ink); }
+html[data-theme="light"] :is(.verification[data-pass="true"],.task-result[data-pass="true"]) > :is(strong,b) { color:var(--green); }
+html[data-theme="light"] :is(.verification[data-pass="false"],.task-result[data-pass="false"]) > :is(strong,b) { color:var(--danger); }
+html[data-theme="light"] .immersive-lesson .single-question button.unknown { color:var(--muted); }
+html[data-theme="light"] .immersive-lesson .single-question button.unknown.selected { color:var(--accent-ink); }
+html[data-theme="light"] :is(.primary,.welcome-primary,.done-button,.talk-composer button) { box-shadow:none; }
+html[data-theme="light"] .settings-backdrop { background:#25374766; }
+html[data-theme="light"] .settings-panel { background:var(--surface-raised); box-shadow:-14px 0 40px #2537471a; }
+
+@media (max-width:760px) {
+  .taskbar-user .taskbar-appearance { gap:6px; }
+  .focus-actions { gap:6px; }
+}

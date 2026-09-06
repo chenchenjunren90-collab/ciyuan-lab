@@ -2,7 +2,7 @@ id: PY-BASE-05
 title: 条件语句
 course: python
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 50
 prerequisites:
@@ -41,9 +41,11 @@ lesson:
   worked_example:
     problem: 根据温度判断是否需要带外套。
     steps:
-    - 写清输入、处理和输出三部分。
-    - 先完成最小可运行代码，再用一个正常输入验证。
-    - 补充边界输入，确认输出格式与预期一致。
+    - 第 1 行把整数 12 保存到 temperature，后面的条件使用这个值。
+    - 第 2 行比较 12 < 15，结果为 True，因此进入 if 下方缩进的代码块。
+    - 第 3 行输出“带外套”；同一个 if/else 结构只选择一个分支，本次跳过 else 的输出。
+    - 把 temperature 改成 15，15 < 15 为 False，执行 else 下的第 5 行，输出“无需外套”。
+    - 增加条件时使用 elif；多分支按顺序只执行首个满足条件的分支，嵌套 if 的 else 按相同缩进层级配对。
     code: "temperature = 12\nif temperature < 15:\n    print(\"带外套\")\nelse:\n    print(\"无需外套\")\n"
     reflection: 条件题最容易错在边界；编码前先把每个区间写在纸上。
   checkpoint:

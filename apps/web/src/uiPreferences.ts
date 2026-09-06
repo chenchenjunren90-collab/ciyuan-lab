@@ -30,7 +30,7 @@ export const STUDENT_ID_KEY = "ciyuan-student-id";
 export const LOCAL_ACCOUNTS_KEY = "ciyuan-local-accounts-v1";
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
-  theme: "dark",
+  theme: "light",
   accent: "ion",
   deviceMode: "auto",
   reducedMotion: false,
@@ -42,7 +42,14 @@ const THEMES: ThemeMode[] = ["light", "dark", "system"];
 const ACCENTS: AccentMode[] = ["ion", "pulse", "solar"];
 const DEVICE_MODES: DeviceMode[] = ["auto", "mobile", "desktop"];
 
-export function loadUiPreferences(storage: KeyValueStorage): UiPreferences {
+export function loadUiPreferences(storage: KeyValueStorage, requestedTheme: string | null = null): UiPreferences {
+  const preferences = readUiPreferences(storage);
+  return THEMES.includes(requestedTheme as ThemeMode)
+    ? { ...preferences, theme: requestedTheme as ThemeMode }
+    : preferences;
+}
+
+function readUiPreferences(storage: KeyValueStorage): UiPreferences {
   try {
     const raw = storage.getItem(UI_PREFERENCES_KEY);
     if (!raw) return { ...DEFAULT_UI_PREFERENCES };

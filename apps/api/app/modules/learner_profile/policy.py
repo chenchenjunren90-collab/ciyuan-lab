@@ -82,6 +82,10 @@ class EvidenceMasteryPolicy:
     ):
         payload = event.payload
         if event.event_type == "assessment.completed":
+            if payload.get("objective_evidence") is False or (
+                payload.get("source") == "legacy_client_assessment"
+            ):
+                return None
             value = payload.get("is_correct", payload.get("correct"))
             if type(value) is not bool:
                 return None

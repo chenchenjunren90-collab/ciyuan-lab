@@ -1,0 +1,215 @@
+{
+  "audit_date": "2026-09-05",
+  "generated_at_utc": "2026-09-05T01:21:35.587949+00:00",
+  "scope": "read-only repository corpus audit and offline lexical evaluation; no database connection, migrations, synchronization or paid provider calls",
+  "runtime_deployment_verified": false,
+  "coverage": {
+    "eligible_sources": 18,
+    "eligible_chunks": 60,
+    "content_characters": 7195,
+    "characters_measure": "Unicode code points across indexed chunk bodies; excludes source titles and metadata",
+    "sources_by_course": {
+      "c": 5,
+      "python": 7,
+      "data_structures": 6
+    },
+    "chunks_by_course": {
+      "c": 5,
+      "data_structures": 6,
+      "python": 49
+    },
+    "concept_preview_count": 122,
+    "blocked_concept_count": 122,
+    "blocked_reasons": {
+      "concept_not_human_reviewed": 122
+    },
+    "snapshot_hash": "6c1a8eeef6ce8ead5770415dae9ef23bdd425cb938c7f9274e3bc0ee3e10c7c2",
+    "sources": [
+      {
+        "course_id": "c",
+        "source_id": "SRC-C-GUIDE-BASE",
+        "title": "C 语言 MVP 教学提要：BASE",
+        "chunk_count": 1,
+        "content_characters": 112,
+        "source_text_sha256": "a5b1a0c2d1ed37e680f5260c5a6d2fbd459b6d67900be801fa015d8c1907df4a"
+      },
+      {
+        "course_id": "c",
+        "source_id": "SRC-C-GUIDE-CONTROL",
+        "title": "C 语言 MVP 教学提要：CONTROL",
+        "chunk_count": 1,
+        "content_characters": 98,
+        "source_text_sha256": "e4f27ed0b7160098979afd510ea8db2ab08ab572f1c89f5674e1d10c59b234f1"
+      },
+      {
+        "course_id": "c",
+        "source_id": "SRC-C-GUIDE-ENGINEERING",
+        "title": "C 语言 MVP 教学提要：ENGINEERING",
+        "chunk_count": 1,
+        "content_characters": 106,
+        "source_text_sha256": "c07bcb22ae8187d106ca5aef7b50dafcb26ebd77f60df001acc9bcdfc91489b2"
+      },
+      {
+        "course_id": "c",
+        "source_id": "SRC-C-GUIDE-MEMORY",
+        "title": "C 语言 MVP 教学提要：MEMORY",
+        "chunk_count": 1,
+        "content_characters": 120,
+        "source_text_sha256": "f30c3e400b63f3cb7a172ef7e14a4087e53818da8e97dbd83ca4f3b9bba12632"
+      },
+      {
+        "course_id": "c",
+        "source_id": "SRC-C-GUIDE-STDLIB",
+        "title": "C 语言 MVP 教学提要：标准库接口契约",
+        "chunk_count": 1,
+        "content_characters": 222,
+        "source_text_sha256": "62a1f2d3b9e38f6767f4be2e789dd9c70a42d2f015730e671e7cb3bfa672bfb2"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-BASE",
+        "title": "Python MVP 教学提要：BASE",
+        "chunk_count": 11,
+        "content_characters": 1533,
+        "source_text_sha256": "7af5ae4216eacf275a4a87a0919508a774530ca4fda634b33f3c4300edc49cf3"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-CASE-FALLBACK",
+        "title": "Python MVP 教学提要：CASE-FALLBACK",
+        "chunk_count": 1,
+        "content_characters": 89,
+        "source_text_sha256": "821f64578f30bcebbac1f78eed8c6b386cc5c6dbbd2f216944d120072bd5030f"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-CURRICULUM",
+        "title": "Python 系统课程路线与能力匹配提要",
+        "chunk_count": 11,
+        "content_characters": 1313,
+        "source_text_sha256": "267720acbc1e38fb3eab2f66d23f5e5d94613cf7c23d5a1a25d1a995585154d9"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-DATA",
+        "title": "Python MVP 教学提要：DATA",
+        "chunk_count": 7,
+        "content_characters": 756,
+        "source_text_sha256": "c0c0c4e011d6f507e8abcd4f4f6f3df1010476ca6eb193ab6e4dd2de59bdcfe6"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-ENGINEERING",
+        "title": "Python MVP 教学提要：ENGINEERING",
+        "chunk_count": 10,
+        "content_characters": 1116,
+        "source_text_sha256": "b40003b5d4b1dc54941143a0baa6a7a6cd94bcf16b3aa532a2a4233d239d1003"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-GUIDE-FUNCTIONS",
+        "title": "Python MVP 教学提要：FUNCTIONS",
+        "chunk_count": 8,
+        "content_characters": 857,
+        "source_text_sha256": "525dc12aa5b5039a54568370f488d28b4b9189ed53506e4e93b7e4f0754693a8"
+      },
+      {
+        "course_id": "python",
+        "source_id": "SRC-PY-SYNTHETIC-FINANCE-CATALOG",
+        "title": "Python课后财经综合项目合成场景目录",
+        "chunk_count": 1,
+        "content_characters": 234,
+        "source_text_sha256": "1c07e7cae0b00e4008d84b71231321c0252d05943a76e7c47140cf7e8b585476"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-GUIDE-DESIGN",
+        "title": "数据结构与算法 MVP 教学提要：设计与验证",
+        "chunk_count": 1,
+        "content_characters": 132,
+        "source_text_sha256": "7eb32f28d29f90d297ee84793090d9908f138a605152e922259dec236d1ea43a"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-GUIDE-FOUND",
+        "title": "数据结构与算法 MVP 教学提要：FOUND",
+        "chunk_count": 1,
+        "content_characters": 85,
+        "source_text_sha256": "e356632251c904713eae2580359dd02ed5f9792d579985123980b5d074355b71"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-GUIDE-LINEAR",
+        "title": "数据结构与算法 MVP 教学提要：LINEAR",
+        "chunk_count": 1,
+        "content_characters": 93,
+        "source_text_sha256": "444692388d03b394129ae3d159991fe663407f6ca3665b12d4d4cfbb7ccdc766"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-GUIDE-SORTSEARCH",
+        "title": "数据结构与算法 MVP 教学提要：SORTSEARCH",
+        "chunk_count": 1,
+        "content_characters": 91,
+        "source_text_sha256": "05036b2391a846688b534e1df313575db96dc6a2b2048187a4d7da07eff18969"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-GUIDE-TREEGRAPH",
+        "title": "数据结构与算法 MVP 教学提要：TREEGRAPH",
+        "chunk_count": 1,
+        "content_characters": 98,
+        "source_text_sha256": "61e498ca2e9d1f56b18b6a4ab2ef47bdf2e4c4cbce10c7e5955c6e0760e4eaaa"
+      },
+      {
+        "course_id": "data_structures",
+        "source_id": "SRC-DS-SYNTHETIC-TRANSACTION-GRAPH",
+        "title": "数据结构课后合成交易图场景",
+        "chunk_count": 1,
+        "content_characters": 140,
+        "source_text_sha256": "83757b8ad41cecc02c1b6e6049af8afd95b8a22bd519e0b843d8d16bf1360508"
+      }
+    ]
+  },
+  "retrieval_implementation": {
+    "default_backend": "lexical (code default; deployment setting not inspected)",
+    "database_backend": "PostgreSQL + pgvector; synchronous SQLAlchemy engine, query moved to worker thread",
+    "embedding": "TokenHashEmbedder, 384-dimensional deterministic lexical feature hashing; not a semantic embedding model",
+    "index_schema_dimensions": 384,
+    "reranking": "See current optional MaaS rerank integration; not exercised by this offline lexical audit",
+    "database_schema": "Existing migrations contain course filter B-tree, GIN full-text and HNSW cosine indexes. Presence/use in a deployed database was not verified.",
+    "index_query_limit": "Current hybrid SQL scores all rows in selected course, then sorts weighted scores; HNSW/GIN existence does not establish an ANN candidate-retrieval execution plan.",
+    "source_metadata_limit": "knowledge_chunks stores citation/content_hash/indexed_at, but has no dedicated rights review state, source version or embedding model/version columns; synchronization is required to remove revoked repository sources."
+  },
+  "offline_lexical_evaluation": {
+    "dataset_path": "evals/rag/retrieval-v1.jsonl",
+    "dataset_sha256": "c02b4f0e3b62a1acf64f4b5d048c9fe7f5baaaaca5e66bd9591e2c688f56db94",
+    "expected_source_count": 13,
+    "metrics": {
+      "dataset_size": 75,
+      "answerable_count": 45,
+      "recall_at_k": 1.0,
+      "mean_reciprocal_rank": 0.9333,
+      "unanswerable_rejection_rate": 1.0,
+      "cross_course_rejection_rate": 0.8667,
+      "course_isolation_rate": 1.0,
+      "failures": [
+        "python-x-02:cross_course_query_not_rejected",
+        "python-x-04:cross_course_query_not_rejected"
+      ]
+    },
+    "limitations": [
+      "Recall/MRR match expected source_id, not the exact supporting chunk, fact coverage or answer correctness.",
+      "45 answerable cases do not establish coverage of all 122 concepts.",
+      "The 75-case set has been used during iterative tuning; it is a regression set, not a fresh blind holdout.",
+      "Cross-course labels for shared computer-science concepts need review; do not improve this metric by adding generic algorithm terms to a blacklist.",
+      "Current results differ from historical 100% claims; this report records the current offline run only."
+    ]
+  },
+  "unverified": [
+    "Actual database configuration, schema version, row count, backup/restore and deployment persistence",
+    "Actual PostgreSQL query plans, latency, lock behavior, timeout and pgvector ranking after changes",
+    "MaaS provider embedding/reranking availability, latency, quality and cost",
+    "Teacher review of corpus breadth, correctness and source/fact support"
+  ]
+}

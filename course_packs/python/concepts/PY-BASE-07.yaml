@@ -2,7 +2,7 @@ id: PY-BASE-07
 title: for 循环与 range
 course: python
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 45
 prerequisites:
@@ -40,9 +40,11 @@ lesson:
   worked_example:
     problem: 输出 0 到 4。
     steps:
-    - 写清输入、处理和输出三部分。
-    - 先完成最小可运行代码，再用一个正常输入验证。
-    - 补充边界输入，确认输出格式与预期一致。
+    - 第 1 行的 range(5) 依次提供 0、1、2、3、4，不包含终点 5。
+    - 第一次循环把 0 赋给 number，再执行缩进的第 2 行，输出 0。
+    - 随后 number 依次取 1、2、3、4，每取一个值都再执行一次 print(number)。
+    - 五个整数分别输出在五行，range 中没有下一个值时结束循环。
+    - 把 range(5) 改成 range(2, 6, 2)，先预测只输出 2 和 4，再运行核对；终点 6 不包含在内。
     code: "for number in range(5):\n    print(number)\n"
     reflection: 使用 range 前先写出期望得到的前三项和最后一项。
   checkpoint:

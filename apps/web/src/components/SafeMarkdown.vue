@@ -29,9 +29,12 @@ const html = computed(() => {
 .safe-markdown :deep(p:last-child) { margin-bottom: 0; }
 .safe-markdown :deep(ul), .safe-markdown :deep(ol) { margin: .45em 0 .7em; padding-left: 1.45em; }
 .safe-markdown :deep(li + li) { margin-top: .25em; }
-.safe-markdown :deep(strong) { color: #342a2e; font-weight: 800; }
-.safe-markdown :deep(code) { padding: .12em .38em; border-radius: 4px; color: #9f1730; background: #fff0f2; font: .92em Consolas, monospace; }
-.safe-markdown :deep(pre) { margin: .7em 0; padding: 11px 12px; overflow: auto; border-radius: 8px; color: #eef1f7; background: #15171d; }
+.safe-markdown :deep(strong) { color: inherit; font-weight: 800; }
+.safe-markdown :deep(code) { padding: .12em .38em; border-radius: 4px; color: var(--accent-ink); background: var(--accent-pale); font: .92em Consolas, monospace; }
+.safe-markdown :deep(pre) { margin: .7em 0; padding: 11px 12px; overflow: auto; border: 1px solid var(--code-line); border-radius: 8px; color: var(--code-ink); background: var(--code); }
 .safe-markdown :deep(pre code) { padding: 0; color: inherit; background: transparent; }
-.safe-markdown :deep(blockquote) { margin: .7em 0; padding-left: 10px; border-left: 3px solid #d78a96; color: #75666b; }
+.safe-markdown :deep(blockquote) { margin: .7em 0; padding-left: 10px; border-left: 3px solid var(--accent); color: var(--muted); }
+.safe-markdown :deep(a) { color: var(--accent-ink); text-decoration: underline; }
+.safe-markdown :deep(table) { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+.safe-markdown :deep(th), .safe-markdown :deep(td) { padding: .4em .65em; border: 1px solid var(--line); }
 </style>

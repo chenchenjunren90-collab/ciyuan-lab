@@ -29,6 +29,7 @@ EXCLUDED_PARTS = {
     "__pycache__",
     "dist",
     "node_modules",
+    "_submit_staging",
 }
 
 

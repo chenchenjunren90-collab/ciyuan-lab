@@ -9,6 +9,7 @@ const props = defineProps<{
   preferences: UiPreferences;
   accounts: LocalLearnerAccount[];
   currentStudentId: string;
+  accountBusy?: boolean;
 }>();
 const emit = defineEmits<{
   close: [];
@@ -21,8 +22,8 @@ const emit = defineEmits<{
 }>();
 
 const themes: { id: ThemeMode; label: string }[] = [
-  { id: "light", label: "日间" },
-  { id: "dark", label: "夜间" },
+  { id: "light", label: "白色模式" },
+  { id: "dark", label: "深色模式" },
   { id: "system", label: "跟随系统" },
 ];
 const accents: { id: AccentMode; label: string; description: string }[] = [
@@ -38,6 +39,14 @@ const deviceModes: { id: DeviceMode; label: string }[] = [
 
 const panel = ref<HTMLElement | null>(null);
 let returnFocus: HTMLElement | null = null;
+
+watch(() => props.accountBusy, async (busy) => {
+  if (busy && props.open) {
+    await nextTick();
+    // A disabled account button loses browser focus; keep keyboard control in the dialog.
+    panel.value?.focus();
+  }
+});
 
 watch(() => props.open, async (open) => {
   if (open) {
@@ -68,10 +77,10 @@ function handlePanelKeydown(event: KeyboardEvent): void {
   }
   const first = focusable[0]!;
   const last = focusable[focusable.length - 1]!;
-  if (event.shiftKey && document.activeElement === first) {
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === panel.value)) {
     event.preventDefault();
     last.focus();
-  } else if (!event.shiftKey && document.activeElement === last) {
+  } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === panel.value)) {
     event.preventDefault();
     first.focus();
   }
@@ -91,13 +100,14 @@ onBeforeUnmount(() => {
         <section class="settings-section account-settings">
           <div><b>体验账号</b><span>同一台设备也可为不同同学保留各自的测评、课程、练习与项目进度。</span></div>
           <div class="account-list">
-            <button v-for="account in accounts" :key="account.id" :class="{ active: currentStudentId === account.id }" @click="emit('switch-account', account.id)">
+            <button v-for="account in accounts" :key="account.id" :disabled="accountBusy" :aria-pressed="currentStudentId === account.id" :class="{ active: currentStudentId === account.id }" @click="emit('switch-account', account.id)">
               <i>{{ account.displayName.slice(0, 1) || '学' }}</i>
               <span><b>{{ account.displayName }}</b><small>体验编号 · {{ account.id.slice(-6) }}</small></span>
               <em>{{ currentStudentId === account.id ? '当前' : '切换' }}</em>
             </button>
-            <button class="add-account" @click="emit('create-account')"><i>＋</i><span><b>新增体验账号</b><small>创建一份完全独立的学习记录</small></span><em>新增</em></button>
+            <button class="add-account" :disabled="accountBusy" @click="emit('create-account')"><i>＋</i><span><b>新增体验账号</b><small>创建一份完全独立的学习记录</small></span><em>新增</em></button>
           </div>
+          <p v-if="accountBusy" role="status">当前请求完成后即可切换或新增体验账号。</p>
         </section>
 
         <section class="settings-section">
@@ -137,8 +147,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.settings-backdrop{position:fixed;z-index:620;inset:0;display:flex;justify-content:flex-end;background:#07091099;backdrop-filter:blur(8px)}.settings-panel{width:min(470px,100%);height:100%;overflow:auto;padding:30px;color:var(--ink);background:var(--surface,#fff);box-shadow:-28px 0 80px #0004}.settings-panel>header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:24px;border-bottom:1px solid var(--line)}.settings-panel>header small{color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.14em}.settings-panel h2{margin:7px 0 0;font-size:25px;line-height:1.25;letter-spacing:-.04em}.settings-panel>header button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;color:var(--muted);background:var(--surface-raised,#fff);font-size:20px}.settings-section{display:grid;gap:14px;padding:22px 0;border-bottom:1px solid var(--line)}.settings-section>div:first-child b,.settings-section>div:first-child span{display:block}.settings-section>div:first-child b{font-size:13px}.settings-section>div:first-child span{margin-top:5px;color:var(--muted);font-size:10px;line-height:1.55}.settings-name{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--surface-raised,#fff);outline:none}.settings-name:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}.theme-options{display:grid!important;grid-template-columns:repeat(3,1fr);gap:8px}.theme-options button{display:grid;place-items:center;gap:7px;padding:13px 8px;border:1px solid var(--line);border-radius:11px;color:var(--muted);background:var(--surface-raised,#fff);font-size:10px}.theme-options button i{font:normal 17px serif}.theme-options button.active{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}.accent-options{display:grid!important;grid-template-columns:repeat(4,1fr);gap:8px}.accent-options button{display:grid;place-items:center;gap:7px;padding:11px 5px;border:1px solid transparent;border-radius:10px;color:var(--muted);background:transparent;font-size:9px}.accent-options button>i{width:27px;height:27px;border-radius:50%;background:#d6001c;box-shadow:inset 0 0 0 4px #fff,0 0 0 1px #ccd0d7}.accent-options .blue>i{background:#2563eb}.accent-options .teal>i{background:#0f8f78}.accent-options .violet>i{background:#7950d8}.accent-options button.active{border-color:var(--line);color:var(--ink);background:var(--surface-muted,#f5f6f8)}.accent-options button.active>i{box-shadow:inset 0 0 0 4px var(--surface-raised,#fff),0 0 0 2px currentColor}.toggle-list{gap:0}.toggle-list>button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 0;border:0;color:var(--ink);background:transparent;text-align:left}.toggle-list>button span{display:grid;gap:4px}.toggle-list>button span>b{font-size:11px}.toggle-list>button span>small{color:var(--muted);font-size:9px;line-height:1.5}.toggle-list>button>i{width:40px;height:22px;flex:0 0 auto;padding:3px;border-radius:999px;background:#b9bec8;transition:.2s}.toggle-list>button>i b{display:block;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 2px 5px #0003;transition:.2s}.toggle-list>button>i.on{background:var(--accent)}.toggle-list>button>i.on b{transform:translateX(18px)}.settings-panel>footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding-top:24px}.settings-panel>footer button{padding:10px 12px;border-radius:9px;font-size:9px;font-weight:800}.reset-button{margin-right:auto;border:0;color:var(--muted);background:transparent}.replay-button{border:1px solid var(--line);color:var(--ink);background:var(--surface-raised,#fff)}.done-button{border:0;color:#fff;background:linear-gradient(135deg,var(--accent-bright),var(--accent-dark));box-shadow:0 8px 18px color-mix(in srgb,var(--accent) 24%,transparent)}.settings-fade-enter-active,.settings-fade-leave-active{transition:opacity .2s}.settings-fade-enter-active .settings-panel,.settings-fade-leave-active .settings-panel{transition:transform .25s ease}.settings-fade-enter-from,.settings-fade-leave-to{opacity:0}.settings-fade-enter-from .settings-panel,.settings-fade-leave-to .settings-panel{transform:translateX(30px)}
-.account-list{display:grid!important;gap:8px}.account-list>button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:10px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:var(--surface-raised,#fff);text-align:left}.account-list>button>i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;color:var(--accent-dark);background:var(--accent-soft);font-style:normal;font-weight:900}.account-list>button>span{display:grid;gap:3px;min-width:0}.account-list>button>span b{overflow:hidden;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.account-list>button>span small{color:var(--muted);font-size:8px}.account-list>button>em{color:var(--muted);font-size:8px;font-style:normal;font-weight:800}.account-list>button.active{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 10%,transparent)}.account-list>button.active>em{color:var(--accent)}.account-list>button.add-account{border-style:dashed}.account-list>button.add-account>i{color:var(--muted);background:var(--surface-muted,#f5f6f8)}
+.settings-backdrop{position:fixed;z-index:620;inset:0;display:flex;justify-content:flex-end;background:#07091099;backdrop-filter:blur(8px)}.settings-panel{width:min(470px,100%);height:100%;overflow:auto;padding:30px;color:var(--ink);background:var(--surface,#fff);box-shadow:-28px 0 80px #0004}.settings-panel>header{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;padding-bottom:24px;border-bottom:1px solid var(--line)}.settings-panel>header small{color:var(--accent);font-size:12px;font-weight:900;letter-spacing:.14em}.settings-panel h2{margin:7px 0 0;font-size:25px;line-height:1.25;letter-spacing:-.04em}.settings-panel>header button{width:34px;height:34px;border:1px solid var(--line);border-radius:50%;color:var(--muted);background:var(--surface-raised,#fff);font-size:20px}.settings-section{display:grid;gap:14px;padding:22px 0;border-bottom:1px solid var(--line)}.settings-section>div:first-child b,.settings-section>div:first-child span{display:block}.settings-section>div:first-child b{font-size:13px}.settings-section>div:first-child span{margin-top:5px;color:var(--muted);font-size:12px;line-height:1.55}.settings-name{width:100%;padding:12px 13px;border:1px solid var(--line);border-radius:10px;color:var(--ink);background:var(--surface-raised,#fff);outline:none}.settings-name:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 14%,transparent)}.theme-options{display:grid!important;grid-template-columns:repeat(3,1fr);gap:8px}.theme-options button{display:grid;place-items:center;gap:7px;padding:13px 8px;border:1px solid var(--line);border-radius:11px;color:var(--muted);background:var(--surface-raised,#fff);font-size:12px}.theme-options button i{font:normal 17px serif}.theme-options button.active{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 18%,transparent)}.accent-options{display:grid!important;grid-template-columns:repeat(4,1fr);gap:8px}.accent-options button{display:grid;place-items:center;gap:7px;padding:11px 5px;border:1px solid transparent;border-radius:10px;color:var(--muted);background:transparent;font-size:12px}.accent-options button>i{width:27px;height:27px;border-radius:50%;background:#d6001c;box-shadow:inset 0 0 0 4px #fff,0 0 0 1px #ccd0d7}.accent-options .blue>i{background:#2563eb}.accent-options .teal>i{background:#0f8f78}.accent-options .violet>i{background:#7950d8}.accent-options button.active{border-color:var(--line);color:var(--ink);background:var(--surface-muted,#f5f6f8)}.accent-options button.active>i{box-shadow:inset 0 0 0 4px var(--surface-raised,#fff),0 0 0 2px currentColor}.toggle-list{gap:0}.toggle-list>button{width:100%;display:flex;align-items:center;justify-content:space-between;gap:20px;padding:13px 0;border:0;color:var(--ink);background:transparent;text-align:left}.toggle-list>button span{display:grid;gap:4px}.toggle-list>button span>b{font-size:12px}.toggle-list>button span>small{color:var(--muted);font-size:12px;line-height:1.5}.toggle-list>button>i{width:40px;height:22px;flex:0 0 auto;padding:3px;border-radius:999px;background:#b9bec8;transition:.2s}.toggle-list>button>i b{display:block;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 2px 5px #0003;transition:.2s}.toggle-list>button>i.on{background:var(--accent)}.toggle-list>button>i.on b{transform:translateX(18px)}.settings-panel>footer{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px;padding-top:24px}.settings-panel>footer button{padding:10px 12px;border-radius:9px;font-size:12px;font-weight:800}.reset-button{margin-right:auto;border:0;color:var(--muted);background:transparent}.replay-button{border:1px solid var(--line);color:var(--ink);background:var(--surface-raised,#fff)}.done-button{border:0;color:#fff;background:linear-gradient(135deg,var(--accent-bright),var(--accent-dark));box-shadow:0 8px 18px color-mix(in srgb,var(--accent) 24%,transparent)}.settings-fade-enter-active,.settings-fade-leave-active{transition:opacity .2s}.settings-fade-enter-active .settings-panel,.settings-fade-leave-active .settings-panel{transition:transform .25s ease}.settings-fade-enter-from,.settings-fade-leave-to{opacity:0}.settings-fade-enter-from .settings-panel,.settings-fade-leave-to .settings-panel{transform:translateX(30px)}
+.account-list{display:grid!important;gap:8px}.account-list>button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;align-items:center;gap:10px;width:100%;padding:10px;border:1px solid var(--line);border-radius:11px;color:var(--ink);background:var(--surface-raised,#fff);text-align:left}.account-list>button>i{display:grid;place-items:center;width:32px;height:32px;border-radius:9px;color:var(--accent-dark);background:var(--accent-soft);font-style:normal;font-weight:900}.account-list>button>span{display:grid;gap:3px;min-width:0}.account-list>button>span b{overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}.account-list>button>span small{color:var(--muted);font-size:12px}.account-list>button>em{color:var(--muted);font-size:12px;font-style:normal;font-weight:800}.account-list>button.active{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 10%,transparent)}.account-list>button.active>em{color:var(--accent)}.account-list>button.add-account{border-style:dashed}.account-list>button.add-account>i{color:var(--muted);background:var(--surface-muted,#f5f6f8)}
 @media(max-width:520px){.settings-panel{padding:24px 18px}.theme-options{grid-template-columns:1fr!important}.theme-options button{display:flex}.settings-panel>footer{align-items:stretch;flex-direction:column}.reset-button{margin:0}}
 
 /* Mainframe appearance settings: one active signal color, no decorative card chrome. */
@@ -159,8 +169,8 @@ onBeforeUnmount(() => {
 .accent-options button.pulse>i{background:#e24b5f}
 .accent-options button.solar>i{background:#e9a83c}
 .accent-options button>span,.accent-options button b,.accent-options button small{display:block}
-.accent-options button b{font-size:10px}
-.accent-options button small{margin-top:3px;color:var(--muted);font-size:8px;line-height:1.4}
+.accent-options button b{font-size:12px}
+.accent-options button small{margin-top:3px;color:var(--muted);font-size:12px;line-height:1.4}
 .accent-options button.active{border-color:var(--accent);color:var(--accent-ink);background:var(--accent-soft)}
 .accent-options button.active>i{box-shadow:0 0 0 2px var(--surface-raised),0 0 0 3px var(--accent)}
 .account-list>button>i{border-radius:6px}

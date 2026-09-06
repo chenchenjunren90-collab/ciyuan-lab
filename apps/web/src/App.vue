@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 
 import {
-  ApiError, api, fetchApiHealth,
+  ApiError, api,
   type ActivityDetail, type ActivitySummary, type CourseId, type CourseSummary,
   type DiagnosticPhase, type DiagnosticQuiz, type DiagnosticSubmissionResult,
   type HintResponse, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile,
@@ -10,6 +10,9 @@ import {
   type GeneratedCodeProblem, type GeneratedProblemSubmissionResponse,
   type GeneratedScenarioProject, type ScenarioContext, type SubmissionResult
 } from "./services/api";
+import { createRequestScope, hasLearningEvidence, loadCourseWorkspace, measuredMastery, qaFeedbackLabel, readProjectDraft, readSavedIds, serviceFailure, verificationUnavailable } from "./services/workspaceState";
+import SafeMarkdown from "./components/SafeMarkdown.vue";
+import ThemeToggle from "./components/ThemeToggle.vue";
 import PythonFirstLesson from "./components/classroom/PythonFirstLesson.vue";
 import SettingsPanel from "./components/SettingsPanel.vue";
 import WelcomeExperience from "./components/WelcomeExperience.vue";
@@ -25,6 +28,7 @@ import {
   loadUiPreferences,
   saveLocalAccounts,
   saveUiPreferences,
+  resolveTheme,
   type AccentMode,
   type LocalLearnerAccount,
   type UiPreferences,
@@ -61,7 +65,9 @@ const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const workspacePreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get("preview") === "workspace";
 const systemPrefersDark = ref(systemThemeQuery.matches);
-const uiPreferences = reactive<UiPreferences>(loadUiPreferences(localStorage));
+const uiPreferences = reactive<UiPreferences>(loadUiPreferences(localStorage, new URLSearchParams(window.location.search).get("theme")));
+const darkTheme = computed(() => resolveTheme(uiPreferences.theme, systemPrefersDark.value) === "dark");
+function toggleTheme(): void { uiPreferences.theme = darkTheme.value ? "light" : "dark"; }
 const initialStudentId = ensureLocalStudentId(localStorage, () => (
   typeof crypto.randomUUID === "function"
     ? crypto.randomUUID()
@@ -85,14 +91,24 @@ const welcomeOpen = ref(
 );
 const settingsOpen = ref(false);
 const accountSwitching = ref(false);
-const connection = ref<"connecting" | "online" | "offline">("connecting");
+const connection = ref<"connecting" | "online" | "offline" | "degraded">("connecting");
 const loading = ref(true);
 const diagnosticSubmitting = ref(false);
 const notice = ref("");
 const courseLoadError = ref("");
+const learningLoadError = ref("");
+const workspaceScope = createRequestScope();
+const activityScope = createRequestScope();
+const knowledgeScope = createRequestScope();
+const diagnosticScope = createRequestScope();
+const activityLoading = ref(false);
+const diagnosticLoading = ref(false);
+const pendingKnowledgeId = ref("");
+const hintLoading = ref(false);
 const tab = ref<Tab>(initialTab);
 const courses = ref<CourseSummary[]>([]);
-const courseId = ref<CourseId>("python");
+const initialQueryCourse = new URLSearchParams(window.location.search).get("course");
+const courseId = ref<CourseId>(["python", "c", "data_structures"].includes(initialQueryCourse ?? "") ? initialQueryCourse as CourseId : "python");
 const knowledge = ref<KnowledgePoint[]>([]);
 const selectedKnowledge = ref<KnowledgePointDetail | null>(null);
 const selectedHomework = ref<ActivitySummary | null>(null);
@@ -114,7 +130,8 @@ const submission = ref<SubmissionResult | null>(null);
 const submitting = ref(false);
 const scenario = ref<ScenarioContext | null>(null);
 const generatedProject = ref<GeneratedScenarioProject | null>(null);
-const projectGoal = ref("希望重点练习数据解析、异常处理、模块化设计和自动化测试");
+const DEFAULT_PROJECT_GOAL = "希望重点练习数据解析、异常处理、模块化设计和自动化测试";
+const projectGoal = ref(DEFAULT_PROJECT_GOAL);
 const projectGenerating = ref(false);
 const hint = ref<HintResponse | null>(null);
 const hintLevel = ref<1 | 2 | 3>(1);
@@ -146,8 +163,17 @@ const assessmentWarningPrimaryAction = ref<HTMLButtonElement | null>(null);
 let assessmentWarningReturnFocus: HTMLElement | null = null;
 const pendingLearningTab = ref<"classroom" | "practice" | "projects">("classroom");
 const classroomFocusMode = ref(false);
+const activeClassroom = ref<InstanceType<typeof PythonFirstLesson> | null>(null);
 const savedProjectIds = ref<string[]>([]);
 const workedExampleExpanded = ref(false);
+const workspaceBusy = computed(() => submitting.value || diagnosticSubmitting.value || adaptiveLoading.value || projectSubmitting.value || qaLoading.value || projectGenerating.value);
+
+watch([tab, courseId], ([currentTab, currentCourse]) => {
+  const url = new URL(window.location.href);
+  url.searchParams.set("tab", currentTab);
+  url.searchParams.set("course", currentCourse);
+  window.history.replaceState(null, "", url);
+});
 
 const greeting = computed(() => {
   const hour = new Date().getHours();
@@ -183,10 +209,13 @@ function createExperienceAccountId(): string {
 }
 
 async function switchLocalAccount(id: string): Promise<void> {
+  if (workspaceBusy.value) return;
   const account = localAccounts.value.find((item) => item.id === id);
   if (!account || id === studentId.value || accountSwitching.value) return;
   accountSwitching.value = true;
   try {
+    persistProjectWorkspace();
+    activity.value = null;
     studentId.value = account.id;
     displayName.value = account.displayName;
     localStorage.setItem(STUDENT_ID_KEY, account.id);
@@ -202,7 +231,7 @@ async function switchLocalAccount(id: string): Promise<void> {
 }
 
 async function createExperienceAccount(): Promise<void> {
-  if (accountSwitching.value) return;
+  if (accountSwitching.value || workspaceBusy.value) return;
   const account: LocalLearnerAccount = {
     id: createExperienceAccountId(),
     displayName: `体验同学 ${localAccounts.value.length + 1}`,
@@ -213,12 +242,12 @@ async function createExperienceAccount(): Promise<void> {
   await switchLocalAccount(account.id);
 }
 
-function finishWelcome(value: string): void {
+async function finishWelcome(value: string): Promise<void> {
   updateDisplayName(value.trim() || "新同学");
   localStorage.setItem(WELCOME_COMPLETE_KEY, "true");
   welcomeOpen.value = false;
   settingsOpen.value = false;
-  notice.value = `欢迎你，${displayName.value}。先完成能力摸底，我们再为你生成第一节课。`;
+  await startBaseline();
 }
 
 function replayWelcome(): void {
@@ -234,6 +263,9 @@ function resetUiPreferences(): void {
 watch(uiPreferences, (value) => {
   saveUiPreferences(localStorage, value);
   applyUiPreferences(document.documentElement, value, systemPrefersDark.value);
+  const url = new URL(window.location.href);
+  url.searchParams.set("theme", value.theme);
+  window.history.replaceState(null, "", url);
 }, { deep: true, immediate: true });
 
 const viewportIsMobile = ref(window.innerWidth < 768);
@@ -271,12 +303,12 @@ const selectedCourse = computed(() => courses.value.find((item) => item.id === c
 const diagnosticComplete = computed(() => diagnostic.value?.items.every(
   (item) => Boolean(diagnosticAnswers[item.exercise_id])
 ) ?? false);
-const masteryMap = computed(() => Object.fromEntries((profile.value?.mastery ?? []).map((item) => [item.knowledge_point_id, item])));
+const masteryMap = computed(() => Object.fromEntries(measuredMastery(profile.value).map((item) => [item.knowledge_point_id, item])));
 const averageMastery = computed(() => {
-  const items = profile.value?.mastery ?? [];
+  const items = measuredMastery(profile.value);
   return items.length ? Math.round(items.reduce((sum, item) => sum + item.score, 0) / items.length * 100) : 0;
 });
-const masteredCount = computed(() => (profile.value?.mastery ?? []).filter((item) => item.score >= .6).length);
+const masteredCount = computed(() => measuredMastery(profile.value).filter((item) => item.score >= .6).length);
 const knowledgeSubskillCount = computed(() => knowledge.value.reduce((sum, item) => sum + item.concepts.length, 0));
 const knowledgePrerequisiteCount = computed(() => knowledge.value.reduce((sum, item) => sum + item.prerequisites.length, 0));
 const knowledgeChapterCount = computed(() => courseId.value === "python"
@@ -394,19 +426,11 @@ function rememberProject(projectId: string): void {
 }
 
 function restoreProjectWorkspace(projectId: string): void {
-  try {
-    const raw = localStorage.getItem(projectDraftKey(projectId));
-    if (!raw) return;
-    const draft = JSON.parse(raw) as {
-      summary?: string; repository?: string; tests?: string; goal?: string;
-    };
-    projectSummary.value = draft.summary ?? "";
-    projectRepository.value = draft.repository ?? "";
-    projectTests.value = draft.tests ?? "";
-    projectGoal.value = draft.goal ?? projectGoal.value;
-  } catch {
-    localStorage.removeItem(projectDraftKey(projectId));
-  }
+  const draft = readProjectDraft(localStorage.getItem(projectDraftKey(projectId)), DEFAULT_PROJECT_GOAL);
+  projectSummary.value = draft.summary;
+  projectRepository.value = draft.repository;
+  projectTests.value = draft.tests;
+  projectGoal.value = draft.goal;
 }
 
 function persistProjectWorkspace(): void {
@@ -422,30 +446,34 @@ function persistProjectWorkspace(): void {
 
 function restorePracticeHistory(): void {
   lastActivityId.value = localStorage.getItem(practiceHistoryKey()) ?? "";
-  try {
-    savedProjectIds.value = JSON.parse(localStorage.getItem(projectIndexKey()) ?? "[]") as string[];
-  } catch {
-    savedProjectIds.value = [];
-  }
+  savedProjectIds.value = readSavedIds(localStorage.getItem(projectIndexKey()));
 }
 
 watch([projectSummary, projectRepository, projectTests, projectGoal], persistProjectWorkspace);
 
-function failureMessage(error: unknown): string {
-  if (error instanceof ApiError && error.status >= 500) {
-    return "本地课程服务未连接：当前可预览界面；题库、画像与判题需启动 API 后使用。";
-  }
-  return error instanceof Error ? error.message : "操作失败，请稍后重试";
-}
+function failureMessage(error: unknown): string { return serviceFailure(error); }
+
 function fail(error: unknown): void {
   notice.value = failureMessage(error);
 }
+function cancelPendingDetails(): void {
+  activityScope.invalidate(); knowledgeScope.invalidate();
+  activityLoading.value = false; selectedKnowledgeLoading.value = false;
+  hintLoading.value = false; pendingKnowledgeId.value = "";
+}
+function closeProjectWorkspace(): void {
+  if (projectSubmitting.value || projectGenerating.value) return;
+  persistProjectWorkspace();
+  cancelPendingDetails();
+  activity.value = null;
+}
 function openClassroom(): void {
+  cancelPendingDetails();
   if (courseId.value === "python" && !learnerContextResolved.value) {
     notice.value = "正在读取能力画像，请稍后再进入课堂。";
     return;
   }
-  if (courseId.value === "python" && learnerContextResolved.value && !profile.value && !genericMode.value) {
+  if (courseId.value === "python" && learnerContextResolved.value && !hasLearningEvidence(profile.value) && !genericMode.value) {
     pendingLearningTab.value = "classroom";
     assessmentWarningOpen.value = true;
     return;
@@ -454,14 +482,17 @@ function openClassroom(): void {
   tab.value = courseId.value === "python" ? "classroom" : "overview";
 }
 function openOverview(): void {
+  cancelPendingDetails();
   notice.value = "";
   tab.value = "overview";
 }
 function openPath(): void {
+  cancelPendingDetails();
   notice.value = "已打开个性化路径；每一步都来自掌握度、前置关系与学习证据。";
   tab.value = "path";
 }
 function openTutor(): void {
+  cancelPendingDetails();
   notice.value = "已进入课程辅导；回答会附带可核验的课程资料来源。";
   tab.value = "tutor";
 }
@@ -470,16 +501,22 @@ function onClassroomFocusChanged(active: boolean): void {
   notice.value = active ? "已进入专注课堂；可从课堂顶部切换听课、交流、代码和资料。" : "课堂已暂停，学习进度已经保存。";
 }
 function openPractice(): void {
-  if (courseLoadError.value) {
+  if (projectSubmitting.value || projectGenerating.value) {
+    notice.value = "项目正在处理，完成后即可切换练习。";
+    return;
+  }
+  persistProjectWorkspace();
+  cancelPendingDetails();
+  if (courseLoadError.value || learningLoadError.value) {
     tab.value = "practice";
-    notice.value = courseLoadError.value;
+    notice.value = courseLoadError.value || learningLoadError.value;
     return;
   }
   if (courseId.value === "python" && !learnerContextResolved.value) {
     notice.value = "正在读取能力画像；评估完成前暂不进入个性化练习。";
     return;
   }
-  if (courseId.value === "python" && learnerContextResolved.value && !profile.value && !genericMode.value) {
+  if (courseId.value === "python" && learnerContextResolved.value && !hasLearningEvidence(profile.value) && !genericMode.value) {
     pendingLearningTab.value = "practice";
     assessmentWarningOpen.value = true;
     return;
@@ -489,16 +526,17 @@ function openPractice(): void {
   tab.value = "practice";
 }
 function openProjects(): void {
-  if (courseLoadError.value) {
+  cancelPendingDetails();
+  if (courseLoadError.value || learningLoadError.value) {
     tab.value = "projects";
-    notice.value = courseLoadError.value;
+    notice.value = courseLoadError.value || learningLoadError.value;
     return;
   }
   if (courseId.value === "python" && !learnerContextResolved.value) {
     notice.value = "正在读取能力画像；稍后会显示每个项目的解锁依据。";
     return;
   }
-  if (courseId.value === "python" && learnerContextResolved.value && !profile.value && !genericMode.value) {
+  if (courseId.value === "python" && learnerContextResolved.value && !hasLearningEvidence(profile.value) && !genericMode.value) {
     pendingLearningTab.value = "projects";
     assessmentWarningOpen.value = true;
     return;
@@ -510,9 +548,10 @@ function genericModeKey(): string {
   return `ciyuan-generic-mode:${studentId.value}:python`;
 }
 function onProfileResolved(value: LearnerProfile | null): void {
+  if (value && (value.student_id !== studentId.value || value.course_id !== courseId.value)) return;
   learnerContextResolved.value = true;
   profile.value = value;
-  if (value) {
+  if (hasLearningEvidence(value)) {
     genericMode.value = false;
     sessionStorage.removeItem(genericModeKey());
   }
@@ -576,6 +615,7 @@ watch(assessmentWarningOpen, async (open) => {
   assessmentWarningReturnFocus = null;
 });
 async function startBaseline(): Promise<void> {
+  tab.value = "overview";
   if (!diagnostic.value) {
     notice.value = "能力诊断尚未载入，请稍后重试。";
     return;
@@ -590,14 +630,7 @@ async function openKnowledgeMap(): Promise<void> {
   await nextTick();
   knowledgeMapSection.value?.scrollIntoView({ behavior: preferredScrollBehavior.value, block: "start" });
 }
-async function rememberStudent(): Promise<void> {
-  studentId.value = studentId.value.trim() || createExperienceAccountId();
-  localStorage.setItem(STUDENT_ID_KEY, studentId.value);
-  assessmentWarningOpen.value = false;
-  learnerContextResolved.value = false;
-  genericMode.value = sessionStorage.getItem(genericModeKey()) === "true";
-  await loadCourse(courseId.value);
-}
+
 function difficulty(value: string): string {
   return ({ beginner: "入门", intermediate: "进阶", advanced: "挑战" } as Record<string, string>)[value] ?? value;
 }
@@ -617,7 +650,7 @@ function knowledgeState(item: KnowledgePoint): KnowledgeState {
   if (score !== null && score >= .6) return "mastered";
   if (next.value?.activity_type === "concept" && next.value.activity_id === item.id) return "recommended";
   if (score !== null) return "learning";
-  if (!profile.value) return "unassessed";
+  if (!hasLearningEvidence(profile.value)) return "unassessed";
   const prerequisitesReady = item.prerequisites.every((id) => (masteryScore(id) ?? 0) >= .6);
   return prerequisitesReady ? "ready" : "locked";
 }
@@ -632,72 +665,76 @@ function knowledgeStateLabel(item: KnowledgePoint): string {
 function knowledgeEvidenceText(item: KnowledgePoint): string {
   const score = masteryScore(item.id);
   if (score !== null) return `掌握度 ${Math.round(score * 100)}%`;
-  if (!profile.value) return "完成摸底后生成个性化状态";
+  if (!hasLearningEvidence(profile.value)) return "完成摸底后生成个性化状态";
   const missing = item.prerequisites.filter((id) => (masteryScore(id) ?? 0) < .6);
   if (missing.length) return `建议先完成 ${missing.slice(0, 2).join("、")}${missing.length > 2 ? " 等" : ""}`;
   return item.prerequisites.length ? "前置知识已满足" : "可直接开始学习";
 }
 
 async function loadCourse(id: CourseId): Promise<void> {
+  if (workspaceBusy.value) return;
+  persistProjectWorkspace();
+  const token = workspaceScope.begin();
+  activityScope.invalidate(); knowledgeScope.invalidate(); diagnosticScope.invalidate();
+  activityLoading.value = false; hintLoading.value = false; selectedKnowledgeLoading.value = false; diagnosticLoading.value = false;
+  pendingKnowledgeId.value = "";
   courseId.value = id;
+  knowledgeQuery.value = ""; activityQuery.value = ""; activityFilter.value = "all"; activitySort.value = "recommended";
   restorePracticeHistory();
-  if (id === "python") {
-    learnerContextResolved.value = false;
-    profile.value = null;
-    genericMode.value = sessionStorage.getItem(genericModeKey()) === "true";
-  }
-  if (tab.value !== "practice") tab.value = id === "python" ? "classroom" : "overview";
+  learnerContextResolved.value = false;
+  genericMode.value = sessionStorage.getItem(genericModeKey()) === "true";
+  if (id !== "python" && tab.value === "classroom") tab.value = "overview";
   loading.value = true;
+  connection.value = "connecting";
   notice.value = "";
   courseLoadError.value = "";
-  qa.value = null;
-  activity.value = null;
-  selectedKnowledge.value = null;
-  selectedHomework.value = null;
-  scenario.value = null;
-  generatedProject.value = null;
-  submission.value = null;
-  adaptiveProblem.value = null;
-  adaptiveSubmission.value = null;
-  adaptiveCode.value = "";
-  adaptiveAttemptIndex.value = 1;
+  learningLoadError.value = "";
+  knowledge.value = []; activities.value = [];
+  profile.value = null; next.value = null; stages.value = [];
+  diagnostic.value = null; diagnosticResult.value = null;
+  Object.keys(diagnosticAnswers).forEach((key) => delete diagnosticAnswers[key]);
+  qa.value = null; activity.value = null;
+  selectedKnowledge.value = null; selectedHomework.value = null;
+  scenario.value = null; generatedProject.value = null; submission.value = null;
+  adaptiveProblem.value = null; adaptiveSubmission.value = null;
+  adaptiveCode.value = ""; adaptiveAttemptIndex.value = 1;
   try {
-    const [kpResult, activityResult] = await Promise.all([api.knowledgePoints(id), api.activities(id)]);
-    knowledge.value = kpResult.items;
-    activities.value = activityResult;
-    // The direct classroom preview can render its scripted lesson before the
-    // persistence services are started. Code evidence and profile updates still
-    // require the normal database-backed endpoints when the learner submits.
-    if (id === "python" && tab.value === "classroom") {
-      profile.value = null; next.value = null; stages.value = [];
-      return;
-    }
-    try {
-      profile.value = await api.profile(studentId.value, id);
-      if (id === "python") onProfileResolved(profile.value);
-      next.value = await api.nextActivity(studentId.value, id);
-    } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        profile.value = null; next.value = null; stages.value = [];
-        if (id === "python") onProfileResolved(null);
-      } else throw error;
-    }
-    await loadDiagnostic(profile.value ? "reassessment" : "initial");
-  } catch (error) {
-    courseLoadError.value = failureMessage(error);
-    fail(error);
-  } finally { loading.value = false }
+    const state = await loadCourseWorkspace(api, studentId.value, id);
+    if (!workspaceScope.isCurrent(token)) return;
+    courses.value = state.courses.length ? state.courses : OFFLINE_COURSES;
+    knowledge.value = state.knowledge;
+    activities.value = state.activities;
+    profile.value = state.profile;
+    next.value = state.next;
+    diagnostic.value = state.diagnostic;
+    diagnosticPhase.value = hasLearningEvidence(state.profile) ? "reassessment" : "initial";
+    courseLoadError.value = state.catalogError;
+    learningLoadError.value = state.learningError;
+    if (id === "python" && !state.learningError) onProfileResolved(state.profile);
+    connection.value = state.catalogError ? "offline" : state.learningError ? "degraded" : "online";
+    if (state.catalogError || state.learningError) notice.value = state.catalogError || state.learningError;
+  } finally {
+    if (workspaceScope.isCurrent(token)) loading.value = false;
+  }
 }
 
 async function loadDiagnostic(phase: DiagnosticPhase): Promise<void> {
-  diagnosticPhase.value = phase;
-  diagnostic.value = await api.diagnostic(courseId.value, phase);
-  diagnosticResult.value = null;
-  Object.keys(diagnosticAnswers).forEach((key) => delete diagnosticAnswers[key]);
+  if (diagnosticSubmitting.value || diagnosticLoading.value) return;
+  const token = diagnosticScope.begin();
+  diagnosticLoading.value = true;
+  try {
+    const quiz = await api.diagnostic(courseId.value, phase);
+    if (!diagnosticScope.isCurrent(token)) return;
+    diagnostic.value = quiz;
+    diagnosticPhase.value = quiz.phase;
+    diagnosticResult.value = null;
+    Object.keys(diagnosticAnswers).forEach((key) => delete diagnosticAnswers[key]);
+  } catch (error) { if (diagnosticScope.isCurrent(token)) fail(error); }
+  finally { if (diagnosticScope.isCurrent(token)) diagnosticLoading.value = false; }
 }
 
 async function submitDiagnostic(): Promise<void> {
-  if (diagnosticSubmitting.value) return;
+  if (diagnosticSubmitting.value || diagnosticLoading.value || diagnosticResult.value) return;
   if (!diagnostic.value || !diagnosticComplete.value) {
     notice.value = "请完成全部诊断题目后再提交。";
     return;
@@ -716,18 +753,19 @@ async function submitDiagnostic(): Promise<void> {
       }))
     );
     diagnosticResult.value = result;
-    profile.value = result.profile; stages.value = result.plan.stages; next.value = result.plan.next_activity;
+    onProfileResolved(result.profile); stages.value = result.plan.stages; next.value = result.plan.next_activity;
     tab.value = "overview";
     notice.value = `${result.phase === "initial" ? "初始诊断" : "阶段重测"}完成：${result.correct_count}/${result.total_count}，画像和学习路径已更新。`;
   } catch (error) { fail(error) } finally { diagnosticSubmitting.value = false }
 }
 
 async function generateAdaptiveProblem(useNext = false): Promise<void> {
-  if (courseId.value !== "python" || !profile.value) {
+  if (adaptiveLoading.value) return;
+  if (courseId.value !== "python" || !hasLearningEvidence(profile.value)) {
     notice.value = "请先完成 Python 能力诊断，再生成个性化编程题。";
     return;
   }
-  rememberStudent(); adaptiveLoading.value = true;
+  localStorage.setItem(STUDENT_ID_KEY, studentId.value); adaptiveLoading.value = true;
   try {
     const problem = useNext && adaptiveSubmission.value
       ? adaptiveSubmission.value.next_problem
@@ -740,7 +778,7 @@ async function generateAdaptiveProblem(useNext = false): Promise<void> {
 }
 
 async function submitAdaptiveProblem(): Promise<void> {
-  if (!adaptiveProblem.value || !adaptiveCode.value.trim()) return;
+  if (!adaptiveProblem.value || !adaptiveCode.value.trim() || adaptiveLoading.value) return;
   adaptiveLoading.value = true;
   try {
     const result = await api.submitAdaptiveProblem(
@@ -748,8 +786,8 @@ async function submitAdaptiveProblem(): Promise<void> {
     );
     adaptiveSubmission.value = result;
     profile.value = result.profile;
-    adaptiveAttemptIndex.value += 1;
-    notice.value = result.verification.accepted
+    if (!verificationUnavailable(result)) adaptiveAttemptIndex.value += 1;
+    notice.value = verificationUnavailable(result) ? result.feedback : result.verification.accepted
       ? "隐藏测试全部通过，学习画像已更新，并已准备下一道变式题。"
       : "代码尚未通过全部测试，请根据诊断信息继续调试。";
   } catch (error) { fail(error) } finally { adaptiveLoading.value = false }
@@ -757,33 +795,48 @@ async function submitAdaptiveProblem(): Promise<void> {
 
 async function ask(): Promise<void> {
   const trimmed = question.value.trim();
-  if (!trimmed) return;
+  if (!trimmed || qaLoading.value) return;
   if (trimmed.length < 2) {
     notice.value = "问题太短，请补充一点描述后再提问。";
     return;
   }
+  const token = workspaceScope.capture();
   qaLoading.value = true; qa.value = null;
-  try { qa.value = await api.ask(studentId.value, courseId.value, trimmed) }
-  catch (error) { fail(error) } finally { qaLoading.value = false }
+  try {
+    const result = await api.ask(studentId.value, courseId.value, trimmed);
+    if (workspaceScope.isCurrent(token)) qa.value = result;
+  } catch (error) { if (workspaceScope.isCurrent(token)) fail(error); }
+  finally { qaLoading.value = false; }
 }
 
-async function openActivity(id: string, destination: "practice" | "projects" = "practice"): Promise<void> {
+async function openActivity(id: string, destination?: "practice" | "projects"): Promise<void> {
+  if (submitting.value || projectSubmitting.value || projectGenerating.value) {
+    notice.value = "当前任务正在处理，完成后即可切换练习或项目。";
+    return;
+  }
+  const token = activityScope.begin();
+  activityLoading.value = true;
+  hintLoading.value = false;
   notice.value = "正在载入练习内容…";
   try {
-    activity.value = await api.activity(courseId.value, id);
+    const loaded = await api.activity(courseId.value, id);
+    if (!activityScope.isCurrent(token)) return;
+    let context: ScenarioContext | null = null;
+    let contextError = "";
+    if (loaded.type === "project" && loaded.scenario_scope === "post_course_finance_practice") {
+      try { context = await api.scenario(courseId.value, id); }
+      catch (error) { contextError = `项目要求已载入，补充场景暂不可用。${failureMessage(error)}`; }
+      if (!activityScope.isCurrent(token)) return;
+    }
+    // Commit the selection and its saved draft together, without an intervening await.
+    persistProjectWorkspace();
+    activity.value = loaded;
     lastActivityId.value = id;
     localStorage.setItem(practiceHistoryKey(), id);
-    answer.value = ""; submission.value = null; scenario.value = null;
+    answer.value = ""; submission.value = null; scenario.value = context;
     generatedProject.value = null;
     hint.value = null; hintLevel.value = 1; projectSubmission.value = null;
     practiceScaffoldLevel.value = 0;
-    projectSummary.value = ""; projectRepository.value = ""; projectTests.value = "";
-    if (
-      activity.value.type === "project"
-      && activity.value.scenario_scope === "post_course_finance_practice"
-    ) {
-      scenario.value = await api.scenario(courseId.value, activity.value.id);
-    }
     if (activity.value.type === "project") {
       rememberProject(activity.value.id);
       restoreProjectWorkspace(activity.value.id);
@@ -792,12 +845,15 @@ async function openActivity(id: string, destination: "practice" | "projects" = "
     code.value = activity.value.evaluation.starter_code ?? (language === "c"
       ? "#include <stdio.h>\n\nint main(void) {\n    // 在这里完成程序\n    return 0;\n}\n"
       : language === "python" ? "# 在这里完成程序\n" : "");
-    tab.value = destination;
-    notice.value = `已打开“${activity.value.title}”，可以开始作答。`;
-  } catch (error) { fail(error) }
+    tab.value = loaded.type === "project" ? "projects" : destination ?? "practice";
+    notice.value = contextError || `已打开“${activity.value.title}”，可以开始作答。`;
+  } catch (error) { if (activityScope.isCurrent(token)) fail(error); }
+  finally { if (activityScope.isCurrent(token)) activityLoading.value = false; }
 }
 
 async function openKnowledgePoint(id: string): Promise<void> {
+  const token = knowledgeScope.begin();
+  pendingKnowledgeId.value = id;
   selectedKnowledgeLoading.value = true;
   notice.value = `正在打开知识点 ${id}…`;
   try {
@@ -805,14 +861,24 @@ async function openKnowledgePoint(id: string): Promise<void> {
       api.knowledgePoint(courseId.value, id),
       api.activities(courseId.value, { knowledgePointId: id, learningStage: "after_class" })
     ]);
+    if (!knowledgeScope.isCurrent(token)) return;
     selectedKnowledge.value = knowledgePoint;
     selectedHomework.value = homework[0] ?? null;
+    workedExampleExpanded.value = false;
     tab.value = "overview";
     await nextTick();
+    if (!knowledgeScope.isCurrent(token)) return;
     knowledgeDetailSection.value?.scrollIntoView({ behavior: preferredScrollBehavior.value, block: "center" });
     notice.value = `已展开“${selectedKnowledge.value.title}”，详情已定位到当前视口。`;
-  } catch (error) { fail(error) }
-  finally { selectedKnowledgeLoading.value = false }
+  } catch (error) { if (knowledgeScope.isCurrent(token)) fail(error); }
+  finally { if (knowledgeScope.isCurrent(token)) { selectedKnowledgeLoading.value = false; pendingKnowledgeId.value = ""; } }
+}
+
+function closeKnowledgePoint(): void {
+  knowledgeScope.invalidate();
+  selectedKnowledgeLoading.value = false; pendingKnowledgeId.value = "";
+  selectedKnowledge.value = null; selectedHomework.value = null;
+  notice.value = "知识点详情已收起。";
 }
 
 function revealNextScaffold(): void {
@@ -834,16 +900,21 @@ async function openNextActivity(): Promise<void> {
 }
 
 async function requestHint(): Promise<void> {
-  if (!activity.value) return;
+  if (!activity.value || activityLoading.value || hintLoading.value) return;
+  const token = activityScope.capture();
+  hintLoading.value = true;
   try {
-    hint.value = await api.hint(studentId.value, courseId.value, activity.value.id, hintLevel.value);
+    const result = await api.hint(studentId.value, courseId.value, activity.value.id, hintLevel.value);
+    if (!activityScope.isCurrent(token)) return;
+    hint.value = result;
     if (hintLevel.value < 3) hintLevel.value = (hintLevel.value + 1) as 1 | 2 | 3;
     notice.value = `第 ${hint.value.level} 层提示已生成。`;
-  } catch (error) { fail(error) }
+  } catch (error) { if (activityScope.isCurrent(token)) fail(error); }
+  finally { if (activityScope.isCurrent(token)) hintLoading.value = false; }
 }
 
 async function submitProject(): Promise<void> {
-  if (!activity.value || activity.value.type !== "project" || projectSubmitting.value) return;
+  if (!activity.value || activity.value.type !== "project" || projectSubmitting.value || activityLoading.value) return;
   if (projectSummary.value.trim().length < 30) {
     notice.value = "实现与验证说明至少需要 30 个字，请补充后再提交。";
     return;
@@ -863,7 +934,7 @@ async function submitProject(): Promise<void> {
 }
 
 async function generatePersonalizedProject(): Promise<void> {
-  if (!activity.value || activity.value.type !== "project") return;
+  if (!activity.value || activity.value.type !== "project" || projectGenerating.value || activityLoading.value) return;
   if (!projectGoal.value.trim()) {
     notice.value = "请先填写你希望重点提升的目标。";
     return;
@@ -888,12 +959,14 @@ async function generatePersonalizedProject(): Promise<void> {
       difficulty: requestedDifficulty,
       estimated_minutes: Math.min(480, Math.max(30, activity.value.estimated_minutes))
     });
-    notice.value = "个性化综合项目已生成，并完成安全与来源检查。";
+    notice.value = generatedProject.value.degraded
+      ? "项目变体服务已降级，当前显示固定安全版本，可继续完成公开任务。"
+      : "个性化综合项目已生成，并完成安全与来源检查。";
   } catch (error) { fail(error) } finally { projectGenerating.value = false }
 }
 
 async function submit(): Promise<void> {
-  if (!activity.value || submitting.value) return;
+  if (!activity.value || submitting.value || activityLoading.value) return;
   const isCode = activity.value.type === "code" || activity.value.type === "debug";
   if (isCode && !code.value.trim()) {
     notice.value = "请先编写代码再提交验证。";
@@ -909,26 +982,20 @@ async function submit(): Promise<void> {
       isCode ? { language: activity.value.evaluation.runtime?.language, source_code: code.value } : { response: answer.value });
     profile.value = { student_id: studentId.value, course_id: courseId.value, mastery: submission.value.mastery_updated };
     next.value = submission.value.next_activity;
-    notice.value = submission.value.verification?.accepted ? "验证通过，学习画像已更新。" : "已返回可操作的验证反馈，请继续修改。";
+    notice.value = verificationUnavailable(submission.value) ? submission.value.feedback : submission.value.verification?.accepted ? "验证通过，学习画像已更新。" : "已返回可操作的验证反馈，请继续修改。";
   } catch (error) { fail(error) } finally { submitting.value = false }
 }
 
 onMounted(async () => {
   systemThemeQuery.addEventListener("change", syncSystemTheme);
   window.addEventListener("resize", syncViewport);
-  try {
-    await fetchApiHealth(); connection.value = "online";
-    courses.value = await api.courses(); await loadCourse(courseId.value);
-  } catch (error) {
-    connection.value = "offline";
-    if (!courses.value.length) courses.value = OFFLINE_COURSES;
-    courseLoadError.value = failureMessage(error);
-    fail(error);
-  }
-  finally { loading.value = false }
+  await loadCourse(courseId.value);
 });
 
 onBeforeUnmount(() => {
+  workspaceScope.invalidate();
+  activityScope.invalidate(); knowledgeScope.invalidate(); diagnosticScope.invalidate();
+  if (noticeTimer) clearTimeout(noticeTimer);
   systemThemeQuery.removeEventListener("change", syncSystemTheme);
   window.removeEventListener("resize", syncViewport);
 });
@@ -939,6 +1006,9 @@ onBeforeUnmount(() => {
     v-if="welcomeOpen"
     :display-name="displayName"
     :device-mode="uiPreferences.deviceMode"
+    :dark-theme="darkTheme"
+    :inert="settingsOpen"
+    @toggle-theme="toggleTheme"
     @start="finishWelcome"
     @settings="settingsOpen = true"
     @update-device="updateUiPreferences({ deviceMode: $event })"
@@ -949,6 +1019,7 @@ onBeforeUnmount(() => {
     :preferences="uiPreferences"
     :accounts="localAccounts"
     :current-student-id="studentId"
+    :account-busy="workspaceBusy || accountSwitching"
     @close="settingsOpen = false"
     @update="updateUiPreferences"
     @update-name="updateDisplayName"
@@ -957,28 +1028,28 @@ onBeforeUnmount(() => {
     @replay="replayWelcome"
     @reset="resetUiPreferences"
   />
-  <div v-if="!welcomeOpen" class="app-shell" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
+  <div v-if="!welcomeOpen" class="app-shell" :inert="settingsOpen || assessmentWarningOpen" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
     <aside v-if="!classroomFocusMode" class="sidebar">
       <div class="brand"><span aria-hidden="true">&lt;/&gt;</span><div><strong>词元研究所</strong><small>LEARNING CORE</small></div></div>
       <nav class="course-nav">
         <p>课程索引</p>
-        <button v-for="item in courses" :key="item.id" :class="{ active: courseId === item.id }" :title="item.title" @click="loadCourse(item.id)">
-          <b>{{ item.id === "data_structures" ? "DS" : item.id.toUpperCase() }}</b>
-          <span><strong>{{ item.title }}</strong><small>{{ item.implemented_core_concepts }} 个知识点</small></span>
+        <button v-for="item in courses" :key="item.id" :disabled="workspaceBusy" :class="{ active: courseId === item.id }" :title="item.title" @click="loadCourse(item.id)">
+          <b>{{ item.id === "data_structures" ? "DS" : item.id === "python" ? "PY" : "C" }}</b>
+          <span><strong>{{ item.title }}</strong><small>{{ item.status === "offline_preview" ? "等待载入" : `${item.implemented_core_concepts} 个知识点` }}</small></span>
         </button>
       </nav>
-      <div class="sidebar-progress"><div><span>课程进度</span><strong>{{ courseLoadError ? "—" : `${masteredCount}/${knowledge.length}` }}</strong></div><i><span :style="{ width: `${!courseLoadError && knowledge.length ? masteredCount / knowledge.length * 100 : 0}%` }"></span></i><small>由测评、练习和代码验证持续更新</small></div>
-      <div class="connection" :data-state="connection"><i></i> API {{ connection === "online" ? "服务正常" : connection === "offline" ? "未连接" : "连接中" }}</div>
+      <div class="sidebar-progress"><div><span>课程进度</span><strong>{{ (loading || courseLoadError || learningLoadError) ? "—" : `${masteredCount}/${knowledge.length}` }}</strong></div><i><span :style="{ width: `${!courseLoadError && knowledge.length ? masteredCount / knowledge.length * 100 : 0}%` }"></span></i><small>由测评、练习和代码验证持续更新</small></div>
+      <div class="connection" :data-state="connection"><i></i> API {{ connection === "online" ? "服务正常" : connection === "offline" ? "未连接" : connection === "degraded" ? "部分功能暂不可用" : "连接中" }}</div>
     </aside>
 
     <main class="workspace">
       <header v-if="!classroomFocusMode" class="topbar">
         <div class="taskbar-title"><h1>学习任务台</h1><span>{{ selectedCourse?.title ?? "课程工作台" }}</span></div>
-        <div class="taskbar-status" :data-state="connection"><i></i><span><b>本地状态</b><small>{{ connection === "online" ? "课程服务已连接" : connection === "offline" ? "使用本地降级内容" : "正在连接课程服务" }}</small></span></div>
+        <div class="taskbar-status" :data-state="connection"><i></i><span><b>服务状态</b><small>{{ connection === "online" ? "课程服务已连接" : connection === "offline" ? "课程服务暂不可用" : connection === "degraded" ? "部分学习服务暂不可用" : "正在连接课程服务" }}</small></span></div>
         <div class="accent-quick-switch" role="group" aria-label="颜色风格">
           <button v-for="item in ACCENT_MODES" :key="item.id" :class="[item.id, { active: uiPreferences.accent === item.id }]" :aria-label="`切换为${item.label}`" :aria-pressed="uiPreferences.accent === item.id" :title="item.label" @click="updateUiPreferences({ accent: item.id })"><i aria-hidden="true"></i><span>{{ item.shortLabel }}</span></button>
         </div>
-        <div class="taskbar-user"><span>{{ greeting }}</span><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div>
+        <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :dark="darkTheme" @toggle="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
       </header>
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>
       <nav v-if="!classroomFocusMode" class="tabs">
@@ -987,9 +1058,10 @@ onBeforeUnmount(() => {
         <button :class="{ active: tab === 'path' }" :aria-current="tab === 'path' ? 'page' : undefined" @click="openPath">个性路径</button>
         <button :class="{ active: tab === 'tutor' }" :aria-current="tab === 'tutor' ? 'page' : undefined" @click="openTutor">课程辅导</button>
         <button :class="{ active: tab === 'practice' }" :aria-current="tab === 'practice' ? 'page' : undefined" @click="openPractice">练习工坊</button>
-        <button v-if="courseId === 'python'" :class="{ active: tab === 'projects' }" :aria-current="tab === 'projects' ? 'page' : undefined" @click="openProjects">项目实战</button>
+        <button :class="{ active: tab === 'projects' }" :aria-current="tab === 'projects' ? 'page' : undefined" @click="openProjects">项目实战</button>
       </nav>
-      <div v-if="loading" class="loading" role="status" aria-live="polite"><i></i>正在同步课程与学情数据…</div>
+      <section v-if="courseLoadError || learningLoadError" class="panel service-recovery" role="status"><p>{{ courseLoadError || learningLoadError }}</p><button class="secondary" :disabled="loading" @click="loadCourse(courseId)">重新载入课程</button></section>
+      <div v-if="loading && !(tab === 'classroom' && activeClassroom)" class="loading" role="status" aria-live="polite"><i></i>正在同步课程与学情数据…</div>
 
       <template v-else-if="tab === 'overview'">
         <section class="hero-card">
@@ -997,7 +1069,7 @@ onBeforeUnmount(() => {
             <button v-if="next" @click="openNextActivity">继续下一项学习</button>
             <button v-else @click="startBaseline">建立能力基线</button>
           </div>
-          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ courseLoadError ? "—" : `${averageMastery}%` }}</strong><span>{{ courseLoadError ? "画像服务未连接" : "当前已测知识" }}<br />{{ courseLoadError ? "等待可靠数据" : "平均掌握度" }}</span></div></div>
+          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : `${averageMastery}%` }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
         <section v-if="courseId === 'python'" class="classroom-invitation">
           <div><h3>不是再开一个聊天框，来真正上一节课。</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
@@ -1005,8 +1077,8 @@ onBeforeUnmount(() => {
         </section>
         <section class="metrics">
           <article><span>课程知识点</span><strong>{{ courseLoadError ? "—" : knowledge.length }}</strong><small>{{ courseLoadError ? "课程索引未载入" : "统一课程包" }}</small></article>
-          <article><span>已有证据</span><strong>{{ courseLoadError ? "—" : (profile?.mastery.length ?? 0) }}</strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
-          <article><span>达到掌握</span><strong>{{ courseLoadError ? "—" : masteredCount }}</strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
+          <article><span>已有证据</span><strong>{{ (courseLoadError || learningLoadError) ? "—" : measuredMastery(profile).length }}</strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
+          <article><span>达到掌握</span><strong>{{ (courseLoadError || learningLoadError) ? "—" : masteredCount }}</strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
           <article><span>实践活动</span><strong>{{ courseLoadError ? "—" : activities.length }}</strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
         </section>
         <section v-if="diagnostic" ref="diagnosticSection" class="panel assessment baseline-target">
@@ -1014,11 +1086,11 @@ onBeforeUnmount(() => {
           <div class="diagnostic-list">
             <article v-for="(item, index) in diagnostic.items" :key="item.exercise_id">
               <header><em>{{ String(index + 1).padStart(2, "0") }}</em><div><strong>{{ item.prompt }}</strong><small>{{ item.concept_ids.join(" · ") }}</small></div></header>
-              <div><button v-for="option in item.options" :key="option.id" :class="{ active: diagnosticAnswers[item.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="diagnosticAnswers[item.exercise_id] = option.id"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b>{{ option.text }}</button></div>
+              <div><button v-for="option in item.options" :key="option.id" :class="{ active: diagnosticAnswers[item.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[item.exercise_id] === option.id" :disabled="diagnosticSubmitting || diagnosticLoading || Boolean(diagnosticResult)" @click="diagnosticAnswers[item.exercise_id] = option.id"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b>{{ option.text }}</button></div>
             </article>
           </div>
-          <footer class="diagnostic-actions"><span>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已作答</span><button class="primary" :disabled="!diagnosticComplete || diagnosticSubmitting" @click="submitDiagnostic">{{ diagnosticSubmitting ? "正在生成个性化路径…" : diagnostic.phase === "initial" ? "提交诊断并生成路径" : "提交重测并更新画像" }}</button></footer>
-          <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据；{{ diagnosticResult.unknown_count ? `“我不知道” ${diagnosticResult.unknown_count} 题已安排回补。` : "画像和后续路径已经刷新。" }}</span><button v-if="diagnosticResult.phase === 'initial'" @click="loadDiagnostic('reassessment')">准备阶段重测</button></div>
+          <footer class="diagnostic-actions"><span>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已作答</span><button class="primary" :disabled="!diagnosticComplete || diagnosticSubmitting || diagnosticLoading || Boolean(diagnosticResult)" @click="submitDiagnostic">{{ diagnosticResult ? "本轮已提交" : diagnosticSubmitting ? "正在生成个性化路径…" : diagnostic.phase === "initial" ? "提交诊断并生成路径" : "提交重测并更新画像" }}</button></footer>
+          <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据；{{ diagnosticResult.unknown_count ? `“我不知道” ${diagnosticResult.unknown_count} 题已安排回补。` : "画像和后续路径已经刷新。" }}</span><button :disabled="diagnosticLoading" @click="loadDiagnostic('reassessment')">{{ diagnosticLoading ? "正在载入…" : "准备阶段重测" }}</button></div>
         </section>
         <section ref="knowledgeMapSection" class="panel knowledge-map-target">
           <header><div><span class="eyebrow">COURSE LEARNING ROADMAP</span><h2>{{ selectedCourse?.title ?? "课程" }} · 知识路线</h2></div><p>先看全局，再按前置关系逐步推进；每个节点都连接讲解、练习与学习证据。</p></header>
@@ -1041,7 +1113,7 @@ onBeforeUnmount(() => {
               </header>
               <div class="knowledge-lane">
                 <article v-for="item in chapter.items" :key="item.id" :class="[`state-${knowledgeState(item)}`, { selected: selectedKnowledge?.id === item.id }]">
-                  <button type="button" :aria-label="`${item.title}，${knowledgeStateLabel(item)}`" :aria-busy="selectedKnowledgeLoading && selectedKnowledge?.id === item.id" @click="openKnowledgePoint(item.id)">
+                  <button type="button" :aria-label="`${item.title}，${knowledgeStateLabel(item)}`" :aria-busy="selectedKnowledgeLoading && pendingKnowledgeId === item.id" @click="openKnowledgePoint(item.id)">
                     <header><span>{{ knowledgeStateLabel(item) }}</span><small>{{ item.id }} · {{ difficulty(item.difficulty) }}</small></header>
                     <h4>{{ item.title }}</h4>
                     <div class="knowledge-subskills"><span v-for="concept in item.concepts.slice(0, 3)" :key="concept">{{ concept }}</span><b v-if="item.concepts.length > 3">+{{ item.concepts.length - 3 }}</b></div>
@@ -1053,7 +1125,7 @@ onBeforeUnmount(() => {
           </div>
           <div v-if="!filteredKnowledge.length" class="empty compact">{{ courseLoadError ? "课程索引尚未载入；启动本地 API 后即可浏览完整知识路线。" : "没有匹配的知识点，请尝试其他关键词。" }}</div>
            <section v-if="selectedKnowledge" ref="knowledgeDetailSection" class="lesson-detail" :aria-busy="selectedKnowledgeLoading">
-             <header><div><span>{{ selectedKnowledge.id }}</span><h3>{{ selectedKnowledge.title }}</h3></div><button @click="selectedKnowledge = null; notice = '知识点详情已收起。'">关闭</button></header>
+             <header><div><span>{{ selectedKnowledge.id }}</span><h3>{{ selectedKnowledge.title }}</h3></div><button @click="closeKnowledgePoint">关闭</button></header>
             <p>{{ selectedKnowledge.lesson.summary }}</p>
             <section class="lesson-concepts"><b>本节点包含 {{ selectedKnowledge.concepts.length }} 项细分技能</b><div><span v-for="concept in selectedKnowledge.concepts" :key="concept">{{ concept }}</span></div></section>
             <div><article><b>学习目标</b><ul><li v-for="item in selectedKnowledge.learning_objectives" :key="item">{{ item }}</li></ul></article><article><b>关键要点</b><ul><li v-for="item in selectedKnowledge.lesson.key_points" :key="item">{{ item }}</li></ul></article><article><b>常见误区</b><ul><li v-for="item in selectedKnowledge.lesson.common_mistakes" :key="item">{{ item }}</li></ul></article></div>
@@ -1066,7 +1138,7 @@ onBeforeUnmount(() => {
       </template>
 
       <template v-else-if="tab === 'path'">
-        <section v-if="profile" class="split-layout">
+        <section v-if="hasLearningEvidence(profile)" class="split-layout">
           <div class="panel path-panel"><header><div><h2>个性化学习路径</h2></div><p>由掌握度和前置关系驱动，不由模型自由编造。</p></header>
             <div v-if="stages.length" class="stage-list"><article v-for="(stage, index) in stages" :key="stage.stage"><em>{{ index + 1 }}</em><div><small>{{ stage.stage }}</small><h3>{{ stage.objective }}</h3><p>{{ stage.reason }}</p><b v-for="id in stage.knowledge_point_ids" :key="id">{{ id }}</b></div></article></div>
             <div v-else class="empty">当前路径来自实时下一任务推荐；重新建立能力基线可生成三阶段计划。</div>
@@ -1079,31 +1151,31 @@ onBeforeUnmount(() => {
       <template v-else-if="tab === 'tutor'">
         <section class="tutor-layout">
           <div class="panel tutor"><header><div><h2>有依据的课程辅导</h2></div><p>回答必须来自已审核课程资料；依据不足时明确拒答。</p></header>
-            <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qa.status === "answered" ? "已通过质量监督" : "依据不足" }}</b><p>{{ qa.answer || "当前资料不足以支持这个问题，我不会编造答案。" }}</p><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_id }} · {{ Math.round(citation.score * 100) }}%</span></div><ol class="trace"><li v-for="step in qa.trace" :key="`${step.component}-${step.status}`" :data-status="step.status"><b>{{ step.component }}</b><span>{{ step.detail }}</span></li></ol></article></div>
+            <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qaFeedbackLabel(qa) }}</b><SafeMarkdown :source="qa.answer || '当前资料不足以支持这个问题，我不会编造答案。'" /><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_title || citation.source_id }} · 检索相关度 {{ Math.round(citation.score * 100) }}%</span></div><ol class="trace"><li v-for="step in qa.trace" :key="`${step.component}-${step.status}`" :data-status="step.status"><b>{{ step.component }}</b><span>{{ step.detail }}</span></li></ol></article></div>
             <div class="composer"><textarea v-model="question" rows="3" maxlength="1000" aria-label="向课程辅导提问"></textarea><button class="primary" :disabled="qaLoading" @click="ask">{{ qaLoading ? "检索中…" : "发送问题" }}</button></div>
           </div>
-            <aside class="agent-stack"><div class="agent-title"><b>智能体协作状态</b></div><article><em>01</em><div><strong>学情规划智能体</strong><p>选择合法的下一活动</p></div><i>待命</i></article><article class="active"><em>02</em><div><strong>课程辅导智能体</strong><p>根据课程资料组织讲解</p></div><i>工作中</i></article><article><em>03</em><div><strong>质量监督智能体</strong><p>检查引用、安全与事实</p></div><i>监督中</i></article></aside>
+            <aside class="agent-stack"><div class="agent-title"><b>智能体协作状态</b></div><article><em>01</em><div><strong>学情规划智能体</strong><p>选择合法的下一活动</p></div><i>待命</i></article><article :class="{ active: qaLoading }"><em>02</em><div><strong>课程辅导智能体</strong><p>根据课程资料组织讲解</p></div><i>{{ qaLoading ? "检索与回答中" : qa ? "已返回" : "待命" }}</i></article><article><em>03</em><div><strong>质量监督智能体</strong><p>检查引用、安全与事实</p></div><i>{{ qaLoading ? "等待回答" : qa ? qaFeedbackLabel(qa) : "待命" }}</i></article></aside>
         </section>
       </template>
 
       <template v-else-if="tab === 'projects'">
         <section class="project-center-hero">
-          <div><span>Python 项目实战</span><h2>把课程能力组合成真正可运行的作品</h2><p>阶段项目对应刚完成的课程能力，综合项目把算法、文件处理与程序可靠性放进脱敏财经场景。核心考核始终是计算机能力。</p></div>
+          <div><span>{{ selectedCourse?.title ?? "课程" }} · 项目实战</span><h2>把课程能力组合成真正可运行的作品</h2><p>阶段项目对应刚完成的课程能力，综合项目把算法、文件处理与程序可靠性放进脱敏财经场景。核心考核始终是计算机能力。</p></div>
           <aside><strong>{{ courseLoadError ? "—" : projectActivities.length }}</strong><span>{{ courseLoadError ? "项目索引未连接" : "个可浏览项目" }}</span><small>{{ courseLoadError ? "启动本地 API 后重新载入" : `${savedProjects.length} 个已加入“我的项目”` }}</small></aside>
         </section>
 
         <section v-if="courseLoadError" class="panel service-state" role="alert">
-          <span>COURSE SERVICE OFFLINE</span><h2>项目目录没有载入，不代表项目数为 0</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
+          <span>COURSE SERVICE OFFLINE</span><h2>项目目录暂未载入</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
         </section>
 
         <section v-if="!courseLoadError" class="project-shelf">
           <header><div><span>01</span><h3>阶段项目</h3><p>在关键阶段结束后进行一次稳定、可重复的综合验证。</p></div></header>
           <div><article v-for="item in stageProjects" :key="item.id" :data-ready="projectReadiness(item).ready"><header><span>{{ projectReadiness(item).ready ? '已解锁' : '可预览' }}</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">{{ projectReadiness(item).ready ? '开始项目' : '查看要求' }} →</button></footer></article></div>
-          <p v-if="!stageProjects.length" class="empty compact">阶段项目正在载入。</p>
+          <p v-if="!stageProjects.length" class="empty compact">本课程暂无阶段项目，可继续下方综合项目。</p>
         </section>
 
         <section v-if="!courseLoadError" class="project-shelf comprehensive">
-          <header><div><span>02</span><h3>综合项目</h3><p>财经内容只提供应用语境，评分聚焦 Python、算法、文件处理、测试与可追溯性。</p></div></header>
+          <header><div><span>02</span><h3>综合项目</h3><p>财经内容只提供应用语境，评分聚焦当前课程的程序设计、算法、测试与可追溯性。</p></div></header>
           <div><article v-for="item in comprehensiveProjects" :key="item.id" :data-ready="projectReadiness(item).ready"><header><span>脱敏合成场景</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">查看项目 →</button></footer></article></div>
         </section>
 
@@ -1113,33 +1185,33 @@ onBeforeUnmount(() => {
           <p v-else class="empty compact">打开任一项目后，它会自动出现在这里。</p>
         </section>
 
-        <section v-if="!courseLoadError && activity?.type === 'project'" class="project-workspace panel">
-          <header class="activity-title"><div><span>{{ activity.id.startsWith('PY-PROJ-STAGE-') ? '阶段项目' : '综合项目' }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><button class="secondary" @click="activity = null">收起工作区</button></header>
+        <section v-if="!courseLoadError && activity?.type === 'project'" class="project-workspace panel" :aria-busy="activityLoading" :inert="activityLoading || submitting || projectSubmitting || projectGenerating">
+          <header class="activity-title"><div><span>{{ activity.id.startsWith('PY-PROJ-STAGE-') ? '阶段项目' : '综合项目' }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><button class="secondary" :disabled="projectSubmitting || projectGenerating" @click="closeProjectWorkspace">收起工作区</button></header>
           <p class="prompt">{{ activity.summary }}</p>
           <div class="project-brief"><section><b>你要完成</b><ol><li v-for="item in activity.requirements" :key="item">{{ item }}</li></ol></section><section><b>提交成果</b><ul><li v-for="item in activity.deliverables" :key="item">{{ item }}</li></ul></section></div>
           <section class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
           <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>不包含真实个人或业务数据</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span v-for="source in scenario.source_refs" :key="source">{{ source }}</span><small>{{ scenario.notice }}</small></footer></section>
-          <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3" maxlength="500" aria-label="项目变体重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>AI 生成内容</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
-          <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
+          <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" :disabled="activityLoading || projectGenerating" rows="3" maxlength="500" aria-label="项目变体重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>{{ generatedProject.degraded ? "固定课程任务" : "AI 生成内容" }}</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
+          <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" :disabled="activityLoading || projectSubmitting" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" :disabled="activityLoading || projectSubmitting" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" :disabled="activityLoading || projectSubmitting" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
           <div v-if="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? '✓' : '!' }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
         </section>
       </template>
 
       <template v-else-if="tab === 'practice'">
         <section v-if="courseLoadError" class="panel service-state" role="alert">
-          <span>PRACTICE SERVICE OFFLINE</span><h2>练习目录暂未载入</h2><p>{{ courseLoadError }} 当前空白不是“0 道练习”的有效结果。</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
+          <span>PRACTICE SERVICE OFFLINE</span><h2>练习目录暂未载入</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
         </section>
         <section v-if="!courseLoadError && courseId === 'python'" class="panel adaptive-lab">
           <header><div><h2>个性化 Python 编程挑战</h2></div><p>根据真实测评与代码证据选择薄弱点；题目变式由规则生成，答案由隐藏测试判定。</p></header>
-          <div v-if="!profile" class="adaptive-empty"><strong>先完成能力诊断</strong><span>建立初始画像后，系统才能选择你的薄弱知识点。</span><button class="primary" @click="tab = 'overview'">前往诊断</button></div>
+          <div v-if="!hasLearningEvidence(profile)" class="adaptive-empty"><strong>先完成能力诊断</strong><span>建立初始画像后，系统才能选择你的薄弱知识点。</span><button class="primary" @click="tab = 'overview'">前往诊断</button></div>
           <div v-else-if="!adaptiveProblem" class="adaptive-empty"><strong>准备生成第一道个性化题目</strong><span>系统优先选择掌握度最低且已有可靠题型的知识点。</span><button class="primary" :disabled="adaptiveLoading" @click="generateAdaptiveProblem()">{{ adaptiveLoading ? "生成中…" : "生成我的新题" }}</button></div>
           <template v-else>
             <div class="adaptive-heading"><div><span v-for="concept in adaptiveProblem.concept_ids" :key="concept">{{ concept }}</span><h3>{{ adaptiveProblem.title }}</h3></div><b>{{ difficulty(adaptiveProblem.difficulty) }}</b></div>
             <p class="prompt">{{ adaptiveProblem.prompt }}</p>
             <div class="adaptive-spec"><section><strong>约束</strong><ul><li v-for="item in adaptiveProblem.constraints" :key="item">{{ item }}</li></ul></section><section><strong>公开样例</strong><div v-for="(item, index) in adaptiveProblem.public_examples" :key="index"><code>输入：{{ item.input }}</code><code>输出：{{ item.expected_output }}</code></div></section></div>
-            <div class="editor"><header><i></i><i></i><i></i><b>Python · 隐藏测试验证</b></header><textarea v-model="adaptiveCode" spellcheck="false" aria-label="Python 代码答案"></textarea></div>
+            <div class="editor"><header><i></i><i></i><i></i><b>Python · 隐藏测试验证</b></header><textarea v-model="adaptiveCode" :disabled="adaptiveLoading" spellcheck="false" aria-label="Python 代码答案"></textarea></div>
             <footer class="adaptive-actions"><small>{{ adaptiveProblem.generation_notice }}</small><button class="primary" :disabled="adaptiveLoading || !adaptiveCode.trim()" @click="submitAdaptiveProblem">{{ adaptiveLoading ? "验证中…" : "运行并提交" }}</button></footer>
-            <div v-if="adaptiveSubmission" class="verification" :data-pass="adaptiveSubmission.verification.accepted"><strong>{{ adaptiveSubmission.verification.accepted ? "挑战通过，画像已更新" : "尚未通过隐藏测试" }}</strong><p>{{ adaptiveSubmission.feedback }}</p><small>通过 {{ adaptiveSubmission.verification.passed_tests }} / {{ adaptiveSubmission.verification.total_tests }} 个测试</small><button v-if="adaptiveSubmission.verification.accepted" class="primary" @click="generateAdaptiveProblem(true)">进入下一道变式题</button></div>
+            <div v-if="adaptiveSubmission" class="verification" :data-pass="adaptiveSubmission.verification.accepted"><strong>{{ verificationUnavailable(adaptiveSubmission) ? "验证服务暂不可用" : adaptiveSubmission.verification.accepted ? "挑战通过，画像已更新" : "尚未通过隐藏测试" }}</strong><p>{{ adaptiveSubmission.feedback }}</p><small v-if="!verificationUnavailable(adaptiveSubmission)">通过 {{ adaptiveSubmission.verification.passed_tests }} / {{ adaptiveSubmission.verification.total_tests }} 个测试</small><button v-if="adaptiveSubmission.verification.accepted" class="primary" @click="generateAdaptiveProblem(true)">进入下一道变式题</button></div>
           </template>
         </section>
         <section v-if="!courseLoadError" class="practice-compass panel">
@@ -1154,20 +1226,20 @@ onBeforeUnmount(() => {
             <div class="activity-filters"><button v-for="item in ([['all','全部'],['homework','课后'],['code','编程'],['debug','排错']] as const)" :key="item[0]" :class="{ active: activityFilter === item[0] }" :aria-pressed="activityFilter === item[0]" @click="activityFilter = item[0]">{{ item[1] }}</button></div>
             <div class="activity-scroll"><button v-for="item in filteredActivities" :key="item.id" :class="{ active: activity?.id === item.id }" @click="openActivity(item.id)"><span>{{ item.learning_stage === 'after_class' ? '课后练习' : activityType(item.type) }}</span><strong>{{ item.title }}</strong><small>{{ item.id }} · {{ item.estimated_minutes }} 分钟</small></button><p v-if="!filteredActivities.length" class="empty compact">没有找到匹配练习，试试更短的关键词或清空筛选。</p></div>
           </aside>
-          <div class="panel activity-workspace"><template v-if="activity"><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
+          <div class="panel activity-workspace" :aria-busy="activityLoading" :inert="activityLoading || submitting || projectSubmitting || projectGenerating"><template v-if="activity"><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2><small>{{ activity.id }}</small></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
             <section v-if="activity.learning_stage === 'after_class'" class="beginner-task-brief"><header><div><small>本节知识 → 课后迁移</small><h3>先读懂任务，再开始写代码</h3></div><b>中文初学者版</b></header><div class="task-io"><article><span>输入是什么</span><p>{{ activity.input_format }}</p></article><article><span>需要输出</span><p>{{ activity.output_format }}</p></article></div><div v-if="activity.public_examples.length" class="task-examples"><b>先看一个公开样例</b><article v-for="(example, index) in activity.public_examples" :key="index"><div><code>输入\n{{ example.input }}</code><code>输出\n{{ example.expected_output }}</code></div><p>{{ example.explanation }}</p></article></div><ul class="task-constraints"><li v-for="item in activity.constraints" :key="item">{{ item }}</li></ul></section>
             <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>经管背景只服务课程综合实践</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span v-for="source in scenario.source_refs" :key="source">{{ source }}</span><small>{{ scenario.notice }}</small></footer></section>
-            <section v-if="activity.type === 'project'" class="project-generator"><header><div><h3>按当前能力生成综合项目</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" rows="3" maxlength="500" aria-label="综合项目重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? "生成中…" : "生成我的项目" }}</button>
+            <section v-if="activity.type === 'project'" class="project-generator"><header><div><h3>按当前能力生成综合项目</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" :disabled="activityLoading || projectGenerating" rows="3" maxlength="500" aria-label="综合项目重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? "生成中…" : "生成我的项目" }}</button>
               <article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? "固定安全版本" : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>AI生成内容</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div><div class="dataset-preview"><strong>固定合成数据 · {{ generatedProject.dataset.filename }}</strong><div><table><thead><tr><th v-for="column in generatedProject.dataset.columns" :key="column">{{ column }}</th></tr></thead><tbody><tr v-for="(row, index) in generatedProject.dataset.rows" :key="index"><td v-for="column in generatedProject.dataset.columns" :key="column">{{ row[column] ?? "—" }}</td></tr></tbody></table></div><small>SHA-256：{{ generatedProject.dataset.sha256 }}</small></div><footer><span v-for="source in generatedProject.source_refs" :key="source">{{ source }}</span><small>{{ generatedProject.ai_generated_notice }}</small></footer></article>
             </section>
             <section v-if="activity.type === 'project'" class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
-            <div v-if="activity.evaluation.options" class="options"><label v-for="option in activity.evaluation.options" :key="option.id" :class="{ selected: answer === option.id }"><input v-model="answer" type="radio" :value="option.id" /><b>{{ option.id }}</b><span>{{ option.text }}</span></label></div>
-            <div v-else-if="activity.type === 'code' || activity.type === 'debug'" class="editor"><header><i></i><i></i><i></i><b>{{ activity.evaluation.runtime?.language }} · 隔离运行环境</b></header><textarea v-model="code" spellcheck="false" aria-label="练习代码答案"></textarea></div>
+            <div v-if="activity.evaluation.options" class="options"><label v-for="option in activity.evaluation.options" :key="option.id" :class="{ selected: answer === option.id }"><input v-model="answer" :disabled="submitting || activityLoading" type="radio" :value="option.id" /><b>{{ option.id }}</b><span>{{ option.text }}</span></label></div>
+            <div v-else-if="activity.type === 'code' || activity.type === 'debug'" class="editor"><header><i></i><i></i><i></i><b>{{ activity.evaluation.runtime?.language }} · 隔离运行环境</b></header><textarea v-model="code" :disabled="submitting || activityLoading" spellcheck="false" aria-label="练习代码答案"></textarea></div>
             <section v-if="activity.learning_stage === 'after_class' && activity.scaffolding.length" class="local-scaffolding"><header><div><b>卡住时再看提示</b><span>提示逐级展开，不直接给完整答案</span></div><button @click="revealNextScaffold" :disabled="practiceScaffoldLevel >= activity.scaffolding.length">{{ practiceScaffoldLevel ? '再看一步' : '看第一步' }}</button></header><ol v-if="practiceScaffoldLevel"><li v-for="(step, index) in activity.scaffolding.slice(0, practiceScaffoldLevel)" :key="step"><em>{{ index + 1 }}</em><span>{{ step }}</span></li></ol></section>
-            <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
-            <textarea v-else v-model="answer" class="answer-box" rows="7" placeholder="输入你的回答…" aria-label="练习回答"></textarea><button v-if="activity.type !== 'project'" class="primary" :disabled="submitting" @click="submit">{{ submitting ? "验证中…" : "提交并验证" }}</button>
-            <section class="hint-box"><button @click="requestHint">{{ hint ? `继续提示（${hintLevel}/3）` : "获取分层提示" }}</button><p v-if="hint"><b>第 {{ hint.level }} 层提示</b>{{ hint.hint }}</p></section>
-            <div v-if="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><strong>{{ submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
+            <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" :disabled="activityLoading || projectSubmitting" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" :disabled="activityLoading || projectSubmitting" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" :disabled="activityLoading || projectSubmitting" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
+            <textarea v-else v-model="answer" :disabled="submitting || activityLoading" class="answer-box" rows="7" placeholder="输入你的回答…" aria-label="练习回答"></textarea><button v-if="activity.type !== 'project'" class="primary" :disabled="submitting" @click="submit">{{ submitting ? "验证中…" : "提交并验证" }}</button>
+            <section class="hint-box"><button :disabled="hintLoading || activityLoading || hint?.level === 3" @click="requestHint">{{ hintLoading ? "正在生成提示…" : hint?.level === 3 ? "已展示全部提示" : hint ? `继续提示（${hintLevel}/3）` : "获取分层提示" }}</button><p v-if="hint"><b>第 {{ hint.level }} 层提示</b>{{ hint.hint }}</p></section>
+            <div v-if="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><strong>{{ verificationUnavailable(submission) ? "验证服务暂不可用" : submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification && !verificationUnavailable(submission)">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
             <section v-if="submission && activity.reflection_prompt" class="practice-reflection"><b>提交后复盘</b><p>{{ activity.reflection_prompt }}</p><span>先用一句话说明本次错误或通过的关键原因，再进入下一题。</span></section>
             <div v-if="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? "✓" : "!" }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
           </template><div v-else class="empty">从左侧选择一道练习，或按照学习路径进入推荐活动。</div></div>
@@ -1176,10 +1248,13 @@ onBeforeUnmount(() => {
 
       <template v-else>
         <PythonFirstLesson
+          ref="activeClassroom"
           :key="studentId"
           :student-id="studentId"
           :generic-mode="genericMode"
-          @profile-updated="profile = $event"
+          :dark-theme="darkTheme"
+          @toggle-theme="toggleTheme"
+          @profile-updated="onProfileResolved"
           @profile-resolved="onProfileResolved"
           @open-knowledge-map="openKnowledgeMap"
           @request-generic-mode="requestGenericMode('classroom')"
@@ -1189,6 +1264,7 @@ onBeforeUnmount(() => {
         />
       </template>
     </main>
+    <Teleport to="body">
     <div v-if="assessmentWarningOpen" class="modal-backdrop" role="presentation" @click.self="closeAssessmentWarning">
       <section ref="assessmentWarningDialog" class="assessment-warning" role="dialog" aria-modal="true" aria-labelledby="assessment-warning-title" @keydown="handleAssessmentWarningKeydown">
         <h2 id="assessment-warning-title">还没有足够信息为你定制课程</h2>
@@ -1197,5 +1273,6 @@ onBeforeUnmount(() => {
         <div><button class="text-button" @click="closeAssessmentWarning">取消</button><button class="secondary" @click="continueWithGenericCourse">仍然继续通用课程</button><button ref="assessmentWarningPrimaryAction" class="primary" @click="goToAssessment">先完成约 8 分钟摸底 <b>→</b></button></div>
       </section>
     </div>
+    </Teleport>
   </div>
 </template>

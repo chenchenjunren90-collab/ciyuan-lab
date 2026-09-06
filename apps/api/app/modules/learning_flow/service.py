@@ -70,6 +70,8 @@ class LearningFlowService:
             raise ValueError("assessment answers must not be empty")
         if len(answer_ids) != len(set(answer_ids)):
             raise ValueError("assessment knowledge_point_id values must be unique")
+        if any(type(is_correct) is not bool for _, is_correct in answers):
+            raise ValueError("assessment outcomes must be boolean")
         unknown = sorted(set(answer_ids) - known_ids)
         if unknown:
             raise ValueError(f"assessment contains unknown knowledge points: {unknown}")
@@ -92,6 +94,7 @@ class LearningFlowService:
 
         assessment_id = uuid4()
         occurred_at = datetime.now(UTC)
+        objective_evidence = evidence_source in {"diagnostic_initial", "diagnostic_reassessment"}
         for knowledge_point_id, is_correct in answers:
             event = LearningEvent(
                 event_id=uuid4(),
@@ -104,16 +107,28 @@ class LearningFlowService:
                 knowledge_point_id=knowledge_point_id,
                 trace_id=str(assessment_id),
                 payload={
-                    "is_correct": is_correct,
+                    "is_correct" if objective_evidence else "self_reported_correct": is_correct,
                     "source": evidence_source,
+                    "objective_evidence": objective_evidence,
                 },
-                evidence_summary="基线测评客观结果",
+                evidence_summary=(
+                    "服务端能力诊断结果" if objective_evidence else "学习者自述，未客观计分"
+                ),
             )
-            if self._repository.append_event(event):
+            if self._repository.append_event(event) and objective_evidence:
                 self._repository.project_event(event_id=event.event_id, policy=self._policy)
 
         profile = self._require_profile(student_id=student_id, course_id=course_id)
         next_activity = await self._next_activity(student_id=student_id, course_id=course_id)
+        if not objective_evidence:
+            next_activity = PlannedActivity(
+                activity_id=next_activity.activity_id,
+                activity_type=next_activity.activity_type,
+                reason=(
+                    "已记录自述，未计入客观学习证据或更新掌握度；请完成服务端能力诊断。"
+                    + next_activity.reason
+                ),
+            )
         stages = self._build_stages(
             profile=profile,
             course_id=course_id,

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { hasLearningEvidence, measuredMastery, qaFeedbackLabel, readSavedIds, serviceFailure, verificationUnavailable } from "../../services/workspaceState";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
 import {
@@ -7,7 +8,6 @@ import {
   type ClassroomBeat,
   type ClassroomCheckpointResult,
   type ClassroomCodeTask as ClassroomCodeTaskData,
-  type ClassroomDialogueResponse,
   type ClassroomLesson,
   type ClassroomRole,
   type ClassroomSelfProfileResponse,
@@ -19,17 +19,22 @@ import {
   type SubmissionResult,
 } from "../../services/api";
 import SafeMarkdown from "../SafeMarkdown.vue";
+import ThemeToggle from "../ThemeToggle.vue";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
 import {
   loadClassroomSession,
+  refreshSessionLectures,
+  restoredSessionIndex,
   saveClassroomSession,
   type ClassroomSessionDraft,
   type ClassroomWorkspaceView,
   type PersistedClassroomMessage,
 } from "./classroomSession";
+import ClassroomPlanPreview from "./ClassroomPlanPreview.vue";
+import LessonBeatContent from "./LessonBeatContent.vue";
 
-const props = defineProps<{ studentId: string; genericMode?: boolean }>();
-const emit = defineEmits<{
+const props = defineProps<{ studentId: string; genericMode?: boolean; darkTheme: boolean }>();
+const dispatch = defineEmits<{
   profileUpdated: [profile: LearnerProfile];
   profileResolved: [profile: LearnerProfile | null];
   openKnowledgeMap: [];
@@ -37,7 +42,13 @@ const emit = defineEmits<{
   requestAssessment: [];
   focusChanged: [active: boolean];
   openProjects: [];
+  toggleTheme: [];
 }>();
+let componentActive = true;
+// Detached classrooms must not overwrite the newly selected account or course.
+const emit = ((...args: unknown[]) => {
+  if (componentActive) (dispatch as (...args: unknown[]) => void)(...args);
+}) as typeof dispatch;
 
 function preferredScrollBehavior(): ScrollBehavior {
   return document.documentElement.dataset.motion === "reduced" ? "auto" : "smooth";
@@ -53,6 +64,9 @@ const lesson = ref<ClassroomLesson | null>(null);
 const currentIndex = ref(0);
 const furthestIndex = ref(0);
 const loading = ref(true);
+const initializing = ref(false);
+const learningContextError = ref("");
+const contextLoading = ref(false);
 const error = ref("");
 const selectedChoice = ref("");
 const checkpointResult = ref<ClassroomCheckpointResult | null>(null);
@@ -73,16 +87,18 @@ const hintLoading = ref(false);
 const dialogueRole = ref<ClassroomRole>("teacher");
 const dialogueText = ref("");
 const dialogueLoading = ref(false);
+const dialogueError = ref("");
 const dialogueComposer = ref<HTMLTextAreaElement | null>(null);
 const lessonComplete = ref(false);
 const learnerProfile = ref<LearnerProfile | null>(null);
+const hasObjectiveProfile = computed(() => hasLearningEvidence(learnerProfile.value));
 const diagnostic = ref<DiagnosticQuiz | null>(null);
 const diagnosticResult = ref<DiagnosticSubmissionResult | null>(null);
 const diagnosticAnswers = ref<Record<string, string>>({});
 const baselineOpen = ref(false);
 const baselineLoading = ref(false);
 const diagnosticLoading = ref(true);
-const learningPlan = ref<ClassroomDialogueResponse | null>(null);
+const learningPlan = ref<ClassroomLesson | null>(null);
 const planLoading = ref(false);
 const dailyMinutes = ref(30);
 // 与后端 /api/v1/classroom/sessions/next 的 daily_minutes 校验范围保持一致。
@@ -123,13 +139,39 @@ const diagnosticAnalysis = ref<DiagnosticAnalysis | null>(null);
 const classroomView = ref<ClassroomWorkspaceView>("lecture");
 const selectedMaterialId = ref("");
 const exitDialogOpen = ref(false);
+const exitDialog = ref<HTMLElement | null>(null);
+let exitReturnFocus: HTMLElement | null = null;
+watch(exitDialogOpen, async (open) => {
+  if (open) {
+    exitReturnFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    await nextTick();
+    exitDialog.value?.focus();
+  } else {
+    await nextTick();
+    if (exitReturnFocus?.isConnected) exitReturnFocus.focus();
+    exitReturnFocus = null;
+  }
+});
+function handleExitKeydown(event: KeyboardEvent): void {
+  if (event.key === "Escape") { event.preventDefault(); exitDialogOpen.value = false; return; }
+  if (event.key !== "Tab") return;
+  const buttons = exitDialog.value?.querySelectorAll<HTMLButtonElement>("button:not([disabled])");
+  if (!buttons?.length) return;
+  const first = buttons[0]!;
+  const last = buttons[buttons.length - 1]!;
+  if (event.shiftKey && (document.activeElement === first || document.activeElement === exitDialog.value)) {
+    event.preventDefault(); last.focus();
+  } else if (!event.shiftKey && (document.activeElement === last || document.activeElement === exitDialog.value)) {
+    event.preventDefault(); first.focus();
+  }
+}
 const isPaused = ref(false);
 const boardCodeExpanded = ref(false);
 const materialCodeExpanded = ref(false);
 const sessionBeatSnapshot = ref<ClassroomBeat[]>([]);
 const planBuildButton = ref<HTMLButtonElement | null>(null);
 const planProgressStep = ref(0);
-const PLAN_PROGRESS_LABELS = ["正在检索薄弱点", "正在组合课程", "正在进行质量审核"] as const;
+const PLAN_PROGRESS_LABELS = ["正在读取学习证据", "正在检查前置知识", "正在组合本次课堂"] as const;
 const SELF_DESCRIPTION_EXAMPLE = "例如：我学过变量和 for 循环，能看懂简单代码，但不太会自己拆题；希望以后能完成数据分析小项目。";
 let planProgressTimer: ReturnType<typeof setInterval> | null = null;
 let sessionReady = false;
@@ -234,6 +276,9 @@ const personalizedBeats = computed<ClassroomBeat[]>(() => (
   sessionBeatSnapshot.value.length ? sessionBeatSnapshot.value : generatedPersonalizedBeats.value
 ));
 const currentBeat = computed<ClassroomBeat | null>(() => personalizedBeats.value[currentIndex.value] ?? null);
+watch([dailyMinutes, weeklyDays, preferredMode, planGoal, selfProfile], () => {
+  learningPlan.value = null;
+});
 const currentBoardMistakes = computed(() => currentBeat.value?.board_points
   .filter((point) => point.startsWith("易错提醒："))
   .map((point) => point.slice("易错提醒：".length)) ?? []);
@@ -255,7 +300,7 @@ const canAdvance = computed(() => {
   return true;
 });
 const averageMastery = computed(() => {
-  const items = learnerProfile.value?.mastery ?? [];
+  const items = measuredMastery(learnerProfile.value);
   return items.length
     ? Math.round(items.reduce((sum, item) => sum + item.score, 0) / items.length * 100)
     : null;
@@ -427,6 +472,8 @@ function buildSessionDraft(): ClassroomSessionDraft | null {
     checkpointResult: checkpointResult.value,
     checkpointDrafts: checkpointDrafts.value,
     messages: messages.value.slice(-200),
+    dialogueText: dialogueText.value,
+    dialogueRole: dialogueRole.value,
     practiceCode: practiceCode.value,
     homeworkCode: homeworkCode.value,
     practiceResult: practiceResult.value,
@@ -440,7 +487,8 @@ function buildSessionDraft(): ClassroomSessionDraft | null {
     assessmentIndex: assessmentIndex.value,
     assessmentResultVisible: assessmentResultVisible.value,
     retakeActive: retakeActive.value,
-    learningPlan: learningPlan.value,
+    learningPlan: null,
+    plannedLesson: learningPlan.value,
     classroomView: classroomView.value,
     selectedMaterialId: selectedMaterialId.value,
     isPaused: isPaused.value,
@@ -449,7 +497,7 @@ function buildSessionDraft(): ClassroomSessionDraft | null {
 }
 
 function persistSession(): void {
-  if (!sessionReady) return;
+  if (!sessionReady || !componentActive) return;
   const draft = buildSessionDraft();
   if (!draft) return;
   try {
@@ -462,15 +510,10 @@ function persistSession(): void {
 function restoreSession(draft: ClassroomSessionDraft): boolean {
   if (!lesson.value || lesson.value.lesson_id !== draft.lessonId) return false;
   const oldBeat = draft.sessionBeatSnapshot[draft.currentIndex];
-  sessionBeatSnapshot.value = draft.contentRevision === 2 ? draft.sessionBeatSnapshot : [];
+  sessionBeatSnapshot.value = draft.contentRevision === 2
+    ? refreshSessionLectures(draft.sessionBeatSnapshot, generatedPersonalizedBeats.value) : [];
   const beatCount = sessionBeatSnapshot.value.length || generatedPersonalizedBeats.value.length;
-  const migratedIndex = oldBeat
-    ? generatedPersonalizedBeats.value.findIndex((beat) => beat.id === oldBeat.id)
-    : -1;
-  currentIndex.value = Math.min(
-    migratedIndex >= 0 ? migratedIndex : draft.currentIndex,
-    Math.max(0, beatCount - 1),
-  );
+  currentIndex.value = restoredSessionIndex(draft, generatedPersonalizedBeats.value);
   furthestIndex.value = Math.min(
     Math.max(currentIndex.value, draft.furthestIndex ?? currentIndex.value),
     Math.max(0, beatCount - 1),
@@ -484,6 +527,8 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
     },
   } : {});
   messages.value = draft.messages;
+  dialogueText.value = typeof draft.dialogueText === "string" ? draft.dialogueText.slice(0, 1000) : "";
+  dialogueRole.value = draft.dialogueRole && draft.dialogueRole in roleMeta ? draft.dialogueRole : "teacher";
   messageCounter.value = draft.messages.reduce((maximum, message) => Math.max(maximum, message.id), 0);
   practiceCode.value = draft.practiceCode;
   homeworkCode.value = draft.homeworkCode;
@@ -495,16 +540,17 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
   const validExerciseIds = new Set(diagnostic.value?.items.map((item) => item.exercise_id) ?? []);
   diagnosticAnswers.value = Object.fromEntries(
     Object.entries(draft.diagnosticAnswers).filter(([exerciseId, response]) => (
-      validExerciseIds.has(exerciseId) && typeof response === "string"
+      (!diagnostic.value || validExerciseIds.has(exerciseId)) && typeof response === "string"
     )),
   );
   baselineOpen.value = draft.baselineOpen;
   assessmentStarted.value = draft.assessmentStarted;
   const assessmentCount = diagnostic.value?.items.length ?? 0;
-  assessmentIndex.value = Math.min(draft.assessmentIndex, Math.max(0, assessmentCount - 1));
+  assessmentIndex.value = diagnostic.value
+    ? Math.min(draft.assessmentIndex, Math.max(0, assessmentCount - 1)) : draft.assessmentIndex;
   assessmentResultVisible.value = draft.assessmentResultVisible;
   retakeActive.value = draft.retakeActive && diagnostic.value?.phase === "reassessment";
-  learningPlan.value = draft.learningPlan;
+  learningPlan.value = draft.plannedLesson ?? null;
   classroomView.value = draft.classroomView === "discussion" ? "lecture" : draft.classroomView;
   selectedMaterialId.value = draft.selectedMaterialId;
   isPaused.value = draft.isPaused;
@@ -519,6 +565,8 @@ watch(() => ({
   checkpointResult: checkpointResult.value,
   checkpointDrafts: checkpointDrafts.value,
   messages: messages.value,
+  dialogueText: dialogueText.value,
+  dialogueRole: dialogueRole.value,
   practiceCode: practiceCode.value,
   homeworkCode: homeworkCode.value,
   practiceResult: practiceResult.value,
@@ -584,14 +632,17 @@ function announceBeat(): void {
 async function ensureProfile(isCorrect = true): Promise<void> {
   try {
     const profile = await api.profile(props.studentId, "python");
+    if (!componentActive) return;
     learnerProfile.value = profile;
     emit("profileUpdated", profile);
     emit("profileResolved", profile);
   } catch (cause) {
+    if (!componentActive) return;
     if (!(cause instanceof ApiError) || cause.status !== 404) throw cause;
     const result = await api.assess(props.studentId, "python", [
       { knowledge_point_id: "PY-LIST-03", is_correct: isCorrect },
     ]);
+    if (!componentActive) return;
     learnerProfile.value = result.profile;
     emit("profileUpdated", result.profile);
     emit("profileResolved", result.profile);
@@ -599,27 +650,37 @@ async function ensureProfile(isCorrect = true): Promise<void> {
 }
 
 async function loadLearningContext(): Promise<void> {
+  if (contextLoading.value) return;
+  contextLoading.value = true;
   try {
-    learnerProfile.value = await api.profile(props.studentId, "python");
+    const profile = await api.profile(props.studentId, "python");
+    if (!componentActive) return;
+    learnerProfile.value = profile;
+    learningContextError.value = "";
     emit("profileUpdated", learnerProfile.value);
     emit("profileResolved", learnerProfile.value);
   } catch (cause) {
-    if (!(cause instanceof ApiError) || cause.status !== 404) {
-      showFeedback(cause instanceof Error ? cause.message : "学情档案暂时不可用。");
+    if (!componentActive) return;
+    if (cause instanceof ApiError && cause.status === 404) {
+      learnerProfile.value = null;
+      learningContextError.value = "尚未读取到学情档案，已保存的课堂仍可继续；需要时可重试同步。";
+      emit("profileResolved", null);
+    } else {
+      learningContextError.value = "学情同步暂时失败，已保留当前课堂与上次进度。";
     }
-    learnerProfile.value = null;
-    emit("profileResolved", null);
+  } finally {
+    contextLoading.value = false;
   }
-  await loadDiagnosticContext();
+  if (componentActive) await loadDiagnosticContext();
 }
 
 async function loadDiagnosticContext(): Promise<void> {
   diagnosticLoading.value = true;
   try {
-    diagnostic.value = await api.diagnostic("python", learnerProfile.value ? "reassessment" : "initial");
+    const quiz = await api.diagnostic("python", hasObjectiveProfile.value ? "reassessment" : "initial");
+    if (componentActive) diagnostic.value = quiz;
   } catch (cause) {
-    diagnostic.value = null;
-    showFeedback(cause instanceof Error ? cause.message : "能力诊断暂时不可用，请点击重试。");
+    showFeedback(`能力诊断暂时不可用。${serviceFailure(cause)}`);
   } finally {
     diagnosticLoading.value = false;
   }
@@ -668,6 +729,7 @@ async function submitBaseline(): Promise<void> {
         response: diagnosticAnswers.value[item.exercise_id] ?? "",
       })),
     );
+    if (!componentActive) return;
     diagnosticResult.value = result;
     diagnosticAnalysis.value = result.analysis;
     savePlanPreferences();
@@ -681,7 +743,7 @@ async function submitBaseline(): Promise<void> {
     planConfirmed.value = false;
     localStorage.removeItem(planConfirmationKey());
     diagnosticAnswers.value = {};
-    diagnostic.value = await api.diagnostic("python", "reassessment");
+    await loadDiagnosticContext();
     showFeedback(`能力基线已建立：${result.correct_count}/${result.total_count}，助教已获得最新学情。`);
   } catch (cause) {
     showFeedback(cause instanceof Error ? cause.message : "能力基线提交失败，请重试。");
@@ -721,21 +783,20 @@ async function restartAssessment(): Promise<void> {
     return;
   }
   diagnosticLoading.value = true;
-  assessmentResultVisible.value = false;
-  assessmentStarted.value = true;
-  retakeActive.value = true;
-  baselineOpen.value = false;
-  assessmentIndex.value = 0;
-  diagnosticAnswers.value = {};
-  planConfirmed.value = false;
-  localStorage.removeItem(planConfirmationKey());
   showFeedback("正在准备一组新的阶段重测题…");
   try {
-    diagnostic.value = await api.diagnostic("python", "reassessment");
+    const quiz = await api.diagnostic("python", "reassessment");
+    if (!componentActive) return;
+    diagnostic.value = quiz;
+    assessmentResultVisible.value = false;
+    assessmentStarted.value = true;
+    retakeActive.value = true;
+    baselineOpen.value = false;
+    assessmentIndex.value = 0;
+    diagnosticAnswers.value = {};
     showFeedback("阶段重测已重新开始；不确定时请选择“我不知道”，不要靠猜测作答。");
   } catch (cause) {
-    retakeActive.value = false;
-    showFeedback(cause instanceof Error ? cause.message : "阶段重测载入失败，请稍后重试。");
+    showFeedback(`阶段重测载入失败，当前课堂已保留。${serviceFailure(cause)}`);
   } finally {
     diagnosticLoading.value = false;
   }
@@ -768,7 +829,9 @@ async function analyzeSelfDescription(): Promise<void> {
   selfProfileLoading.value = true;
   showFeedback("助教正在把你的自述与 Python 课程知识路线进行匹配…");
   try {
-    selfProfile.value = await api.classroomSelfProfile(props.studentId, activeLessonId.value, description);
+    const result = await api.classroomSelfProfile(props.studentId, activeLessonId.value, description);
+    if (!componentActive) return;
+    selfProfile.value = result;
     savePlanPreferences();
   showFeedback(selfProfile.value.level === "newcomer"
     ? "已记录为零基础倾向；课程规划会以此为主要起点，摸底题只用于细节校正。"
@@ -805,28 +868,9 @@ async function enterPersonalizedClassroom(): Promise<void> {
   if (!clampDailyMinutes()) {
     return;
   }
-  if (!props.genericMode) {
-    loading.value = true;
-    showFeedback("助教正在为你组合本次课堂…");
-    try {
-      const nextLesson = await api.nextClassroomSession(
-        props.studentId,
-        dailyMinutes.value,
-        preferredMode.value,
-        selfProfile.value?.level,
-      );
-      applyLesson(nextLesson);
-      localStorage.setItem(
-        `ciyuan-active-lesson:${props.studentId}:python`,
-        nextLesson.lesson_id,
-      );
-    } catch (cause) {
-      showFeedback(cause instanceof Error ? cause.message : "个性化课堂生成失败，请重试。");
-      loading.value = false;
-      return;
-    }
-    loading.value = false;
-  }
+  const prepared = learningPlan.value;
+  applyLesson(prepared);
+  localStorage.setItem(`ciyuan-active-lesson:${props.studentId}:python`, prepared.lesson_id);
   assessmentResultVisible.value = false;
   planConfirmed.value = true;
   isPaused.value = false;
@@ -844,7 +888,7 @@ async function enterPersonalizedClassroom(): Promise<void> {
   messages.value = [];
   messageCounter.value = 0;
   announceBeat();
-  pushMessage("ta", `已优先按你的学习经历与倾向，并结合测评证据、${dailyMinutes.value} 分钟/天和“${planGoal.value}”完成编排。本次不是固定课表：共 ${personalizedBeats.value.length} 个学习环节，我会根据后续答题与代码结果继续调整。`, "reply", "approved", 1);
+  pushMessage("ta", `本次学习“${prepared.title}”，共 ${prepared.beats.length} 个环节。${prepared.planning_reason}`, "lesson");
   showFeedback(`已进入“${personalizedSession.value.title}”，本次内容和节奏已按你的信息重新编排。`);
 }
 
@@ -880,7 +924,7 @@ function requestEarlyExit(): void {
 function pauseClassroom(markKnown: boolean): void {
   if (markKnown && currentBeat.value) {
     const key = `ciyuan-self-known:${props.studentId}:python`;
-    const existing = JSON.parse(localStorage.getItem(key) ?? "[]") as string[];
+    const existing = readSavedIds(localStorage.getItem(key));
     localStorage.setItem(key, JSON.stringify([...new Set([...existing, currentBeat.value.id])]));
   }
   exitDialogOpen.value = false;
@@ -910,7 +954,7 @@ async function generateLearningPlan(): Promise<void> {
   if (!clampDailyMinutes()) {
     return;
   }
-  if (!learnerProfile.value) {
+  if (!hasObjectiveProfile.value || !learnerProfile.value) {
     showFeedback("请先建立能力基线，助教才能量身安排学习节奏。");
     await startBaseline();
     return;
@@ -923,33 +967,27 @@ async function generateLearningPlan(): Promise<void> {
   savePlanPreferences();
   showFeedback("助教小程正在结合你的能力画像安排学习节奏…");
   const effectiveGoal = planGoal.value.trim() || DEFAULT_PLAN_GOAL;
-  const weakest = [...learnerProfile.value.mastery]
-    .sort((left, right) => left.score - right.score)
-    .slice(0, 3)
-    .map((item) => `${item.knowledge_point_id}(${Math.round(item.score * 100)}%)`)
-    .join("、") || "尚无充分练习证据";
+  const requestedMinutes = dailyMinutes.value;
+  const requestedDays = weeklyDays.value;
+  const requestedMode = preferredMode.value;
+  const requestedLevel = selfProfile.value?.level;
   try {
-    const result = await api.classroomDialogue(
+    const result = await api.nextClassroomSession(
       props.studentId,
-      lesson.value.lesson_id,
-      currentBeat.value?.phase ?? "welcome",
-      "ta",
-      `请以课程规划助教身份，为我设计个性化 Python 学习方案。每天 ${dailyMinutes.value} 分钟，每周 ${weeklyDays.value} 天；目标：${effectiveGoal}；学习偏好：${preferredMode.value}；学生自述：${selfDescription.value.trim() || "未填写"}；自述初判：${selfProfile.value?.level_label ?? "待判断"}；当前薄弱点：${weakest}。决策规则：学习倾向与明确的零基础自述优先于短测分数，摸底只用于发现断层和微调；零基础不得因选择题猜对而跳级。请明确本次课重点、讲解与练习比例、每日节奏和调整依据，不要给所有学生相同课表，控制在 300 字内。`,
+      requestedMinutes,
+      requestedMode,
+      requestedLevel,
     );
+    if (!componentActive) return;
+    if (dailyMinutes.value !== requestedMinutes || weeklyDays.value !== requestedDays || preferredMode.value !== requestedMode
+      || selfProfile.value?.level !== requestedLevel || (planGoal.value.trim() || DEFAULT_PLAN_GOAL) !== effectiveGoal) {
+      showFeedback("学习设置已更改，请按新设置重新编排。");
+      return;
+    }
     learningPlan.value = result;
-    pushMessage(
-      result.role,
-      result.answer,
-      "reply",
-      result.status === "answered" ? "approved" : "limited",
-      result.citations.length,
-      undefined,
-      result.scope_notice ?? undefined,
-      result.suggested_knowledge_point_ids,
-    );
-    showFeedback(result.status === "answered" ? "个性化学习计划已生成并通过质量监督。" : "课程依据不足，已给出保守建议。");
+    showFeedback(`已编排“${result.title}”，请确认本次目标和学习顺序。`);
   } catch (cause) {
-    showFeedback(cause instanceof Error ? cause.message : "学习计划生成失败，请重试。");
+    showFeedback(`课程编排未完成，测评记录已保留。${serviceFailure(cause)}`);
   } finally {
     planLoading.value = false;
     clearPlanProgress();
@@ -990,6 +1028,7 @@ function clampWeeklyDays(): boolean {
 }
 
 async function openDialogue(role: ClassroomRole, starter = ""): Promise<void> {
+  if (dialogueLoading.value) return;
   dialogueRole.value = role;
   if (starter) dialogueText.value = starter;
   classroomView.value = "lecture";
@@ -1035,6 +1074,7 @@ function lessonViewForBeat(beat: ClassroomBeat): ClassroomWorkspaceView {
 }
 
 function goToLessonStep(index: number): void {
+  if (submitting.value) { showFeedback("当前答案正在验证，完成后即可切换课堂环节。"); return; }
   if (!personalizedBeats.value.length) return;
   if (index < 0 || index > furthestIndex.value || index === currentIndex.value) {
     if (index > furthestIndex.value) showFeedback("请先完成前面的学习环节，再进入这里。");
@@ -1052,6 +1092,7 @@ function goToLessonStep(index: number): void {
 }
 
 function applyLesson(value: ClassroomLesson): void {
+  dialogueError.value = "";
   activeLessonId.value = value.lesson_id;
   lesson.value = value;
   currentIndex.value = 0;
@@ -1076,9 +1117,12 @@ async function loadLesson(targetLessonId = activeLessonId.value): Promise<void> 
   loading.value = true;
   error.value = "";
   try {
-    applyLesson(await api.classroomLesson(targetLessonId));
+    const loaded = await api.classroomLesson(targetLessonId);
+    if (componentActive) applyLesson(loaded);
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : "课堂暂时没有准备好，请稍后重试。";
+    error.value = cause instanceof ApiError && cause.status === 404
+      ? "暂时无法恢复这节课堂，之前的进度和草稿已保留。请稍后点击“重新准备”。"
+      : serviceFailure(cause);
   } finally {
     loading.value = false;
   }
@@ -1095,6 +1139,7 @@ async function startNextLesson(): Promise<void> {
       preferredMode.value,
       selfProfile.value?.level,
     );
+    if (!componentActive) return;
     applyLesson(nextLesson);
     localStorage.setItem(
       `ciyuan-active-lesson:${props.studentId}:python`,
@@ -1113,23 +1158,31 @@ async function submitChoice(): Promise<void> {
   if (!lesson.value || !currentBeat.value || !selectedChoice.value || submitting.value) return;
   submitting.value = true;
   error.value = "";
+  const lessonId = lesson.value.lesson_id;
+  const beatId = currentBeat.value.id;
   try {
     pushMessage("student", currentBeat.value.checkpoint?.choices.find((item) => item.id === selectedChoice.value)?.text ?? selectedChoice.value, "checkpoint", undefined, undefined, "teacher");
-    checkpointResult.value = await api.classroomCheckpoint(
-      lesson.value.lesson_id,
-      currentBeat.value.id,
+    const result = await api.classroomCheckpoint(
+      lessonId,
+      beatId,
       selectedChoice.value,
     );
+    if (!componentActive || lesson.value?.lesson_id !== lessonId || currentBeat.value?.id !== beatId) return;
+    checkpointResult.value = result;
     rememberCurrentCheckpoint();
     pushMessage(checkpointResult.value.reply_role, checkpointResult.value.reply_message, "reply");
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : "理解检查提交失败。";
+    if (!componentActive) return;
+    error.value = cause instanceof ApiError && cause.status === 404
+      ? "这次理解检查暂时无法处理，已保留你的选项和课堂进度。请稍后重试。"
+      : `理解检查未完成，已选答案已保留。${serviceFailure(cause)}`;
   } finally {
     submitting.value = false;
   }
 }
 
 function advance(): void {
+  if (submitting.value) { showFeedback("当前答案正在验证，请先查看结果再继续。"); return; }
   if (!lesson.value || !currentBeat.value) {
     showFeedback("课堂内容仍在载入，请稍候再试。");
     return;
@@ -1175,12 +1228,19 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
   showFeedback("代码已提交，正在隔离环境中运行公开样例和隐藏测试…");
   try {
     await ensureProfile(true);
+    if (!componentActive) return;
     const result = await api.submit(props.studentId, "python", task.exercise_id, {
       language: "python",
       source_code: sourceCode,
     });
+    if (!componentActive) return;
     if (homework) homeworkResult.value = result;
     else practiceResult.value = result;
+    if (verificationUnavailable(result)) {
+      pushMessage("ta", result.feedback, "reply");
+      showFeedback("验证服务暂不可用，本次未产生代码成绩；请稍后重试。");
+      return;
+    }
     const updatedProfile: LearnerProfile = {
       student_id: props.studentId,
       course_id: "python",
@@ -1208,7 +1268,8 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
       showFeedback("代码已经运行，但尚未通过全部测试；请查看诊断信息或向助教要提示。");
     }
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : "代码验证暂时不可用。";
+    if (!componentActive) return;
+    error.value = `代码提交未完成，草稿已保留。${serviceFailure(cause)}`;
     showFeedback(error.value);
   } finally {
     submitting.value = false;
@@ -1225,6 +1286,7 @@ async function requestHint(task: ClassroomCodeTaskData): Promise<void> {
   showFeedback("助教正在结合题目要求和你的当前进度准备提示…");
   try {
     const result = await api.hint(props.studentId, "python", task.exercise_id, 1);
+    if (!componentActive) return;
     hint.value = result.hint;
     pushMessage("ta", result.hint, "reply");
     showFeedback("助教提示已显示在公开样例下方。");
@@ -1256,28 +1318,36 @@ async function askRole(): Promise<void> {
     dialogueComposer.value?.focus();
     return;
   }
-  const recentTurns = messages.value.slice(-8).map((message) => ({
+  const lessonId = lesson.value.lesson_id;
+  const role = dialogueRole.value;
+  const previousMessage = messages.value.at(-1);
+  const retrying = dialogueError.value && previousMessage?.kind === "student"
+    && previousMessage.content === text && previousMessage.target === role;
+  const history = retrying ? messages.value.slice(0, -1) : messages.value;
+  const recentTurns = history.slice(-8).map((message) => ({
     role: message.role,
     content: message.content,
   }));
   dialogueLoading.value = true;
+  dialogueError.value = "";
   dialogueText.value = "";
-  pushMessage("student", text, "student", undefined, undefined, dialogueRole.value);
+  if (!retrying) pushMessage("student", text, "student", undefined, undefined, role);
   try {
     const result = await api.classroomDialogue(
       props.studentId,
-      lesson.value.lesson_id,
+      lessonId,
       currentBeat.value.phase,
-      dialogueRole.value,
+      role,
       text,
       recentTurns,
     );
+    if (!componentActive || lesson.value?.lesson_id !== lessonId) return;
     const onlineEvidence = result.citations.some((citation) => citation.source_type === "online");
     pushMessage(
       result.role,
       result.answer,
       "reply",
-      result.status === "answered" ? "approved" : "limited",
+      result.status === "answered" && !result.trace.some((step) => step.status === "degraded") ? "approved" : "limited",
       result.citations.length,
       undefined,
       result.scope_notice ?? undefined,
@@ -1285,6 +1355,10 @@ async function askRole(): Promise<void> {
       onlineEvidence ? "online" : "course",
     );
     const finalTrace = result.trace.at(-1)?.detail ?? "";
+    if (result.trace.some((step) => step.status === "degraded")) {
+      showFeedback(qaFeedbackLabel(result));
+      return;
+    }
     showFeedback(result.status === "answered"
       ? onlineEvidence
         ? `${result.display_name}已基于 Python 官方文档联网回答，并通过质量监督。`
@@ -1296,44 +1370,62 @@ async function askRole(): Promise<void> {
         : "问题信息或课程依据不足；角色已说明还需要你补充什么。"
     );
   } catch (cause) {
-    error.value = cause instanceof Error ? cause.message : "这次对话没有发送成功。";
+    if (!componentActive || lesson.value?.lesson_id !== lessonId) return;
+    const detail = cause instanceof ApiError && cause.status === 404
+      ? "当前课堂请求暂时无法处理，请稍后重试；课堂进度会保留。"
+      : serviceFailure(cause);
+    dialogueError.value = `未收到${roleMeta[role].name}的回复。${detail} 原问题已保留，可再次发送。`;
+    if (!dialogueText.value) dialogueText.value = text;
   } finally {
     dialogueLoading.value = false;
   }
 }
 
-onMounted(async () => {
-  loadPlanPreferences();
-  const savedSession = loadClassroomSession(localStorage, props.studentId);
-  const savedLesson = savedSession?.lessonId
-    ?? localStorage.getItem(`ciyuan-active-lesson:${props.studentId}:python`);
-  if (savedLesson === SECOND_LESSON_ID || savedLesson?.startsWith("python-adaptive--")) {
-    activeLessonId.value = savedLesson;
+async function initializeClassroom(): Promise<void> {
+  if (initializing.value) return;
+  initializing.value = true;
+  sessionReady = false;
+  try {
+    loadPlanPreferences();
+    const savedSession = loadClassroomSession(localStorage, props.studentId);
+    const savedLesson = savedSession?.lessonId
+      ?? localStorage.getItem(`ciyuan-active-lesson:${props.studentId}:python`);
+    if (savedLesson === SECOND_LESSON_ID || savedLesson?.startsWith("python-adaptive--")) {
+      activeLessonId.value = savedLesson;
+    }
+    await Promise.all([loadLesson(), loadLearningContext()]);
+    if (!componentActive) return;
+    const restored = savedSession ? restoreSession(savedSession) : false;
+    sessionReady = Boolean(lesson.value);
+    persistSession();
+    if (restored && planConfirmed.value && !isPaused.value) emit("focusChanged", true);
+    if (restored && (assessmentStarted.value || planConfirmed.value || sessionBeatSnapshot.value.length)) {
+      showFeedback(isPaused.value
+        ? "已恢复上次保存的过程，回来后可从原位置继续。"
+        : "已接上上次进度，测评答案、课堂环节、对话和代码草稿都已保留。"
+      );
+    }
+  } finally {
+    initializing.value = false;
   }
-  await Promise.all([loadLesson(), loadLearningContext()]);
-  const restored = savedSession ? restoreSession(savedSession) : false;
-  sessionReady = true;
-  persistSession();
-  if (restored && (assessmentStarted.value || planConfirmed.value || sessionBeatSnapshot.value.length)) {
-    showFeedback(isPaused.value
-      ? "已恢复上次保存的过程，回来后可从原位置继续。"
-      : "已接上上次进度，测评答案、课堂环节、对话和代码草稿都已保留。"
-    );
-  }
-});
+}
+
+onMounted(initializeClassroom);
 
 onBeforeUnmount(() => {
   persistSession();
   clearPlanProgress();
   if (feedbackDismissTimer) clearTimeout(feedbackDismissTimer);
   emit("focusChanged", false);
+  componentActive = false;
 });
 </script>
 
 <template>
-  <section class="immersive-lesson">
-    <div v-if="loading || diagnosticLoading" class="classroom-loading"><i></i><strong>正在读取课程与能力测评…</strong><span>只需几秒，我们先了解你的起点</span></div>
-    <div v-else-if="error && !lesson" class="classroom-error"><strong>暂时没能进入教室</strong><p>{{ error }}</p><button @click="loadLesson()">重新准备</button></div>
+  <section class="immersive-lesson" :inert="exitDialogOpen">
+    <div v-if="learningContextError && lesson && !loading && !initializing" class="classroom-sync-notice" role="status"><span>{{ learningContextError }}</span><button :disabled="contextLoading" @click="loadLearningContext">{{ contextLoading ? "同步中…" : "重试同步学情" }}</button></div>
+    <div v-if="initializing || loading || (diagnosticLoading && !sessionReady)" class="classroom-loading"><i></i><strong>正在读取课程与能力测评…</strong><span>只需几秒，我们先了解你的起点</span></div>
+    <div v-else-if="error && !lesson" class="classroom-error"><strong>暂时没能进入教室</strong><p>{{ error }}</p><button @click="initializeClassroom">重新准备</button></div>
 
     <section v-else-if="retakeActive && diagnostic && currentDiagnosticItem" class="assessment-gate reassessment-gate">
       <header><div><b>阶段能力重测</b><small>{{ diagnostic.items.length }} 道跨层级短题，不计入成绩</small></div><button class="text-button" @click="cancelRetake">稍后再测</button></header>
@@ -1341,7 +1433,7 @@ onBeforeUnmount(() => {
       <div class="single-question">
         <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
         <h2>{{ currentDiagnosticItem.prompt }}</h2>
-        <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+        <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
       </div>
       <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在更新画像…" : "提交重测并更新路线" }}</button></div>
       <footer class="assessment-progress"><div><span>测试进度</span><b>{{ assessmentProgress }}%</b></div><i><span :style="{ width: `${assessmentProgress}%` }"></span></i><small>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已完成</small></footer>
@@ -1376,18 +1468,17 @@ onBeforeUnmount(() => {
         <div v-if="planDetailMode === 'full'" class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
         <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成我的专属课程" }} <span>→</span></button>
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
-        <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status"><header><div><b>助教小程 · 专属课程提案</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header><SafeMarkdown :source="learningPlan.answer" /><small class="audit-mark">{{ learningPlan.status === "answered" ? `✓ 质量监督已审核 · ${learningPlan.citations.length} 条课程依据` : "△ 依据有限 · 已执行保守降级" }}</small></article>
-        <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
+        <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
-          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
       <footer><button class="secondary" @click="restartAssessment">{{ retakeEntryLabel }}</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入我的课堂 <span>→</span></button></footer>
     </section>
 
-    <section v-else-if="learnerProfile && !props.genericMode && !planConfirmed && !sessionBeatSnapshot.length" class="returning-planner-gate">
+    <section v-else-if="hasObjectiveProfile && !props.genericMode && !planConfirmed && !sessionBeatSnapshot.length" class="returning-planner-gate">
       <header><div><h2>先确认今天怎样学，再进入课堂</h2><p>你的时间、目标和学习偏好，会共同决定本次内容和节奏。</p></div><div class="profile-chip" data-ready="true"><b>{{ averageMastery ?? 0 }}%</b><span>当前掌握度</span></div></header>
       <section class="planning-studio">
         <header><div><span>助教小程 · 可随时修改</span><h3>我的学习设置</h3></div><div class="plan-mode-switch" role="group" aria-label="规划面板模式"><button :class="{ active: planDetailMode === 'simple' }" @click="planDetailMode = 'simple'; savePlanPreferences()">简易版</button><button :class="{ active: planDetailMode === 'full' }" @click="planDetailMode = 'full'; savePlanPreferences()">完整版</button></div><button class="suggestion-button" @click="useSuggestedPace">采用助教建议</button></header>
@@ -1397,19 +1488,19 @@ onBeforeUnmount(() => {
         <div v-if="planDetailMode === 'full'" class="mode-picker"><span>我更喜欢</span><button :class="{ active: preferredMode === 'step_by_step' }" @click="preferredMode = 'step_by_step'">老师分步带着学</button><button :class="{ active: preferredMode === 'example_first' }" @click="preferredMode = 'example_first'">先看例子再归纳</button><button :class="{ active: preferredMode === 'practice_first' }" @click="preferredMode = 'practice_first'">先动手再补知识</button></div>
         <button ref="planBuildButton" class="primary build-plan" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? planProgressMessage : learningPlan ? "按新设置重新编排" : "生成今天的专属课程" }} <span>→</span></button>
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
-        <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status"><header><div><b>助教小程 · 专属课程提案</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header><SafeMarkdown :source="learningPlan.answer" /><small class="audit-mark">{{ learningPlan.status === "answered" ? `✓ 质量监督已审核 · ${learningPlan.citations.length} 条课程依据` : "△ 依据有限 · 已执行保守降级" }}</small></article>
-        <div v-if="learningPlan" class="session-preview"><div><small>本次动态编排</small><b>{{ personalizedSession.title }}</b><span>{{ personalizedSession.focus }}</span></div><strong>{{ personalizedSession.lessonCount }} 个环节</strong></div>
+        <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
-          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
+          <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
       </section>
       <footer><button class="secondary" @click="restartAssessment">{{ retakeEntryLabel }}</button><button class="primary" :aria-disabled="!learningPlan || planLoading" @click="requestEnterPersonalizedClassroom">确认安排，进入课堂 <span>→</span></button></footer>
     </section>
 
-    <section v-else-if="!learnerProfile && !props.genericMode" class="assessment-gate">
+    <section v-else-if="!hasObjectiveProfile && !props.genericMode && !(learningContextError && (planConfirmed || sessionBeatSnapshot.length))" class="assessment-gate">
       <header><div><b>能力摸底</b><small>{{ diagnostic?.items.length ?? 12 }} 道跨层级短题，约 8 分钟，不计入成绩</small></div></header>
+      <p class="honest-answer-note">这是跨知识点抽样摸底，题号表示测评顺序，不代表教材章节。未抽到的知识点不视为已掌握，后续课堂和练习会继续补充证据。</p>
       <template v-if="!assessmentStarted">
         <div class="assessment-welcome">
           <div><h1>先了解你的 Python 基础</h1><p>你可以先说说学习经历，也可以直接完成几道短题。助教会以客观测评为主、自述为辅，安排合适的起点、讲解节奏和后续练习。</p></div>
@@ -1427,7 +1518,7 @@ onBeforeUnmount(() => {
         <div class="single-question">
           <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
           <h2>{{ currentDiagnosticItem.prompt }}</h2>
-          <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+          <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
         </div>
         <div class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在生成画像…" : "提交测评并生成路线" }}</button></div>
       </template>
@@ -1439,12 +1530,12 @@ onBeforeUnmount(() => {
     </section>
 
     <template v-else-if="lesson && currentBeat">
-      <div v-if="props.genericMode && !learnerProfile" class="generic-mode-banner"><div><b>正在使用通用课程</b><span>尚未建立能力画像，讲解顺序和练习难度无法按你的水平调整。</span></div><button @click="emit('requestAssessment')">现在去完成测评</button></div>
+      <div v-if="props.genericMode && !hasObjectiveProfile" class="generic-mode-banner"><div><b>正在使用通用课程</b><span>尚未建立能力画像，讲解顺序和练习难度无法按你的水平调整。</span></div><button @click="emit('requestAssessment')">现在去完成测评</button></div>
       <nav class="focus-toolbar" aria-label="课堂工作区切换">
         <div><b>专注课堂</b><span>讲解与互动在同一空间持续进行</span></div>
         <select :value="classroomView" aria-label="选择课堂工作区" @change="handleViewSelect"><option value="lecture">课堂学习</option><option value="code">代码练习</option><option value="materials">课程资料</option></select>
         <div class="focus-view-buttons"><button v-for="item in ([['lecture','课堂'],['code','写代码'],['materials','看资料']] as const)" :key="item[0]" :class="{ active: classroomView === item[0] }" @click="changeClassroomView(item[0])">{{ item[1] }}</button></div>
-        <button class="exit-class" @click="requestEarlyExit">提前下课</button>
+        <div class="focus-actions"><ThemeToggle :dark="darkTheme" @toggle="emit('toggleTheme')" /><button class="exit-class" @click="requestEarlyExit">提前下课</button></div>
       </nav>
       <header class="lesson-masthead">
         <div>
@@ -1460,7 +1551,7 @@ onBeforeUnmount(() => {
       </header>
       <section v-if="progressExplanationOpen" class="progress-explanation">
         <article><b>课堂完成度 {{ progress }}%</b><p>已完成环节 ÷ 本次个性化课堂环节数。正在学习的环节不提前计入，因此刚进入课堂从 0% 开始。</p><small>当前完成 {{ currentIndex }} / {{ personalizedBeats.length }} 个环节</small></article>
-        <article><b>能力掌握度 {{ averageMastery ?? 0 }}%</b><p>只对已经留下测评、练习或代码验证证据的知识点计算平均值；它反映能力证据，不等于看完了多少课程。</p><small>{{ learnerProfile?.mastery.length ?? 0 }} 个已测知识点 · {{ masteryEvidenceCount }} 条证据</small></article>
+        <article><b>能力掌握度 {{ averageMastery === null ? "尚未测评" : `${averageMastery}%` }}</b><p>只对已经留下测评、练习或代码验证证据的知识点计算平均值；它反映能力证据，不等于看完了多少课程。</p><small>{{ measuredMastery(learnerProfile).length }} 个已测知识点 · {{ masteryEvidenceCount }} 条证据</small></article>
         <button aria-label="关闭计算说明" @click="progressExplanationOpen = false">×</button>
       </section>
 
@@ -1469,9 +1560,9 @@ onBeforeUnmount(() => {
           <div><h3>助教小程 · 我的学习节奏</h3><span>可以随时调整学习时间、目标和方式。</span></div>
           <div class="learning-tools">
             <button @click="emit('openKnowledgeMap')">课程知识地图 <span>→</span></button>
-            <button class="profile-chip" :data-ready="Boolean(learnerProfile)" @click="progressExplanationOpen = !progressExplanationOpen">
-              <b>{{ learnerProfile ? `${averageMastery ?? 0}%` : "未测" }}</b>
-              <span>{{ learnerProfile ? "能力掌握度 · 查看算法" : "尚未建立能力基线" }}</span>
+            <button class="profile-chip" :data-ready="hasObjectiveProfile" @click="progressExplanationOpen = !progressExplanationOpen">
+              <b>{{ hasObjectiveProfile ? `${averageMastery ?? 0}%` : "未测" }}</b>
+              <span>{{ hasObjectiveProfile ? "能力掌握度 · 查看算法" : "尚未建立能力基线" }}</span>
             </button>
           </div>
         </header>
@@ -1479,24 +1570,20 @@ onBeforeUnmount(() => {
           <label>每天投入<input v-model.number="dailyMinutes" type="number" :min="DAILY_MINUTES_MIN" :max="DAILY_MINUTES_MAX" step="5" @blur="clampDailyMinutes" /><span>分钟（20–120）</span></label>
           <label>每周学习<input v-model.number="weeklyDays" type="number" min="1" max="7" @blur="clampWeeklyDays" /><span>天</span></label>
           <label class="plan-goal">本阶段目标<input v-model="planGoal" maxlength="120" /></label>
-          <button class="secondary" :disabled="diagnosticLoading" @click="learnerProfile ? restartAssessment() : startBaseline()">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (learnerProfile ? retakeEntryLabel : "建立能力基线") : "重新载入诊断" }}</button>
+          <button class="secondary" :disabled="diagnosticLoading" @click="hasObjectiveProfile ? restartAssessment() : startBaseline()">{{ diagnosticLoading ? "诊断载入中…" : diagnostic ? (hasObjectiveProfile ? retakeEntryLabel : "建立能力基线") : "重新载入诊断" }}</button>
           <button class="primary" :disabled="planLoading" @click="generateLearningPlan">{{ planLoading ? "规划中…" : "生成我的学习计划" }}</button>
         </div>
         <details class="self-profile-details">
           <summary><span>补充或修改我的学习经历</span><b>{{ selfProfile?.level_label ?? "待填写" }}</b></summary>
           <section v-if="planDetailMode === 'full'" class="self-profile-inline"><label>告诉助教你学过什么、做过什么、哪里容易卡住<textarea v-model="selfDescription" rows="3" maxlength="1200" placeholder="例如：学过 for 和列表，但遇到代码题不太会拆步骤。" @input="updateSelfDescription"></textarea></label><button :disabled="selfProfileLoading || selfDescription.trim().length < 8" @click="analyzeSelfDescription">{{ selfProfileLoading ? "分析中…" : "更新学习倾向" }}</button><div v-if="selfProfile"><b>{{ selfProfile.level_label }}</b><span>{{ selfProfile.course_fit }}；推荐从“{{ selfProfile.recommended_start }}”开始。课程规划优先尊重明确的学习倾向，短测用于细调。</span></div></section>
         </details>
-        <article v-if="learningPlan" class="plan-result" :data-status="learningPlan.status">
-          <header><div><b>助教小程的安排</b><span>{{ dailyMinutes }} 分钟/天 · {{ weeklyDays }} 天/周</span></div></header>
-          <SafeMarkdown :source="learningPlan.answer" />
-          <small class="audit-mark">{{ learningPlan.status === "answered" ? `✓ 质量监督已审核 · ${learningPlan.citations.length} 条课程依据` : "△ 依据有限 · 已执行保守降级" }}</small>
-        </article>
+        <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
           <header><div><b>{{ diagnostic.title }}</b><span>每次完成一题，全部提交后更新学习画像</span></div><button @click="baselineOpen = false; showFeedback('阶段重测已收起，已选答案会保留。')">收起</button></header>
           <div v-if="currentDiagnosticItem" class="single-question">
             <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
             <h2>{{ currentDiagnosticItem.prompt }}</h2>
-            <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
+            <div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div>
           </div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
         </section>
@@ -1570,7 +1657,9 @@ onBeforeUnmount(() => {
               <button :class="{ active: dialogueRole === 'ta' }" @click="selectDialogueRole('ta')">问助教小程</button>
               <button v-for="person in lesson.cast.filter((item) => peerRoles.includes(item.role))" :key="person.role" :class="{ active: dialogueRole === person.role }" @click="selectDialogueRole(person.role)">{{ person.display_name }}</button>
             </div>
-            <div class="talk-composer"><textarea ref="dialogueComposer" v-model="dialogueText" rows="2" maxlength="1000" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : "发送" }}</button></div>
+            <p v-if="dialogueError" class="dialogue-error" role="alert">{{ dialogueError }}</p>
+            <div class="talk-composer"><textarea ref="dialogueComposer" v-model="dialogueText" :disabled="dialogueLoading" rows="2" maxlength="1000" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : dialogueError ? "重试发送" : "发送" }}</button></div>
+            <small v-if="dialogueLoading" role="status">{{ roleMeta[dialogueRole].name }}正在查阅课程资料并组织回复…</small>
             <small>回答经过课程资料检索与质量监督</small>
           </footer>
         </aside>
@@ -1590,7 +1679,7 @@ onBeforeUnmount(() => {
         <template v-if="currentBeat.action === 'choice' && currentBeat.checkpoint">
           <header><div><p>停一下，轮到你</p><h3>{{ currentBeat.checkpoint.prompt }}</h3></div><span>没有计时，想清楚再选</span></header>
           <div class="checkpoint-options">
-            <button v-for="choice in currentBeat.checkpoint.choices" :key="choice.id" :class="{ selected: selectedChoice === choice.id }" :disabled="checkpointResult?.accepted" @click="selectedChoice = choice.id; checkpointResult = null"><b>{{ choice.id }}</b><span>{{ choice.text }}</span></button>
+            <button v-for="choice in currentBeat.checkpoint.choices" :key="choice.id" :class="{ selected: selectedChoice === choice.id }" :disabled="submitting || checkpointResult?.accepted" @click="selectedChoice = choice.id; checkpointResult = null"><b>{{ choice.id }}</b><span>{{ choice.text }}</span></button>
           </div>
           <footer><p v-if="checkpointResult" :data-pass="checkpointResult.accepted">{{ checkpointResult.feedback }}</p><button v-if="!checkpointResult?.accepted" class="primary" :disabled="!selectedChoice || submitting" @click="submitChoice">{{ submitting ? "正在听你的回答…" : "说出我的答案" }}</button><button v-else class="primary" @click="advance">继续听讲 <span>→</span></button></footer>
         </template>
@@ -1637,6 +1726,7 @@ onBeforeUnmount(() => {
 
         <template v-else>
           <header><div><p>{{ currentBeat.eyebrow }}</p><h3>{{ currentBeat.title }}</h3></div><span>老师会等你准备好</span></header>
+          <LessonBeatContent :beat="currentBeat" />
           <div class="ready-card"><i>✓</i><div><b>{{ currentBeat.phase === "summary" ? "用自己的话复盘今天的方法" : "准备好后再继续" }}</b><span>{{ currentBeat.phase === "summary" ? lesson.focus_skill_atoms.join("、") : "这里没有自动跳转，也没有催促倒计时" }}</span></div><button class="primary" @click="advance">{{ currentBeat.phase === "summary" ? "领取课后作业" : "我准备好了" }} <span>→</span></button></div>
         </template>
       </section>
@@ -1648,9 +1738,11 @@ onBeforeUnmount(() => {
       </div>
     </Transition>
 
+    <Teleport to="body">
     <div v-if="exitDialogOpen" class="class-exit-backdrop" role="presentation" @click.self="exitDialogOpen = false">
-      <section role="dialog" aria-modal="true" aria-labelledby="class-exit-title"><span>离开前确认</span><h2 id="class-exit-title">为什么想提前下课？</h2><p>无论怎样选择，当前进度、讨论和代码草稿都会保存。</p><div><button @click="pauseClassroom(true)"><b>这部分我已经学过</b><span>记录为自述，之后用短题复核，不直接算作掌握</span></button><button @click="pauseClassroom(false)"><b>仍然退出课堂</b><span>暂停在当前位置，稍后可以继续</span></button></div><footer><button @click="exitDialogOpen = false">取消退出，继续学习</button></footer></section>
+      <section ref="exitDialog" role="dialog" aria-modal="true" aria-labelledby="class-exit-title" tabindex="-1" @keydown="handleExitKeydown"><span>离开前确认</span><h2 id="class-exit-title">为什么想提前下课？</h2><p>无论怎样选择，当前进度、讨论和代码草稿都会保存。</p><div><button @click="pauseClassroom(true)"><b>这部分我已经学过</b><span>记录为自述，之后用短题复核，不直接算作掌握</span></button><button @click="pauseClassroom(false)"><b>仍然退出课堂</b><span>暂停在当前位置，稍后可以继续</span></button></div><footer><button @click="exitDialogOpen = false">取消退出，继续学习</button></footer></section>
     </div>
+    </Teleport>
   </section>
 </template>
 
@@ -1661,82 +1753,85 @@ onBeforeUnmount(() => {
 .classroom-loading strong { font-size: 17px; }.classroom-loading span { color: #8c7d82; font-size: 12px; }
 .classroom-error button { padding: 9px 18px; border: 0; border-radius: 9px; color: #fff; background: #b4233b; }
 .lesson-masthead { display: flex; align-items: end; justify-content: space-between; gap: 24px; padding: 24px 28px; overflow: hidden; border: 1px solid #eadbdd; border-radius: 22px; background: radial-gradient(circle at 88% 10%, #ffe9d2 0 10%, transparent 35%), linear-gradient(135deg, #fffaf7, #fff 48%, #fff3f2); box-shadow: 0 18px 50px #7720330d; }
-.lesson-masthead p { margin: 0 0 6px; color: #b4233b; font: 800 9px Consolas, monospace; letter-spacing: .18em; }.lesson-masthead h2 { margin: 0; font-size: 26px; }.lesson-masthead div > span { display: block; margin-top: 7px; color: #796b70; font-size: 12px; }
+.lesson-masthead p { margin: 0 0 6px; color: #b4233b; font: 800 12px Consolas, monospace; letter-spacing: .18em; }.lesson-masthead h2 { margin: 0; font-size: 26px; }.lesson-masthead div > span { display: block; margin-top: 7px; color: #796b70; font-size: 12px; }
 .lesson-masthead aside { width: 220px; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 5px 12px; }.lesson-masthead aside small { color: #8b7c81; }.lesson-masthead aside b { color: #b4233b; font-size: 22px; }.lesson-masthead aside i { grid-column: 1 / -1; height: 6px; overflow: hidden; border-radius: 99px; background: #f1dedf; }.lesson-masthead aside i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #c51632, #e27765); }
-.lesson-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 7px; }.lesson-steps > button { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; cursor: default; }.lesson-steps > button.visited { cursor: pointer; }.lesson-steps > button:disabled { opacity: .58; }.lesson-steps > button em { font: normal 8px Consolas; }.lesson-steps > button span { overflow: hidden; font-size: 9px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps > button.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps > button.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }.lesson-steps > button.visited:hover { transform: translateY(-1px); border-color: #cf8792; }.lesson-history-actions { display: flex; align-items: center; gap: 12px; margin-top: 9px; }.lesson-history-actions button { padding: 8px 11px; border: 1px solid #dfd2d4; border-radius: 9px; color: #8f2032; background: #fff; font-size: 9px; font-weight: 800; }.lesson-history-actions button:disabled { color: #b8adb0; cursor: not-allowed; }.lesson-history-actions span { color: #8e8286; font-size: 8px; }
+.lesson-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(112px, 1fr)); gap: 7px; }.lesson-steps > button { min-width: 0; display: grid; gap: 3px; padding: 10px; border: 1px solid #ece3e4; border-radius: 11px; color: #a09599; background: #fff; text-align: left; cursor: default; }.lesson-steps > button.visited { cursor: pointer; }.lesson-steps > button:disabled { opacity: .58; }.lesson-steps > button em { font: normal 12px Consolas; }.lesson-steps > button span { overflow: hidden; font-size: 12px; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }.lesson-steps > button.active { color: #8f1428; border-color: #cf8792; background: #fff4f4; box-shadow: inset 0 -2px #c51632; }.lesson-steps > button.done { color: #577863; border-color: #d6e5da; background: #f5fbf7; }.lesson-steps > button.visited:hover { transform: translateY(-1px); border-color: #cf8792; }.lesson-history-actions { display: flex; align-items: center; gap: 12px; margin-top: 9px; }.lesson-history-actions button { padding: 8px 11px; border: 1px solid #dfd2d4; border-radius: 9px; color: #8f2032; background: #fff; font-size: 12px; font-weight: 800; }.lesson-history-actions button:disabled { color: #b8adb0; cursor: not-allowed; }.lesson-history-actions span { color: #8e8286; font-size: 12px; }
 .classroom-layout { min-height: 620px; display: grid; grid-template-columns: minmax(540px, 1.45fr) minmax(320px, .8fr); overflow: hidden; border: 1px solid #e4d9d8; border-radius: 24px; background: #fff; box-shadow: 0 22px 65px #3c1c250e; }
 .classroom-scene { position: relative; min-height: 620px; padding: 54px 34px 28px; overflow: hidden; border-right: 1px solid #e7dcda; background: linear-gradient(180deg, #fbf4e9 0 63%, #d9b99b 63% 65%, #c69671 65%); }
 .classroom-scene::after { content: ""; position: absolute; inset: 65% 0 0; opacity: .28; background-image: linear-gradient(90deg, #6f3d201c 1px, transparent 1px), linear-gradient(#6f3d201c 1px, transparent 1px); background-size: 48px 38px; transform: perspective(160px) rotateX(5deg); }
-.sun-window { position: absolute; top: 24px; right: 25px; width: 160px; height: 112px; overflow: hidden; border: 8px solid #fff; border-radius: 5px 18px 5px 5px; background: linear-gradient(#bce0ea 0 58%, #b8c99d 58%); box-shadow: 0 10px 28px #6b543120; }.sun-window::before, .sun-window::after { content: ""; position: absolute; background: #fff; }.sun-window::before { left: 48%; width: 6px; height: 100%; }.sun-window::after { top: 51%; width: 100%; height: 6px; }.sun-window span { position: absolute; top: 12px; left: 18px; width: 30px; height: 30px; border-radius: 50%; background: #ffd881; box-shadow: 0 0 28px #ffc85c; }.sun-window i { position: absolute; right: -15px; bottom: -20px; width: 90px; height: 56px; border-radius: 50%; background: #769b6c; }.sun-window small { position: absolute; z-index: 2; right: 6px; bottom: 4px; padding: 3px 6px; border-radius: 5px; color: #635940; background: #fff9; font-size: 7px; }
-.wall-note { position: absolute; top: 25px; left: 32px; padding: 8px 12px; border: 1px solid #ead6bd; border-radius: 8px; color: #8a5e40; background: #fff8e9; font-size: 9px; transform: rotate(-1deg); }
-.smart-board { position: relative; z-index: 2; width: calc(100% - 170px); min-height: 330px; max-height: 470px; overflow-y: auto; padding: 20px 22px; border: 10px solid #6e5140; border-radius: 10px; color: #edf8f0; background: linear-gradient(145deg, #23443b, #17352e); box-shadow: inset 0 0 35px #081b14, 0 14px 28px #60422a24; }.smart-board::-webkit-scrollbar { width: 9px; }.smart-board::-webkit-scrollbar-track { border-radius: 99px; background: #17352e; }.smart-board::-webkit-scrollbar-thumb { border-radius: 99px; background: #ffffff35; }.smart-board { scrollbar-width: thin; scrollbar-color: #ffffff40 #17352e; }.smart-board header span { display: block; color: #e4c999; font: 700 8px Consolas; letter-spacing: .12em; }.smart-board header b { display: block; margin-top: 7px; font-size: 18px; }.smart-board pre { margin: 8px 0 0; padding: 12px 14px; overflow: auto; border: 1px solid #ffffff18; border-radius: 8px; background: #071f19a8; }.smart-board code { color: #fff4d4; font: 11px/1.65 Consolas, monospace; }.smart-board ul { margin: 8px 0 0; padding: 0; display: grid; gap: 7px; list-style: none; }.smart-board li { color: #d8ebe1; font-size: 10px; line-height: 1.55; }.smart-board li::before { content: "·"; margin-right: 8px; color: #f0c76f; font-weight: 900; }.board-key-points,.board-code-example { margin-top: 13px; }.board-key-points > b,.board-code-example > b { color: #f6caa2; font-size: 9px; }
-.teacher-zone { position: relative; z-index: 3; height: 122px; display: flex; align-items: end; justify-content: space-between; padding: 6px 34px 0 80px; }.teacher-desk { width: 125px; height: 52px; position: relative; border-radius: 5px 5px 2px 2px; color: #fbddaa; background: #855b3e; box-shadow: 0 8px 14px #56341f28; }.teacher-desk span { position: absolute; top: -35px; left: 28px; width: 48px; height: 34px; display: grid; place-items:center; border: 4px solid #55525c; border-radius: 4px; color: #ffcad1; background: #22252c; font: 800 10px Consolas; }.teacher-desk i { position: absolute; right: 10px; top: -14px; width: 10px; height: 16px; border-radius: 2px 2px 5px 5px; background: #b8d4c4; }
-.desk-row { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; }.classmate { position: relative; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #b77c5548; border-radius: 12px 12px 5px 5px; color: #5b4032; background: linear-gradient(#f6dec7, #d7ae8c); box-shadow: 0 10px 15px #6b3c2222; text-align: left; }.classmate > i { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 3px solid #fff8; border-radius: 50%; color: #fff; background: #6f8d75; font: normal 800 12px serif; box-shadow: 0 3px 8px #4b2d1f24; }.classmate:nth-child(2) > i { background: #c76a4e; }.classmate:nth-child(3) > i { background: #8b7195; }.classmate.ta > i { background: #a06e43; }.classmate div { min-width: 0; }.classmate b, .classmate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.classmate b { font-size: 10px; }.classmate small { margin-top: 3px; color: #8b6957; font-size: 7px; }.classmate > span { position: absolute; top: -8px; right: 10px; width: 10px; height: 10px; border: 3px solid #fff; border-radius: 50%; background: #c8b7aa; }.classmate.speaking { border-color: #c51632; background: linear-gradient(#fff1df, #efc7a5); transform: translateY(-5px); box-shadow: 0 0 0 4px #c5163215, 0 16px 25px #6b3c2230; }.classmate.speaking > span { background: #d51c39; box-shadow: 0 0 0 5px #d51c3920; animation: pulse 1.5s infinite; }.classmate.teacher { width: 165px; background: linear-gradient(#f5e5d9, #d5b9a3); }
-.conversation-dock { min-height: 620px; display: grid; grid-template-rows: auto 1fr auto; background: #fffcfa; }.conversation-dock > header { display: flex; justify-content: space-between; gap: 15px; padding: 20px; border-bottom: 1px solid #eee2e0; }.conversation-dock header p { margin: 0 0 5px; color: #b4233b; font: 700 8px Consolas; letter-spacing: .14em; }.conversation-dock header h3 { margin: 0; font-size: 15px; }.conversation-dock header > span { height: fit-content; display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 99px; color: #65756b; background: #eef6f0; font-size: 8px; }.conversation-dock header > span i { width: 6px; height: 6px; border-radius: 50%; background: #49a26c; box-shadow: 0 0 0 4px #49a26c17; }
-.message-list { max-height: 410px; min-height: 340px; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }.message-list article { display: grid; grid-template-columns: 31px 1fr; align-items: start; gap: 9px; }.message-list article > i { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; color: #fff; font: normal 700 10px serif; }.message-list article > div { padding: 10px 11px; border: 1px solid #eee3e2; border-radius: 4px 13px 13px; background: #fff; box-shadow: 0 5px 16px #3c1c2508; }.message-list article b { color: #7b6069; font-size: 9px; }.message-list article p { margin: 5px 0 0; color: #4e4548; font-size: 11px; line-height: 1.7; white-space: pre-wrap; }.message-list article.role-student { grid-template-columns: 1fr 31px; }.message-list article.role-student > i { grid-column: 2; }.message-list article.role-student > div { grid-column: 1; grid-row: 1; border-color: #f0cdd2; border-radius: 13px 4px 13px 13px; background: #fff4f4; }
-.conversation-dock > footer { padding: 13px; border-top: 1px solid #eee2e0; background: #fff; }.role-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }.role-pills button { padding: 4px 7px; border: 1px solid #eadfe0; border-radius: 99px; color: #8c7d82; background: #fff; font-size: 8px; }.role-pills button.active { color: #a6132c; border-color: #dba5ad; background: #fff2f3; }.talk-composer { display: grid; grid-template-columns: 1fr auto; gap: 7px; }.talk-composer textarea { padding: 9px 10px; resize: none; border: 1px solid #dfd4d4; border-radius: 9px; color: #40383a; background: #fffcfb; font-size: 10px; }.talk-composer button { padding: 0 13px; border: 0; border-radius: 9px; color: #fff; background: #b4233b; font-size: 10px; }.talk-composer button:disabled { opacity: .5; }.conversation-dock > footer > small { display: block; margin-top: 6px; color: #aaa0a3; font-size: 7px; }
-.lesson-action { padding: 24px; border: 1px solid #e5d9d8; border-radius: 22px; background: #fff; box-shadow: 0 16px 45px #3c1c250a; }.lesson-action > header { display: flex; align-items: start; justify-content: space-between; gap: 20px; }.lesson-action header p { margin: 0 0 5px; color: #b4233b; font: 800 8px Consolas; letter-spacing: .14em; }.lesson-action header h3 { margin: 0; font-size: 17px; }.lesson-action header > span { color: #9a8d91; font-size: 9px; }.inline-error { margin-bottom: 14px; padding: 9px 12px; border-radius: 8px; color: #9f2837; background: #fff0f1; font-size: 10px; }.inline-error span { float: right; }
-.checkpoint-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }.checkpoint-options button { display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid #e6dada; border-radius: 12px; color: #62565a; background: #fffdfc; text-align: left; }.checkpoint-options button b { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 8px; color: #a31d32; background: #fff0f2; }.checkpoint-options button span { font-size: 10px; line-height: 1.45; }.checkpoint-options button.selected { border-color: #cc7c89; background: #fff5f5; box-shadow: 0 0 0 3px #c5163210; }.lesson-action > footer { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }.lesson-action > footer p { margin: 0 auto 0 0; color: #a03a48; font-size: 10px; }.lesson-action > footer p[data-pass="true"] { color: #28794f; }
-.primary { padding: 10px 17px; border: 0; border-radius: 9px; color: #fff; background: linear-gradient(135deg, #cc1936, #a70f27); box-shadow: 0 8px 18px #b5163030; font-size: 10px; font-weight: 700; }.primary:disabled { opacity: .5; box-shadow: none; }.primary span { margin-left: 7px; }
-.ready-card { margin-top: 16px; display: flex; align-items: center; gap: 12px; padding: 15px; border: 1px solid #e8dedd; border-radius: 13px; background: #fffaf7; }.ready-card > i { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #657b69; background: #e6f1e8; font-style: normal; }.ready-card div { flex: 1; }.ready-card b, .ready-card span { display: block; }.ready-card b { font-size: 11px; }.ready-card div span { margin-top: 4px; color: #8d8084; font-size: 9px; }
-.continue-bar { margin-top: 15px; padding-top: 15px; border-top: 1px solid #e8dddd; }.continue-bar > span { margin-right: auto; color: #397456; font-size: 10px; }
-.lesson-complete { margin-bottom: 18px; padding: 27px; border: 1px solid #d7e4d9; border-radius: 16px; background: radial-gradient(circle at 90% 10%, #ffe6b8, transparent 25%), linear-gradient(135deg, #f5fbf6, #fff); }.lesson-complete > span { color: #508063; font: 800 9px Consolas; letter-spacing: .16em; }.lesson-complete h3 { margin: 8px 0; font-size: 22px; }.lesson-complete p { max-width: 650px; color: #657069; font-size: 11px; line-height: 1.7; }.lesson-complete div { width: fit-content; padding: 9px 12px; border-radius: 9px; color: #715a38; background: #fff2d8; font-size: 10px; }.lesson-complete div b { margin-right: 9px; }
-.lesson-complete footer { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }.lesson-complete footer .secondary { padding: 9px 13px; border: 1px solid #bfd6c6; border-radius: 9px; color: #426f53; background: #fff; font-size: 9px; font-weight: 800; }
+.sun-window { position: absolute; top: 24px; right: 25px; width: 160px; height: 112px; overflow: hidden; border: 8px solid #fff; border-radius: 5px 18px 5px 5px; background: linear-gradient(#bce0ea 0 58%, #b8c99d 58%); box-shadow: 0 10px 28px #6b543120; }.sun-window::before, .sun-window::after { content: ""; position: absolute; background: #fff; }.sun-window::before { left: 48%; width: 6px; height: 100%; }.sun-window::after { top: 51%; width: 100%; height: 6px; }.sun-window span { position: absolute; top: 12px; left: 18px; width: 30px; height: 30px; border-radius: 50%; background: #ffd881; box-shadow: 0 0 28px #ffc85c; }.sun-window i { position: absolute; right: -15px; bottom: -20px; width: 90px; height: 56px; border-radius: 50%; background: #769b6c; }.sun-window small { position: absolute; z-index: 2; right: 6px; bottom: 4px; padding: 3px 6px; border-radius: 5px; color: #635940; background: #fff9; font-size: 12px; }
+.wall-note { position: absolute; top: 25px; left: 32px; padding: 8px 12px; border: 1px solid #ead6bd; border-radius: 8px; color: #8a5e40; background: #fff8e9; font-size: 12px; transform: rotate(-1deg); }
+.smart-board { position: relative; z-index: 2; width: calc(100% - 170px); min-height: 330px; max-height: 470px; overflow-y: auto; padding: 20px 22px; border: 10px solid #6e5140; border-radius: 10px; color: #edf8f0; background: linear-gradient(145deg, #23443b, #17352e); box-shadow: inset 0 0 35px #081b14, 0 14px 28px #60422a24; }.smart-board::-webkit-scrollbar { width: 9px; }.smart-board::-webkit-scrollbar-track { border-radius: 99px; background: #17352e; }.smart-board::-webkit-scrollbar-thumb { border-radius: 99px; background: #ffffff35; }.smart-board { scrollbar-width: thin; scrollbar-color: #ffffff40 #17352e; }.smart-board header span { display: block; color: #e4c999; font: 700 12px Consolas; letter-spacing: .12em; }.smart-board header b { display: block; margin-top: 7px; font-size: 18px; }.smart-board pre { margin: 8px 0 0; padding: 12px 14px; overflow: auto; border: 1px solid #ffffff18; border-radius: 8px; background: #071f19a8; }.smart-board code { color: #fff4d4; font: 12px/1.65 Consolas, monospace; }.smart-board ul { margin: 8px 0 0; padding: 0; display: grid; gap: 7px; list-style: none; }.smart-board li { color: #d8ebe1; font-size: 12px; line-height: 1.55; }.smart-board li::before { content: "·"; margin-right: 8px; color: #f0c76f; font-weight: 900; }.board-key-points,.board-code-example { margin-top: 13px; }.board-key-points > b,.board-code-example > b { color: #f6caa2; font-size: 12px; }
+.teacher-zone { position: relative; z-index: 3; height: 122px; display: flex; align-items: end; justify-content: space-between; padding: 6px 34px 0 80px; }.teacher-desk { width: 125px; height: 52px; position: relative; border-radius: 5px 5px 2px 2px; color: #fbddaa; background: #855b3e; box-shadow: 0 8px 14px #56341f28; }.teacher-desk span { position: absolute; top: -35px; left: 28px; width: 48px; height: 34px; display: grid; place-items:center; border: 4px solid #55525c; border-radius: 4px; color: #ffcad1; background: #22252c; font: 800 12px Consolas; }.teacher-desk i { position: absolute; right: 10px; top: -14px; width: 10px; height: 16px; border-radius: 2px 2px 5px 5px; background: #b8d4c4; }
+.desk-row { position: relative; z-index: 4; display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; align-items: end; }.classmate { position: relative; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 10px; border: 1px solid #b77c5548; border-radius: 12px 12px 5px 5px; color: #5b4032; background: linear-gradient(#f6dec7, #d7ae8c); box-shadow: 0 10px 15px #6b3c2222; text-align: left; }.classmate > i { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; border: 3px solid #fff8; border-radius: 50%; color: #fff; background: #6f8d75; font: normal 800 12px serif; box-shadow: 0 3px 8px #4b2d1f24; }.classmate:nth-child(2) > i { background: #c76a4e; }.classmate:nth-child(3) > i { background: #8b7195; }.classmate.ta > i { background: #a06e43; }.classmate div { min-width: 0; }.classmate b, .classmate small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }.classmate b { font-size: 12px; }.classmate small { margin-top: 3px; color: #8b6957; font-size: 12px; }.classmate > span { position: absolute; top: -8px; right: 10px; width: 10px; height: 10px; border: 3px solid #fff; border-radius: 50%; background: #c8b7aa; }.classmate.speaking { border-color: #c51632; background: linear-gradient(#fff1df, #efc7a5); transform: translateY(-5px); box-shadow: 0 0 0 4px #c5163215, 0 16px 25px #6b3c2230; }.classmate.speaking > span { background: #d51c39; box-shadow: 0 0 0 5px #d51c3920; animation: pulse 1.5s infinite; }.classmate.teacher { width: 165px; background: linear-gradient(#f5e5d9, #d5b9a3); }
+.conversation-dock { min-height: 620px; display: grid; grid-template-rows: auto 1fr auto; background: #fffcfa; }.conversation-dock > header { display: flex; justify-content: space-between; gap: 15px; padding: 20px; border-bottom: 1px solid #eee2e0; }.conversation-dock header p { margin: 0 0 5px; color: #b4233b; font: 700 12px Consolas; letter-spacing: .14em; }.conversation-dock header h3 { margin: 0; font-size: 15px; }.conversation-dock header > span { height: fit-content; display: flex; align-items: center; gap: 6px; padding: 5px 8px; border-radius: 99px; color: #65756b; background: #eef6f0; font-size: 12px; }.conversation-dock header > span i { width: 6px; height: 6px; border-radius: 50%; background: #49a26c; box-shadow: 0 0 0 4px #49a26c17; }
+.message-list { max-height: 410px; min-height: 340px; overflow: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }.message-list article { display: grid; grid-template-columns: 31px 1fr; align-items: start; gap: 9px; }.message-list article > i { width: 31px; height: 31px; display: grid; place-items: center; border-radius: 9px; color: #fff; font: normal 700 12px serif; }.message-list article > div { padding: 10px 11px; border: 1px solid #eee3e2; border-radius: 4px 13px 13px; background: #fff; box-shadow: 0 5px 16px #3c1c2508; }.message-list article b { color: #7b6069; font-size: 12px; }.message-list article p { margin: 5px 0 0; color: #4e4548; font-size: 12px; line-height: 1.7; white-space: pre-wrap; }.message-list article.role-student { grid-template-columns: 1fr 31px; }.message-list article.role-student > i { grid-column: 2; }.message-list article.role-student > div { grid-column: 1; grid-row: 1; border-color: #f0cdd2; border-radius: 13px 4px 13px 13px; background: #fff4f4; }
+.conversation-dock > footer { padding: 13px; border-top: 1px solid #eee2e0; background: #fff; }.role-pills { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 8px; }.role-pills button { padding: 4px 7px; border: 1px solid #eadfe0; border-radius: 99px; color: #8c7d82; background: #fff; font-size: 12px; }.role-pills button.active { color: #a6132c; border-color: #dba5ad; background: #fff2f3; }.talk-composer { display: grid; grid-template-columns: 1fr auto; gap: 7px; }.talk-composer textarea { padding: 9px 10px; resize: none; border: 1px solid #dfd4d4; border-radius: 9px; color: #40383a; background: #fffcfb; font-size: 12px; }.talk-composer button { padding: 0 13px; border: 0; border-radius: 9px; color: #fff; background: #b4233b; font-size: 12px; }.talk-composer button:disabled { opacity: .5; }.conversation-dock > footer > small { display: block; margin-top: 6px; color: #aaa0a3; font-size: 12px; }
+.lesson-action { padding: 24px; border: 1px solid #e5d9d8; border-radius: 22px; background: #fff; box-shadow: 0 16px 45px #3c1c250a; }.lesson-action > header { display: flex; align-items: start; justify-content: space-between; gap: 20px; }.lesson-action header p { margin: 0 0 5px; color: #b4233b; font: 800 12px Consolas; letter-spacing: .14em; }.lesson-action header h3 { margin: 0; font-size: 17px; }.lesson-action header > span { color: #9a8d91; font-size: 12px; }.inline-error { margin-bottom: 14px; padding: 9px 12px; border-radius: 8px; color: #9f2837; background: #fff0f1; font-size: 12px; }.inline-error span { float: right; }
+.checkpoint-options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 18px 0; }.checkpoint-options button { display: flex; align-items: center; gap: 10px; padding: 13px; border: 1px solid #e6dada; border-radius: 12px; color: #62565a; background: #fffdfc; text-align: left; }.checkpoint-options button b { width: 28px; height: 28px; flex: 0 0 auto; display: grid; place-items: center; border-radius: 8px; color: #a31d32; background: #fff0f2; }.checkpoint-options button span { font-size: 12px; line-height: 1.45; }.checkpoint-options button.selected { border-color: #cc7c89; background: #fff5f5; box-shadow: 0 0 0 3px #c5163210; }.lesson-action > footer { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }.lesson-action > footer p { margin: 0 auto 0 0; color: #a03a48; font-size: 12px; }.lesson-action > footer p[data-pass="true"] { color: #28794f; }
+.primary { padding: 10px 17px; border: 0; border-radius: 9px; color: #fff; background: linear-gradient(135deg, #cc1936, #a70f27); box-shadow: 0 8px 18px #b5163030; font-size: 12px; font-weight: 700; }.primary:disabled { opacity: .5; box-shadow: none; }.primary span { margin-left: 7px; }
+.ready-card { margin-top: 16px; display: flex; align-items: center; gap: 12px; padding: 15px; border: 1px solid #e8dedd; border-radius: 13px; background: #fffaf7; }.ready-card > i { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: #657b69; background: #e6f1e8; font-style: normal; }.ready-card div { flex: 1; }.ready-card b, .ready-card span { display: block; }.ready-card b { font-size: 12px; }.ready-card div span { margin-top: 4px; color: #8d8084; font-size: 12px; }
+.continue-bar { margin-top: 15px; padding-top: 15px; border-top: 1px solid #e8dddd; }.continue-bar > span { margin-right: auto; color: #397456; font-size: 12px; }
+.lesson-complete { margin-bottom: 18px; padding: 27px; border: 1px solid #d7e4d9; border-radius: 16px; background: radial-gradient(circle at 90% 10%, #ffe6b8, transparent 25%), linear-gradient(135deg, #f5fbf6, #fff); }.lesson-complete > span { color: #508063; font: 800 12px Consolas; letter-spacing: .16em; }.lesson-complete h3 { margin: 8px 0; font-size: 22px; }.lesson-complete p { max-width: 650px; color: #657069; font-size: 12px; line-height: 1.7; }.lesson-complete div { width: fit-content; padding: 9px 12px; border-radius: 9px; color: #715a38; background: #fff2d8; font-size: 12px; }.lesson-complete div b { margin-right: 9px; }
+.lesson-complete footer { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 18px; }.lesson-complete footer .secondary { padding: 9px 13px; border: 1px solid #bfd6c6; border-radius: 9px; color: #426f53; background: #fff; font-size: 12px; font-weight: 800; }
 @keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 50% { box-shadow: 0 0 0 8px #d51c3908; } }
 @media (max-width: 1120px) { .classroom-layout { grid-template-columns: 1fr; }.classroom-scene { border-right: 0; border-bottom: 1px solid #e7dcda; }.conversation-dock { min-height: 520px; }.message-list { max-height: 330px; } }
 @media (max-width: 760px) { .lesson-masthead { min-width: 0; align-items: start; flex-direction: column; padding: 20px; }.lesson-masthead > div { min-width: 0; }.lesson-masthead h2 { font-size: 22px; line-height: 1.25; }.lesson-masthead aside { width: 100%; min-width: 0; }.lesson-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }.classroom-layout, .classroom-scene, .conversation-dock { min-width: 0; }.classroom-scene { min-height: 660px; padding-inline: 18px; }.smart-board { width: 100%; margin-top: 100px; }.sun-window { top: 20px; right: 18px; }.desk-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }.checkpoint-options { grid-template-columns: 1fr; } }
 html[data-device-resolved="mobile"] .classroom-layout { grid-template-columns: 1fr; } html[data-device-resolved="mobile"] .classroom-scene { border-right: 0; border-bottom: 1px solid #e7dcda; } html[data-device-resolved="mobile"] .conversation-dock { min-height: 520px; } html[data-device-resolved="mobile"] .message-list { max-height: 330px; } html[data-device-resolved="mobile"] .lesson-masthead { min-width: 0; align-items: start; flex-direction: column; padding: 20px; } html[data-device-resolved="mobile"] .lesson-masthead > div { min-width: 0; } html[data-device-resolved="mobile"] .lesson-masthead h2 { font-size: 22px; line-height: 1.25; } html[data-device-resolved="mobile"] .lesson-masthead aside { width: 100%; min-width: 0; } html[data-device-resolved="mobile"] .lesson-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } html[data-device-resolved="mobile"] .classroom-layout, html[data-device-resolved="mobile"] .classroom-scene, html[data-device-resolved="mobile"] .conversation-dock { min-width: 0; } html[data-device-resolved="mobile"] .classroom-scene { min-height: 660px; padding-inline: 18px; } html[data-device-resolved="mobile"] .smart-board { width: 100%; margin-top: 100px; } html[data-device-resolved="mobile"] .sun-window { top: 20px; right: 18px; } html[data-device-resolved="mobile"] .desk-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } html[data-device-resolved="mobile"] .checkpoint-options { grid-template-columns: 1fr; } html[data-device-resolved="mobile"] .classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; } html[data-device-resolved="mobile"] .teacher-portrait { justify-items: start; } html[data-device-resolved="mobile"] .teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } html[data-device-resolved="mobile"] .lesson-materials { grid-template-columns: 1fr; } html[data-device-resolved="mobile"] .lesson-materials > aside { border-right: 0; border-bottom: 1px solid #eee4e5; }
 .learning-copilot { display: grid; gap: 14px; padding: 21px 23px; border: 1px solid #e7dadd; border-radius: 20px; background: linear-gradient(135deg, #fff 0 65%, #fff5f4); box-shadow: 0 14px 38px #6e1b2a0a; }
-.learning-copilot > header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }.learning-copilot > header p { margin: 0 0 4px; color: #b4233b; font: 800 8px Consolas, monospace; letter-spacing: .16em; }.learning-copilot > header h3 { margin: 0; font-size: 18px; }.learning-copilot > header div > span { display: block; margin-top: 5px; color: #8e8085; font-size: 9px; }
-.profile-chip { min-width: 145px; padding: 10px 13px; border: 1px solid #ead0d4; border-radius: 12px; color: #9d2337; background: #fff5f6; text-align: right; }.profile-chip[data-ready="true"] { color: #387657; border-color: #cee3d5; background: #f3faf5; }.profile-chip b, .profile-chip span { display: block; }.profile-chip b { font-size: 20px; }.profile-chip span { margin-top: 2px; font-size: 8px; }
-.learning-tools { display: flex; align-items: center; gap: 9px; }.learning-tools > button { padding: 9px 11px; border: 1px solid #e2c6ca; border-radius: 9px; color: #962139; background: #fff9f9; font-size: 8px; font-weight: 800; white-space: nowrap; }.learning-tools > button:hover { border-color: #c85e70; background: #fff; transform: translateY(-1px); }.learning-tools > button span { margin-left: 5px; }
-.plan-controls { display: grid; grid-template-columns: 140px 140px minmax(230px, 1fr) auto auto; align-items: end; gap: 9px; }.plan-controls label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; color: #75696d; font-size: 8px; font-weight: 700; }.plan-controls label > input { grid-column: 1; width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #e2d7d8; border-radius: 8px; color: #3e3538; background: #fffdfc; outline: none; }.plan-controls label > span { grid-column: 2; grid-row: 2; color: #9a8d91; }.plan-controls .plan-goal { grid-template-columns: 1fr; }.plan-controls .plan-goal input { grid-column: 1; }.plan-controls input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.plan-controls button { min-height: 36px; padding: 8px 12px; border-radius: 8px; white-space: nowrap; font-size: 9px; font-weight: 800; }.plan-controls .secondary { border: 1px solid #d7aab1; color: #9e1930; background: #fff5f6; }
+.learning-copilot > header { display: flex; align-items: center; justify-content: space-between; gap: 20px; }.learning-copilot > header p { margin: 0 0 4px; color: #b4233b; font: 800 12px Consolas, monospace; letter-spacing: .16em; }.learning-copilot > header h3 { margin: 0; font-size: 18px; }.learning-copilot > header div > span { display: block; margin-top: 5px; color: #8e8085; font-size: 12px; }
+.profile-chip { min-width: 145px; padding: 10px 13px; border: 1px solid #ead0d4; border-radius: 12px; color: #9d2337; background: #fff5f6; text-align: right; }.profile-chip[data-ready="true"] { color: #387657; border-color: #cee3d5; background: #f3faf5; }.profile-chip b, .profile-chip span { display: block; }.profile-chip b { font-size: 20px; }.profile-chip span { margin-top: 2px; font-size: 12px; }
+.learning-tools { display: flex; align-items: center; gap: 9px; }.learning-tools > button { padding: 9px 11px; border: 1px solid #e2c6ca; border-radius: 9px; color: #962139; background: #fff9f9; font-size: 12px; font-weight: 800; white-space: nowrap; }.learning-tools > button:hover { border-color: #c85e70; background: #fff; transform: translateY(-1px); }.learning-tools > button span { margin-left: 5px; }
+.plan-controls { display: grid; grid-template-columns: 140px 140px minmax(230px, 1fr) auto auto; align-items: end; gap: 9px; }.plan-controls label { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; color: #75696d; font-size: 12px; font-weight: 700; }.plan-controls label > input { grid-column: 1; width: 100%; min-width: 0; padding: 9px 10px; border: 1px solid #e2d7d8; border-radius: 8px; color: #3e3538; background: #fffdfc; outline: none; }.plan-controls label > span { grid-column: 2; grid-row: 2; color: #9a8d91; }.plan-controls .plan-goal { grid-template-columns: 1fr; }.plan-controls .plan-goal input { grid-column: 1; }.plan-controls input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.plan-controls button { min-height: 36px; padding: 8px 12px; border-radius: 8px; white-space: nowrap; font-size: 12px; font-weight: 800; }.plan-controls .secondary { border: 1px solid #d7aab1; color: #9e1930; background: #fff5f6; }
 .plan-controls .secondary:disabled { opacity: .58; cursor: wait; }
-.global-action-feedback { position: fixed; z-index: 90; right: 24px; bottom: 24px; width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; gap: 10px; padding: 13px 14px; border: 1px solid #e5d8d9; border-radius: 13px; color: #514649; background: #fffdfcf2; box-shadow: 0 18px 55px #3c101d26; backdrop-filter: blur(14px); font-size: 11px; line-height: 1.55; }.global-action-feedback > i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #4b9b6b; box-shadow: 0 0 0 4px #4b9b6b15; }.global-action-feedback > span { flex: 1; }.global-action-feedback button { flex: 0 0 auto; padding: 3px 6px; border: 0; color: #8f7d82; background: transparent; font-size: 15px; }.feedback-toast-enter-active, .feedback-toast-leave-active { transition: opacity .18s ease, transform .18s ease; }.feedback-toast-enter-from, .feedback-toast-leave-to { opacity: 0; transform: translateY(8px); }
-.plan-result { position: relative; padding: 16px 17px 30px; border: 1px solid #d9e5dc; border-radius: 14px; background: #f8fcf9; }.plan-result[data-status="insufficient_evidence"] { border-color: #ead9c0; background: #fffaf2; }.plan-result > header div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }.plan-result header b { font-size: 11px; }.plan-result header span { color: #8a9690; font-size: 8px; }.plan-result :deep(.safe-markdown) { color: #4f5c55; font-size: 10px; }.audit-mark, .message-audit { color: #8ba095; font-size: 7px; font-weight: 600; letter-spacing: .03em; opacity: .72; }.audit-mark { position: absolute; right: 14px; bottom: 10px; }
-.baseline-panel { scroll-margin-top: 20px; padding: 17px; border: 1px solid #e8cbd0; border-radius: 14px; background: #fff9f8; animation: panel-in .2s ease-out; }.baseline-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }.baseline-panel > header b, .baseline-panel > header span { display: block; }.baseline-panel > header b { font-size: 13px; }.baseline-panel > header span { margin-top: 4px; color: #8d7f84; font-size: 9px; }.baseline-panel > header button { border: 0; color: #9a5964; background: transparent; font-size: 9px; }.baseline-questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }.baseline-questions article { padding: 12px; border: 1px solid #ece2e2; border-radius: 11px; background: #fff; }.baseline-questions p { min-height: 38px; margin: 0 0 9px; font-size: 10px; line-height: 1.5; }.baseline-questions p em { margin-right: 7px; color: #ba2039; font: normal 8px Consolas; }.baseline-questions article > div { display: grid; gap: 5px; }.baseline-questions button { display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid transparent; border-radius: 7px; color: #62585b; background: #f6f3f3; text-align: left; font-size: 8px; }.baseline-questions button b { color: #a62a3e; }.baseline-questions button.selected { border-color: #d48b97; color: #951a2f; background: #fff0f2; box-shadow: inset 2px 0 #c51632; }.baseline-panel > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 13px; padding-top: 12px; border-top: 1px solid #eadfe0; }.baseline-panel > footer span { color: #8f8387; font-size: 9px; }
-.message-list article :deep(.safe-markdown) { margin-top: 5px; color: #4e4548; font-size: 11px; }.message-list .message-audit { display: block; margin-top: 7px; text-align: right; }
+.global-action-feedback { position: fixed; z-index: 90; right: 24px; bottom: 24px; width: min(420px, calc(100vw - 32px)); display: flex; align-items: center; gap: 10px; padding: 13px 14px; border: 1px solid #e5d8d9; border-radius: 13px; color: #514649; background: #fffdfcf2; box-shadow: 0 18px 55px #3c101d26; backdrop-filter: blur(14px); font-size: 12px; line-height: 1.55; }.global-action-feedback > i { width: 8px; height: 8px; flex: 0 0 auto; border-radius: 50%; background: #4b9b6b; box-shadow: 0 0 0 4px #4b9b6b15; }.global-action-feedback > span { flex: 1; }.global-action-feedback button { flex: 0 0 auto; padding: 3px 6px; border: 0; color: #8f7d82; background: transparent; font-size: 15px; }.feedback-toast-enter-active, .feedback-toast-leave-active { transition: opacity .18s ease, transform .18s ease; }.feedback-toast-enter-from, .feedback-toast-leave-to { opacity: 0; transform: translateY(8px); }
+.plan-result { position: relative; padding: 16px 17px 30px; border: 1px solid #d9e5dc; border-radius: 14px; background: #f8fcf9; }.plan-result[data-status="insufficient_evidence"] { border-color: #ead9c0; background: #fffaf2; }.plan-result > header div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }.plan-result header b { font-size: 12px; }.plan-result header span { color: #8a9690; font-size: 12px; }.plan-result :deep(.safe-markdown) { color: #4f5c55; font-size: 12px; }.audit-mark, .message-audit { color: #8ba095; font-size: 12px; font-weight: 600; letter-spacing: .03em; opacity: .72; }.audit-mark { position: absolute; right: 14px; bottom: 10px; }
+.baseline-panel { scroll-margin-top: 20px; padding: 17px; border: 1px solid #e8cbd0; border-radius: 14px; background: #fff9f8; animation: panel-in .2s ease-out; }.baseline-panel > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }.baseline-panel > header b, .baseline-panel > header span { display: block; }.baseline-panel > header b { font-size: 13px; }.baseline-panel > header span { margin-top: 4px; color: #8d7f84; font-size: 12px; }.baseline-panel > header button { border: 0; color: #9a5964; background: transparent; font-size: 12px; }.baseline-questions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 14px; }.baseline-questions article { padding: 12px; border: 1px solid #ece2e2; border-radius: 11px; background: #fff; }.baseline-questions p { min-height: 38px; margin: 0 0 9px; font-size: 12px; line-height: 1.5; }.baseline-questions p em { margin-right: 7px; color: #ba2039; font: normal 12px Consolas; }.baseline-questions article > div { display: grid; gap: 5px; }.baseline-questions button { display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 1px solid transparent; border-radius: 7px; color: #62585b; background: #f6f3f3; text-align: left; font-size: 12px; }.baseline-questions button b { color: #a62a3e; }.baseline-questions button.selected { border-color: #d48b97; color: #951a2f; background: #fff0f2; box-shadow: inset 2px 0 #c51632; }.baseline-panel > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 13px; padding-top: 12px; border-top: 1px solid #eadfe0; }.baseline-panel > footer span { color: #8f8387; font-size: 12px; }
+.message-list article :deep(.safe-markdown) { margin-top: 5px; color: #4e4548; font-size: 12px; }.message-list .message-audit { display: block; margin-top: 7px; text-align: right; }
 @keyframes panel-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
 @media (max-width: 1120px) { .plan-controls { grid-template-columns: 1fr 1fr; }.plan-controls .plan-goal { grid-column: 1 / -1; } }
 @media (max-width: 760px) { .learning-copilot > header { align-items: stretch; flex-direction: column; }.learning-tools { align-items: stretch; flex-direction: column-reverse; }.profile-chip { text-align: left; }.plan-controls, .baseline-questions { grid-template-columns: 1fr; }.plan-controls .plan-goal { grid-column: auto; } }
 .assessment-gate, .assessment-result-screen { width: min(100%, 1080px); min-height: 0; display: grid; align-content: start; gap: 20px; margin: 0 auto; padding: clamp(24px, 3vw, 40px); overflow: hidden; border: 1px solid #e8dfe1; border-radius: 22px; background: radial-gradient(circle at 92% 8%, #ffe9e6 0 8%, transparent 28%), linear-gradient(145deg, #fff, #fffaf9); box-shadow: 0 20px 55px #5513220d; }
-.assessment-gate > header, .assessment-result-screen > header { padding-bottom: 14px; border-bottom: 1px solid #eee5e6; }.assessment-gate > header div { display: flex; align-items: baseline; gap: 12px; }.assessment-gate > header b { font-size: 18px; }.assessment-gate > header small { color: #7e7377; font-size: 11px; }
+.assessment-gate > header, .assessment-result-screen > header { padding-bottom: 14px; border-bottom: 1px solid #eee5e6; }.assessment-gate > header div { display: flex; align-items: baseline; gap: 12px; }.assessment-gate > header b { font-size: 18px; }.assessment-gate > header small { color: #7e7377; font-size: 12px; }
 .assessment-welcome { max-width: 760px; padding: 24px 0 12px; }.assessment-welcome h1 { margin: 0; font-size: clamp(30px, 4vw, 46px); line-height: 1.16; letter-spacing: -.045em; }.assessment-welcome p { max-width: 700px; margin: 18px 0 0; color: #665b5f; font-size: 14px; line-height: 1.85; }
-.assessment-start-actions, .assessment-navigation { width: min(100%, 760px); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; }.assessment-start-actions .text-button { padding: 9px 0; border: 0; color: #766a6e; background: transparent; font-size: 11px; text-decoration: underline; text-underline-offset: 3px; }.assessment-start-actions .primary, .assessment-navigation .primary, .assessment-result-screen footer .primary { padding: 12px 18px; font-size: 11px; }.assessment-navigation .secondary, .assessment-result-screen footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #655b5f; background: #fff; font-size: 11px; }.assessment-navigation .secondary:disabled { opacity: .45; }
-.single-question { max-width: 760px; width: 100%; margin: 4px auto; }.single-question > header { display: flex; align-items: center; }.single-question > header span { color: #a41d34; font-size: 12px; font-weight: 800; }.single-question h2 { margin: 14px 0 20px; font-size: clamp(24px, 3vw, 32px); line-height: 1.35; letter-spacing: -.025em; }.single-question > div { display: grid; gap: 10px; }.single-question button { display: grid; grid-template-columns: 38px 1fr 24px; align-items: center; gap: 12px; padding: 13px 16px; border: 1px solid #e9e1e2; border-radius: 12px; color: #4f4649; background: #fff; text-align: left; }.single-question button:hover { border-color: #d9aab2; transform: translateX(3px); box-shadow: 0 10px 25px #6813230a; }.single-question button b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #a42338; background: #fff1f2; font-size: 11px; }.single-question button span { font-size: 13px; line-height: 1.55; }.single-question button i { color: transparent; font-style: normal; }.single-question button.selected { border-color: #c96575; background: #fff5f5; box-shadow: inset 4px 0 #bf1934, 0 12px 30px #6813230d; }.single-question button.selected i { color: #3c9666; }
+.assessment-start-actions, .assessment-navigation { width: min(100%, 760px); display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 auto; }.assessment-start-actions .text-button { padding: 9px 0; border: 0; color: #766a6e; background: transparent; font-size: 12px; text-decoration: underline; text-underline-offset: 3px; }.assessment-start-actions .primary, .assessment-navigation .primary, .assessment-result-screen footer .primary { padding: 12px 18px; font-size: 12px; }.assessment-navigation .secondary, .assessment-result-screen footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #655b5f; background: #fff; font-size: 12px; }.assessment-navigation .secondary:disabled { opacity: .45; }
+.single-question { max-width: 760px; width: 100%; margin: 4px auto; }.single-question > header { display: flex; align-items: center; }.single-question > header span { color: #a41d34; font-size: 12px; font-weight: 800; }.single-question h2 { margin: 14px 0 20px; font-size: clamp(24px, 3vw, 32px); line-height: 1.35; letter-spacing: -.025em; }.single-question > div { display: grid; gap: 10px; }.single-question button { display: grid; grid-template-columns: 38px 1fr 24px; align-items: center; gap: 12px; padding: 13px 16px; border: 1px solid #e9e1e2; border-radius: 12px; color: #4f4649; background: #fff; text-align: left; }.single-question button:hover { border-color: #d9aab2; transform: translateX(3px); box-shadow: 0 10px 25px #6813230a; }.single-question button b { width: 34px; height: 34px; display: grid; place-items: center; border-radius: 9px; color: #a42338; background: #fff1f2; font-size: 12px; }.single-question button span { font-size: 13px; line-height: 1.55; }.single-question button i { color: transparent; font-style: normal; }.single-question button.selected { border-color: #c96575; background: #fff5f5; box-shadow: inset 4px 0 #bf1934, 0 12px 30px #6813230d; }.single-question button.selected i { color: #3c9666; }
 .single-question button.unknown { border-style: dashed; color: #766c70; background: #fbf9f9; }.single-question button.unknown b { color: #6d6266; background: #f0ecec; }.single-question button.unknown.selected { border-style: solid; border-color: #9c858a; background: #f5f1f1; box-shadow: inset 4px 0 #817075, 0 12px 30px #3d30330d; }
-.honest-answer-note { width: min(100%, 760px); margin: 0 auto; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); background: var(--surface-muted); font-size: 10px; line-height: 1.7; }.reassessment-gate > header { display: flex; align-items: center; justify-content: space-between; }.reassessment-gate > header .text-button { border: 0; color: #8c777c; background: transparent; text-decoration: underline; text-underline-offset: 3px; }
-.assessment-progress { width: min(100%, 760px); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 15px; margin: 2px auto 0; padding-top: 16px; border-top: 1px solid #eee5e6; }.assessment-progress div { display: flex; justify-content: space-between; grid-column: 1 / -1; color: #786d71; font-size: 11px; }.assessment-progress div b { color: #ae1b34; font-size: 12px; }.assessment-progress > i { height: 7px; overflow: hidden; border-radius: 99px; background: #eee7e8; }.assessment-progress > i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #be1732, #ef7182); }.assessment-progress > small { color: #807579; font-size: 10px; }
-.assessment-result-screen > header b { color: #3b8c60; font: 800 18px Consolas; }.result-celebration { text-align: center; }.result-celebration i { width: 54px; height: 54px; display: grid; place-items: center; margin: 0 auto 15px; border-radius: 50%; color: #fff; background: #3d9867; box-shadow: 0 0 0 10px #3d986712; font-style: normal; }.result-celebration p { margin: 0 0 5px; color: #478461; font-size: 9px; font-weight: 800; }.result-celebration h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); }.result-celebration > span { display: block; max-width: 650px; margin: 12px auto 0; color: #776b6f; font-size: 11px; line-height: 1.75; }.result-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }.result-summary article { padding: 17px; border: 1px solid #e9e1e2; border-radius: 13px; background: #fff; }.result-summary small, .result-summary strong { display: block; }.result-summary small { color: #998e91; font-size: 8px; }.result-summary strong { margin-top: 8px; font-size: 15px; }.assessment-result-screen > section:not(.planning-studio) { padding: 20px; border-radius: 15px; background: #f8f6f6; }.assessment-result-screen > section:not(.planning-studio) h3 { margin: 0 0 7px; }.assessment-result-screen > section:not(.planning-studio) > p { color: #74696d; font-size: 10px; }.assessment-result-screen > section:not(.planning-studio) > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.assessment-result-screen > section:not(.planning-studio) span { display: grid; gap: 4px; padding: 11px; border-radius: 9px; color: #655c5f; background: #fff; font-size: 8px; }.assessment-result-screen > section:not(.planning-studio) span b { color: #a21b32; font-size: 9px; }.assessment-result-screen > footer { display: flex; justify-content: flex-end; gap: 10px; }
-.result-summary article > em { display: block; margin-top: 6px; color: #8a7277; font-size: 8px; font-style: normal; line-height: 1.5; }
-.generic-mode-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #efd8b8; border-radius: 12px; color: #735b36; background: #fffaf0; }.generic-mode-banner b, .generic-mode-banner span { display: block; }.generic-mode-banner b { font-size: 10px; }.generic-mode-banner span { margin-top: 3px; color: #907b5c; font-size: 8px; }.generic-mode-banner button { padding: 8px 11px; border: 1px solid #dfc49d; border-radius: 8px; color: #76531e; background: #fff; font-size: 8px; font-weight: 800; }
-.assessment-result-screen > .planning-studio, .returning-planner-gate .planning-studio { display: grid; gap: 15px; padding: 22px; border: 1px solid #e6d8db; border-radius: 18px; background: linear-gradient(145deg, #fff, #fff8f7); }.returning-planner-gate { min-height: 650px; display: grid; align-content: start; gap: 22px; padding: clamp(28px, 5vw, 56px); border: 1px solid #e8dfe1; border-radius: 28px; background: radial-gradient(circle at 90% 8%, #ffe8e6, transparent 28%), #fff; box-shadow: 0 26px 75px #5513220e; }.returning-planner-gate > header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee4e5; }.returning-planner-gate > header span { color: #b4233b; font: 800 9px Consolas; letter-spacing: .15em; }.returning-planner-gate > header h2 { margin: 8px 0; font-size: clamp(27px, 3.6vw, 42px); }.returning-planner-gate > header p { margin: 0; color: #766a6e; font-size: 10px; }.returning-planner-gate > footer { display: flex; justify-content: flex-end; gap: 10px; }.returning-planner-gate > footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #786c70; background: #fff; font-size: 9px; }.planning-studio > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }.planning-studio > header span { color: #b4233b; font: 800 8px Consolas; letter-spacing: .14em; }.planning-studio > header h3 { margin: 6px 0; font-size: 18px; }.planning-studio > header p { margin: 0; color: #827579; font-size: 9px; }.suggestion-button { padding: 8px 11px; border: 1px solid #dab7bd; border-radius: 8px; color: #9f2337; background: #fff; font-size: 8px; white-space: nowrap; }.plan-mode-switch { display: flex; gap: 4px; padding: 3px; border: 1px solid #eadcde; border-radius: 9px; background: #f7f1f2; }.plan-mode-switch button { padding: 6px 11px; border: 0; border-radius: 7px; color: #8b7d81; background: transparent; font-size: 8px; font-weight: 800; }.plan-mode-switch button.active { color: #9d1c32; background: #fff; box-shadow: 0 2px 8px #4e10200f; }.plan-simple-note { margin: 0; padding: 9px 12px; border-radius: 9px; color: #5f7165; background: #f1f8f3; font-size: 9px; line-height: 1.6; }.preference-grid { display: grid; grid-template-columns: 150px 150px minmax(260px, 1fr); gap: 10px; }.preference-grid label { position: relative; display: grid; gap: 6px; color: #76696e; font-size: 8px; font-weight: 800; }.preference-grid input { min-width: 0; padding: 10px 12px; border: 1px solid #e2d5d7; border-radius: 9px; background: #fff; outline: none; }.preference-grid label > span { position: absolute; right: 10px; bottom: 11px; color: #9d9194; font-size: 8px; }.preference-grid input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.mode-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }.mode-picker > span { margin-right: 4px; color: #897b80; font-size: 8px; }.mode-picker button { padding: 7px 10px; border: 1px solid #e5dbdc; border-radius: 99px; color: #7c6f73; background: #fff; font-size: 8px; }.mode-picker button.active { color: #a51b32; border-color: #d58a96; background: #fff1f3; box-shadow: inset 0 0 0 1px #d58a9625; }.build-plan { justify-self: end; }.planning-studio .plan-result { padding: 15px 16px 28px; }.session-preview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #d7e6dc; border-radius: 12px; background: #f6fbf7; }.session-preview small, .session-preview b, .session-preview span { display: block; }.session-preview small { color: #5d8a6d; font-size: 7px; font-weight: 800; }.session-preview b { margin: 4px 0; font-size: 12px; }.session-preview span { color: #6f7f75; font-size: 8px; }.session-preview > strong { color: #3e7855; font-size: 11px; white-space: nowrap; }
-.classroom-layout > .teacher-lecture-card { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 15px; padding: 19px 22px; border-bottom: 1px solid #eadcdd; background: linear-gradient(105deg, #fff8f7, #fff 58%); }.teacher-portrait { display: grid; justify-items: center; align-content: center; gap: 5px; }.teacher-portrait i { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #cf203c, #901026); box-shadow: 0 9px 22px #8d10282c; font: normal 800 18px serif; }.teacher-portrait span { color: #9e7d84; font-size: 7px; }.teacher-lecture-card > div:last-child { min-width: 0; }.teacher-lecture-card header { display: flex; align-items: center; gap: 12px; }.teacher-lecture-card header span { color: #b4233b; font-size: 9px; font-weight: 800; }.teacher-lecture-card header b { color: #8c7b80; font-size: 8px; font-weight: 600; }.teacher-lecture-card :deep(.safe-markdown) { margin-top: 8px; color: #3d3337; font-size: 13px; line-height: 1.85; }.teacher-lecture-card footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed #eadcdd; }.teacher-lecture-card footer span { color: #998b90; font-size: 8px; }.teacher-lecture-card footer button { padding: 7px 10px; border: 1px solid #d9aeb5; border-radius: 8px; color: #9f1d33; background: #fff; font-size: 8px; font-weight: 800; }
-.teacher-question { margin: 9px 0 0; padding: 8px 10px; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent-ink); background: var(--accent-pale); font-size: 9px; line-height: 1.6; }
-.conversation-dock > header small { display: block; max-width: 260px; margin-top: 4px; color: #9b8e92; font-size: 7px; line-height: 1.5; }.discussion-prompts { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px; border-bottom: 1px solid #eee2e0; background: #fffaf8; }.discussion-prompts button { padding: 6px 8px; border: 1px solid #ead9d8; border-radius: 99px; color: #8a515b; background: #fff; font-size: 7px; }.discussion-prompts button:hover { color: #a3142d; border-color: #d79aa4; }.discussion-empty { display: grid; place-items: center; align-content: center; min-height: 150px; padding: 26px; color: #8d7f84; text-align: center; }.discussion-empty b { color: #675b5f; font-size: 10px; }.discussion-empty span { max-width: 270px; margin-top: 8px; font-size: 8px; line-height: 1.7; }.role-pills .teacher-pill { color: #a21c32; border-color: #d8a6ae; background: #fff4f5; font-weight: 800; }
-.self-profile-card { display: grid; gap: 12px; width: min(100%, 860px); margin: 4px auto 18px; padding: 18px; border: 1px solid #e8dcde; border-radius: 16px; background: #fffdfc; box-shadow: 0 14px 35px #54101f08; }.self-profile-card > header { display: flex; justify-content: space-between; gap: 16px; }.self-profile-card > header b, .self-profile-card > header span { display: block; }.self-profile-card > header b { font-size: 14px; }.self-profile-card > header span { margin-top: 5px; color: #7f7277; font-size: 10px; line-height: 1.55; }.self-profile-card > header small { color: #a09397; font-size: 9px; white-space: nowrap; }.self-profile-presets { display: flex; flex-wrap: wrap; gap: 7px; }.self-profile-presets button { padding: 7px 10px; border: 1px solid #e5d7d9; border-radius: 99px; color: #885560; background: #fff; font-size: 9px; }.self-profile-card > textarea, .self-profile-inline textarea { width: 100%; padding: 12px 14px; resize: vertical; border: 1px solid #dfd2d5; border-radius: 11px; color: #443b3e; background: #fff; font: 11px/1.75 inherit; outline: none; }.self-profile-card > textarea:focus, .self-profile-inline textarea:focus { border-color: #c96676; box-shadow: 0 0 0 3px #c5163210; }.self-profile-card > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }.self-profile-card > footer span { color: #75686d; font-size: 9px; line-height: 1.5; }.self-profile-card > footer button, .self-profile-inline > button { padding: 9px 12px; border: 1px solid #d49aa4; border-radius: 9px; color: #9d1c32; background: #fff; font-size: 9px; font-weight: 800; white-space: nowrap; }.self-profile-card button:disabled, .self-profile-inline button:disabled { opacity: .45; }.self-profile-result { display: grid; grid-template-columns: 150px 1fr; gap: 10px 16px; padding: 13px 14px; border-radius: 11px; color: #476b56; background: #f1f8f3; }.self-profile-result small, .self-profile-result b { display: block; }.self-profile-result div small { font-size: 8px; }.self-profile-result div b { margin-top: 4px; color: #315d43; font-size: 11px; }.self-profile-result p { margin: 0; font-size: 10px; line-height: 1.7; }.self-profile-result > small { grid-column: 1 / -1; color: #6e8a78; font-size: 8px; }
-.self-profile-inline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; padding: 13px; border: 1px solid #eadfe0; border-radius: 12px; background: #fffdfc; }.self-profile-inline label { display: grid; gap: 6px; color: #75696d; font-size: 9px; font-weight: 800; }.self-profile-inline > div { grid-column: 1 / -1; display: grid; gap: 4px; padding: 10px 12px; border-radius: 9px; background: #f2f8f4; }.self-profile-inline > div b { color: #386448; font-size: 10px; }.self-profile-inline > div span { color: #627469; font-size: 9px; line-height: 1.55; }
+.honest-answer-note { width: min(100%, 760px); margin: 0 auto; padding: 11px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--muted); background: var(--surface-muted); font-size: 12px; line-height: 1.7; }.reassessment-gate > header { display: flex; align-items: center; justify-content: space-between; }.reassessment-gate > header .text-button { border: 0; color: #8c777c; background: transparent; text-decoration: underline; text-underline-offset: 3px; }
+.assessment-progress { width: min(100%, 760px); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px 15px; margin: 2px auto 0; padding-top: 16px; border-top: 1px solid #eee5e6; }.assessment-progress div { display: flex; justify-content: space-between; grid-column: 1 / -1; color: #786d71; font-size: 12px; }.assessment-progress div b { color: #ae1b34; font-size: 12px; }.assessment-progress > i { height: 7px; overflow: hidden; border-radius: 99px; background: #eee7e8; }.assessment-progress > i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #be1732, #ef7182); }.assessment-progress > small { color: #807579; font-size: 12px; }
+.assessment-result-screen > header b { color: #3b8c60; font: 800 18px Consolas; }.result-celebration { text-align: center; }.result-celebration i { width: 54px; height: 54px; display: grid; place-items: center; margin: 0 auto 15px; border-radius: 50%; color: #fff; background: #3d9867; box-shadow: 0 0 0 10px #3d986712; font-style: normal; }.result-celebration p { margin: 0 0 5px; color: #478461; font-size: 12px; font-weight: 800; }.result-celebration h2 { margin: 0; font-size: clamp(28px, 4vw, 44px); }.result-celebration > span { display: block; max-width: 650px; margin: 12px auto 0; color: #776b6f; font-size: 12px; line-height: 1.75; }.result-summary { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }.result-summary article { padding: 17px; border: 1px solid #e9e1e2; border-radius: 13px; background: #fff; }.result-summary small, .result-summary strong { display: block; }.result-summary small { color: #998e91; font-size: 12px; }.result-summary strong { margin-top: 8px; font-size: 15px; }.assessment-result-screen > section:not(.planning-studio) { padding: 20px; border-radius: 15px; background: #f8f6f6; }.assessment-result-screen > section:not(.planning-studio) h3 { margin: 0 0 7px; }.assessment-result-screen > section:not(.planning-studio) > p { color: #74696d; font-size: 12px; }.assessment-result-screen > section:not(.planning-studio) > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }.assessment-result-screen > section:not(.planning-studio) span { display: grid; gap: 4px; padding: 11px; border-radius: 9px; color: #655c5f; background: #fff; font-size: 12px; }.assessment-result-screen > section:not(.planning-studio) span b { color: #a21b32; font-size: 12px; }.assessment-result-screen > footer { display: flex; justify-content: flex-end; gap: 10px; }
+.result-summary article > em { display: block; margin-top: 6px; color: #8a7277; font-size: 12px; font-style: normal; line-height: 1.5; }
+.generic-mode-banner { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #efd8b8; border-radius: 12px; color: #735b36; background: #fffaf0; }.generic-mode-banner b, .generic-mode-banner span { display: block; }.generic-mode-banner b { font-size: 12px; }.generic-mode-banner span { margin-top: 3px; color: #907b5c; font-size: 12px; }.generic-mode-banner button { padding: 8px 11px; border: 1px solid #dfc49d; border-radius: 8px; color: #76531e; background: #fff; font-size: 12px; font-weight: 800; }
+.assessment-result-screen > .planning-studio, .returning-planner-gate .planning-studio { display: grid; gap: 15px; padding: 22px; border: 1px solid #e6d8db; border-radius: 18px; background: linear-gradient(145deg, #fff, #fff8f7); }.returning-planner-gate { min-height: 650px; display: grid; align-content: start; gap: 22px; padding: clamp(28px, 5vw, 56px); border: 1px solid #e8dfe1; border-radius: 28px; background: radial-gradient(circle at 90% 8%, #ffe8e6, transparent 28%), #fff; box-shadow: 0 26px 75px #5513220e; }.returning-planner-gate > header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 20px; border-bottom: 1px solid #eee4e5; }.returning-planner-gate > header span { color: #b4233b; font: 800 12px Consolas; letter-spacing: .15em; }.returning-planner-gate > header h2 { margin: 8px 0; font-size: clamp(27px, 3.6vw, 42px); }.returning-planner-gate > header p { margin: 0; color: #766a6e; font-size: 12px; }.returning-planner-gate > footer { display: flex; justify-content: flex-end; gap: 10px; }.returning-planner-gate > footer .secondary { padding: 11px 15px; border: 1px solid #e2d3d5; border-radius: 9px; color: #786c70; background: #fff; font-size: 12px; }.planning-studio > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }.planning-studio > header span { color: #b4233b; font: 800 12px Consolas; letter-spacing: .14em; }.planning-studio > header h3 { margin: 6px 0; font-size: 18px; }.planning-studio > header p { margin: 0; color: #827579; font-size: 12px; }.suggestion-button { padding: 8px 11px; border: 1px solid #dab7bd; border-radius: 8px; color: #9f2337; background: #fff; font-size: 12px; white-space: nowrap; }.plan-mode-switch { display: flex; gap: 4px; padding: 3px; border: 1px solid #eadcde; border-radius: 9px; background: #f7f1f2; }.plan-mode-switch button { padding: 6px 11px; border: 0; border-radius: 7px; color: #8b7d81; background: transparent; font-size: 12px; font-weight: 800; }.plan-mode-switch button.active { color: #9d1c32; background: #fff; box-shadow: 0 2px 8px #4e10200f; }.plan-simple-note { margin: 0; padding: 9px 12px; border-radius: 9px; color: #5f7165; background: #f1f8f3; font-size: 12px; line-height: 1.6; }.preference-grid { display: grid; grid-template-columns: 150px 150px minmax(260px, 1fr); gap: 10px; }.preference-grid label { position: relative; display: grid; gap: 6px; color: #76696e; font-size: 12px; font-weight: 800; }.preference-grid input { min-width: 0; padding: 10px 12px; border: 1px solid #e2d5d7; border-radius: 9px; background: #fff; outline: none; }.preference-grid label > span { position: absolute; right: 10px; bottom: 11px; color: #9d9194; font-size: 12px; }.preference-grid input:focus { border-color: #c85b6c; box-shadow: 0 0 0 3px #c5163210; }.mode-picker { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; }.mode-picker > span { margin-right: 4px; color: #897b80; font-size: 12px; }.mode-picker button { padding: 7px 10px; border: 1px solid #e5dbdc; border-radius: 99px; color: #7c6f73; background: #fff; font-size: 12px; }.mode-picker button.active { color: #a51b32; border-color: #d58a96; background: #fff1f3; box-shadow: inset 0 0 0 1px #d58a9625; }.build-plan { justify-self: end; }.planning-studio .plan-result { padding: 15px 16px 28px; }.session-preview { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 13px 15px; border: 1px solid #d7e6dc; border-radius: 12px; background: #f6fbf7; }.session-preview small, .session-preview b, .session-preview span { display: block; }.session-preview small { color: #5d8a6d; font-size: 12px; font-weight: 800; }.session-preview b { margin: 4px 0; font-size: 12px; }.session-preview span { color: #6f7f75; font-size: 12px; }.session-preview > strong { color: #3e7855; font-size: 12px; white-space: nowrap; }
+.classroom-layout > .teacher-lecture-card { grid-column: 1 / -1; display: grid; grid-template-columns: auto 1fr; gap: 15px; padding: 19px 22px; border-bottom: 1px solid #eadcdd; background: linear-gradient(105deg, #fff8f7, #fff 58%); }.teacher-portrait { display: grid; justify-items: center; align-content: center; gap: 5px; }.teacher-portrait i { width: 54px; height: 54px; display: grid; place-items: center; border-radius: 16px; color: #fff; background: linear-gradient(145deg, #cf203c, #901026); box-shadow: 0 9px 22px #8d10282c; font: normal 800 18px serif; }.teacher-portrait span { color: #9e7d84; font-size: 12px; }.teacher-lecture-card > div:last-child { min-width: 0; }.teacher-lecture-card header { display: flex; align-items: center; gap: 12px; }.teacher-lecture-card header span { color: #b4233b; font-size: 12px; font-weight: 800; }.teacher-lecture-card header b { color: #8c7b80; font-size: 12px; font-weight: 600; }.teacher-lecture-card :deep(.safe-markdown) { margin-top: 8px; color: #3d3337; font-size: 13px; line-height: 1.85; }.teacher-lecture-card footer { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; padding-top: 9px; border-top: 1px dashed #eadcdd; }.teacher-lecture-card footer span { color: #998b90; font-size: 12px; }.teacher-lecture-card footer button { padding: 7px 10px; border: 1px solid #d9aeb5; border-radius: 8px; color: #9f1d33; background: #fff; font-size: 12px; font-weight: 800; }
+.teacher-question { margin: 9px 0 0; padding: 8px 10px; border: 1px solid var(--accent); border-radius: 8px; color: var(--accent-ink); background: var(--accent-pale); font-size: 12px; line-height: 1.6; }
+.conversation-dock > header small { display: block; max-width: 260px; margin-top: 4px; color: #9b8e92; font-size: 12px; line-height: 1.5; }.discussion-prompts { display: flex; flex-wrap: wrap; gap: 5px; padding: 9px 12px; border-bottom: 1px solid #eee2e0; background: #fffaf8; }.discussion-prompts button { padding: 6px 8px; border: 1px solid #ead9d8; border-radius: 99px; color: #8a515b; background: #fff; font-size: 12px; }.discussion-prompts button:hover { color: #a3142d; border-color: #d79aa4; }.discussion-empty { display: grid; place-items: center; align-content: center; min-height: 150px; padding: 26px; color: #8d7f84; text-align: center; }.discussion-empty b { color: #675b5f; font-size: 12px; }.discussion-empty span { max-width: 270px; margin-top: 8px; font-size: 12px; line-height: 1.7; }.role-pills .teacher-pill { color: #a21c32; border-color: #d8a6ae; background: #fff4f5; font-weight: 800; }
+.self-profile-card { display: grid; gap: 12px; width: min(100%, 860px); margin: 4px auto 18px; padding: 18px; border: 1px solid #e8dcde; border-radius: 16px; background: #fffdfc; box-shadow: 0 14px 35px #54101f08; }.self-profile-card > header { display: flex; justify-content: space-between; gap: 16px; }.self-profile-card > header b, .self-profile-card > header span { display: block; }.self-profile-card > header b { font-size: 14px; }.self-profile-card > header span { margin-top: 5px; color: #7f7277; font-size: 12px; line-height: 1.55; }.self-profile-card > header small { color: #a09397; font-size: 12px; white-space: nowrap; }.self-profile-presets { display: flex; flex-wrap: wrap; gap: 7px; }.self-profile-presets button { padding: 7px 10px; border: 1px solid #e5d7d9; border-radius: 99px; color: #885560; background: #fff; font-size: 12px; }.self-profile-card > textarea, .self-profile-inline textarea { width: 100%; padding: 12px 14px; resize: vertical; border: 1px solid #dfd2d5; border-radius: 11px; color: #443b3e; background: #fff; font: 12px/1.75 inherit; outline: none; }.self-profile-card > textarea:focus, .self-profile-inline textarea:focus { border-color: #c96676; box-shadow: 0 0 0 3px #c5163210; }.self-profile-card > footer { display: flex; align-items: center; justify-content: space-between; gap: 14px; }.self-profile-card > footer span { color: #75686d; font-size: 12px; line-height: 1.5; }.self-profile-card > footer button, .self-profile-inline > button { padding: 9px 12px; border: 1px solid #d49aa4; border-radius: 9px; color: #9d1c32; background: #fff; font-size: 12px; font-weight: 800; white-space: nowrap; }.self-profile-card button:disabled, .self-profile-inline button:disabled { opacity: .45; }.self-profile-result { display: grid; grid-template-columns: 150px 1fr; gap: 10px 16px; padding: 13px 14px; border-radius: 11px; color: #476b56; background: #f1f8f3; }.self-profile-result small, .self-profile-result b { display: block; }.self-profile-result div small { font-size: 12px; }.self-profile-result div b { margin-top: 4px; color: #315d43; font-size: 12px; }.self-profile-result p { margin: 0; font-size: 12px; line-height: 1.7; }.self-profile-result > small { grid-column: 1 / -1; color: #6e8a78; font-size: 12px; }
+.self-profile-inline { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 10px; padding: 13px; border: 1px solid #eadfe0; border-radius: 12px; background: #fffdfc; }.self-profile-inline label { display: grid; gap: 6px; color: #75696d; font-size: 12px; font-weight: 800; }.self-profile-inline > div { grid-column: 1 / -1; display: grid; gap: 4px; padding: 10px 12px; border-radius: 9px; background: #f2f8f4; }.self-profile-inline > div b { color: #386448; font-size: 12px; }.self-profile-inline > div span { color: #627469; font-size: 12px; line-height: 1.55; }
 .self-profile-card > textarea::placeholder, .self-profile-inline textarea::placeholder { color: #a89ca0; opacity: .64; }
-.plan-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 11px; border: 1px solid #eadfe1; border-radius: 11px; background: #fffafa; }.plan-progress span { display: flex; align-items: center; gap: 7px; color: #9a8e92; font-size: 8px; }.plan-progress i { width: 20px; height: 20px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #9e8f93; background: #eee7e8; font-style: normal; font-weight: 800; }.plan-progress span.active { color: #a11c33; font-weight: 800; }.plan-progress span.active i { color: #fff; background: #bd1a34; box-shadow: 0 0 0 4px #bd1a3412; }.plan-progress span.done { color: #477158; }.plan-progress span.done i { color: #fff; background: #4e8b65; }
-.self-profile-details { overflow: hidden; border: 1px solid #e9dfe0; border-radius: 11px; background: #fff; }.self-profile-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #76696d; cursor: pointer; font-size: 9px; }.self-profile-details summary b { color: #a12338; }.self-profile-details[open] summary { border-bottom: 1px solid #eee4e5; background: #fff9f8; }.self-profile-details .self-profile-inline { border: 0; border-radius: 0; }
-.lesson-masthead aside button { grid-column: 1 / -1; justify-self: end; padding: 0; border: 0; color: #9e5763; background: transparent; font-size: 8px; text-decoration: underline; }.progress-explanation { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 42px 14px 14px; border: 1px solid #e6dadd; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px #4c0f1b0a; }.progress-explanation article { padding: 12px; border-radius: 10px; background: #faf7f7; }.progress-explanation b { color: #8f1c31; font-size: 11px; }.progress-explanation p { margin: 6px 0; color: #665b5f; font-size: 9px; line-height: 1.65; }.progress-explanation small { color: #8c7f83; font-size: 8px; }.progress-explanation > button { position: absolute; top: 9px; right: 12px; border: 0; color: #9b8c90; background: transparent; font-size: 18px; }.profile-chip { border: 0; text-align: left; } button.profile-chip { cursor: pointer; }
-.smart-board .board-explanation { margin: 10px 0; color: #f1e9e0; font-size: 11px; line-height: 1.85; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 9px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 9px/1.65 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }.board-mistakes { display: grid; gap: 5px; margin-top: 11px; padding: 10px 12px; border: 1px solid #f3b58745; border-radius: 8px; background: #552f213d; }.board-mistakes b { color: #ffd2ae; font-size: 9px; }.board-mistakes span { color: #f1d9cb; font-size: 9px; line-height: 1.55; }.board-mistakes span::before { content: "!"; display: inline-grid; width: 14px; height: 14px; margin-right: 7px; place-items: center; border-radius: 50%; color: #40251c; background: #f0bd82; font-weight: 900; }.board-code-example { position: relative; }.board-code-example .code-expand { position: absolute; top: -2px; right: 0; padding: 3px 10px; border: 1px solid #ffffff2e; border-radius: 999px; color: #e4c999; background: #ffffff10; font-size: 8px; cursor: pointer; }.board-code-example .code-expand:hover { background: #ffffff1c; }.board-code-example pre { max-height: 210px; overflow: auto; }.board-code-example.expanded pre { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; }
-.scope-notice { display: flex; align-items: flex-start; gap: 7px; margin: 7px 0 9px; padding: 8px 10px; border: 1px solid #e8cf9c; border-radius: 9px; background: #fff9ec; color: #765c2b; font-size: 8px; line-height: 1.55; }.scope-notice > b { flex: 0 0 auto; color: #a06017; font-size: 7px; letter-spacing: .04em; }.scope-notice.compact { margin: 5px 0 7px; padding: 6px 8px; }
+.plan-progress { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; padding: 11px; border: 1px solid #eadfe1; border-radius: 11px; background: #fffafa; }.plan-progress span { display: flex; align-items: center; gap: 7px; color: #9a8e92; font-size: 12px; }.plan-progress i { width: 20px; height: 20px; display: grid; flex: 0 0 auto; place-items: center; border-radius: 50%; color: #9e8f93; background: #eee7e8; font-style: normal; font-weight: 800; }.plan-progress span.active { color: #a11c33; font-weight: 800; }.plan-progress span.active i { color: #fff; background: #bd1a34; box-shadow: 0 0 0 4px #bd1a3412; }.plan-progress span.done { color: #477158; }.plan-progress span.done i { color: #fff; background: #4e8b65; }
+.self-profile-details { overflow: hidden; border: 1px solid #e9dfe0; border-radius: 11px; background: #fff; }.self-profile-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #76696d; cursor: pointer; font-size: 12px; }.self-profile-details summary b { color: #a12338; }.self-profile-details[open] summary { border-bottom: 1px solid #eee4e5; background: #fff9f8; }.self-profile-details .self-profile-inline { border: 0; border-radius: 0; }
+.lesson-masthead aside button { grid-column: 1 / -1; justify-self: end; padding: 0; border: 0; color: #9e5763; background: transparent; font-size: 12px; text-decoration: underline; }.progress-explanation { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 42px 14px 14px; border: 1px solid #e6dadd; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px #4c0f1b0a; }.progress-explanation article { padding: 12px; border-radius: 10px; background: #faf7f7; }.progress-explanation b { color: #8f1c31; font-size: 12px; }.progress-explanation p { margin: 6px 0; color: #665b5f; font-size: 12px; line-height: 1.65; }.progress-explanation small { color: #8c7f83; font-size: 12px; }.progress-explanation > button { position: absolute; top: 9px; right: 12px; border: 0; color: #9b8c90; background: transparent; font-size: 18px; }.profile-chip { border: 0; text-align: left; } button.profile-chip { cursor: pointer; }
+.smart-board .board-explanation { margin: 10px 0; color: #f1e9e0; font-size: 12px; line-height: 1.85; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 12px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 12px/1.65 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }.board-mistakes { display: grid; gap: 5px; margin-top: 11px; padding: 10px 12px; border: 1px solid #f3b58745; border-radius: 8px; background: #552f213d; }.board-mistakes b { color: #ffd2ae; font-size: 12px; }.board-mistakes span { color: #f1d9cb; font-size: 12px; line-height: 1.55; }.board-mistakes span::before { content: "!"; display: inline-grid; width: 14px; height: 14px; margin-right: 7px; place-items: center; border-radius: 50%; color: #40251c; background: #f0bd82; font-weight: 900; }.board-code-example { position: relative; }.board-code-example .code-expand { position: absolute; top: -2px; right: 0; padding: 3px 10px; border: 1px solid #ffffff2e; border-radius: 999px; color: #e4c999; background: #ffffff10; font-size: 12px; cursor: pointer; }.board-code-example .code-expand:hover { background: #ffffff1c; }.board-code-example pre { max-height: 210px; overflow: auto; }.board-code-example.expanded pre { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; }
+.scope-notice { display: flex; align-items: flex-start; gap: 7px; margin: 7px 0 9px; padding: 8px 10px; border: 1px solid #e8cf9c; border-radius: 9px; background: #fff9ec; color: #765c2b; font-size: 12px; line-height: 1.55; }.scope-notice > b { flex: 0 0 auto; color: #a06017; font-size: 12px; letter-spacing: .04em; }.scope-notice.compact { margin: 5px 0 7px; padding: 6px 8px; }
 @media (max-width: 760px) { .assessment-gate, .assessment-result-screen { min-height: 600px; padding: 24px 18px; }.assessment-welcome { grid-template-columns: 1fr; gap: 24px; }.assessment-gate > header, .assessment-result-screen > header, .generic-mode-banner { align-items: flex-start; flex-direction: column; }.result-summary, .assessment-result-screen > section:not(.planning-studio) > div { grid-template-columns: 1fr 1fr; }.assessment-navigation { flex-wrap: wrap; }.assessment-navigation > span { width: 100%; order: -1; } }
 @media (max-width: 760px) { .returning-planner-gate { padding: 24px 18px; }.returning-planner-gate > header, .planning-studio > header { align-items: flex-start; flex-direction: column; }.preference-grid, .self-profile-result, .progress-explanation, .plan-progress { grid-template-columns: 1fr; }.self-profile-card > footer, .self-profile-inline { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; }.self-profile-inline > div { grid-column: auto; }.classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; }.teacher-portrait { justify-items: start; }.teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } }
 .desk-row { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .diagnostic-analysis { display: grid; gap: 13px; padding: 18px; border: 1px solid #e4d8da; border-radius: 15px; background: #fff; }
-.diagnostic-analysis > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }.diagnostic-analysis > header b { color: #a21b32; font-size: 13px; }.diagnostic-analysis > header p { margin: 6px 0 0; color: #6f6367; font-size: 10px; }.diagnostic-analysis > header > span { padding: 7px 10px; border-radius: 99px; color: #37684a; background: #eef7f1; font-size: 9px; white-space: nowrap; }
-.gap-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.gap-list article { padding: 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-pale); }.gap-list b, .gap-list span { display: block; font-size: 9px; }.gap-list span { margin-top: 5px; color: var(--accent-ink); font-weight: 800; }.gap-list p { margin: 7px 0 0; color: var(--muted); font-size: 8px; line-height: 1.6; }
-.block-list { display: flex; flex-wrap: wrap; gap: 7px; }.block-list span { display: grid; gap: 4px; padding: 9px 11px; border: 1px solid #e8dfe0; border-radius: 9px; color: #796d71; background: #fbf9f9; font-size: 8px; }.block-list b { color: #4a3e42; font-size: 9px; }.diagnostic-analysis > small { color: #8d8084; font-size: 8px; line-height: 1.6; }
-.focus-toolbar { position: sticky; z-index: 20; top: 10px; display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 14px; padding: 11px 13px; border: 1px solid #e5d7d9; border-radius: 14px; background: #fffefdf2; box-shadow: 0 12px 34px #45101c12; backdrop-filter: blur(14px); }.focus-toolbar > div:first-child b, .focus-toolbar > div:first-child span { display: block; }.focus-toolbar > div:first-child b { font-size: 11px; }.focus-toolbar > div:first-child span { margin-top: 2px; color: #918488; font-size: 7px; }.focus-toolbar select { display: none; padding: 8px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.focus-view-buttons { display: flex; justify-self: center; gap: 5px; padding: 4px; border-radius: 10px; background: #f4eff0; }.focus-view-buttons button { padding: 7px 12px; border: 0; border-radius: 7px; color: #75696d; background: transparent; font-size: 9px; }.focus-view-buttons button.active { color: #9f1730; background: #fff; box-shadow: 0 3px 10px #4e10200d; font-weight: 800; }.exit-class { padding: 7px 10px; border: 1px solid #e2cfd2; border-radius: 8px; color: #8d5660; background: #fff; font-size: 8px; }
+.diagnostic-analysis > header { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }.diagnostic-analysis > header b { color: #a21b32; font-size: 13px; }.diagnostic-analysis > header p { margin: 6px 0 0; color: #6f6367; font-size: 12px; }.diagnostic-analysis > header > span { padding: 7px 10px; border-radius: 99px; color: #37684a; background: #eef7f1; font-size: 12px; white-space: nowrap; }
+.gap-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }.gap-list article { padding: 12px; border: 1px solid var(--accent); border-radius: 10px; background: var(--accent-pale); }.gap-list b, .gap-list span { display: block; font-size: 12px; }.gap-list span { margin-top: 5px; color: var(--accent-ink); font-weight: 800; }.gap-list p { margin: 7px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.block-list { display: flex; flex-wrap: wrap; gap: 7px; }.block-list span { display: grid; gap: 4px; padding: 9px 11px; border: 1px solid #e8dfe0; border-radius: 9px; color: #796d71; background: #fbf9f9; font-size: 12px; }.block-list b { color: #4a3e42; font-size: 12px; }.diagnostic-analysis > small { color: #8d8084; font-size: 12px; line-height: 1.6; }
+.focus-toolbar { position: sticky; z-index: 20; top: 10px; display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 14px; padding: 11px 13px; border: 1px solid #e5d7d9; border-radius: 14px; background: #fffefdf2; box-shadow: 0 12px 34px #45101c12; backdrop-filter: blur(14px); }.focus-toolbar > div:first-child b, .focus-toolbar > div:first-child span { display: block; }.focus-toolbar > div:first-child b { font-size: 12px; }.focus-toolbar > div:first-child span { margin-top: 2px; color: #918488; font-size: 12px; }.focus-toolbar select { display: none; padding: 8px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.focus-view-buttons { display: flex; justify-self: center; gap: 5px; padding: 4px; border-radius: 10px; background: #f4eff0; }.focus-view-buttons button { padding: 7px 12px; border: 0; border-radius: 7px; color: #75696d; background: transparent; font-size: 12px; }.focus-view-buttons button.active { color: #9f1730; background: #fff; box-shadow: 0 3px 10px #4e10200d; font-weight: 800; }.exit-class { padding: 7px 10px; border: 1px solid #e2cfd2; border-radius: 8px; color: #8d5660; background: #fff; font-size: 12px; }
 .classroom-layout.integrated-learning .conversation-dock { min-width: 0; }.classroom-layout.integrated-learning .message-list { min-height: 300px; }
-.lesson-materials { min-height: 620px; display: grid; grid-template-columns: 290px minmax(0, 1fr); overflow: hidden; border: 1px solid #e5d9da; border-radius: 22px; background: #fff; box-shadow: 0 18px 55px #40101b0a; }.lesson-materials > aside { display: grid; align-content: start; gap: 7px; padding: 18px; border-right: 1px solid #eee4e5; background: #fbf8f8; }.lesson-materials aside header { margin-bottom: 7px; }.lesson-materials aside header b, .lesson-materials aside header span { display: block; }.lesson-materials aside header b { font-size: 13px; }.lesson-materials aside header span { margin-top: 4px; color: #928589; font-size: 8px; }.lesson-materials aside button { display: grid; gap: 4px; padding: 11px; border: 1px solid transparent; border-radius: 10px; color: #5f5558; background: transparent; text-align: left; }.lesson-materials aside button small { color: #a62a3e; font: 7px Consolas; }.lesson-materials aside button b { font-size: 10px; }.lesson-materials aside button span { color: #887b7f; font-size: 8px; line-height: 1.5; }.lesson-materials aside button.active { border-color: #dfbcc2; background: #fff; box-shadow: inset 3px 0 #bd1b35; }.lesson-materials > article { padding: clamp(24px, 4vw, 52px); }.lesson-materials article header span { color: #a3263b; font-size: 9px; }.lesson-materials article h2 { margin: 8px 0 20px; font-size: 28px; }.lesson-materials article > p { color: #5d5256; font-size: 13px; line-height: 1.9; }.lesson-materials article section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #eee5e6; }.lesson-materials article li { margin: 8px 0; color: #655b5e; font-size: 11px; line-height: 1.7; }.lesson-materials pre { max-height: 240px; padding: 16px; overflow: auto; border-radius: 11px; color: #f8ebdf; background: #1d2c29; }.lesson-materials pre.expanded { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; }.lesson-materials .code-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }.lesson-materials .code-heading b { color: #a3263b; font-size: 10px; }.lesson-materials .code-expand { padding: 4px 11px; border: 1px solid #ead9d8; border-radius: 999px; color: #8a515b; background: #fff; font-size: 9px; cursor: pointer; }.lesson-materials article > small { display: block; margin-top: 24px; color: #9b8f92; font-size: 8px; text-align: right; }
-.code-standby, .paused-classroom { min-height: 500px; display: grid; place-items: center; align-content: center; gap: 12px; padding: 30px; border: 1px solid #e6dbdc; border-radius: 22px; background: #fff; text-align: center; }.code-standby b, .paused-classroom h2 { margin: 0; font-size: 24px; }.code-standby p, .paused-classroom p { max-width: 620px; margin: 0; color: #786c70; font-size: 11px; line-height: 1.75; }.code-standby .secondary { padding: 9px 13px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.paused-classroom > span { color: #a22037; font-size: 9px; font-weight: 800; }
-.class-exit-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: #24131880; backdrop-filter: blur(6px); }.class-exit-backdrop > section { width: min(100%, 560px); padding: 26px; border-radius: 20px; background: #fff; box-shadow: 0 30px 90px #16060a40; }.class-exit-backdrop > section > span { color: #a82239; font-size: 9px; font-weight: 800; }.class-exit-backdrop h2 { margin: 7px 0; font-size: 25px; }.class-exit-backdrop p { color: #776a6e; font-size: 10px; }.class-exit-backdrop section > div { display: grid; gap: 9px; margin: 20px 0; }.class-exit-backdrop section > div button { display: grid; gap: 4px; padding: 13px; border: 1px solid #e7dcde; border-radius: 11px; color: #493e42; background: #fff; text-align: left; }.class-exit-backdrop section > div button:hover { border-color: #d49ba5; background: #fff8f8; }.class-exit-backdrop section > div button b { font-size: 11px; }.class-exit-backdrop section > div button span { color: #8b7e82; font-size: 8px; }.class-exit-backdrop footer { text-align: right; }.class-exit-backdrop footer button { padding: 9px 12px; border: 0; border-radius: 8px; color: #fff; background: #ad1931; }
+.lesson-materials { min-height: 620px; display: grid; grid-template-columns: 290px minmax(0, 1fr); overflow: hidden; border: 1px solid #e5d9da; border-radius: 22px; background: #fff; box-shadow: 0 18px 55px #40101b0a; }.lesson-materials > aside { display: grid; align-content: start; gap: 7px; padding: 18px; border-right: 1px solid #eee4e5; background: #fbf8f8; }.lesson-materials aside header { margin-bottom: 7px; }.lesson-materials aside header b, .lesson-materials aside header span { display: block; }.lesson-materials aside header b { font-size: 13px; }.lesson-materials aside header span { margin-top: 4px; color: #928589; font-size: 12px; }.lesson-materials aside button { display: grid; gap: 4px; padding: 11px; border: 1px solid transparent; border-radius: 10px; color: #5f5558; background: transparent; text-align: left; }.lesson-materials aside button small { color: #a62a3e; font: 12px Consolas; }.lesson-materials aside button b { font-size: 12px; }.lesson-materials aside button span { color: #887b7f; font-size: 12px; line-height: 1.5; }.lesson-materials aside button.active { border-color: #dfbcc2; background: #fff; box-shadow: inset 3px 0 #bd1b35; }.lesson-materials > article { padding: clamp(24px, 4vw, 52px); }.lesson-materials article header span { color: #a3263b; font-size: 12px; }.lesson-materials article h2 { margin: 8px 0 20px; font-size: 28px; }.lesson-materials article > p { color: #5d5256; font-size: 13px; line-height: 1.9; }.lesson-materials article section { margin-top: 22px; padding-top: 18px; border-top: 1px solid #eee5e6; }.lesson-materials article li { margin: 8px 0; color: #655b5e; font-size: 12px; line-height: 1.7; }.lesson-materials pre { max-height: 240px; padding: 16px; overflow: auto; border-radius: 11px; color: #f8ebdf; background: #1d2c29; }.lesson-materials pre.expanded { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; }.lesson-materials .code-heading { display: flex; align-items: center; justify-content: space-between; margin-top: 12px; }.lesson-materials .code-heading b { color: #a3263b; font-size: 12px; }.lesson-materials .code-expand { padding: 4px 11px; border: 1px solid #ead9d8; border-radius: 999px; color: #8a515b; background: #fff; font-size: 12px; cursor: pointer; }.lesson-materials article > small { display: block; margin-top: 24px; color: #9b8f92; font-size: 12px; text-align: right; }
+.code-standby, .paused-classroom { min-height: 500px; display: grid; place-items: center; align-content: center; gap: 12px; padding: 30px; border: 1px solid #e6dbdc; border-radius: 22px; background: #fff; text-align: center; }.code-standby b, .paused-classroom h2 { margin: 0; font-size: 24px; }.code-standby p, .paused-classroom p { max-width: 620px; margin: 0; color: #786c70; font-size: 12px; line-height: 1.75; }.code-standby .secondary { padding: 9px 13px; border: 1px solid #dfd2d4; border-radius: 8px; background: #fff; }.paused-classroom > span { color: #a22037; font-size: 12px; font-weight: 800; }
+.class-exit-backdrop { position: fixed; z-index: 100; inset: 0; display: grid; place-items: center; padding: 20px; background: #24131880; backdrop-filter: blur(6px); }.class-exit-backdrop > section { width: min(100%, 560px); padding: 26px; border-radius: 20px; background: #fff; box-shadow: 0 30px 90px #16060a40; }.class-exit-backdrop > section > span { color: #a82239; font-size: 12px; font-weight: 800; }.class-exit-backdrop h2 { margin: 7px 0; font-size: 25px; }.class-exit-backdrop p { color: #776a6e; font-size: 12px; }.class-exit-backdrop section > div { display: grid; gap: 9px; margin: 20px 0; }.class-exit-backdrop section > div button { display: grid; gap: 4px; padding: 13px; border: 1px solid #e7dcde; border-radius: 11px; color: #493e42; background: #fff; text-align: left; }.class-exit-backdrop section > div button:hover { border-color: #d49ba5; background: #fff8f8; }.class-exit-backdrop section > div button b { font-size: 12px; }.class-exit-backdrop section > div button span { color: #8b7e82; font-size: 12px; }.class-exit-backdrop footer { text-align: right; }.class-exit-backdrop footer button { padding: 9px 12px; border: 0; border-radius: 8px; color: #fff; background: #ad1931; }
 @media (max-width: 760px) { .diagnostic-analysis > header { flex-direction: column; }.gap-list { grid-template-columns: 1fr; }.focus-toolbar { grid-template-columns: 1fr auto auto; }.focus-toolbar select { display: block; }.focus-view-buttons { display: none; }.lesson-materials { grid-template-columns: 1fr; }.lesson-materials > aside { border-right: 0; border-bottom: 1px solid #eee4e5; }.lesson-materials > aside button { display: none; }.lesson-materials > aside button.active { display: grid; }.global-action-feedback { right: 16px; bottom: 16px; } }
 
 /* Appearance tokens own every instructional surface; outcome colors stay semantic. */
+.classroom-sync-notice { display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:12px; padding:12px; border:1px solid var(--line); border-radius:8px; color:var(--muted); background:var(--surface-muted); font-size:13px; }
+.classroom-sync-notice button { padding:8px 12px; min-height:44px; border:1px solid var(--line); border-radius:6px; color:var(--accent-ink); background:var(--surface-raised); }
+.conversation-dock .dialogue-error { margin:8px 0; padding:10px 12px; border:1px solid var(--danger); border-radius:8px; color:var(--danger); background:var(--surface-raised); font-size:13px; line-height:1.6; }
 .immersive-lesson { color: var(--ink); }
 :is(
   .classroom-loading,.lesson-masthead,.lesson-steps > button,.learning-copilot,

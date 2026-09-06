@@ -24,6 +24,30 @@ function memoryStorage(initial: Record<string, string> = {}): KeyValueStorage {
 }
 
 describe("UI preferences", () => {
+  it("opens a new learner workspace in white mode", () => {
+    expect(loadUiPreferences(memoryStorage()).theme).toBe("light");
+    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, loadUiPreferences(memoryStorage()), true);
+    expect(root.dataset.theme).toBe("light");
+    expect(root.style.colorScheme).toBe("light");
+  });
+
+  it("lets a white-mode link override the saved dark theme without losing other preferences", () => {
+    const storage = memoryStorage();
+    saveUiPreferences(storage, { ...DEFAULT_UI_PREFERENCES, theme: "dark", accent: "solar", reducedMotion: true });
+    const linked = loadUiPreferences(storage, "light");
+    expect(linked).toMatchObject({ theme: "light", accent: "solar", reducedMotion: true });
+    saveUiPreferences(storage, linked);
+    expect(loadUiPreferences(storage).theme).toBe("light");
+  });
+
+  it("preserves a chosen dark theme and ignores unsupported theme links", () => {
+    const storage = memoryStorage();
+    saveUiPreferences(storage, { ...DEFAULT_UI_PREFERENCES, theme: "dark" });
+    expect(loadUiPreferences(storage).theme).toBe("dark");
+    expect(loadUiPreferences(storage, "unknown").theme).toBe("dark");
+    expect(loadUiPreferences(storage, "system").theme).toBe("system");
+  });
   it("keeps defaults when stored preferences are invalid", () => {
     const storage = memoryStorage({ [UI_PREFERENCES_KEY]: "not-json" });
     expect(loadUiPreferences(storage)).toEqual(DEFAULT_UI_PREFERENCES);
