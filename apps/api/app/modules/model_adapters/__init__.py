@@ -1,5 +1,6 @@
 """External model-provider boundary."""
 
+from app.modules.model_adapters.deepseek import DeepSeekAdapter
 from app.modules.model_adapters.errors import (
     ModelConfigurationError,
     ModelError,
@@ -31,6 +32,7 @@ from app.modules.model_adapters.xfyun_maas_reranker import (
 __all__ = [
     "ChatMessage",
     "ConcurrencyLimitedModelAdapter",
+    "DeepSeekAdapter",
     "DocumentReranker",
     "MockAdapter",
     "ModelAdapter",

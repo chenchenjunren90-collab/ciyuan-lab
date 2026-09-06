@@ -1,14 +1,15 @@
-# 讯飞 MaaS 模型与检索服务接入
+# 通用模型与检索服务接入
 
-更新日期：2026-09-05。当前路线是 MaaS 托管推理、学科知识库、检索增强、三个逻辑智能体及确定性代码验证。
+更新日期：2026-09-06。当前路线是统一托管推理（MaaS 或 DeepSeek 官方 API，由 `MODEL_PROVIDER` 选择）、学科知识库、检索增强、三个逻辑智能体及确定性代码验证。
 
 ## 统一推理
 
 学情规划、C语言/Python/数据结构课程辅导、质量监督与受控项目编排，共用
-`model_adapters/` 内的讯飞适配器和并发限制。默认模型服务标识为
+`model_adapters/` 内的适配器和并发限制。默认 MaaS 模型服务标识为
 `xopdeepseekv4flash0731`，必须与实际服务卡一致。
 
 ```text
+MODEL_PROVIDER=xfyun_maas
 XFYUN_MAAS_BASE_URL=https://maas-api.cn-huabei-1.xf-yun.com/v2
 XFYUN_MAAS_MODEL=xopdeepseekv4flash0731
 XFYUN_MAAS_TIMEOUT_SECONDS=45
@@ -20,6 +21,23 @@ XFYUN_MAAS_MAX_RETRIES=2
 课程辅导接口失败时使用证据摘录或明确拒答，不把网络故障说成模型已生成正确答案。
 
 协议依据：[讯飞推理服务 HTTP 文档](https://www.xfyun.cn/doc/spark/%E6%8E%A8%E7%90%86%E6%9C%8D%E5%8A%A1-http.html)。
+
+## DeepSeek 官方 API 路由
+
+当 MaaS 服务不可用（例如服务鉴权失败、套餐到期）时，可切换 `MODEL_PROVIDER=deepseek`，
+由 `DeepSeekAdapter` 调用 DeepSeek 官方 OpenAI 兼容接口（`https://api.deepseek.com/chat/completions`）。
+与 MaaS 路由共用同一套超时、有限重试、错误映射和降级逻辑，并保留 provider 标识 `deepseek`。
+
+```text
+MODEL_PROVIDER=deepseek
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_TIMEOUT_SECONDS=45
+DEEPSEEK_MAX_RETRIES=2
+```
+
+`DEEPSEEK_API_KEY` 由部署者保管，不写入文档、测试、截图或 Git。
+切换路由不改变下游契约：辅导答案仍必须通过引用白名单与质量监督门禁。
 
 ## MaaS 文档重排
 

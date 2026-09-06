@@ -34,6 +34,15 @@ class Settings(BaseSettings):
     xfyun_maas_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
     xfyun_maas_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_mock_fallback: bool = True
+
+    # Active general-model route. The Xfyun MaaS route remains available when
+    # its service is restored; operators switch providers without code changes.
+    model_provider: Literal["xfyun_maas", "deepseek", "xfyun_spark"] = "xfyun_maas"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_api_key: SecretStr = SecretStr("")
+    deepseek_model: str = "deepseek-chat"
+    deepseek_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
+    deepseek_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_reranker_enabled: bool = False
     xfyun_maas_reranker_model: str = ""
     xfyun_maas_reranker_api_key: SecretStr = SecretStr("")

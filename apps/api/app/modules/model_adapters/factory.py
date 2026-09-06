@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from app.core.config import Settings
+from app.modules.model_adapters.deepseek import DeepSeekAdapter
 from app.modules.model_adapters.errors import ModelConfigurationError
 from app.modules.model_adapters.mock import MockAdapter
 from app.modules.model_adapters.ports import ModelAdapter
@@ -13,12 +14,19 @@ from app.modules.model_adapters.xfyun_maas_reranker import DocumentReranker, Xfy
 
 
 def build_model_adapter(settings: Settings) -> ModelAdapter:
-    """Return a configured adapter, falling back to Mock when allowed.
+    """Return the adapter for the active ``MODEL_PROVIDER`` route.
 
-    Xfyun MaaS is preferred when its API key is configured. Legacy Spark
-    credentials remain supported for older local environments. Otherwise a
-    fixed Mock adapter is returned unless fallback is disabled.
+    ``xfyun_maas`` (default) keeps the hosted MaaS route with the legacy Spark
+    fallback chain. ``deepseek`` uses the official DeepSeek OpenAI-compatible
+    API. ``xfyun_spark`` forces the legacy Spark route. An unconfigured active
+    route falls back to Mock when allowed, otherwise raises.
     """
+    if settings.model_provider == "deepseek":
+        return _build_deepseek_adapter(settings)
+
+    if settings.model_provider == "xfyun_spark":
+        return _build_spark_adapter(settings)
+
     maas_api_key = settings.xfyun_maas_api_key.get_secret_value().strip()
     if maas_api_key:
         return XfyunMaaSAdapter(
@@ -28,7 +36,25 @@ def build_model_adapter(settings: Settings) -> ModelAdapter:
             timeout_seconds=settings.xfyun_maas_timeout_seconds,
             max_retries=settings.xfyun_maas_max_retries,
         )
+    return _build_spark_adapter(settings)
 
+
+def _build_deepseek_adapter(settings: Settings) -> ModelAdapter:
+    api_key = settings.deepseek_api_key.get_secret_value().strip()
+    if api_key:
+        return DeepSeekAdapter(
+            base_url=settings.deepseek_base_url,
+            api_key=api_key,
+            model=settings.deepseek_model,
+            timeout_seconds=settings.deepseek_timeout_seconds,
+            max_retries=settings.deepseek_max_retries,
+        )
+    if settings.xfyun_maas_mock_fallback and settings.xfyun_spark_mock_fallback:
+        return MockAdapter()
+    raise ModelConfigurationError("DEEPSEEK_API_KEY is not configured")
+
+
+def _build_spark_adapter(settings: Settings) -> ModelAdapter:
     api_password = settings.xfyun_spark_api_password.get_secret_value().strip()
     api_key = settings.xfyun_spark_api_key.get_secret_value().strip()
     api_secret = settings.xfyun_spark_api_secret.get_secret_value().strip()
