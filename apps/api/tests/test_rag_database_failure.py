@@ -123,7 +123,7 @@ def test_embedder_dimensions_must_match_existing_index() -> None:
 def test_migration_target_metadata_keeps_the_existing_knowledge_index() -> None:
     table = Base.metadata.tables["knowledge_chunks"]
     assert table is KnowledgeChunkRow.__table__
-    assert table.c.embedding.type.dim == TokenHashEmbedder().dimensions
+    assert table.c.embedding.type.dim == TokenHashEmbedder().dimensions  # type: ignore[attr-defined]  # noqa: E501
     assert {index.name for index in table.indexes} == {
         "ix_knowledge_chunks_course_id",
         "ix_knowledge_chunks_search_vector",
@@ -176,7 +176,7 @@ def test_qa_reports_reranking_status_without_exposing_provider_details(
     )
     service = RagQaService(
         SimpleNamespace(search=AsyncMock(return_value=hits)),
-        SimpleNamespace(
+        SimpleNamespace(  # type: ignore[arg-type]
             draft=AsyncMock(return_value=TutorDraft("列表可变。", (hits[0].chunk_id,), False))
         ),
         QualitySupervisor(),
@@ -206,10 +206,10 @@ def test_qa_distinguishes_unavailable_review_from_a_rejected_answer(
     hit = SearchHit("SRC-PY-TEST", "chunk-1", "列表可变。", 0.7, {})
     service = RagQaService(
         SimpleNamespace(search=AsyncMock(return_value=(hit,))),
-        SimpleNamespace(
+        SimpleNamespace(  # type: ignore[arg-type]
             draft=AsyncMock(return_value=TutorDraft("尚未审核的回答", (hit.chunk_id,), False))
         ),
-        SimpleNamespace(
+        SimpleNamespace(  # type: ignore[arg-type]
             review=AsyncMock(
                 return_value=SupervisionResult(
                     accepted=False,
@@ -238,7 +238,7 @@ def test_qa_fails_closed_when_configured_semantic_reviewer_times_out() -> None:
     )
     service = RagQaService(
         SimpleNamespace(search=AsyncMock(return_value=(hit,))),
-        SimpleNamespace(
+        SimpleNamespace(  # type: ignore[arg-type]
             draft=AsyncMock(return_value=TutorDraft("未经语义审核的草稿", (hit.chunk_id,), False))
         ),
         QualitySupervisor(review_model),

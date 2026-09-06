@@ -53,7 +53,7 @@ def test_maas_adapter_uses_openai_compatible_contract() -> None:
 
 
 def test_factory_prefers_maas_over_legacy_spark() -> None:
-    settings = Settings(
+    settings = Settings(  # type: ignore[call-arg]
         _env_file=None,
         xfyun_maas_api_key=SecretStr("maas-key"),
         xfyun_spark_api_password=SecretStr("legacy-password"),

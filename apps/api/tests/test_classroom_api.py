@@ -309,7 +309,7 @@ def test_generated_adaptive_session_works_across_classroom_endpoints(
             PlannedActivity(activity_id="PY-BASE-01", activity_type="concept", reason="基础复核"),
         ),
     )
-    monkeypatch.setitem(app.dependency_overrides, get_classroom_lesson_service, lambda: service)
+    monkeypatch.setitem(app.dependency_overrides, get_classroom_lesson_service, lambda: service)  # type: ignore[misc]
     generated = client.get("/api/v1/classroom/sessions/next", params={
         "student_id": profile.student_id, "daily_minutes": minutes,
     })

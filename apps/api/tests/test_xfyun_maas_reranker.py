@@ -163,14 +163,16 @@ def test_candidate_limit_is_enforced_before_any_network_request() -> None:
 
 
 def test_reranking_is_disabled_unless_explicitly_configured() -> None:
-    assert build_reranker(Settings(_env_file=None)) is None
+    assert build_reranker(Settings(_env_file=None)) is None  # type: ignore[call-arg]
     with pytest.raises(ModelConfigurationError, match="key and model"):
-        build_reranker(Settings(_env_file=None, xfyun_maas_reranker_enabled=True))
+        build_reranker(
+            Settings(_env_file=None, xfyun_maas_reranker_enabled=True)  # type: ignore[call-arg]
+        )
 
 
 def test_factory_can_use_the_existing_maas_key_or_a_dedicated_key() -> None:
     for dedicated_key in ("", "dedicated-key"):
-        settings = Settings(
+        settings = Settings(  # type: ignore[call-arg]
             _env_file=None,
             xfyun_maas_api_key=SecretStr("main-key"),
             xfyun_maas_reranker_api_key=SecretStr(dedicated_key),
