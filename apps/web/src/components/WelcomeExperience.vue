@@ -27,6 +27,13 @@ function startLearning(): void {
 
 <template>
   <section class="welcome-experience" aria-labelledby="welcome-title">
+    <div class="welcome-tech" aria-hidden="true">
+      <i class="tech-grid"></i>
+      <i class="tech-orb orb-a"></i>
+      <i class="tech-orb orb-b"></i>
+      <i class="tech-ring"></i>
+      <i class="tech-scan"></i>
+    </div>
     <header class="welcome-nav">
       <div class="welcome-brand"><i>&lt;/&gt;</i><span><b>词元研究所</b><small>计算机专业学习平台</small></span></div>
       <div class="welcome-appearance"><ThemeToggle :dark="darkTheme" @toggle="emit('toggle-theme')" /><button class="welcome-settings" @click="emit('settings')" aria-label="打开外观设置"><span aria-hidden="true">Aa</span> 设置外观</button></div>
@@ -112,4 +119,75 @@ function startLearning(): void {
 .welcome-device button i { color:var(--muted); }
 .welcome-device button.active i { color:var(--accent-ink); }
 .welcome-secondary:hover,.welcome-device button:hover { color:var(--accent-ink); background:var(--accent-pale); border-color:var(--accent); }
+
+/* ===== 欢迎页科技感装饰 ===== */
+.welcome-tech { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.welcome-nav,.welcome-main,.welcome-footer { z-index: 1; }
+.tech-grid {
+  position: absolute; inset: 0; opacity: .55;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--accent) 10%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--accent) 10%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 40%, #000 30%, transparent 78%);
+}
+.tech-orb { position: absolute; width: 34vw; height: 34vw; border-radius: 50%; filter: blur(80px); opacity: .5; }
+.orb-a { top: -12vw; right: -8vw; background: color-mix(in srgb, var(--accent) 24%, transparent); animation: orb-drift-a 18s ease-in-out infinite alternate; }
+.orb-b { bottom: -14vw; left: -10vw; background: color-mix(in srgb, var(--accent-dark) 18%, transparent); animation: orb-drift-b 22s ease-in-out infinite alternate; }
+@keyframes orb-drift-a { to { transform: translate(-6vw, 5vh) scale(1.15); } }
+@keyframes orb-drift-b { to { transform: translate(7vw, -5vh) scale(.92); } }
+.tech-ring {
+  position: absolute; top: 88px; right: 34%; width: 300px; height: 300px;
+  border: 1px dashed color-mix(in srgb, var(--accent) 32%, transparent); border-radius: 50%;
+  animation: tech-ring-spin 46s linear infinite;
+}
+.tech-ring::before, .tech-ring::after {
+  content: ""; position: absolute; border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+.tech-ring::before { inset: 34px; }
+.tech-ring::after { inset: 78px; }
+@keyframes tech-ring-spin { to { transform: rotate(360deg); } }
+.tech-scan {
+  position: absolute; left: -20%; top: -8%; width: 44%; height: 120%;
+  background: linear-gradient(100deg, transparent 42%, color-mix(in srgb, var(--accent) 9%, transparent) 50%, transparent 58%);
+  animation: tech-scan-sweep 9s ease-in-out infinite;
+}
+@keyframes tech-scan-sweep {
+  0%, 55% { transform: translateX(-30vw) skewX(-12deg); opacity: 0; }
+  60% { opacity: 1; }
+  82%, 100% { transform: translateX(150vw) skewX(-12deg); opacity: 0; }
+}
+
+.welcome-brand > i { position: relative; animation: brand-glow 3.4s ease-in-out infinite; }
+@keyframes brand-glow {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); }
+  50% { box-shadow: 0 0 0 7px color-mix(in srgb, var(--accent) 16%, transparent), 0 0 26px color-mix(in srgb, var(--accent) 40%, transparent); }
+}
+.welcome-copy h1 {
+  background: linear-gradient(115deg, var(--ink) 30%, var(--accent-ink) 55%, var(--accent-bright) 80%);
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.welcome-copy h1::after { animation: title-bar-pulse 2.6s ease-in-out infinite; }
+@keyframes title-bar-pulse { 0%, 100% { width: 58px; opacity: .85; } 50% { width: 108px; opacity: 1; } }
+.welcome-primary { position: relative; overflow: hidden; }
+.welcome-primary::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: -70%; width: 42%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.4), transparent);
+  animation: cta-shine 3.4s ease-in-out infinite;
+}
+@keyframes cta-shine { 0%, 60% { left: -70%; } 90%, 100% { left: 150%; } }
+.welcome-primary { animation: cta-halo 2.8s ease-in-out infinite; }
+@keyframes cta-halo {
+  0%, 100% { box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 22%, transparent); }
+  50% { box-shadow: 0 10px 30px color-mix(in srgb, var(--accent) 42%, transparent), 0 0 0 5px color-mix(in srgb, var(--accent) 12%, transparent); }
+}
+.welcome-route { animation: route-float 6.5s ease-in-out infinite; }
+@keyframes route-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+
+html[data-motion="reduced"] :is(.tech-orb, .tech-ring, .tech-scan, .welcome-brand > i,
+  .welcome-copy h1::after, .welcome-primary::after, .welcome-primary, .welcome-route) { animation: none !important; }
 </style>

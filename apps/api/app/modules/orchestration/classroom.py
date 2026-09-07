@@ -728,6 +728,31 @@ class ClassroomDialogueService:
         self._supervisor = supervisor
         self._top_k = top_k
 
+    @staticmethod
+    def _social_reply(role: ClassroomRole) -> ClassroomDialogueResponse:
+        return ClassroomDialogueResponse(
+            status="answered",
+            role=role,
+            display_name=_ROLE_NAMES[role],
+            answer=_SOCIAL_REPLIES.get(role, _SOCIAL_REPLIES["teacher"]),
+            question_scope="current_lesson",
+            scope_notice=None,
+            suggested_knowledge_point_ids=[],
+            citations=[],
+            trace=[
+                AgentTraceStep(
+                    component="retrieval",
+                    status="completed",
+                    detail="礼貌性回应，无需检索课程资料。",
+                ),
+                AgentTraceStep(
+                    component="quality_supervisor",
+                    status="completed",
+                    detail="确定性安全门禁检查通过。",
+                ),
+            ],
+        )
+
     async def answer(self, request: ClassroomDialogueRequest) -> ClassroomDialogueResponse:
         adaptive_ids = _adaptive_knowledge_point_ids(request.lesson_id)
         if adaptive_ids:
@@ -737,6 +762,9 @@ class ClassroomDialogueService:
 
         if _is_prompt_injection(request.message):
             return self._blocked_input(request.role)
+
+        if _is_social_message(request.message):
+            return self._social_reply(request.role)
 
         if (
             not query_is_in_course_scope(request.message, "python")
@@ -1429,6 +1457,46 @@ def _is_prompt_injection(message: str) -> bool:
     return any(target in normalized for target in protected_targets) and any(
         signal in normalized for signal in override_signals
     )
+
+
+_SOCIAL_MARKERS = (
+    "谢谢",
+    "感谢",
+    "多谢",
+    "辛苦了",
+    "加油",
+    "没关系",
+    "不客气",
+    "再见",
+    "拜拜",
+)
+
+_SOCIAL_REPLIES: dict[str, str] = {
+    "teacher": "不用谢。我们继续——你可以把刚才的例子亲手运行一遍，或直接提出下一个问题。",
+    "ta": "收到！随时把卡住的地方贴给我，我会给你分层提示。",
+    "peer_cautious": "不客气～我们先别急着跳过，确认刚才那一步真的理解了吗？",
+    "peer_debugger": "客气啦。如果运行有报错，把最小代码和完整报错发我，我们一起定位。",
+    "peer_summarizer": "没问题。需要的时候我可以帮你把这一段总结成要点。",
+}
+
+
+def _is_social_message(message: str) -> bool:
+    """A short acknowledgment or thanks with no technical content.
+
+    Social-only turns get a deterministic in-role reply instead of an
+    evidence search or a "please clarify" prompt. Anything that also carries
+    a Python identifier or a technical term keeps the normal flow.
+    """
+    normalized = re.sub(r"\s+", "", message)
+    if len(normalized) > 12 or not any(marker in normalized for marker in _SOCIAL_MARKERS):
+        return False
+    identifiers = {
+        item.casefold()
+        for item in re.findall(r"(?i)(?<![a-z0-9_])([a-z_][a-z0-9_]*)", message)
+    }
+    if identifiers & _PYTHON_RELEVANCE_IDENTIFIERS:
+        return False
+    return not any(term in message for term in _PYTHON_RELEVANCE_TERMS)
 
 
 def _is_explicit_off_topic_question(message: str) -> bool:
