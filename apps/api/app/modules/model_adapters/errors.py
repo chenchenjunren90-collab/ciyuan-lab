@@ -43,3 +43,15 @@ class ModelUpstreamError(ModelError):
     """Upstream returned an unexpected status, network error or invalid payload."""
 
     code = "MODEL_UPSTREAM_ERROR"
+
+
+class ModelTransientResponseError(ModelUpstreamError):
+    """Upstream returned a well-formed HTTP response with a transient shape.
+
+    Covers empty assistant content, invalid JSON, unexpected payload shapes
+    and missing choices: bounded retries may recover from these without any
+    change to the request. Deterministic provider rejections keep using
+    ``ModelUpstreamError`` so they are surfaced immediately.
+    """
+
+    code = "MODEL_TRANSIENT_RESPONSE"

@@ -133,7 +133,7 @@ def test_complete_connection_error_raises_upstream_error() -> None:
         asyncio.run(scenario())
 
 
-def test_complete_rate_limit_raises_and_is_not_retried() -> None:
+def test_complete_rate_limit_retries_then_raises() -> None:
     calls = 0
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -149,7 +149,86 @@ def test_complete_rate_limit_raises_and_is_not_retried() -> None:
 
     with pytest.raises(ModelRateLimitError, match="429"):
         asyncio.run(scenario())
-    assert calls == 1
+    assert calls == 3
+
+
+def test_complete_rate_limit_recovers_on_retry() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        del request
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(429, json={"error": {"message": "rate limited"}})
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "model": "spark-x",
+                "choices": [{"message": {"role": "assistant", "content": "恢复成功"}}],
+            },
+        )
+
+    async def scenario() -> ModelResponse:
+        async with _make_client(handler) as client:
+            adapter = _adapter_with(client, max_retries=1)
+            return await adapter.complete([USER_MESSAGE])
+
+    result = asyncio.run(scenario())
+
+    assert result.content == "恢复成功"
+    assert calls == 2
+
+
+def test_complete_empty_assistant_content_recovers_on_retry() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        del request
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(
+                200, json={"code": 0, "choices": [{"message": {"content": ""}}]}
+            )
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "model": "spark-x",
+                "choices": [{"message": {"role": "assistant", "content": "恢复成功"}}],
+            },
+        )
+
+    async def scenario() -> ModelResponse:
+        async with _make_client(handler) as client:
+            adapter = _adapter_with(client, max_retries=1)
+            return await adapter.complete([USER_MESSAGE])
+
+    result = asyncio.run(scenario())
+
+    assert result.content == "恢复成功"
+    assert calls == 2
+
+
+def test_complete_empty_assistant_content_raises_after_retries() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        del request
+        nonlocal calls
+        calls += 1
+        return httpx.Response(200, json={"code": 0, "choices": [{"message": {"content": ""}}]})
+
+    async def scenario() -> None:
+        async with _make_client(handler) as client:
+            adapter = _adapter_with(client, max_retries=2)
+            await adapter.complete([USER_MESSAGE])
+
+    with pytest.raises(ModelUpstreamError, match="missing assistant content"):
+        asyncio.run(scenario())
+    assert calls == 3
 
 
 def test_complete_5xx_retries_then_raises_upstream_error() -> None:

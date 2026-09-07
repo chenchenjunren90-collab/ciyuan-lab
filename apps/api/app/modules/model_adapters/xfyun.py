@@ -14,6 +14,7 @@ from app.modules.model_adapters.errors import (
     ModelConfigurationError,
     ModelRateLimitError,
     ModelTimeoutError,
+    ModelTransientResponseError,
     ModelUpstreamError,
 )
 from app.modules.model_adapters.ports import ChatMessage, ModelAdapter, ModelResponse
@@ -41,10 +42,11 @@ class XfyunSparkAdapter(ModelAdapter):
     WebSocket handshake URLs of the older streaming protocol. The shared
     ``config.py`` exposes exactly the key/secret pair this adapter needs.
 
-    Retry policy: only timeouts, request transport errors and HTTP 5xx statuses
-    are retried, at most ``max_retries`` extra attempts. 4xx errors
-    (including 429 rate limits) are surfaced immediately and never retried.
-    Secrets are never written to logs.
+    Retry policy: timeouts, request transport errors, HTTP 5xx, HTTP 429 rate
+    limits and transient response shapes (empty assistant content, invalid
+    JSON, missing choices) are retried at most ``max_retries`` extra attempts
+    with backoff. Other 4xx statuses and deterministic provider rejections
+    are surfaced immediately and never retried. Secrets are never logged.
     """
 
     _provider_name = "xfyun"
@@ -131,7 +133,15 @@ class XfyunSparkAdapter(ModelAdapter):
                 continue
 
             if response.status_code == 429:
-                raise ModelRateLimitError(f"{self._provider_label} rate limited (HTTP 429)")
+                if attempt == attempts:
+                    raise ModelRateLimitError(f"{self._provider_label} rate limited (HTTP 429)")
+                logger.warning(
+                    "%s rate limited (HTTP 429, attempt %d/%d)",
+                    self._provider_name,
+                    attempt,
+                    attempts,
+                )
+                continue
 
             if response.status_code in _RETRYABLE_STATUS_CODES:
                 if attempt == attempts:
@@ -152,7 +162,18 @@ class XfyunSparkAdapter(ModelAdapter):
                     f"{self._provider_label} returned HTTP {response.status_code}"
                 )
 
-            return self._parse_response(response)
+            try:
+                return self._parse_response(response)
+            except (ModelTransientResponseError, ModelRateLimitError):
+                if attempt == attempts:
+                    raise
+                logger.warning(
+                    "%s returned a transient response (attempt %d/%d)",
+                    self._provider_name,
+                    attempt,
+                    attempts,
+                )
+                continue
 
         # Loop always returns or raises; kept for type narrowing.
         raise ModelUpstreamError(f"{self._provider_label} request failed")  # pragma: no cover
@@ -183,10 +204,14 @@ class XfyunSparkAdapter(ModelAdapter):
         try:
             data = response.json()
         except ValueError as exc:
-            raise ModelUpstreamError(f"{self._provider_label} returned invalid JSON") from exc
+            raise ModelTransientResponseError(
+                f"{self._provider_label} returned invalid JSON"
+            ) from exc
 
         if not isinstance(data, dict):
-            raise ModelUpstreamError(f"{self._provider_label} returned unexpected payload shape")
+            raise ModelTransientResponseError(
+                f"{self._provider_label} returned unexpected payload shape"
+            )
 
         response_code = data.get("code", 0)
         if isinstance(response_code, int) and not isinstance(response_code, bool):
@@ -203,7 +228,9 @@ class XfyunSparkAdapter(ModelAdapter):
 
         choices = data.get("choices")
         if not isinstance(choices, list) or not choices:
-            raise ModelUpstreamError(f"{self._provider_label} response is missing choices")
+            raise ModelTransientResponseError(
+                f"{self._provider_label} response is missing choices"
+            )
 
         first = choices[0]
         message = first.get("message") if isinstance(first, dict) else None
@@ -211,7 +238,7 @@ class XfyunSparkAdapter(ModelAdapter):
         if isinstance(message, dict):
             content = message.get("content", "")
         if not isinstance(content, str) or not content.strip():
-            raise ModelUpstreamError(
+            raise ModelTransientResponseError(
                 f"{self._provider_label} response is missing assistant content"
             )
 

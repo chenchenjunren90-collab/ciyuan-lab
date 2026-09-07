@@ -94,7 +94,7 @@ def test_maas_adapter_honors_timeout_with_an_injected_client() -> None:
 
 @pytest.mark.parametrize(
     ("status", "error_type"),
-    [(401, ModelUpstreamError), (429, ModelRateLimitError)],
+    [(401, ModelUpstreamError)],
 )
 def test_maas_client_errors_are_not_retried_or_exposed(
     status: int, error_type: type[Exception]
@@ -121,6 +121,67 @@ def test_maas_client_errors_are_not_retried_or_exposed(
         asyncio.run(scenario())
     assert calls == 1
     assert "private upstream details" not in str(caught.value)
+
+
+def test_maas_rate_limit_retries_then_raises() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        return httpx.Response(429, json={"error": "private upstream details"})
+
+    async def scenario() -> None:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            adapter = XfyunMaaSAdapter(
+                base_url="https://maas-api.cn-huabei-1.xf-yun.com/v2",
+                api_key="test-maas-key",
+                model="hosted-model",
+                max_retries=2,
+                client=client,
+            )
+            await adapter.complete([ChatMessage(role="user", content="只回复ok")])
+
+    with pytest.raises(ModelRateLimitError, match="Xfyun MaaS") as caught:
+        asyncio.run(scenario())
+    assert calls == 3
+    assert "private upstream details" not in str(caught.value)
+
+
+def test_maas_empty_assistant_content_recovers_on_retry() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(
+                200,
+                json={"code": 0, "choices": [{"message": {"content": "  "}}]},
+            )
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "choices": [{"message": {"content": "ok"}}],
+                "model": "hosted-model",
+            },
+        )
+
+    async def scenario() -> tuple[str, str]:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            adapter = XfyunMaaSAdapter(
+                base_url="https://maas-api.cn-huabei-1.xf-yun.com/v2",
+                api_key="test-maas-key",
+                model="hosted-model",
+                max_retries=1,
+                client=client,
+            )
+            response = await adapter.complete([ChatMessage(role="user", content="只回复ok")])
+            return response.provider, response.content
+
+    assert asyncio.run(scenario()) == ("xfyun-maas", "ok")
+    assert calls == 2
 
 
 def test_maas_overload_retries_with_backoff_and_keeps_provider_identity(

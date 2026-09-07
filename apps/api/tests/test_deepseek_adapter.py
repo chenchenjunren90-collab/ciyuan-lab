@@ -136,7 +136,7 @@ def test_deepseek_http_errors_keep_provider_identity_and_hide_body() -> None:
     assert "invalid api key" not in str(caught.value)
 
 
-def test_deepseek_rate_limit_is_not_retried() -> None:
+def test_deepseek_rate_limit_retries_then_raises() -> None:
     calls = 0
 
     def handler(request: httpx.Request) -> httpx.Response:
@@ -157,7 +157,42 @@ def test_deepseek_rate_limit_is_not_retried() -> None:
 
     with pytest.raises(ModelRateLimitError, match="DeepSeek"):
         asyncio.run(scenario())
-    assert calls == 1
+    assert calls == 3
+
+
+def test_deepseek_empty_assistant_content_recovers_on_retry() -> None:
+    calls = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            return httpx.Response(
+                200, json={"code": 0, "choices": [{"message": {"content": ""}}]}
+            )
+        return httpx.Response(
+            200,
+            json={
+                "code": 0,
+                "choices": [{"message": {"content": "ok"}}],
+                "model": "deepseek-v4-flash",
+            },
+        )
+
+    async def scenario() -> tuple[str, str]:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            adapter = DeepSeekAdapter(
+                base_url="https://api.deepseek.com",
+                api_key="test-deepseek-key",
+                model="deepseek-v4-flash",
+                max_retries=1,
+                client=client,
+            )
+            response = await adapter.complete([ChatMessage(role="user", content="只回复ok")])
+            return response.provider, response.content
+
+    assert asyncio.run(scenario()) == ("deepseek", "ok")
+    assert calls == 2
 
 
 def test_deepseek_invalid_configuration_identifies_the_service() -> None:
