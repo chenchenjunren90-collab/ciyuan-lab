@@ -200,6 +200,18 @@ export class ApiError extends Error {
   constructor(public readonly status: number, message: string) { super(message) }
 }
 
+const ACCESS_CODE_STORAGE_KEY = "ciyuan-access-code";
+export const ACCESS_CODE_REQUIRED_EVENT = "access-code-required";
+export const ACCESS_CODE_REQUIRED_DETAIL = "access code required";
+
+export function getAccessCode(): string {
+  try { return localStorage.getItem(ACCESS_CODE_STORAGE_KEY) ?? ""; } catch { return ""; }
+}
+
+export function setAccessCode(code: string): void {
+  try { localStorage.setItem(ACCESS_CODE_STORAGE_KEY, code.trim()); } catch { /* storage may be unavailable */ }
+}
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 const configuredTimeoutMs = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? "10000");
 const defaultTimeoutMs = Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0
@@ -218,6 +230,7 @@ async function request<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+  const accessCode = getAccessCode();
 
   try {
     const response = await fetcher(`${apiBaseUrl}${path}`, {
@@ -225,6 +238,7 @@ async function request<T>(
       headers: {
         Accept: "application/json",
         ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(accessCode ? { "X-Access-Code": accessCode } : {}),
         ...options.headers
       },
       signal: controller.signal
@@ -244,6 +258,9 @@ async function request<T>(
           message = `参数不合法：${(payload.detail[0] as { msg: string }).msg}`;
         }
       } catch { /* Keep a stable message for non-JSON failures. */ }
+      if (response.status === 403 && message === ACCESS_CODE_REQUIRED_DETAIL) {
+        globalThis.dispatchEvent(new Event(ACCESS_CODE_REQUIRED_EVENT));
+      }
       throw new ApiError(response.status, message);
     }
     return (await response.json()) as T;

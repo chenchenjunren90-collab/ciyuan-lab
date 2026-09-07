@@ -57,6 +57,20 @@ html[data-theme="light"] .immersive-lesson .board-mistakes { color:var(--warning
 html[data-theme="light"] .immersive-lesson .board-mistakes span { color:var(--warning); }
 html[data-theme="light"] .immersive-lesson .smart-board .code-expand { color:var(--accent-ink); border-color:var(--line); background:var(--accent-pale); }
 html[data-theme="light"] .immersive-lesson .smart-board .board-trace span::before { color:var(--accent-ink); }
+html[data-theme="light"] .immersive-lesson .smart-board .board-tool { color:var(--accent-ink); border-color:var(--line); background:var(--accent-pale); }
+html[data-theme="light"] .immersive-lesson .smart-board .board-tool:hover { background:var(--accent-soft); }
+html[data-theme="light"] .immersive-lesson .smart-board .board-tool.active { color:var(--accent-contrast); border-color:var(--accent); background:var(--accent); }
+html[data-theme="light"] .immersive-lesson .smart-board .board-highlighted { outline-color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent); box-shadow:0 0 14px color-mix(in srgb,var(--accent) 22%,transparent); }
+
+/* The dark classroom uses a purple-black glass board. */
+html[data-theme="dark"] .immersive-lesson .smart-board { border-color:#3b3354; background:linear-gradient(145deg,#1d1830,#120e1f); box-shadow:inset 0 0 35px #0a0714,0 14px 28px #00000055; }
+html[data-theme="dark"] .immersive-lesson .smart-board :is(header span,.board-key-points > b,.board-trace > b,.board-code-example > b,.board-mistakes > b) { color:var(--accent-bright); }
+html[data-theme="dark"] .immersive-lesson .smart-board :is(.board-explanation,.board-key-points li,.board-trace span,.board-mistakes span) { color:var(--ink); }
+html[data-theme="dark"] .immersive-lesson .smart-board :is(.board-trace,.board-code-example,.board-mistakes) { border-color:var(--line); }
+html[data-theme="dark"] .immersive-lesson .smart-board :is(.board-code-example pre,.board-code-example pre code) { color:var(--code-ink); background:var(--code); border-color:var(--code-line); }
+html[data-theme="dark"] .immersive-lesson .smart-board .code-expand,html[data-theme="dark"] .immersive-lesson .smart-board .board-tool { color:var(--accent-ink); border-color:var(--line); background:var(--accent-pale); }
+html[data-theme="dark"] .immersive-lesson .smart-board .board-tool.active { color:var(--accent-contrast); background:var(--accent); border-color:var(--accent); }
+html[data-theme="dark"] .immersive-lesson .smart-board .board-trace span::before { color:var(--accent-bright); }
 
 /* Semantic feedback remains legible independently of the selected accent. */
 html[data-theme="light"] :is(.verification,.task-result,.diagnostic-result,.checkpoint-feedback,.hint-box,.code-task .hint-card) { color:var(--ink); border-color:var(--line); background:var(--surface-muted); }

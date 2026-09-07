@@ -76,6 +76,22 @@ def _build_spark_adapter(settings: Settings) -> ModelAdapter:
     raise ModelConfigurationError("Model adapter is not configured and Mock fallback is disabled")
 
 
+def describe_model_route(settings: Settings) -> tuple[bool, str]:
+    """Validate the active model route without making any network call.
+
+    Returns ``(ready, description)``. A route is ready when it resolves to a
+    real provider adapter; a Mock fallback or a configuration error means the
+    deployment would silently degrade every model-backed flow.
+    """
+    try:
+        adapter = build_model_adapter(settings)
+    except ModelConfigurationError as exc:
+        return False, str(exc)
+    if isinstance(adapter, MockAdapter):
+        return False, f"MODEL_PROVIDER={settings.model_provider} resolves to MockAdapter"
+    return True, f"MODEL_PROVIDER={settings.model_provider} -> {type(adapter).__name__}"
+
+
 def build_reranker(settings: Settings) -> DocumentReranker | None:
     """Use MaaS relevance scoring only when its published service is configured."""
     if not settings.xfyun_maas_reranker_enabled:

@@ -12,6 +12,7 @@ from app.api.scenarios import router as scenarios_router
 from app.api.schemas import CapabilitiesResponse, HealthResponse
 from app.api.submissions import router as submissions_router
 from app.core.config import get_settings
+from app.modules.model_adapters.factory import describe_model_route
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(adaptive_router)
@@ -34,10 +35,12 @@ async def api_health() -> HealthResponse:
 @router.get("/capabilities", response_model=CapabilitiesResponse, tags=["system"])
 async def list_capabilities() -> CapabilitiesResponse:
     settings = get_settings()
+    route_ready, _ = describe_model_route(settings)
     return CapabilitiesResponse(
         status="mvp",
         code_execution_enabled=settings.code_execution_enabled,
         tuoling_enabled=settings.tuoling_enabled,
+        model_route_ready=route_ready,
         modules=[
             "orchestration",
             "rag",

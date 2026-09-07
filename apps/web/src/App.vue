@@ -2,7 +2,7 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 
 import {
-  ApiError, api,
+  ACCESS_CODE_REQUIRED_EVENT, ApiError, api, setAccessCode,
   type ActivityDetail, type ActivitySummary, type CourseId, type CourseSummary,
   type DiagnosticPhase, type DiagnosticQuiz, type DiagnosticSubmissionResult,
   type HintResponse, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile,
@@ -29,7 +29,6 @@ import {
   saveLocalAccounts,
   saveUiPreferences,
   resolveTheme,
-  type AccentMode,
   type LocalLearnerAccount,
   type UiPreferences,
 } from "./uiPreferences";
@@ -38,11 +37,6 @@ type Tab = "overview" | "path" | "tutor" | "practice" | "projects" | "classroom"
 type ActivityFilter = "all" | "homework" | "code" | "debug" | "project";
 type ActivitySort = "recommended" | "catalog" | "shortest";
 type KnowledgeState = "mastered" | "learning" | "recommended" | "ready" | "locked" | "unassessed";
-const ACCENT_MODES: { id: AccentMode; label: string; shortLabel: string }[] = [
-  { id: "ion", label: "离子青", shortLabel: "青" },
-  { id: "pulse", label: "脉冲红", shortLabel: "红" },
-  { id: "solar", label: "太阳金", shortLabel: "金" },
-];
 const OFFLINE_COURSES: CourseSummary[] = [
   { id: "c", title: "C 语言", status: "offline_preview", target_core_concepts: 40, implemented_core_concepts: 42, features: {} },
   { id: "python", title: "Python", status: "offline_preview", target_core_concepts: 40, implemented_core_concepts: 40, features: {} },
@@ -67,7 +61,15 @@ const workspacePreview = import.meta.env.DEV
 const systemPrefersDark = ref(systemThemeQuery.matches);
 const uiPreferences = reactive<UiPreferences>(loadUiPreferences(localStorage, new URLSearchParams(window.location.search).get("theme")));
 const darkTheme = computed(() => resolveTheme(uiPreferences.theme, systemPrefersDark.value) === "dark");
-function toggleTheme(): void { uiPreferences.theme = darkTheme.value ? "light" : "dark"; }
+let themeTransitionTimer: number | undefined;
+function toggleTheme(): void {
+  uiPreferences.theme = darkTheme.value ? "light" : "dark";
+  const root = document.documentElement;
+  if (uiPreferences.reducedMotion) return;
+  root.classList.add("theming");
+  if (themeTransitionTimer) window.clearTimeout(themeTransitionTimer);
+  themeTransitionTimer = window.setTimeout(() => root.classList.remove("theming"), 500);
+}
 const initialStudentId = ensureLocalStudentId(localStorage, () => (
   typeof crypto.randomUUID === "function"
     ? crypto.randomUUID()
@@ -91,6 +93,8 @@ const welcomeOpen = ref(
 );
 const settingsOpen = ref(false);
 const accountSwitching = ref(false);
+const accessGateOpen = ref(false);
+const accessCodeInput = ref("");
 const connection = ref<"connecting" | "online" | "offline" | "degraded">("connecting");
 const loading = ref(true);
 const diagnosticSubmitting = ref(false);
@@ -989,8 +993,20 @@ async function submit(): Promise<void> {
 onMounted(async () => {
   systemThemeQuery.addEventListener("change", syncSystemTheme);
   window.addEventListener("resize", syncViewport);
+  window.addEventListener(ACCESS_CODE_REQUIRED_EVENT, onAccessCodeRequired);
   await loadCourse(courseId.value);
 });
+
+function onAccessCodeRequired(): void {
+  accessGateOpen.value = true;
+}
+
+function confirmAccessCode(): void {
+  setAccessCode(accessCodeInput.value);
+  accessCodeInput.value = "";
+  accessGateOpen.value = false;
+  window.location.reload();
+}
 
 onBeforeUnmount(() => {
   workspaceScope.invalidate();
@@ -998,10 +1014,27 @@ onBeforeUnmount(() => {
   if (noticeTimer) clearTimeout(noticeTimer);
   systemThemeQuery.removeEventListener("change", syncSystemTheme);
   window.removeEventListener("resize", syncViewport);
+  window.removeEventListener(ACCESS_CODE_REQUIRED_EVENT, onAccessCodeRequired);
 });
 </script>
 
 <template>
+  <div v-if="accessGateOpen" class="access-gate" role="dialog" aria-modal="true" aria-label="访问口令">
+    <form class="access-gate-card" @submit.prevent="confirmAccessCode">
+      <div class="access-gate-mark" aria-hidden="true">&lt;/&gt;</div>
+      <h3>演示站点访问口令</h3>
+      <p>此部署开启了访问口令保护。输入后会自动刷新并继续。</p>
+      <input
+        v-model="accessCodeInput"
+        type="password"
+        autocomplete="off"
+        placeholder="访问口令"
+        aria-label="访问口令"
+        autofocus
+      />
+      <button type="submit" class="primary" :disabled="!accessCodeInput.trim()">进入平台</button>
+    </form>
+  </div>
   <WelcomeExperience
     v-if="welcomeOpen"
     :display-name="displayName"
@@ -1046,9 +1079,6 @@ onBeforeUnmount(() => {
       <header v-if="!classroomFocusMode" class="topbar">
         <div class="taskbar-title"><h1>学习任务台</h1><span>{{ selectedCourse?.title ?? "课程工作台" }}</span></div>
         <div class="taskbar-status" :data-state="connection"><i></i><span><b>服务状态</b><small>{{ connection === "online" ? "课程服务已连接" : connection === "offline" ? "课程服务暂不可用" : connection === "degraded" ? "部分学习服务暂不可用" : "正在连接课程服务" }}</small></span></div>
-        <div class="accent-quick-switch" role="group" aria-label="颜色风格">
-          <button v-for="item in ACCENT_MODES" :key="item.id" :class="[item.id, { active: uiPreferences.accent === item.id }]" :aria-label="`切换为${item.label}`" :aria-pressed="uiPreferences.accent === item.id" :title="item.label" @click="updateUiPreferences({ accent: item.id })"><i aria-hidden="true"></i><span>{{ item.shortLabel }}</span></button>
-        </div>
         <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :dark="darkTheme" @toggle="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
       </header>
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>

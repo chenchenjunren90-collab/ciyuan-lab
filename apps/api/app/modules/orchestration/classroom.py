@@ -27,6 +27,7 @@ from app.modules.orchestration.python_tutor_prompts import (
 )
 from app.modules.orchestration.supervisor import QualitySupervisor
 from app.modules.orchestration.tutor import CourseTutor, TutorDraft
+from app.modules.rag.citations import citation_from_hit as _citation_from_hit
 from app.modules.rag.models import AgentTraceStep, Citation
 from app.modules.rag.ports import KnowledgeRetrievalError, KnowledgeRetriever, SearchHit
 from app.modules.rag.retriever import query_is_in_course_scope, tokenize
@@ -1582,29 +1583,6 @@ def _fit_role_answer(role: ClassroomRole, answer: str) -> str:
     if len(normalized) <= max_chars or "```" in normalized:
         return normalized
     return _clip_sentence(normalized, max_chars)
-
-
-def _citation_from_hit(hit: SearchHit) -> Citation:
-    source_type: Literal["course", "online"] = (
-        "online" if hit.metadata.get("source_type") == "online" else "course"
-    )
-    title = hit.metadata.get("title")
-    url = hit.metadata.get("url")
-    safe_url = (
-        str(url)
-        if source_type == "online"
-        and isinstance(url, str)
-        and url.startswith("https://docs.python.org/")
-        else None
-    )
-    return Citation(
-        source_id=hit.source_id,
-        chunk_id=hit.chunk_id,
-        score=hit.score,
-        source_type=source_type,
-        source_title=str(title)[:200] if isinstance(title, str) else None,
-        source_url=safe_url,
-    )
 
 
 def _most_relevant_evidence_sentence(

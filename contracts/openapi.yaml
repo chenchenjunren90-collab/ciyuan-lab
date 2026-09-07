@@ -677,7 +677,7 @@ components:
     CapabilitiesResponse:
       type: object
       additionalProperties: false
-      required: [status, code_execution_enabled, tuoling_enabled, modules]
+      required: [status, code_execution_enabled, tuoling_enabled, model_route_ready, modules]
       properties:
         status:
           type: string
@@ -685,6 +685,8 @@ components:
         code_execution_enabled:
           type: boolean
         tuoling_enabled:
+          type: boolean
+        model_route_ready:
           type: boolean
         modules:
           type: array

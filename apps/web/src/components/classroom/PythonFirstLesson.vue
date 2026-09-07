@@ -168,6 +168,51 @@ function handleExitKeydown(event: KeyboardEvent): void {
 const isPaused = ref(false);
 const boardCodeExpanded = ref(false);
 const materialCodeExpanded = ref(false);
+// 黑板动作引擎：激光笔 / 高亮笔 / 分步演示。
+const boardLaserOn = ref(false);
+const boardHighlighterOn = ref(false);
+const boardStepping = ref(false);
+const boardStepKey = ref(0);
+const laserPos = ref<{ x: number; y: number } | null>(null);
+
+function toggleBoardLaser(): void {
+  boardLaserOn.value = !boardLaserOn.value;
+  if (!boardLaserOn.value) laserPos.value = null;
+}
+function toggleBoardHighlighter(): void {
+  boardHighlighterOn.value = !boardHighlighterOn.value;
+}
+function replayBoardSteps(): void {
+  boardStepping.value = !boardStepping.value;
+  if (boardStepping.value) boardStepKey.value += 1;
+}
+function onBoardPointerMove(event: PointerEvent): void {
+  if (!boardLaserOn.value) return;
+  const board = event.currentTarget as HTMLElement;
+  const rect = board.getBoundingClientRect();
+  laserPos.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+}
+function onBoardPointerLeave(): void {
+  laserPos.value = null;
+}
+function onBoardPointerDown(event: PointerEvent): void {
+  if (!boardLaserOn.value) return;
+  const board = event.currentTarget as HTMLElement;
+  const rect = board.getBoundingClientRect();
+  const mark = document.createElement("i");
+  mark.className = "laser-mark";
+  mark.style.left = `${event.clientX - rect.left - 5}px`;
+  mark.style.top = `${event.clientY - rect.top - 5}px`;
+  board.appendChild(mark);
+  window.setTimeout(() => mark.remove(), 1400);
+}
+function onBoardLineClick(event: MouseEvent): void {
+  if (!boardHighlighterOn.value || boardLaserOn.value) return;
+  const line = (event.target as HTMLElement).closest(
+    ".board-key-points li, .board-trace span, .board-mistakes span",
+  );
+  if (line instanceof HTMLElement) line.classList.toggle("board-highlighted");
+}
 const sessionBeatSnapshot = ref<ClassroomBeat[]>([]);
 const planBuildButton = ref<HTMLButtonElement | null>(null);
 const planProgressStep = ref(0);
@@ -1612,13 +1657,30 @@ onBeforeUnmount(() => {
           <div class="sun-window"><span></span><i></i></div>
           <div class="wall-note">慢慢来，每一次尝试都算数</div>
 
-          <section class="smart-board">
-            <header><span>{{ currentBeat.eyebrow }}</span><b>{{ currentBeat.board_title }}</b></header>
-            <p v-if="currentBeat.board_explanation" class="board-explanation">{{ currentBeat.board_explanation }}</p>
-            <section v-if="currentBoardPoints.length" class="board-key-points"><b>关键要点</b><ul><li v-for="point in currentBoardPoints" :key="point">{{ point }}</li></ul></section>
-            <section v-if="currentBeat.board_code" class="board-code-example" :class="{ expanded: boardCodeExpanded }"><b>示例代码</b><button class="code-expand" @click="boardCodeExpanded = !boardCodeExpanded">{{ boardCodeExpanded ? "收起" : "展开" }}</button><pre><code>{{ currentBeat.board_code }}</code></pre></section>
-            <div v-if="currentBeat.board_trace.length" class="board-trace"><b>逐步拆解</b><span v-for="step in currentBeat.board_trace" :key="step">{{ step }}</span></div>
-            <aside v-if="currentBoardMistakes.length" class="board-mistakes"><b>容易踩坑</b><span v-for="mistake in currentBoardMistakes" :key="mistake">{{ mistake }}</span></aside>
+          <section
+            class="smart-board"
+            :class="{ 'laser-on': boardLaserOn, 'highlighter-on': boardHighlighterOn, 'stepping': boardStepping }"
+            @pointermove="onBoardPointerMove"
+            @pointerleave="onBoardPointerLeave"
+            @pointerdown="onBoardPointerDown"
+            @click="onBoardLineClick"
+          >
+            <header>
+              <span>{{ currentBeat.eyebrow }}</span><b>{{ currentBeat.board_title }}</b>
+              <div class="board-tools" role="group" aria-label="黑板演示工具">
+                <button type="button" class="board-tool" :class="{ active: boardLaserOn }" :aria-pressed="boardLaserOn" title="激光笔：移动指示，点击留下光点" @click="toggleBoardLaser">⊙<span>激光笔</span></button>
+                <button type="button" class="board-tool" :class="{ active: boardHighlighterOn }" :aria-pressed="boardHighlighterOn" title="高亮笔：点击要点或步骤进行高亮" @click="toggleBoardHighlighter">✎<span>高亮笔</span></button>
+                <button type="button" class="board-tool" :class="{ active: boardStepping }" :aria-pressed="boardStepping" title="分步演示：逐条展示板书内容" @click="replayBoardSteps">▶<span>{{ boardStepping ? "结束分步" : "分步演示" }}</span></button>
+              </div>
+            </header>
+            <i v-if="laserPos" class="laser-dot" :style="{ left: `${laserPos.x}px`, top: `${laserPos.y}px` }" aria-hidden="true"></i>
+            <div class="board-draw" :key="boardStepping ? boardStepKey : 0">
+              <p v-if="currentBeat.board_explanation" class="board-explanation">{{ currentBeat.board_explanation }}</p>
+              <section v-if="currentBoardPoints.length" class="board-key-points"><b>关键要点</b><ul><li v-for="point in currentBoardPoints" :key="point">{{ point }}</li></ul></section>
+              <section v-if="currentBeat.board_code" class="board-code-example" :class="{ expanded: boardCodeExpanded }"><b>示例代码</b><button class="code-expand" @click="boardCodeExpanded = !boardCodeExpanded">{{ boardCodeExpanded ? "收起" : "展开" }}</button><pre><code>{{ currentBeat.board_code }}</code></pre></section>
+              <div v-if="currentBeat.board_trace.length" class="board-trace"><b>逐步拆解</b><span v-for="step in currentBeat.board_trace" :key="step">{{ step }}</span></div>
+              <aside v-if="currentBoardMistakes.length" class="board-mistakes"><b>容易踩坑</b><span v-for="mistake in currentBoardMistakes" :key="mistake">{{ mistake }}</span></aside>
+            </div>
           </section>
 
           <div class="teacher-zone">
@@ -1813,6 +1875,26 @@ html[data-device-resolved="mobile"] .classroom-layout { grid-template-columns: 1
 .self-profile-details { overflow: hidden; border: 1px solid #e9dfe0; border-radius: 11px; background: #fff; }.self-profile-details summary { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; color: #76696d; cursor: pointer; font-size: 12px; }.self-profile-details summary b { color: #a12338; }.self-profile-details[open] summary { border-bottom: 1px solid #eee4e5; background: #fff9f8; }.self-profile-details .self-profile-inline { border: 0; border-radius: 0; }
 .lesson-masthead aside button { grid-column: 1 / -1; justify-self: end; padding: 0; border: 0; color: #9e5763; background: transparent; font-size: 12px; text-decoration: underline; }.progress-explanation { position: relative; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 14px 42px 14px 14px; border: 1px solid #e6dadd; border-radius: 14px; background: #fff; box-shadow: 0 12px 35px #4c0f1b0a; }.progress-explanation article { padding: 12px; border-radius: 10px; background: #faf7f7; }.progress-explanation b { color: #8f1c31; font-size: 12px; }.progress-explanation p { margin: 6px 0; color: #665b5f; font-size: 12px; line-height: 1.65; }.progress-explanation small { color: #8c7f83; font-size: 12px; }.progress-explanation > button { position: absolute; top: 9px; right: 12px; border: 0; color: #9b8c90; background: transparent; font-size: 18px; }.profile-chip { border: 0; text-align: left; } button.profile-chip { cursor: pointer; }
 .smart-board .board-explanation { margin: 10px 0; color: #f1e9e0; font-size: 12px; line-height: 1.85; }.board-trace { display: grid; gap: 5px; margin-top: 11px; padding-top: 10px; border-top: 1px solid #ffffff24; }.board-trace b { color: #f6caa2; font-size: 12px; }.board-trace span { position: relative; padding-left: 14px; color: #dfd5cc; font: 12px/1.65 Consolas, monospace; }.board-trace span::before { content: "→"; position: absolute; left: 0; color: #ef9e74; }.board-mistakes { display: grid; gap: 5px; margin-top: 11px; padding: 10px 12px; border: 1px solid #f3b58745; border-radius: 8px; background: #552f213d; }.board-mistakes b { color: #ffd2ae; font-size: 12px; }.board-mistakes span { color: #f1d9cb; font-size: 12px; line-height: 1.55; }.board-mistakes span::before { content: "!"; display: inline-grid; width: 14px; height: 14px; margin-right: 7px; place-items: center; border-radius: 50%; color: #40251c; background: #f0bd82; font-weight: 900; }.board-code-example { position: relative; }.board-code-example .code-expand { position: absolute; top: -2px; right: 0; padding: 3px 10px; border: 1px solid #ffffff2e; border-radius: 999px; color: #e4c999; background: #ffffff10; font-size: 12px; cursor: pointer; }.board-code-example .code-expand:hover { background: #ffffff1c; }.board-code-example pre { max-height: 210px; overflow: auto; }.board-code-example.expanded pre { max-height: none; overflow: visible; white-space: pre-wrap; word-break: break-word; }
+/* 黑板动作引擎 */
+.smart-board header { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.smart-board .board-tools { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+.smart-board .board-tool { display: inline-flex; align-items: center; gap: 5px; min-height: 30px; padding: 4px 10px; border: 1px solid #ffffff2e; border-radius: 999px; color: #e4c999; background: #ffffff10; font-size: 12px; cursor: pointer; transition: background .2s ease, box-shadow .2s ease, border-color .2s ease; }
+.smart-board .board-tool:hover { background: #ffffff1e; }
+.smart-board .board-tool.active { color: #fff; border-color: var(--accent-bright); background: color-mix(in srgb, var(--accent-bright) 26%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--accent-bright) 40%, transparent); }
+.smart-board .laser-dot { position: absolute; z-index: 6; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: radial-gradient(circle, #fff 0%, var(--accent-bright) 45%, transparent 75%); box-shadow: 0 0 18px 7px color-mix(in srgb, var(--accent-bright) 55%, transparent); pointer-events: none; }
+.smart-board .laser-mark { position: absolute; z-index: 5; width: 10px; height: 10px; border-radius: 50%; background: radial-gradient(circle, #fff, var(--accent-bright) 60%, transparent); box-shadow: 0 0 12px 5px color-mix(in srgb, var(--accent-bright) 45%, transparent); pointer-events: none; animation: laser-mark-fade 1.4s ease-out forwards; }
+@keyframes laser-mark-fade { from { opacity: 1; transform: scale(1); } to { opacity: 0; transform: scale(1.9); } }
+.smart-board.laser-on { cursor: crosshair; }
+.smart-board.highlighter-on :is(.board-key-points li, .board-trace span, .board-mistakes span) { cursor: pointer; border-radius: 4px; transition: background .2s ease, box-shadow .2s ease; }
+.smart-board .board-highlighted { outline: 1px dashed color-mix(in srgb, var(--accent-bright) 70%, transparent); outline-offset: 2px; background: color-mix(in srgb, var(--accent-bright) 18%, transparent); box-shadow: 0 0 14px color-mix(in srgb, var(--accent-bright) 30%, transparent); }
+.smart-board.stepping .board-draw > * { animation: board-step-in .5s cubic-bezier(.2,.8,.25,1) both; }
+.smart-board.stepping .board-draw > :nth-child(1) { animation-delay: 0ms; }
+.smart-board.stepping .board-draw > :nth-child(2) { animation-delay: 280ms; }
+.smart-board.stepping .board-draw > :nth-child(3) { animation-delay: 560ms; }
+.smart-board.stepping .board-draw > :nth-child(4) { animation-delay: 840ms; }
+.smart-board.stepping .board-draw > :nth-child(5) { animation-delay: 1120ms; }
+@keyframes board-step-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+html[data-motion="reduced"] .smart-board :is(.laser-mark, .board-draw > *) { animation: none !important; }
 .scope-notice { display: flex; align-items: flex-start; gap: 7px; margin: 7px 0 9px; padding: 8px 10px; border: 1px solid #e8cf9c; border-radius: 9px; background: #fff9ec; color: #765c2b; font-size: 12px; line-height: 1.55; }.scope-notice > b { flex: 0 0 auto; color: #a06017; font-size: 12px; letter-spacing: .04em; }.scope-notice.compact { margin: 5px 0 7px; padding: 6px 8px; }
 @media (max-width: 760px) { .assessment-gate, .assessment-result-screen { min-height: 600px; padding: 24px 18px; }.assessment-welcome { grid-template-columns: 1fr; gap: 24px; }.assessment-gate > header, .assessment-result-screen > header, .generic-mode-banner { align-items: flex-start; flex-direction: column; }.result-summary, .assessment-result-screen > section:not(.planning-studio) > div { grid-template-columns: 1fr 1fr; }.assessment-navigation { flex-wrap: wrap; }.assessment-navigation > span { width: 100%; order: -1; } }
 @media (max-width: 760px) { .returning-planner-gate { padding: 24px 18px; }.returning-planner-gate > header, .planning-studio > header { align-items: flex-start; flex-direction: column; }.preference-grid, .self-profile-result, .progress-explanation, .plan-progress { grid-template-columns: 1fr; }.self-profile-card > footer, .self-profile-inline { align-items: stretch; grid-template-columns: 1fr; flex-direction: column; }.self-profile-inline > div { grid-column: auto; }.classroom-layout > .teacher-lecture-card { grid-template-columns: 1fr; }.teacher-portrait { justify-items: start; }.teacher-lecture-card footer { align-items: flex-start; flex-direction: column; } }

@@ -80,6 +80,12 @@ def get_rag_qa_service() -> RagQaService:
         CourseTutor(get_model_adapter()),
         QualitySupervisor(get_model_adapter()),
         top_k=settings.rag_top_k,
+        online_retriever=PythonOfficialDocsRetriever(
+            enabled=settings.python_online_search_enabled and settings.app_env != "test",
+            base_url=settings.python_docs_base_url,
+            timeout_seconds=settings.python_online_search_timeout_seconds,
+            max_pages=settings.python_online_search_max_pages,
+        ),
     )
 
 

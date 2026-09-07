@@ -25,6 +25,7 @@ class CapabilitiesResponse(BaseModel):
     status: Literal["mvp"]
     code_execution_enabled: bool
     tuoling_enabled: bool
+    model_route_ready: bool
     modules: list[
         Literal[
             "orchestration",

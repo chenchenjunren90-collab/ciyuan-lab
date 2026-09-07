@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # Optional site password for shared/demo deployments. Empty disables the
+    # gate. Every request except the health endpoints must send a matching
+    # ``X-Access-Code`` header.
+    access_code: SecretStr = SecretStr("")
 
     database_url: str = (
         "postgresql+psycopg://ciyuan:replace-before-use@127.0.0.1:5432/ciyuan?connect_timeout=3"
