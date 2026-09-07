@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from app.modules.course_content import CourseId, CoursePackRepository
 from app.modules.learner_profile.models import LearnerProfile
+from app.modules.orchestration.dialogue_context import build_dialogue_context
 from app.modules.orchestration.ports import PlannedActivity
 from app.modules.orchestration.python_tutor_prompts import (
     GROUNDING_SUFFIX,
@@ -772,10 +773,18 @@ class ClassroomDialogueService:
             )
 
         contextual = bool(request.recent_turns) and _is_context_dependent(request.message)
+        dialogue_context = build_dialogue_context(
+            message=request.message,
+            recent_turns=request.recent_turns,
+            current_role=request.role,
+            role_names={str(key): value for key, value in _ROLE_NAMES.items()},
+            lesson_topic=topic,
+            contextual=contextual,
+        )
         retrieval_query = (
-            _contextual_retrieval_query(
-                message=request.message, topic=topic, recent_turns=request.recent_turns,
-            ) if contextual else _direct_retrieval_query(request.message)
+            dialogue_context.retrieval_query
+            if contextual
+            else _direct_retrieval_query(request.message)
         )
         scope_match = _classify_lesson_scope(
             courses=self._courses,
@@ -829,10 +838,14 @@ class ClassroomDialogueService:
                 suggested_knowledge_point_ids=list(scope_match.knowledge_point_ids),
             )
 
-        model_question = _question_with_history(request.message, request.recent_turns)
+        evidence_question = retrieval_query if contextual else request.message
         public_example: str | None = None
         if contextual and any(
-            marker in request.recent_turns[-1].content
+            marker in content
+            for content in (
+                request.message,
+                *(turn.content for turn in request.recent_turns[-2:]),
+            )
             for marker in ("例子", "示例", "愿意", "运行", "试试")
         ):
             example_ids = scope_match.knowledge_point_ids or adaptive_ids
@@ -855,23 +868,44 @@ class ClassroomDialogueService:
             if retrieval_mode == "online"
             else ""
         )
+        example_instruction = (
+            "学生已接受上一轮的示例邀请。本轮必须直接展示并解释下面的课程公开示例，"
+            "代码必须放在 python Markdown 代码块中，不要再次询问是否愿意：\n"
+            f"```python\n{public_example}\n```"
+            if public_example
+            else ""
+        )
+        state_instruction = f"当前课堂状态：{phase_context}。"
         draft = await self._tutor.draft(
-            question=model_question,
+            question=request.message,
             evidence=hits,
             course_id="python",
+            conversation=dialogue_context.model_messages,
             system_prompt=build_python_tutor_system_prompt(
                 request.role,
-                context_instruction=scope_instruction + evidence_instruction,
+                context_instruction=(
+                    state_instruction
+                    + dialogue_context.instruction
+                    + scope_instruction
+                    + evidence_instruction
+                    + example_instruction
+                ),
             ),
         )
         fallback_used = False
         fallback_reason = ""
         if draft.degraded:
+            degradation_reason = draft.degradation_reason or ""
+            fallback_reason = {
+                "mock_provider": "当前环境未启用真实课程辅导模型",
+                "model_unavailable": "课程辅导模型请求失败",
+                "format_repair_unavailable": "模型格式修复请求失败",
+                "invalid_structured_output": "模型连续两次未返回合规 JSON",
+            }.get(degradation_reason, "课程辅导模型未返回可发布结果")
             draft = _persona_fallback(
-                request.role, model_question, hits, public_example=public_example,
+                request.role, evidence_question, hits, public_example=public_example,
             )
             fallback_used = True
-            fallback_reason = "课程辅导模型不可用或未返回合规结构"
         if fallback_used:
             decision = self._supervisor.inspect(draft=draft, evidence=hits)
         else:
@@ -879,7 +913,7 @@ class ClassroomDialogueService:
                 draft=draft,
                 evidence=hits,
                 learning_context=f"Python 沉浸课堂；阶段：{phase_context}；角色：{request.role}",
-                student_question=model_question,
+                student_question=dialogue_context.review_question,
                 role=request.role,
                 phase=request.phase,
             )
@@ -898,6 +932,8 @@ class ClassroomDialogueService:
             answer=reviewed_answer,
             has_history=bool(request.recent_turns),
         )
+        if public_example and "```python" not in reviewed_answer:
+            output_issue = "continuation_missing_public_example"
         if not decision.accepted or output_issue:
             rejection_reason = decision.reason_code if not decision.accepted else output_issue
             if fallback_used or rejection_reason in {
@@ -919,7 +955,7 @@ class ClassroomDialogueService:
             # evidence-extractive answer.  The replacement cannot reuse model
             # prose and must pass the deterministic release gate on its own.
             fallback = _persona_fallback(
-                request.role, model_question, hits, public_example=public_example,
+                request.role, evidence_question, hits, public_example=public_example,
             )
             deterministic = self._supervisor.inspect(draft=fallback, evidence=hits)
             deterministic_answer = (
@@ -1362,8 +1398,11 @@ def _is_context_dependent(message: str) -> bool:
         "那里",
         "它",
         "这一步",
+        "这段",
         "刚才",
         "上面",
+        "前面",
+        "上一个",
         "为什么不行",
         "换个例子",
         "再说一遍",
@@ -1371,19 +1410,6 @@ def _is_context_dependent(message: str) -> bool:
         "总结一下",
     )
     return len(normalized) <= 32 and any(marker in normalized for marker in markers)
-
-
-def _contextual_retrieval_query(
-    *,
-    message: str,
-    topic: str,
-    recent_turns: Sequence[ClassroomDialogueTurn],
-) -> str:
-    history = " ".join(turn.content for turn in recent_turns[-4:])
-    # History is the primary disambiguator.  Repeating the whole lesson topic
-    # here would once again drown a precise concept mentioned in recent turns.
-    _ = topic
-    return f"最近对话：{history}。学生追问：{message}"
 
 
 def _is_prompt_injection(message: str) -> bool:
@@ -1425,26 +1451,6 @@ def _is_explicit_python_question(message: str) -> bool:
         identifiers & _PYTHON_RELEVANCE_IDENTIFIERS
         or any(marker in normalized for marker in _PYTHON_WEB_MARKERS)
         or any(term in message for term in _PYTHON_RELEVANCE_TERMS)
-    )
-
-
-def _question_with_history(
-    message: str,
-    recent_turns: Sequence[ClassroomDialogueTurn],
-) -> str:
-    if not recent_turns:
-        return message
-    lines = [f"{turn.role}: {turn.content}" for turn in recent_turns[-8:]]
-    continuation = (
-        "这是对上一轮的确认或继续请求。请执行上一轮提出的下一步；"
-        "若上一轮邀请看例子，应直接给出例子和解释，不要再次询问是否愿意。\n"
-        if _is_context_dependent(message) else ""
-    )
-    return (
-        f"当前学生问题（必须优先直接回答）：{message}\n"
-        + continuation
-        + "以下最近对话只用于消解指代，不得编造缺失轮次：\n"
-        + "\n".join(lines)
     )
 
 

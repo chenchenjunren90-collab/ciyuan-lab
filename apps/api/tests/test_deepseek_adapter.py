@@ -25,7 +25,7 @@ def test_deepseek_adapter_uses_openai_compatible_contract() -> None:
         assert request.headers["Authorization"] == "Bearer test-deepseek-key"
         body = json.loads(request.read().decode())
         assert body == {
-            "model": "deepseek-chat",
+            "model": "deepseek-v4-flash",
             "messages": [{"role": "user", "content": "只回复ok"}],
             "stream": False,
         }
@@ -33,7 +33,7 @@ def test_deepseek_adapter_uses_openai_compatible_contract() -> None:
             200,
             json={
                 "choices": [{"message": {"role": "assistant", "content": "ok"}}],
-                "model": "deepseek-chat",
+                "model": "deepseek-v4-flash",
                 "usage": {"total_tokens": 3},
             },
         )
@@ -43,13 +43,42 @@ def test_deepseek_adapter_uses_openai_compatible_contract() -> None:
             adapter = DeepSeekAdapter(
                 base_url="https://api.deepseek.com",
                 api_key="test-deepseek-key",
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 client=client,
             )
             response = await adapter.complete([ChatMessage(role="user", content="只回复ok")])
             return response.provider, response.content
 
     assert asyncio.run(scenario()) == ("deepseek", "ok")
+
+
+def test_deepseek_structured_prompts_enable_native_json_mode() -> None:
+    def handler(request: httpx.Request) -> httpx.Response:
+        body = json.loads(request.read().decode())
+        assert body["response_format"] == {"type": "json_object"}
+        assert body["max_tokens"] == 2048
+        return httpx.Response(
+            200,
+            json={
+                "choices": [{"message": {"content": '{"answer":"ok"}'}}],
+                "model": "deepseek-v4-flash",
+            },
+        )
+
+    async def scenario() -> str:
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+            adapter = DeepSeekAdapter(
+                base_url="https://api.deepseek.com",
+                api_key="test-deepseek-key",
+                model="deepseek-v4-flash",
+                client=client,
+            )
+            response = await adapter.complete(
+                [ChatMessage(role="system", content="只输出 JSON 对象")]
+            )
+            return response.content
+
+    assert asyncio.run(scenario()) == '{"answer":"ok"}'
 
 
 def test_factory_routes_to_deepseek_when_provider_is_selected() -> None:
@@ -97,7 +126,7 @@ def test_deepseek_http_errors_keep_provider_identity_and_hide_body() -> None:
             adapter = DeepSeekAdapter(
                 base_url="https://api.deepseek.com",
                 api_key="test-deepseek-key",
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 client=client,
             )
             await adapter.complete([ChatMessage(role="user", content="只回复ok")])
@@ -120,7 +149,7 @@ def test_deepseek_rate_limit_is_not_retried() -> None:
             adapter = DeepSeekAdapter(
                 base_url="https://api.deepseek.com",
                 api_key="test-deepseek-key",
-                model="deepseek-chat",
+                model="deepseek-v4-flash",
                 max_retries=2,
                 client=client,
             )

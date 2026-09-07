@@ -378,6 +378,63 @@ def test_classroom_replaces_unreviewed_prose_with_cited_conservative_answer() ->
     assert "模型语义审核与确定性" not in result.trace[-1].detail
 
 
+def test_classroom_continuation_requires_promised_public_example() -> None:
+    hit = SearchHit(
+        "SRC-PY-BASE-01",
+        "chunk-base-01",
+        "Python 源文件通常使用 .py 扩展名，由解释器执行；print() 输出内容。",
+        0.9,
+        {},
+    )
+
+    class Retriever:
+        async def search(self, *args: object) -> tuple[SearchHit, ...]:
+            return (hit,)
+
+    class Tutor:
+        def __init__(self) -> None:
+            self.system_prompt = ""
+
+        async def draft(self, **kwargs: object) -> TutorDraft:
+            self.system_prompt = cast(str, kwargs["system_prompt"])
+            return TutorDraft("我们继续看这个概念。", (hit.chunk_id,), False)
+
+    tutor = Tutor()
+    service = ClassroomDialogueService(
+        courses=CoursePackRepository(),
+        retriever=Retriever(),
+        tutor=cast(Any, tutor),
+        supervisor=QualitySupervisor(),
+    )
+    result = asyncio.run(
+        service.answer(
+            ClassroomDialogueRequest(
+                student_id="context-example",
+                lesson_id="python-adaptive--PY-BASE-01",
+                phase="concept",
+                role="teacher",
+                message="愿意，请接着给刚才的例子",
+                recent_turns=[
+                    ClassroomDialogueTurn(
+                        role="student",
+                        content="Python 解释器如何运行 print 程序？",
+                    ),
+                    ClassroomDialogueTurn(
+                        role="teacher",
+                        content="你愿意接着看一个公开例子吗？",
+                    ),
+                ],
+            )
+        )
+    )
+
+    assert "```python" in tutor.system_prompt
+    assert "```python" in result.answer
+    assert result.status == "answered"
+    assert result.trace[1].status == "degraded"
+    assert "continuation_missing_public_example" in result.trace[1].detail
+
+
 @pytest.mark.parametrize("status", ["completed", "degraded"])
 def test_classroom_records_maas_rerank_outcome(status: str) -> None:
     class Retriever:

@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
+from typing import Any
+
 import httpx
 
+from app.modules.model_adapters.ports import ChatMessage
 from app.modules.model_adapters.xfyun import XfyunSparkAdapter
 
 
@@ -13,8 +17,8 @@ class DeepSeekAdapter(XfyunSparkAdapter):
     The official DeepSeek API speaks the same bearer-token, chat-completions
     contract. The shared transport keeps bounded retries, timeouts and safe
     error mapping while preserving the DeepSeek identity in responses and
-    diagnostics. ``deepseek-chat`` is used for grounded, structured-answer
-    generation; reasoning-mode models are not needed by the tutor/supervisor.
+    diagnostics. Structured classroom prompts enable the provider's native
+    JSON-output mode, reducing format-repair calls and evidence fallbacks.
     """
 
     _provider_name = "deepseek"
@@ -39,3 +43,10 @@ class DeepSeekAdapter(XfyunSparkAdapter):
             max_retries=max_retries,
             client=client,
         )
+
+    def _build_payload(self, messages: Sequence[ChatMessage]) -> dict[str, Any]:
+        payload = super()._build_payload(messages)
+        if any("json" in message.content.casefold() for message in messages):
+            payload["response_format"] = {"type": "json_object"}
+            payload["max_tokens"] = 2048
+        return payload

@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     model_provider: Literal["xfyun_maas", "deepseek", "xfyun_spark"] = "xfyun_maas"
     deepseek_base_url: str = "https://api.deepseek.com"
     deepseek_api_key: SecretStr = SecretStr("")
-    deepseek_model: str = "deepseek-chat"
+    deepseek_model: str = "deepseek-v4-flash"
     deepseek_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
     deepseek_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_reranker_enabled: bool = False

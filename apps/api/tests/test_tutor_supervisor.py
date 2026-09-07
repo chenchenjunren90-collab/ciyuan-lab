@@ -85,6 +85,39 @@ def test_tutor_accepts_only_structured_model_output(
     assert QualitySupervisor().inspect(draft=draft, evidence=evidence).accepted is True
 
 
+def test_tutor_sends_role_aware_history_before_current_grounded_question(
+    evidence: tuple[SearchHit, ...],
+) -> None:
+    adapter = FixedAdapter(
+        '{"answer":"继续解释当前问题。",'
+        '"citation_chunk_ids":["SRC-PY-GUIDE-DATA-001-deadbeef00"]}'
+    )
+    tutor = CourseTutor(adapter)
+
+    asyncio.run(
+        tutor.draft(
+            question="那它为什么这样？",
+            evidence=evidence,
+            conversation=(
+                ChatMessage(role="user", content="请解释缺失值"),
+                ChatMessage(role="assistant", content="先确认字段约定。"),
+                ChatMessage(role="user", content="[阿拓（课堂同伴）]: 我建议做最小实验。"),
+            ),
+        )
+    )
+
+    assert [item.role for item in adapter.last_messages] == [
+        "system",
+        "user",
+        "assistant",
+        "user",
+        "user",
+    ]
+    assert adapter.last_messages[1].content == "请解释缺失值"
+    current_payload = json.loads(adapter.last_messages[-1].content)
+    assert current_payload["question"] == "那它为什么这样？"
+
+
 def test_tutor_uses_one_model_adapter_for_every_course(
     evidence: tuple[SearchHit, ...],
 ) -> None:

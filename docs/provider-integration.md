@@ -1,6 +1,6 @@
 # 通用模型与检索服务接入
 
-更新日期：2026-09-06。当前路线是统一托管推理（MaaS 或 DeepSeek 官方 API，由 `MODEL_PROVIDER` 选择）、学科知识库、检索增强、三个逻辑智能体及确定性代码验证。
+更新日期：2026-09-07。当前路线是统一托管推理（MaaS 或 DeepSeek 官方 API，由 `MODEL_PROVIDER` 选择）、学科知识库、检索增强、三个逻辑智能体及确定性代码验证。
 
 ## 统一推理
 
@@ -31,13 +31,35 @@ XFYUN_MAAS_MAX_RETRIES=2
 ```text
 MODEL_PROVIDER=deepseek
 DEEPSEEK_BASE_URL=https://api.deepseek.com
-DEEPSEEK_MODEL=deepseek-chat
+DEEPSEEK_MODEL=deepseek-v4-flash
 DEEPSEEK_TIMEOUT_SECONDS=45
 DEEPSEEK_MAX_RETRIES=2
 ```
 
 `DEEPSEEK_API_KEY` 由部署者保管，不写入文档、测试、截图或 Git。
 切换路由不改变下游契约：辅导答案仍必须通过引用白名单与质量监督门禁。
+需要严格 JSON 的规划、辅导和监督请求会启用 DeepSeek 原生 `json_object` 响应格式，
+降低模型输出说明文字或代码围栏后触发二次格式修复的概率。
+
+协议依据：[DeepSeek Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、
+[JSON Output](https://api-docs.deepseek.com/guides/json_mode/)。
+
+## OpenMAIC 对话编排适配
+
+课堂上下文参考 OpenMAIC（MIT）的消息转换、对话摘要、同伴上下文和场景状态设计，
+在 `orchestration/dialogue_context.py` 中按本项目证据边界重新实现：
+
+- 浏览器继续传递最多 8 条最近消息，后端保持无会话粘性的请求处理方式；
+- 学生发言保留为 `user`，当前被询问角色过去的发言保留为 `assistant`；
+- 其他课堂角色以带显示名的 `user` 侧上下文传入，防止同伴发言冒充当前角色；
+- RAG 查询只取最近有效的学生主题和当前追问，不再混入所有角色的整段回答；
+- 当前课堂阶段进入受信任提示，同伴已经说过的内容用于去重，不能直接当作事实；
+- 空回复、纯省略号和超出窗口的旧消息不会进入模型上下文。
+
+OpenMAIC 来源：[message-converter](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/message-converter.ts)、
+[conversation-summary](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/conversation-summary.ts)、
+[peer-context](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/peer-context.ts)、
+[state-context](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/state-context.ts)。
 
 ## MaaS 文档重排
 

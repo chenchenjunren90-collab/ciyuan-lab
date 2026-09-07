@@ -17,6 +17,7 @@ class TutorDraft:
     answer: str
     citation_chunk_ids: tuple[str, ...]
     degraded: bool
+    degradation_reason: str | None = None
 
 
 class CourseTutor:
@@ -32,20 +33,27 @@ class CourseTutor:
         evidence: Sequence[SearchHit],
         system_prompt: str | None = None,
         course_id: str | None = None,
+        conversation: Sequence[ChatMessage] = (),
     ) -> TutorDraft:
         if not evidence:
-            return TutorDraft(answer="", citation_chunk_ids=(), degraded=True)
+            return TutorDraft(
+                answer="",
+                citation_chunk_ids=(),
+                degraded=True,
+                degradation_reason="no_evidence",
+            )
         messages = self._messages(
             question=question,
             evidence=evidence,
             system_prompt=system_prompt,
+            conversation=conversation,
         )
         try:
             response = await self._model_adapter.complete(messages)
         except ModelError:
-            return self._fallback(evidence)
+            return self._fallback(evidence, reason="model_unavailable")
         if response.provider == "mock":
-            return self._fallback(evidence)
+            return self._fallback(evidence, reason="mock_provider")
         parsed = self._parse(
             response.content,
             allowed_chunk_ids={hit.chunk_id for hit in evidence},
@@ -74,14 +82,17 @@ class CourseTutor:
         try:
             repaired_response = await self._model_adapter.complete(repair_messages)
         except ModelError:
-            return self._fallback(evidence)
+            return self._fallback(evidence, reason="format_repair_unavailable")
         if repaired_response.provider == "mock":
-            return self._fallback(evidence)
+            return self._fallback(evidence, reason="mock_provider")
         repaired = self._parse(
             repaired_response.content,
             allowed_chunk_ids={hit.chunk_id for hit in evidence},
         )
-        return repaired if repaired is not None else self._fallback(evidence)
+        return repaired if repaired is not None else self._fallback(
+            evidence,
+            reason="invalid_structured_output",
+        )
 
     @staticmethod
     def _messages(
@@ -89,6 +100,7 @@ class CourseTutor:
         question: str,
         evidence: Sequence[SearchHit],
         system_prompt: str | None = None,
+        conversation: Sequence[ChatMessage] = (),
     ) -> tuple[ChatMessage, ...]:
         system = system_prompt or (
             "你是计算机课程辅导智能体。只使用给出的已审核证据回答；"
@@ -105,7 +117,16 @@ class CourseTutor:
             for hit in evidence
         ]
         user = json.dumps({"question": question, "evidence": evidence_payload}, ensure_ascii=False)
-        return (ChatMessage(role="system", content=system), ChatMessage(role="user", content=user))
+        bounded_conversation = tuple(
+            ChatMessage(role=message.role, content=message.content.strip()[:1000])
+            for message in conversation[-8:]
+            if message.role != "system" and message.content.strip()
+        )
+        return (
+            ChatMessage(role="system", content=system),
+            *bounded_conversation,
+            ChatMessage(role="user", content=user),
+        )
 
     @staticmethod
     def _parse(
@@ -141,11 +162,16 @@ class CourseTutor:
         )
 
     @staticmethod
-    def _fallback(evidence: Sequence[SearchHit]) -> TutorDraft:
+    def _fallback(
+        evidence: Sequence[SearchHit],
+        *,
+        reason: str = "model_unavailable",
+    ) -> TutorDraft:
         selected = tuple(evidence[:2])
         body = "\n".join(f"{index}. {hit.content}" for index, hit in enumerate(selected, start=1))
         return TutorDraft(
             answer=f"根据已审核课程资料，可先从以下要点理解：\n{body}",
             citation_chunk_ids=tuple(hit.chunk_id for hit in selected),
             degraded=True,
+            degradation_reason=reason,
         )
