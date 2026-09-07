@@ -860,6 +860,115 @@ button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-
   from { opacity: 0; transform: translateY(14px) scale(.97); }
   to { opacity: 1; transform: none; }
 }
+
+/* ============ 动效层 ============ */
+
+/* 极光背景：两团主色光斑缓慢漂移 */
+.aurora { position: fixed; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+.aurora::before, .aurora::after {
+  content: ""; position: absolute; width: 48vw; height: 48vw; border-radius: 50%;
+  filter: blur(90px); opacity: .55;
+}
+.aurora::before {
+  top: -14vw; left: -12vw;
+  background: color-mix(in srgb, var(--accent) 24%, transparent);
+  animation: aurora-drift-a 26s ease-in-out infinite alternate;
+}
+.aurora::after {
+  bottom: -16vw; right: -10vw;
+  background: color-mix(in srgb, var(--accent-dark) 20%, transparent);
+  animation: aurora-drift-b 32s ease-in-out infinite alternate;
+}
+@keyframes aurora-drift-a { from { transform: translate(0,0) scale(1); } to { transform: translate(10vw,7vh) scale(1.18); } }
+@keyframes aurora-drift-b { from { transform: translate(0,0) scale(1.12); } to { transform: translate(-9vw,-6vh) scale(.92); } }
+
+/* v-reveal：容器进入视口后，子元素依次浮现 */
+.reveal > * { opacity: 0; transform: translateY(16px); }
+.reveal.reveal-ready > * { animation: reveal-rise .55s cubic-bezier(.2,.75,.25,1) both; }
+.reveal.reveal-ready > :nth-child(1) { animation-delay: 0ms; }
+.reveal.reveal-ready > :nth-child(2) { animation-delay: 70ms; }
+.reveal.reveal-ready > :nth-child(3) { animation-delay: 140ms; }
+.reveal.reveal-ready > :nth-child(4) { animation-delay: 210ms; }
+.reveal.reveal-ready > :nth-child(5) { animation-delay: 280ms; }
+.reveal.reveal-ready > :nth-child(6) { animation-delay: 350ms; }
+.reveal.reveal-ready > :nth-child(7) { animation-delay: 420ms; }
+.reveal.reveal-ready > :nth-child(8) { animation-delay: 490ms; }
+@keyframes reveal-rise { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+
+/* data-spotlight：鼠标跟随高光 */
+[data-spotlight] { position: relative; overflow: hidden; }
+[data-spotlight]::before {
+  content: ""; position: absolute; inset: 0; z-index: 0; pointer-events: none;
+  opacity: 0; transition: opacity .3s ease;
+  background: radial-gradient(260px circle at var(--mx, 50%) var(--my, 50%),
+    color-mix(in srgb, var(--accent) 13%, transparent), transparent 66%);
+}
+[data-spotlight]:hover::before { opacity: 1; }
+[data-spotlight] > * { position: relative; z-index: 1; }
+
+/* v-ripple：按压水波 */
+.ripple-host { position: relative; overflow: hidden; }
+.ripple-wave {
+  position: absolute; border-radius: 50%; pointer-events: none;
+  background: color-mix(in srgb, var(--accent-contrast) 42%, transparent);
+  transform: scale(0); animation: ripple-grow .6s ease-out forwards;
+}
+@keyframes ripple-grow { to { transform: scale(1); opacity: 0; } }
+
+/* 主按钮：扫光 + 悬停上浮 */
+.primary { position: relative; overflow: hidden; transition: transform .18s ease, box-shadow .25s ease; }
+.primary::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; left: -80%; width: 45%;
+  transform: skewX(-20deg);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.38), transparent);
+  transition: left .55s ease;
+}
+.primary:hover::after { left: 135%; }
+.primary:hover { transform: translateY(-1.5px); box-shadow: 0 12px 26px color-mix(in srgb, var(--accent) 38%, transparent); }
+.primary:active { transform: translateY(0) scale(.985); }
+
+/* 进度条流光 */
+:is(.sidebar-progress > i span, .assessment-progress > i span, .knowledge-chapter > header aside i b) {
+  position: relative; overflow: hidden;
+}
+:is(.sidebar-progress > i span, .assessment-progress > i span, .knowledge-chapter > header aside i b)::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.45), transparent);
+  animation: progress-shimmer 2.4s linear infinite;
+}
+@keyframes progress-shimmer { from { transform: translateX(-100%); } to { transform: translateX(100%); } }
+
+/* 加载指示：光环轨道 */
+.loading i {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 2px solid var(--line); border-top-color: var(--accent);
+  animation: loading-orbit .9s linear infinite;
+  box-shadow: 0 0 22px color-mix(in srgb, var(--accent) 30%, transparent),
+    inset 0 0 12px color-mix(in srgb, var(--accent) 16%, transparent);
+}
+@keyframes loading-orbit { to { transform: rotate(360deg); } }
+
+/* 聊天消息入场 */
+.chat article { animation: chat-enter .38s cubic-bezier(.2,.8,.25,1) both; }
+@keyframes chat-enter { from { opacity: 0; transform: translateY(10px) scale(.985); } to { opacity: 1; transform: none; } }
+
+/* 卡片悬停轻浮 */
+.metrics article, .knowledge-grid article, .project-shelf article, .next-card, .continue-card {
+  transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease;
+}
+.metrics article:hover, .knowledge-grid article:hover, .project-shelf article:hover, .next-card:hover, .continue-card:hover {
+  transform: translateY(-3px);
+}
+
+/* 减少动效：全部降级为瞬时 */
+html[data-motion="reduced"] :is(.aurora::before, .aurora::after, .primary::after,
+  .sidebar-progress > i span::after, .assessment-progress > i span::after,
+  .knowledge-chapter > header aside i b::after, .chat article) { animation: none !important; }
+html[data-motion="reduced"] .reveal > * { opacity: 1; transform: none; }
+html[data-motion="reduced"] :is(.metrics article, .knowledge-grid article, .project-shelf article,
+  .next-card, .continue-card, .primary) { transition: none; }
+html[data-motion="reduced"] :is(.metrics article:hover, .knowledge-grid article:hover,
+  .project-shelf article:hover, .next-card:hover, .continue-card:hover) { transform: none; }
 @media (max-width: 760px) {
   html button { min-height: 44px; }
   html[data-theme] .immersive-lesson button { min-height: 44px; }

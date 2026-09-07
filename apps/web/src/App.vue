@@ -16,6 +16,8 @@ import ThemeToggle from "./components/ThemeToggle.vue";
 import PythonFirstLesson from "./components/classroom/PythonFirstLesson.vue";
 import SettingsPanel from "./components/SettingsPanel.vue";
 import WelcomeExperience from "./components/WelcomeExperience.vue";
+import CountUp from "./components/CountUp.vue";
+import { useSpotlight } from "./composables/useSpotlight";
 import {
   DEFAULT_UI_PREFERENCES,
   DISPLAY_NAME_KEY,
@@ -994,6 +996,7 @@ onMounted(async () => {
   systemThemeQuery.addEventListener("change", syncSystemTheme);
   window.addEventListener("resize", syncViewport);
   window.addEventListener(ACCESS_CODE_REQUIRED_EVENT, onAccessCodeRequired);
+  useSpotlight();
   await loadCourse(courseId.value);
 });
 
@@ -1019,6 +1022,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
+  <div class="aurora" aria-hidden="true"></div>
   <div v-if="accessGateOpen" class="access-gate" role="dialog" aria-modal="true" aria-label="访问口令">
     <form class="access-gate-card" @submit.prevent="confirmAccessCode">
       <div class="access-gate-mark" aria-hidden="true">&lt;/&gt;</div>
@@ -1094,22 +1098,22 @@ onBeforeUnmount(() => {
       <div v-if="loading && !(tab === 'classroom' && activeClassroom)" class="loading" role="status" aria-live="polite"><i></i>正在同步课程与学情数据…</div>
 
       <template v-else-if="tab === 'overview'">
-        <section class="hero-card">
+        <section class="hero-card" data-spotlight v-reveal>
           <div><h2>理解知识。编写代码。验证能力。</h2><p>课堂助教结合学情安排节奏，质量监督在后台检查依据、安全与事实。</p>
-            <button v-if="next" @click="openNextActivity">继续下一项学习</button>
-            <button v-else @click="startBaseline">建立能力基线</button>
+            <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
+            <button v-else v-ripple @click="startBaseline">建立能力基线</button>
           </div>
-          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : `${averageMastery}%` }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
+          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
-        <section v-if="courseId === 'python'" class="classroom-invitation">
+        <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
           <div><h3>不是再开一个聊天框，来真正上一节课。</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
-          <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button @click="openClassroom">进入温暖的 Python 教室 <b>→</b></button></aside>
+          <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button v-ripple @click="openClassroom">进入温暖的 Python 教室 <b>→</b></button></aside>
         </section>
-        <section class="metrics">
-          <article><span>课程知识点</span><strong>{{ courseLoadError ? "—" : knowledge.length }}</strong><small>{{ courseLoadError ? "课程索引未载入" : "统一课程包" }}</small></article>
-          <article><span>已有证据</span><strong>{{ (courseLoadError || learningLoadError) ? "—" : measuredMastery(profile).length }}</strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
-          <article><span>达到掌握</span><strong>{{ (courseLoadError || learningLoadError) ? "—" : masteredCount }}</strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
-          <article><span>实践活动</span><strong>{{ courseLoadError ? "—" : activities.length }}</strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
+        <section class="metrics" v-reveal>
+          <article data-spotlight><span>课程知识点</span><strong><CountUp :value="courseLoadError ? '—' : knowledge.length" /></strong><small>{{ courseLoadError ? "课程索引未载入" : "统一课程包" }}</small></article>
+          <article data-spotlight><span>已有证据</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : measuredMastery(profile).length" /></strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
+          <article data-spotlight><span>达到掌握</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : masteredCount" /></strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
+          <article data-spotlight><span>实践活动</span><strong><CountUp :value="courseLoadError ? '—' : activities.length" /></strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
         </section>
         <section v-if="diagnostic" ref="diagnosticSection" class="panel assessment baseline-target">
           <header><div><h2>{{ diagnostic.title }}</h2></div><p>{{ diagnostic.instructions }}</p></header>
@@ -1122,7 +1126,7 @@ onBeforeUnmount(() => {
           <footer class="diagnostic-actions"><span>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已作答</span><button class="primary" :disabled="!diagnosticComplete || diagnosticSubmitting || diagnosticLoading || Boolean(diagnosticResult)" @click="submitDiagnostic">{{ diagnosticResult ? "本轮已提交" : diagnosticSubmitting ? "正在生成个性化路径…" : diagnostic.phase === "initial" ? "提交诊断并生成路径" : "提交重测并更新画像" }}</button></footer>
           <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据；{{ diagnosticResult.unknown_count ? `“我不知道” ${diagnosticResult.unknown_count} 题已安排回补。` : "画像和后续路径已经刷新。" }}</span><button :disabled="diagnosticLoading" @click="loadDiagnostic('reassessment')">{{ diagnosticLoading ? "正在载入…" : "准备阶段重测" }}</button></div>
         </section>
-        <section ref="knowledgeMapSection" class="panel knowledge-map-target">
+        <section ref="knowledgeMapSection" class="panel knowledge-map-target" v-reveal>
           <header><div><span class="eyebrow">COURSE LEARNING ROADMAP</span><h2>{{ selectedCourse?.title ?? "课程" }} · 知识路线</h2></div><p>先看全局，再按前置关系逐步推进；每个节点都连接讲解、练习与学习证据。</p></header>
           <div class="knowledge-map-summary">
             <article><strong>{{ courseLoadError ? "—" : knowledgeChapterCount }}</strong><span>学习阶段</span></article>
@@ -1142,7 +1146,7 @@ onBeforeUnmount(() => {
                 <aside><strong>{{ chapter.mastered }}/{{ chapter.total }}</strong><span>核心节点已掌握</span><i><b :style="{ width: `${chapter.total ? chapter.mastered / chapter.total * 100 : 0}%` }"></b></i></aside>
               </header>
               <div class="knowledge-lane">
-                <article v-for="item in chapter.items" :key="item.id" :class="[`state-${knowledgeState(item)}`, { selected: selectedKnowledge?.id === item.id }]">
+                <article v-for="item in chapter.items" :key="item.id" :class="[`state-${knowledgeState(item)}`, { selected: selectedKnowledge?.id === item.id }]" data-spotlight>
                   <button type="button" :aria-label="`${item.title}，${knowledgeStateLabel(item)}`" :aria-busy="selectedKnowledgeLoading && pendingKnowledgeId === item.id" @click="openKnowledgePoint(item.id)">
                     <header><span>{{ knowledgeStateLabel(item) }}</span><small>{{ item.id }} · {{ difficulty(item.difficulty) }}</small></header>
                     <h4>{{ item.title }}</h4>
@@ -1169,18 +1173,18 @@ onBeforeUnmount(() => {
 
       <template v-else-if="tab === 'path'">
         <section v-if="hasLearningEvidence(profile)" class="split-layout">
-          <div class="panel path-panel"><header><div><h2>个性化学习路径</h2></div><p>由掌握度和前置关系驱动，不由模型自由编造。</p></header>
+          <div class="panel path-panel" v-reveal><header><div><h2>个性化学习路径</h2></div><p>由掌握度和前置关系驱动，不由模型自由编造。</p></header>
             <div v-if="stages.length" class="stage-list"><article v-for="(stage, index) in stages" :key="stage.stage"><em>{{ index + 1 }}</em><div><small>{{ stage.stage }}</small><h3>{{ stage.objective }}</h3><p>{{ stage.reason }}</p><b v-for="id in stage.knowledge_point_ids" :key="id">{{ id }}</b></div></article></div>
             <div v-else class="empty">当前路径来自实时下一任务推荐；重新建立能力基线可生成三阶段计划。</div>
           </div>
-          <aside class="next-card"><span>{{ activityType(next?.activity_type ?? "concept") }}</span><h2>{{ next?.activity_id ?? "等待规划" }}</h2><p>{{ next?.reason }}</p><button v-if="next" @click="openNextActivity">进入学习活动</button></aside>
+          <aside class="next-card" data-spotlight><span>{{ activityType(next?.activity_type ?? "concept") }}</span><h2>{{ next?.activity_id ?? "等待规划" }}</h2><p>{{ next?.reason }}</p><button v-if="next" v-ripple @click="openNextActivity">进入学习活动</button></aside>
         </section>
         <section v-else class="panel empty">请先在课程概览完成快速能力基线。</section>
       </template>
 
       <template v-else-if="tab === 'tutor'">
         <section class="tutor-layout">
-          <div class="panel tutor"><header><div><h2>有依据的课程辅导</h2></div><p>回答必须来自已审核课程资料；依据不足时明确拒答。</p></header>
+          <div class="panel tutor" v-reveal><header><div><h2>有依据的课程辅导</h2></div><p>回答必须来自已审核课程资料；依据不足时明确拒答。</p></header>
             <div class="chat"><article><b>课程辅导智能体</b><p>可以询问当前课程的概念、边界、调试思路或算法前提。</p></article><article v-if="qa" :data-status="qa.status"><b>{{ qaFeedbackLabel(qa) }}</b><SafeMarkdown :source="qa.answer || '当前资料不足以支持这个问题，我不会编造答案。'" /><div><span v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_title || citation.source_id }} · 检索相关度 {{ Math.round(citation.score * 100) }}%</span></div><ol class="trace"><li v-for="step in qa.trace" :key="`${step.component}-${step.status}`" :data-status="step.status"><b>{{ step.component }}</b><span>{{ step.detail }}</span></li></ol></article></div>
             <div class="composer"><textarea v-model="question" rows="3" maxlength="1000" aria-label="向课程辅导提问"></textarea><button class="primary" :disabled="qaLoading" @click="ask">{{ qaLoading ? "检索中…" : "发送问题" }}</button></div>
           </div>
@@ -1198,15 +1202,15 @@ onBeforeUnmount(() => {
           <span>COURSE SERVICE OFFLINE</span><h2>项目目录暂未载入</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
         </section>
 
-        <section v-if="!courseLoadError" class="project-shelf">
+        <section v-if="!courseLoadError" class="project-shelf" v-reveal>
           <header><div><span>01</span><h3>阶段项目</h3><p>在关键阶段结束后进行一次稳定、可重复的综合验证。</p></div></header>
-          <div><article v-for="item in stageProjects" :key="item.id" :data-ready="projectReadiness(item).ready"><header><span>{{ projectReadiness(item).ready ? '已解锁' : '可预览' }}</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">{{ projectReadiness(item).ready ? '开始项目' : '查看要求' }} →</button></footer></article></div>
+          <div><article v-for="item in stageProjects" :key="item.id" :data-ready="projectReadiness(item).ready" data-spotlight><header><span>{{ projectReadiness(item).ready ? '已解锁' : '可预览' }}</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">{{ projectReadiness(item).ready ? '开始项目' : '查看要求' }} →</button></footer></article></div>
           <p v-if="!stageProjects.length" class="empty compact">本课程暂无阶段项目，可继续下方综合项目。</p>
         </section>
 
         <section v-if="!courseLoadError" class="project-shelf comprehensive">
           <header><div><span>02</span><h3>综合项目</h3><p>财经内容只提供应用语境，评分聚焦当前课程的程序设计、算法、测试与可追溯性。</p></div></header>
-          <div><article v-for="item in comprehensiveProjects" :key="item.id" :data-ready="projectReadiness(item).ready"><header><span>脱敏合成场景</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">查看项目 →</button></footer></article></div>
+          <div><article v-for="item in comprehensiveProjects" :key="item.id" :data-ready="projectReadiness(item).ready" data-spotlight><header><span>脱敏合成场景</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><p>{{ item.concept_ids.join(' · ') }}</p><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">查看项目 →</button></footer></article></div>
         </section>
 
         <section v-if="!courseLoadError" class="project-shelf mine">
@@ -1231,7 +1235,7 @@ onBeforeUnmount(() => {
         <section v-if="courseLoadError" class="panel service-state" role="alert">
           <span>PRACTICE SERVICE OFFLINE</span><h2>练习目录暂未载入</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
         </section>
-        <section v-if="!courseLoadError && courseId === 'python'" class="panel adaptive-lab">
+        <section v-if="!courseLoadError && courseId === 'python'" class="panel adaptive-lab" v-reveal>
           <header><div><h2>个性化 Python 编程挑战</h2></div><p>根据真实测评与代码证据选择薄弱点；题目变式由规则生成，答案由隐藏测试判定。</p></header>
           <div v-if="!hasLearningEvidence(profile)" class="adaptive-empty"><strong>先完成能力诊断</strong><span>建立初始画像后，系统才能选择你的薄弱知识点。</span><button class="primary" @click="tab = 'overview'">前往诊断</button></div>
           <div v-else-if="!adaptiveProblem" class="adaptive-empty"><strong>准备生成第一道个性化题目</strong><span>系统优先选择掌握度最低且已有可靠题型的知识点。</span><button class="primary" :disabled="adaptiveLoading" @click="generateAdaptiveProblem()">{{ adaptiveLoading ? "生成中…" : "生成我的新题" }}</button></div>
@@ -1245,11 +1249,11 @@ onBeforeUnmount(() => {
           </template>
         </section>
         <section v-if="!courseLoadError" class="practice-compass panel">
-          <div v-if="lastActivity" class="continue-card"><span>继续上次</span><div><b>{{ lastActivity.title }}</b><small>{{ lastActivity.estimated_minutes }} 分钟 · {{ activityType(lastActivity.type) }}</small></div><button class="primary" @click="openActivity(lastActivity.id)">继续作答 <b>→</b></button></div>
+          <div v-if="lastActivity" class="continue-card" data-spotlight><span>继续上次</span><div><b>{{ lastActivity.title }}</b><small>{{ lastActivity.estimated_minutes }} 分钟 · {{ activityType(lastActivity.type) }}</small></div><button class="primary" v-ripple @click="openActivity(lastActivity.id)">继续作答 <b>→</b></button></div>
           <div class="recommend-strip"><header><span>按当前画像推荐</span><small>优先薄弱知识、下一任务与适合难度</small></header><button v-for="(item, index) in recommendedActivities" :key="item.id" @click="openActivity(item.id)"><em>0{{ index + 1 }}</em><span><b>{{ item.title }}</b><small>{{ item.concept_ids.slice(0, 2).join(' · ') }} · {{ item.estimated_minutes }} 分钟</small></span></button></div>
         </section>
         <section v-if="!courseLoadError" class="practice-layout">
-          <aside class="panel activity-list">
+          <aside class="panel activity-list" v-reveal>
             <header><div><h2>练习工坊</h2><p>搜索题目，或按推荐顺序继续</p></div><small>{{ filteredActivities.length }} 项</small></header>
             <label class="activity-search"><span>⌕</span><input v-model="activityQuery" type="search" placeholder="搜索题目、编号或知识点" aria-label="搜索练习" /><button v-if="activityQuery" aria-label="清空搜索" @click="activityQuery = ''">×</button></label>
             <div class="activity-sort"><button :class="{ active: activitySort === 'recommended' }" @click="activitySort = 'recommended'">为我推荐</button><button :class="{ active: activitySort === 'shortest' }" @click="activitySort = 'shortest'">用时较短</button><button :class="{ active: activitySort === 'catalog' }" @click="activitySort = 'catalog'">课程顺序</button></div>
