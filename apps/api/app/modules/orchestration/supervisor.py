@@ -20,6 +20,29 @@ _SECRET_PATTERNS = (
     re.compile(r"(?i)system\s+prompt"),
 )
 
+# Internal identifiers that must never leak into learner-facing answers.
+_INTERNAL_SOURCE_ID = re.compile(
+    r"\b(?:SRC|PY|DS|C)-(?:[A-Z0-9]+-?){1,}[A-Z0-9]\b"
+)
+_INLINE_CITATION_PHRASE = re.compile(
+    r"[（(【\[]\s*证据[：:]?\s*[^）)\】\]]*[）)\】\]]"
+)
+_EVIDENCE_LABEL_PREFIX = re.compile(r"证据\s*[：:]?\s*")
+
+
+def sanitize_answer_text(answer: str) -> str:
+    """Remove inline citations and internal source IDs from learner-facing text.
+
+    Citations belong in the structured ``citation_chunk_ids`` field only.
+    """
+    cleaned = answer
+    cleaned = _INLINE_CITATION_PHRASE.sub("", cleaned)
+    cleaned = _EVIDENCE_LABEL_PREFIX.sub("", cleaned)
+    cleaned = _INTERNAL_SOURCE_ID.sub("", cleaned)
+    cleaned = re.sub(r"\s{2,}", " ", cleaned)
+    cleaned = re.sub(r"[（(]\s*[）)]", "", cleaned)
+    return cleaned.strip()
+
 _SEMANTIC_REASON_CODES = {
     "approved",
     "unsupported_claim",
@@ -72,7 +95,7 @@ class QualitySupervisor:
 
     def inspect(self, *, draft: TutorDraft, evidence: Sequence[SearchHit]) -> SupervisionResult:
         """Run the mandatory local rules without calling an external model."""
-        answer = draft.answer.strip()
+        answer = sanitize_answer_text(draft.answer)
         if not answer or len(answer) > 2000:
             return self._reject("invalid_answer")
         if any(pattern.search(answer) for pattern in _SECRET_PATTERNS):
@@ -260,7 +283,7 @@ class QualitySupervisor:
         allowed = {hit.chunk_id for hit in evidence}
         if not used_ids or any(chunk_id not in allowed for chunk_id in used_ids):
             return KnowledgeGapReview(relevant=False, reason_code="fabricated_citation")
-        normalized_answer = answer.strip()
+        normalized_answer = sanitize_answer_text(answer)
         if not 2 <= len(normalized_answer) <= 2000:
             return KnowledgeGapReview(relevant=False, reason_code="invalid_answer")
         if any(pattern.search(normalized_answer) for pattern in _SECRET_PATTERNS):

@@ -174,6 +174,11 @@ class RagQaService:
                     source_id=hit.source_id,
                     chunk_id=hit.chunk_id,
                     score=hit.score,
+                    source_title=(
+                        str(title)[:200]
+                        if isinstance(title := hit.metadata.get("title"), str)
+                        else None
+                    ),
                 )
                 for hit in decision.citations
             ],
