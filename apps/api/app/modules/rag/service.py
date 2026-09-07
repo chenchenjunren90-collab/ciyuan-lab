@@ -10,7 +10,7 @@ from app.modules.orchestration.tutor import CourseTutor
 from app.modules.rag.citations import citation_from_hit
 from app.modules.rag.models import AgentTraceStep, Citation, QaResponse
 from app.modules.rag.ports import KnowledgeRetrievalError, KnowledgeRetriever, SearchHit
-from app.modules.rag.question_gates import supplement_gate_passes
+from app.modules.rag.question_gates import is_prompt_injection, supplement_gate_passes
 from app.modules.rag.retriever import query_is_in_course_scope
 
 # A best-hit below this floor is treated as "almost no evidence" and may
@@ -42,6 +42,22 @@ class RagQaService:
         self._supplement_enabled = supplement_enabled
 
     async def answer(self, *, course_id: CourseId, question: str) -> QaResponse:
+        # Deterministic security gate runs before ANY retrieval: attempts to
+        # extract protected information never reach the index, the model or
+        # the online supplement.
+        if is_prompt_injection(question):
+            return QaResponse(
+                status="insufficient_evidence",
+                answer="该问题涉及受保护信息，已按安全规则拒绝处理。",
+                citations=[],
+                trace=[
+                    AgentTraceStep(
+                        component="retrieval",
+                        status="blocked",
+                        detail="安全门禁拦截：检测到对受保护信息的索取。",
+                    )
+                ],
+            )
         try:
             hits = await self._retriever.search(question, course_id, self._top_k)
         except KnowledgeRetrievalError:
