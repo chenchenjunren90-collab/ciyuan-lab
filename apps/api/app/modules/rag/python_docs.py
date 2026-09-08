@@ -74,9 +74,14 @@ _DOC_TARGETS = (
         ("导入系统", "importlib", "相对导入", "绝对导入", "模块搜索", "包"),
     ),
     _DocTarget(
+        "tutorial/appetite.html",
+        "Python 简介（开胃菜）",
+        ("特点", "特性", "优势", "介绍", "是什么", "解释型", "编译", "语言", "开胃菜"),
+    ),
+    _DocTarget(
         "tutorial/introduction.html",
         "Python 入门",
-        ("print", "input", "数字", "字符串", "列表", "入门"),
+        ("print", "input", "数字", "字符串", "列表", "入门", "特点", "特性", "优势", "介绍"),
     ),
     _DocTarget(
         "tutorial/controlflow.html",
@@ -141,6 +146,21 @@ _DOC_TARGETS = (
 
 _SKIP_TAGS = {"script", "style", "svg", "nav", "footer", "noscript"}
 _BLOCK_TAGS = {"p", "pre", "dt", "li"}
+
+# Characteristic phrases for "what is Python / its features" questions.
+_FEATURE_BLOCK_MARKERS = (
+    "解释型",
+    "面向对象",
+    "简洁",
+    "易读",
+    "强大",
+    "高级",
+    "动态",
+    "开源",
+    "缩进",
+    "可移植",
+    "模块",
+)
 
 
 class _ReadableBlockParser(HTMLParser):
@@ -270,12 +290,28 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
             marker in query.casefold()
             for marker in ("例子", "示例", "代码", "怎么写", "如何写", "example")
         )
+        # Broad "what is Python / its features" questions must prefer prose
+        # explanations over incidental code snippets that merely share the
+        # token "python".
+        feature_intent = any(
+            marker in query for marker in ("特点", "特性", "优势", "介绍", "是什么", "入门")
+        )
         ranked: list[tuple[float, str]] = []
         for block in blocks:
             block_terms = tokenize(block)
             score = max((self._overlap(terms, block_terms) for terms in query_terms), default=0.0)
             if score <= 0:
                 continue
+            if feature_intent:
+                if "编程语言" in block or "语言" in block:
+                    score += 0.30
+                feature_hits = sum(
+                    1 for marker in _FEATURE_BLOCK_MARKERS if marker in block
+                )
+                if feature_hits:
+                    score += 0.25 + 0.10 * min(feature_hits, 4)
+                if block.strip().startswith(">>>") or block.count(">>>") >= 2:
+                    score *= 0.45
             code_bonus = (
                 0.20
                 if example_requested

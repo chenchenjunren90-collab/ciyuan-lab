@@ -834,11 +834,14 @@ class ClassroomDialogueService:
         if (
             not hits
             and self._online_retriever is not None
-            and _is_explicit_python_question(retrieval_query)
+            and _is_explicit_python_question(request.message)
         ):
+            # The course query strips language-only markers (such as "python")
+            # so they cannot manufacture relevance; the bounded official-docs
+            # fallback instead judges the student's original wording.
             try:
                 hits = tuple(
-                    await self._online_retriever.search(direct_query, "python", self._top_k)
+                    await self._online_retriever.search(request.message, "python", self._top_k)
                 )
             except KnowledgeRetrievalError:
                 return self._retrieval_failed(request.role)
@@ -849,10 +852,15 @@ class ClassroomDialogueService:
                 request.role,
                 has_history=bool(request.recent_turns),
             )
+            scope_notice = scope_match.notice
             if scope_match.scope == "python_course_extension":
                 clarification = (
-                    "这是本节之外的 Python 问题，但当前没有检索到足够的已审核资料，"
+                    "这是本节之外的 Python 问题，但当前课程资料与官方文档都没有收录足够证据，"
                     f"所以我不会凭印象作答。{clarification}"
+                )
+                scope_notice = (
+                    "该问题属于 Python 延伸知识，但证据不足，本次只能如实说明而不会给出回答；"
+                    "建议把问题问得更具体（例如具体到某个语法或模块）。"
                 )
             return self._blocked(
                 request.role,
@@ -863,7 +871,7 @@ class ClassroomDialogueService:
                     else "原始问题与有界对话上下文均未命中足够的已审核 Python 资料。"
                 ),
                 question_scope=scope_match.scope,
-                scope_notice=scope_match.notice,
+                scope_notice=scope_notice,
                 suggested_knowledge_point_ids=list(scope_match.knowledge_point_ids),
             )
 

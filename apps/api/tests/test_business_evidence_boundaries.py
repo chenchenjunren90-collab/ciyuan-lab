@@ -224,6 +224,31 @@ def test_classroom_retrieval_outage_is_a_visible_degradation(stage: str) -> None
     assert result.citations == []
 
 
+def test_extension_scope_no_evidence_notice_does_not_promise_an_answer() -> None:
+    service = ClassroomDialogueService(
+        courses=CoursePackRepository(),
+        retriever=cast(Any, EmptyRetriever()),
+        online_retriever=cast(Any, EmptyRetriever()),
+        tutor=cast(Any, NeverTutor()),
+        supervisor=QualitySupervisor(),
+    )
+    request = ClassroomDialogueRequest(
+        student_id="evidence-student",
+        lesson_id=FIRST_LESSON_ID,
+        phase="concept",
+        role="teacher",
+        message="Python 的特点是什么",
+        recent_turns=[],
+    )
+    result = asyncio.run(service.answer(request))
+
+    assert result.status == "insufficient_evidence"
+    assert result.scope_notice is not None
+    assert "下面先做简要回答" not in result.scope_notice
+    assert "证据不足" in result.scope_notice
+    assert "不会凭印象作答" in result.answer
+
+
 def test_self_profile_marks_retrieval_outage_without_claiming_evidence() -> None:
     service = ClassroomDialogueService(
         courses=CoursePackRepository(),
