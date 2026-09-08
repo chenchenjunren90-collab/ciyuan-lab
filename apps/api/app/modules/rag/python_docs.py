@@ -147,20 +147,21 @@ _DOC_TARGETS = (
 _SKIP_TAGS = {"script", "style", "svg", "nav", "footer", "noscript"}
 _BLOCK_TAGS = {"p", "pre", "dt", "li"}
 
-# Characteristic phrases for "what is Python / its features" questions.
-_FEATURE_BLOCK_MARKERS = (
-    "解释型",
-    "面向对象",
-    "简洁",
-    "易读",
-    "强大",
-    "高级",
-    "动态",
-    "开源",
-    "缩进",
-    "可移植",
-    "模块",
-)
+# Characteristic phrases for "what is Python / its features" questions,
+# weighted by how directly they describe the language itself.
+_FEATURE_BLOCK_MARKERS: dict[str, float] = {
+    "解释型": 0.50,
+    "面向对象": 0.50,
+    "简洁": 0.40,
+    "易读": 0.40,
+    "强大": 0.35,
+    "高级": 0.30,
+    "动态": 0.30,
+    "缩进": 0.25,
+    "开源": 0.25,
+    "可移植": 0.25,
+    "模块": 0.15,
+}
 
 
 class _ReadableBlockParser(HTMLParser):
@@ -305,11 +306,13 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
             if feature_intent:
                 if "编程语言" in block or "语言" in block:
                     score += 0.30
-                feature_hits = sum(
-                    1 for marker in _FEATURE_BLOCK_MARKERS if marker in block
+                feature_bonus = sum(
+                    weight
+                    for marker, weight in _FEATURE_BLOCK_MARKERS.items()
+                    if marker in block
                 )
-                if feature_hits:
-                    score += 0.25 + 0.10 * min(feature_hits, 4)
+                if feature_bonus:
+                    score += min(0.70, feature_bonus)
                 if block.strip().startswith(">>>") or block.count(">>>") >= 2:
                     score *= 0.45
             code_bonus = (

@@ -895,7 +895,8 @@ class ClassroomDialogueService:
         rerank_completed = any(hit.metadata.get("rerank_status") == "completed" for hit in hits)
         scope_instruction = (
             "这个问题属于 Python 课程，但不属于本节学习目标。只做准确、简短的预告式回答，"
-            "不要展开成一节新课；提醒学生可以把它加入后续学习计划。"
+            "直接概括 2—3 个关键点即可；不要展开成一节新课，也不要邀请学生运行例子或写代码；"
+            "最后提醒学生可以把它加入后续学习计划。"
             if scope_match.scope == "python_course_extension"
             else ""
         )
