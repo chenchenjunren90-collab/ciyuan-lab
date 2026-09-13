@@ -78,11 +78,11 @@ $env:CIYUAN_TEST_DATABASE_URL="postgresql+psycopg://ciyuan:replace-before-use@12
 
 ```dotenv
 XFYUN_MAAS_BASE_URL=https://maas-api.cn-huabei-1.xf-yun.com/v2
-XFYUN_MAAS_MODEL=xopdeepseekv4flash0731
+XFYUN_MAAS_MODEL=xopdeepseekv4pro0813
 XFYUN_MAAS_API_KEY=从服务管控页面获取的项目密钥
 ```
 
-不得把密钥提交到Git。适配器使用 OpenAI 兼容的 `/chat/completions` 接口和 Bearer 鉴权；本项目不使用微调，因此不发送 `lora_id`。
+不得把密钥提交到Git。适配器使用 OpenAI 兼容的 `/chat/completions` 接口和 Bearer 鉴权，所有课程统一使用已配置的 MaaS 推理服务。
 
 配置可先做不联网自检：
 

@@ -37,6 +37,7 @@ def test_capabilities_describe_mvp_runtime_switches() -> None:
     assert payload["status"] == "mvp"
     assert payload["code_execution_enabled"] is False
     assert payload["tuoling_enabled"] is False
+    assert isinstance(payload["model_route_ready"], bool)
     assert set(payload["modules"]) == {
         "orchestration",
         "rag",

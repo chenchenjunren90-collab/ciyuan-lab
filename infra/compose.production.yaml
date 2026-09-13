@@ -49,10 +49,16 @@ services:
       SANDBOX_PYTHON_IMAGE: ${SANDBOX_PYTHON_IMAGE:-docker.1panel.live/library/python:3.11.15-alpine3.24}
       SANDBOX_C_IMAGE: ${SANDBOX_C_IMAGE:-ciyuan-lab-c-sandbox:latest}
       XFYUN_MAAS_BASE_URL: ${XFYUN_MAAS_BASE_URL:-https://maas-api.cn-huabei-1.xf-yun.com/v2}
-      XFYUN_MAAS_MODEL: ${XFYUN_MAAS_MODEL:-xopdeepseekv4flash0731}
+      XFYUN_MAAS_MODEL: ${XFYUN_MAAS_MODEL:-xopdeepseekv4pro0813}
       XFYUN_MAAS_API_KEY: ${XFYUN_MAAS_API_KEY:-}
       XFYUN_MAAS_MOCK_FALLBACK: "false"
       XFYUN_SPARK_MOCK_FALLBACK: "false"
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-xfyun_maas}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY:-}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL:-deepseek-v4-flash}
+      DEEPSEEK_TIMEOUT_SECONDS: ${DEEPSEEK_TIMEOUT_SECONDS:-45}
+      DEEPSEEK_MAX_RETRIES: ${DEEPSEEK_MAX_RETRIES:-2}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/local/bin/docker:ro

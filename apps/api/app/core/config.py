@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
+    # Optional site password for shared/demo deployments. Empty disables the
+    # gate. Every request except the health endpoints must send a matching
+    # ``X-Access-Code`` header.
+    access_code: SecretStr = SecretStr("")
 
     database_url: str = (
         "postgresql+psycopg://ciyuan:replace-before-use@127.0.0.1:5432/ciyuan?connect_timeout=3"
@@ -30,16 +34,25 @@ class Settings(BaseSettings):
 
     xfyun_maas_base_url: str = "https://maas-api.cn-huabei-1.xf-yun.com/v2"
     xfyun_maas_api_key: SecretStr = SecretStr("")
-    xfyun_maas_model: str = "xopdeepseekv4flash0731"
-    # Optional MaaS SFT/LoRA route for the Python course tutor. Both values must
-    # be configured together and explicitly enabled before activation.
-    xfyun_maas_python_tutor_enabled: bool = False
-    xfyun_maas_python_tutor_api_key: SecretStr = SecretStr("")
-    xfyun_maas_python_tutor_model: str = ""
-    xfyun_maas_python_tutor_lora_id: str = ""
+    xfyun_maas_model: str = "xopdeepseekv4pro0813"
     xfyun_maas_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
     xfyun_maas_max_retries: int = Field(default=2, ge=0, le=5)
     xfyun_maas_mock_fallback: bool = True
+
+    # Active general-model route. The Xfyun MaaS route remains available when
+    # its service is restored; operators switch providers without code changes.
+    model_provider: Literal["xfyun_maas", "deepseek", "xfyun_spark"] = "xfyun_maas"
+    deepseek_base_url: str = "https://api.deepseek.com"
+    deepseek_api_key: SecretStr = SecretStr("")
+    deepseek_model: str = "deepseek-v4-flash"
+    deepseek_timeout_seconds: float = Field(default=45.0, gt=0, le=120)
+    deepseek_max_retries: int = Field(default=2, ge=0, le=5)
+    xfyun_maas_reranker_enabled: bool = False
+    xfyun_maas_reranker_model: str = ""
+    xfyun_maas_reranker_api_key: SecretStr = SecretStr("")
+    xfyun_maas_reranker_candidate_limit: int = Field(default=12, ge=1, le=20)
+    xfyun_maas_reranker_timeout_seconds: float = Field(default=8.0, gt=0, le=60)
+    xfyun_maas_reranker_max_retries: int = Field(default=1, ge=0, le=5)
     model_max_concurrency: int = Field(default=4, ge=1, le=32)
     model_queue_timeout_seconds: float = Field(default=15.0, gt=0, le=60)
 

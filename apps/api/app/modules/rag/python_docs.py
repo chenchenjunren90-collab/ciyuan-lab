@@ -12,7 +12,8 @@ import asyncio
 import hashlib
 import math
 import re
-from collections import Counter
+import time
+from collections import Counter, OrderedDict
 from collections.abc import Sequence
 from dataclasses import dataclass
 from html.parser import HTMLParser
@@ -74,14 +75,20 @@ _DOC_TARGETS = (
         ("导入系统", "importlib", "相对导入", "绝对导入", "模块搜索", "包"),
     ),
     _DocTarget(
+        "tutorial/appetite.html",
+        "Python 简介（开胃菜）",
+        ("特点", "特性", "优势", "介绍", "是什么", "解释型", "编译", "语言", "开胃菜"),
+    ),
+    _DocTarget(
         "tutorial/introduction.html",
         "Python 入门",
-        ("print", "input", "数字", "字符串", "列表", "入门"),
+        ("print", "input", "数字", "字符串", "列表", "入门", "特点", "特性", "优势", "介绍"),
     ),
     _DocTarget(
         "tutorial/controlflow.html",
         "流程控制",
-        ("控制流", "range", "enumerate", "循环", "函数参数", "默认参数", "关键字参数"),
+        ("控制流", "range", "enumerate", "循环", "函数参数", "默认参数", "关键字参数",
+         "边界控制", "循环终止", "端点"),
     ),
     _DocTarget(
         "tutorial/datastructures.html",
@@ -124,7 +131,8 @@ _DOC_TARGETS = (
     _DocTarget(
         "library/stdtypes.html",
         "内置类型",
-        ("内置类型", "str", "list", "tuple", "set", "dict", "bytes", "frozenset"),
+        ("内置类型", "str", "list", "tuple", "set", "dict", "bytes", "frozenset",
+         "索引", "越界", "indexerror", "边界"),
     ),
     _DocTarget("library/dataclasses.html", "dataclasses", ("dataclass", "dataclasses", "数据类")),
     _DocTarget(
@@ -141,6 +149,22 @@ _DOC_TARGETS = (
 
 _SKIP_TAGS = {"script", "style", "svg", "nav", "footer", "noscript"}
 _BLOCK_TAGS = {"p", "pre", "dt", "li"}
+
+# Characteristic phrases for "what is Python / its features" questions,
+# weighted by how directly they describe the language itself.
+_FEATURE_BLOCK_MARKERS: dict[str, float] = {
+    "解释型": 0.50,
+    "面向对象": 0.50,
+    "简洁": 0.40,
+    "易读": 0.40,
+    "强大": 0.35,
+    "高级": 0.30,
+    "动态": 0.30,
+    "缩进": 0.25,
+    "开源": 0.25,
+    "可移植": 0.25,
+    "模块": 0.15,
+}
 
 
 class _ReadableBlockParser(HTMLParser):
@@ -187,6 +211,7 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
         timeout_seconds: float = 8.0,
         max_pages: int = 2,
         client: httpx.AsyncClient | None = None,
+        cache_ttl_seconds: float = 3600,
     ) -> None:
         parsed = urlparse(base_url)
         if parsed.scheme != "https" or parsed.hostname != "docs.python.org":
@@ -196,11 +221,19 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
         self._timeout_seconds = timeout_seconds
         self._max_pages = max(1, min(max_pages, 3))
         self._client = client
-        self._cache: dict[str, tuple[str, ...]] = {}
+        self._cache_ttl = max(0, cache_ttl_seconds)
+        self._cache: OrderedDict[str, tuple[float, tuple[str, ...]]] = OrderedDict()
+        self._query_cache: OrderedDict[str, tuple[float, tuple[SearchHit, ...]]] = OrderedDict()
+        self._page_locks: dict[str, asyncio.Lock] = {}
 
     async def search(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
         if not self._enabled or course_id != "python" or top_k < 1 or not query.strip():
             return ()
+        key = hashlib.sha256(f"{top_k}:{query.strip().casefold()}".encode()).hexdigest()
+        cached = self._query_cache.get(key)
+        if cached is not None and cached[0] > time.monotonic():
+            self._query_cache.move_to_end(key)
+            return cached[1]
         ranked_targets = self._rank_targets(query)[: self._max_pages]
         if not ranked_targets:
             return ()
@@ -215,7 +248,9 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
             url, blocks = result
             ranked.extend(
                 (
-                    min(0.99, score + min(0.40, target_score / 20)),
+                    # Page selection is not paragraph relevance. A large page
+                    # bonus used to saturate all scores and sort by text instead.
+                    min(0.99, score + min(0.12, target_score / 100)),
                     target,
                     url,
                     block,
@@ -223,11 +258,20 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
                 for score, block in self._rank_blocks(query, blocks)[:2]
             )
         ranked.sort(key=lambda item: (-item[0], item[1].path, item[3]))
-        return tuple(self._to_hit(*item) for item in ranked[:top_k])
+        hits = tuple(self._to_hit(*item) for item in ranked[:top_k])
+        # Cache only public evidence, never generated dialogue or student identities.
+        # Short negative TTL allows a recovered network/updated source to be retried.
+        ttl = min(self._cache_ttl, 300 if hits else 15)
+        self._query_cache[key] = (time.monotonic() + ttl, hits)
+        self._query_cache.move_to_end(key)
+        while len(self._query_cache) > 128:
+            self._query_cache.popitem(last=False)
+        return hits
 
     def _rank_targets(self, query: str) -> list[tuple[float, _DocTarget]]:
         normalized = query.casefold()
         query_terms = tokenize(query)
+        list_concatenation = _is_list_concatenation_query(normalized)
         ranked: list[tuple[float, _DocTarget]] = []
         for target in _DOC_TARGETS:
             score = self._overlap(
@@ -236,6 +280,14 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
             for marker in target.markers:
                 if marker.casefold() in normalized:
                     score += 3.0 + min(len(marker), 12) / 12
+            if "边界控制" in normalized and target.path in {
+                "tutorial/controlflow.html", "library/stdtypes.html",
+            }:
+                score += 12.0
+            if list_concatenation and target.path == "library/stdtypes.html":
+                score += 18.0
+            elif list_concatenation and target.path == "tutorial/introduction.html":
+                score += 8.0
             if score > 0:
                 ranked.append((score, target))
         ranked.sort(key=lambda item: (-item[0], item[1].path))
@@ -243,9 +295,15 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
 
     async def _load_target(self, target: _DocTarget) -> tuple[str, tuple[str, ...]]:
         url = urljoin(self._base_url, target.path)
+        # The catalogue is fixed, so this lock map is bounded by catalogue size.
+        async with self._page_locks.setdefault(url, asyncio.Lock()):
+            return await self._load_page(url)
+
+    async def _load_page(self, url: str) -> tuple[str, tuple[str, ...]]:
         cached = self._cache.get(url)
-        if cached is not None:
-            return url, cached
+        if cached is not None and cached[0] > time.monotonic():
+            self._cache.move_to_end(url)
+            return url, cached[1]
         if self._client is not None:
             response = await self._client.get(url, follow_redirects=False)
         else:
@@ -260,15 +318,33 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
         # the HTTP charset; httpx would otherwise guess an incompatible codec.
         parser.feed(response.content.decode("utf-8", errors="strict"))
         blocks = tuple(dict.fromkeys(parser.blocks))
-        self._cache[url] = blocks
+        self._cache[url] = (time.monotonic() + self._cache_ttl, blocks)
+        self._cache.move_to_end(url)
+        while len(self._cache) > 64:
+            self._cache.popitem(last=False)
         return url, blocks
 
     def _rank_blocks(self, query: str, blocks: Sequence[str]) -> list[tuple[float, str]]:
+        if "边界控制" in query:
+            query += " range 起点 终点 终止值 索引"
+        list_concatenation = _is_list_concatenation_query(query.casefold())
+        if list_concatenation:
+            query += " 列表 序列 拼接 连接 相同类型序列 +"
         variants = query_variants(query)
         query_terms = [tokenize(item) for item in variants if item.strip()]
         example_requested = any(
             marker in query.casefold()
             for marker in ("例子", "示例", "代码", "怎么写", "如何写", "example")
+        )
+        # Broad "what is Python / its features" questions must prefer prose
+        # explanations over incidental code snippets that merely share the
+        # token "python".
+        feature_intent = any(
+            marker in query for marker in ("特点", "特性", "优势", "介绍", "是什么", "入门")
+        )
+        boundary_intent = any(
+            marker in query.casefold()
+            for marker in ("边界", "越界", "端点", "终止", "indexerror")
         )
         ranked: list[tuple[float, str]] = []
         for block in blocks:
@@ -276,6 +352,35 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
             score = max((self._overlap(terms, block_terms) for terms in query_terms), default=0.0)
             if score <= 0:
                 continue
+            if not example_requested and (
+                block.lstrip().startswith((">>>", "class ")) or len(block) < 40
+            ):
+                score *= 0.25
+            if boundary_intent and "async" in block and "async" not in query.casefold():
+                score *= 0.1
+            if boundary_intent and any(
+                marker in block.casefold() for marker in ("range", "索引", "indexerror", "循环")
+            ) and any(
+                marker in block.casefold()
+                for marker in ("不包含", "不包括", "不会包括", "超出", "终止", "stop", "indexerror")
+            ) and not block.lstrip().startswith((">>>", "class ")):
+                score += 1.0
+            if list_concatenation and any(
+                marker in block.casefold() for marker in ("拼接", "连接", "concaten", " s + t")
+            ) and any(marker in block.casefold() for marker in ("列表", "list", "序列")):
+                score += 1.4
+            if feature_intent:
+                if "编程语言" in block or "语言" in block:
+                    score += 0.30
+                feature_bonus = sum(
+                    weight
+                    for marker, weight in _FEATURE_BLOCK_MARKERS.items()
+                    if marker in block
+                )
+                if feature_bonus:
+                    score += min(0.70, feature_bonus)
+                if block.strip().startswith(">>>") or block.count(">>>") >= 2:
+                    score *= 0.45
             code_bonus = (
                 0.20
                 if example_requested
@@ -313,3 +418,14 @@ class PythonOfficialDocsRetriever(KnowledgeRetriever):
                 "version": "3.11",
             },
         )
+
+
+def _is_list_concatenation_query(query: str) -> bool:
+    compact = re.sub(r"\s+", "", query)
+    return (
+        ("[" in compact and "]" in compact and "+" in compact)
+        or (
+            "列表" in compact
+            and any(marker in compact for marker in ("相加", "拼接", "连接", "+"))
+        )
+    )

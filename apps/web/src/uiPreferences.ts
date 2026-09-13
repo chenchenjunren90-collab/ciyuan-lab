@@ -28,7 +28,7 @@ export const STUDENT_ID_KEY = "ciyuan-student-id";
 export const LOCAL_ACCOUNTS_KEY = "ciyuan-local-accounts-v1";
 
 export const DEFAULT_UI_PREFERENCES: UiPreferences = {
-  theme: "system",
+  theme: "light",
   deviceMode: "auto",
   reducedMotion: false,
   highContrast: false,
@@ -38,7 +38,14 @@ export const DEFAULT_UI_PREFERENCES: UiPreferences = {
 const THEMES: ThemeMode[] = ["light", "dark", "system"];
 const DEVICE_MODES: DeviceMode[] = ["auto", "mobile", "desktop"];
 
-export function loadUiPreferences(storage: KeyValueStorage): UiPreferences {
+export function loadUiPreferences(storage: KeyValueStorage, requestedTheme: string | null = null): UiPreferences {
+  const preferences = readUiPreferences(storage);
+  return THEMES.includes(requestedTheme as ThemeMode)
+    ? { ...preferences, theme: requestedTheme as ThemeMode }
+    : preferences;
+}
+
+function readUiPreferences(storage: KeyValueStorage): UiPreferences {
   try {
     const raw = storage.getItem(UI_PREFERENCES_KEY);
     if (!raw) return { ...DEFAULT_UI_PREFERENCES };
@@ -74,7 +81,6 @@ export function applyUiPreferences(
   prefersDark: boolean,
 ): void {
   root.dataset.theme = resolveTheme(preferences.theme, prefersDark);
-  delete root.dataset.accent;
   root.dataset.device = preferences.deviceMode;
   root.dataset.motion = preferences.reducedMotion ? "reduced" : "full";
   root.dataset.contrast = preferences.highContrast ? "high" : "standard";

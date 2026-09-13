@@ -9,6 +9,7 @@ from sqlalchemy import engine_from_config, pool
 
 from app.core.config import Settings
 from app.modules.learner_profile.db_models import Base
+from app.modules.rag.db_models import KnowledgeChunkRow  # noqa: F401
 
 config = context.config
 if config.config_file_name is not None:

@@ -17,8 +17,7 @@
 - 使用 UCI Bank Marketing、UCI Default of Credit Card Clients、CFPB 结构化字段说明和
   IBM AMLSim 作为问题结构依据，并在课程包中登记来源和许可；
 - 本地按固定规则生成虚构记录，返回文件名、字段、数据行和 SHA-256，保证演示可复现；
-- 通过讯飞星辰 MaaS 的 OpenAI 兼容接口调用 DeepSeek-V4-Flash-0731，不使用微调或
-  `lora_id`；
+- 通过讯飞星辰 MaaS 的 OpenAI 兼容接口调用 DeepSeek-V4-Flash-0731，按已审核模板组织场景；
 - 模型只接收非身份化学习目标、知识点 ID 和已审核模板，响应必须通过严格 JSON Schema、
   来源白名单和敏感内容检查；
 - 学习目标在进入模型前拒绝手机号、邮箱、身份证号、学号和凭据值；无模型时也会按目标、

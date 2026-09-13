@@ -9,6 +9,41 @@ from app.main import app
 
 client = TestClient(app)
 
+
+@pytest.mark.parametrize("confirmation", ["愿意", "好的", "继续", "可以", "OK"])
+def test_short_confirmation_continues_the_previous_interpreter_example(confirmation: str) -> None:
+    request = {
+        "student_id": "continuation-regression", "lesson_id": "python-adaptive--PY-BASE-01",
+        "phase": "concept", "role": "teacher", "message": "老师给我解释一下python解释器",
+    }
+    first = client.post("/api/v1/classroom/dialogue", json=request).json()
+    assert first["status"] == "answered"
+    response = client.post("/api/v1/classroom/dialogue", json={
+        **request, "message": confirmation,
+        "recent_turns": [
+            {"role": "student", "content": request["message"]},
+            {"role": "teacher", "content": first["answer"]},
+        ],
+    })
+    assert response.status_code == 200
+    second = response.json()
+    assert second["status"] == "answered"
+    assert "```python" in second["answer"]
+    assert "print(" in second["answer"]
+    assert "愿意" not in second["answer"]
+    assert "把概念名称" not in second["answer"]
+    assert second["citations"]
+    assert second["trace"][1]["status"] == "degraded"  # Deterministic mock, not a live model.
+
+
+def test_confirmation_without_history_does_not_invent_a_topic() -> None:
+    payload = client.post("/api/v1/classroom/dialogue", json={
+        "student_id": "no-history", "lesson_id": "python-adaptive--PY-BASE-01",
+        "phase": "concept", "role": "teacher", "message": "愿意",
+    }).json()
+    assert payload["status"] == "insufficient_evidence"
+    assert payload["citations"] == []
+
 _ROLES = (
     ("teacher", "林老师"),
     ("ta", "助教小程"),
@@ -62,7 +97,8 @@ def test_role_fallbacks_are_distinct_and_obey_visible_role_constraints() -> None
         answers[role] = payload["answer"]
 
     assert len(set(answers.values())) == len(_ROLES)
-    assert "？" in answers["teacher"]
+    assert "print" in answers["teacher"]
+    assert "哪些操作改变了值" not in answers["teacher"]
     assert "？" in answers["peer_cautious"]
     assert any(word in answers["peer_debugger"] for word in ("运行", "试", "输出"))
     assert any(word in answers["peer_summarizer"] for word in ("一句", "笔记", "总结"))

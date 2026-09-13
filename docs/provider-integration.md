@@ -1,59 +1,121 @@
-# 模型服务接入与验收
+# 通用模型与检索服务接入
 
-## 通用模型：讯飞星辰 MaaS 托管 DeepSeek-V4-Flash-0731
+更新日期：2026-09-07。当前路线是统一托管推理（MaaS 或 DeepSeek 官方 API，由 `MODEL_PROVIDER` 选择）、学科知识库、检索增强、三个逻辑智能体及确定性代码验证。
 
-当前默认接入讯飞星辰MaaS的OpenAI兼容接口：
-`https://maas-api.cn-huabei-1.xf-yun.com/v2/chat/completions`，服务卡片模型ID为
-`xopdeepseekv4flash0731`。鉴权使用 `Authorization: Bearer <APIKey>`。依据为讯飞官方
-[推理服务HTTP协议](https://www.xfyun.cn/doc/spark/%E6%8E%A8%E7%90%86%E6%9C%8D%E5%8A%A1-http.html)。
-该模型作为通用推理路由，用于学情规划候选、质量监督语义复核和受控项目编排。默认请求不发送 `lora_id`。
+## 统一推理
 
-## Python 垂类辅导模型：MaaS SFT/LoRA（已训练，待优化后启用）
+学情规划、C语言/Python/数据结构课程辅导、质量监督与受控项目编排，共用
+`model_adapters/` 内的适配器和并发限制。默认 MaaS 模型服务标识为
+`xopdeepseekv4pro0813`，必须与实际服务卡一致。
 
-Python 课堂教师、助教和同伴角色可以单独路由到 MaaS 的经审核 LoRA 模型，而 C语言、数据结构和通用智能体继续使用 DeepSeek。锁定评测集位于 `training/python_tutor/v1/eval/`；实际训练候选与审核脚本位于 `training/python_tutor/v2/`。V2 的 1120 条记录已由 `AI-AUDIT-V2` 做可复现来源、格式和边界审计。Qwen3-14B 的 SFT/LoRA 任务已完成并发布为服务；`training/python_tutor/evaluation/` 中保留了评测报告。该标记不等同于教师人工签字。
-
-训练通过后，只在未跟踪的 `.env` 写入以下非秘密标识：
-
-```env
-XFYUN_MAAS_PYTHON_TUTOR_ENABLED=false
-XFYUN_MAAS_PYTHON_TUTOR_API_KEY=Python服务专用APIKey（如与通用服务不同）
-XFYUN_MAAS_PYTHON_TUTOR_MODEL=模型服务卡片的modelId
-XFYUN_MAAS_PYTHON_TUTOR_LORA_ID=微调任务的resourceId
+```text
+MODEL_PROVIDER=xfyun_maas
+XFYUN_MAAS_BASE_URL=https://maas-api.cn-huabei-1.xf-yun.com/v2
+XFYUN_MAAS_MODEL=xopdeepseekv4pro0813
+XFYUN_MAAS_TIMEOUT_SECONDS=45
+XFYUN_MAAS_MAX_RETRIES=2
 ```
 
-三个变量必须同时满足“启用 + 两个标识完整”；适配器才会在 Python 课程辅导请求中发送 `lora_id`。若 LoRA 服务与通用模型的授权 Key 不同，则把服务 Key 单独写入 `XFYUN_MAAS_PYTHON_TUTOR_API_KEY`，避免覆盖通用 DeepSeek 路由。当前锁定评测中，通用 DeepSeek 自动通过 8/12，LoRA 自动通过 4/12；虽然 LoRA 的 JSON、引用和安全边界均通过，但概念解释与角色贴合度仍低于基线，因此 `XFYUN_MAAS_PYTHON_TUTOR_ENABLED` 必须保持 `false`，待补充定向样本并复训后再启用。未启用或训练服务不可用时，系统保留 DeepSeek 通用模型与确定性证据降级路径。训练请求、费用、模型卡截图和基线对比必须进入竞赛证据包。
+请求使用 `POST /chat/completions` 和 Bearer 鉴权。模型输出必须通过结构、引用和质量门禁。
+适配器为注入的 HTTP 客户端也设置明确超时，瞬态错误有限重试；错误日志不含凭据或学生原文。
+课程辅导接口失败时使用证据摘录或明确拒答，不把网络故障说成模型已生成正确答案。
 
-第二轮定向训练文件位于 `training/python_tutor/v3/approved/`，共 1400 条。V3 对齐真实
-五角色提示，新增课堂总结与安全拒答，并强化一条回答覆盖两项证据。建议使用 2 epoch、
-`5e-6` 学习率，避免重复 V2 的低 loss 过拟合。V3 只有在锁定评测至少 9/12、严格高于
-DeepSeek 且人工边界复核通过后才能启用。
+协议依据：[讯飞推理服务 HTTP 文档](https://www.xfyun.cn/doc/spark/%E6%8E%A8%E7%90%86%E6%9C%8D%E5%8A%A1-http.html)。
 
-模型接入前，使用 `scripts/evaluate_python_tutor_models.py --live` 分别评测当前 DeepSeek 基线和
-微调路由，两个结果文件必须保留；该工具要求显式传入 `--live` 和结果 `--output`，默认不调用
-外部接口。自动指标仅覆盖 JSON、引用与关键教学点，完整代码泄露、角色口吻及课程边界由课程审核人
-按锁定题集的 `manual_checks` 复核。MaaS 服务卡的实际 `modelId` 与训练产物的 `resourceId` 必须以
-训练完成页为准，不得自行猜测或复用演示值。
+## DeepSeek 官方 API 路由
 
-模型仅负责学习规划候选和基于证据组织语言：课程事实来自 RAG，代码正确性来自确定性
-测试，质量监督会拒绝伪造引用。Python LoRA 训练教学行为与结构化输出，不替代来源核验、代码测试或画像规则。接口返回的推理过程字段不进入平台响应。
+当 MaaS 服务不可用（例如服务鉴权失败、套餐到期）时，可切换 `MODEL_PROVIDER=deepseek`，
+由 `DeepSeekAdapter` 调用 DeepSeek 官方 OpenAI 兼容接口（`https://api.deepseek.com/chat/completions`）。
+与 MaaS 路由共用同一套超时、有限重试、错误映射和降级逻辑，并保留 provider 标识 `deepseek`。
+
+```text
+MODEL_PROVIDER=deepseek
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+DEEPSEEK_TIMEOUT_SECONDS=45
+DEEPSEEK_MAX_RETRIES=2
+```
+
+`DEEPSEEK_API_KEY` 由部署者保管，不写入文档、测试、截图或 Git。
+切换路由不改变下游契约：辅导答案仍必须通过引用白名单与质量监督门禁。
+需要严格 JSON 的规划、辅导和监督请求会启用 DeepSeek 原生 `json_object` 响应格式，
+降低模型输出说明文字或代码围栏后触发二次格式修复的概率。
+
+协议依据：[DeepSeek Chat Completion](https://api-docs.deepseek.com/api/create-chat-completion/)、
+[JSON Output](https://api-docs.deepseek.com/guides/json_mode/)。
+
+## OpenMAIC 对话编排适配
+
+课堂上下文参考 OpenMAIC（MIT）的消息转换、对话摘要、同伴上下文和场景状态设计，
+在 `orchestration/dialogue_context.py` 中按本项目证据边界重新实现：
+
+- 浏览器继续传递最多 8 条最近消息，后端保持无会话粘性的请求处理方式；
+- 学生发言保留为 `user`，当前被询问角色过去的发言保留为 `assistant`；
+- 其他课堂角色以带显示名的 `user` 侧上下文传入，防止同伴发言冒充当前角色；
+- RAG 查询只取最近有效的学生主题和当前追问，不再混入所有角色的整段回答；
+- 当前课堂阶段进入受信任提示，同伴已经说过的内容用于去重，不能直接当作事实；
+- 空回复、纯省略号和超出窗口的旧消息不会进入模型上下文。
+
+OpenMAIC 来源：[message-converter](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/message-converter.ts)、
+[conversation-summary](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/conversation-summary.ts)、
+[peer-context](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/peer-context.ts)、
+[state-context](https://github.com/THU-MAIC/OpenMAIC/blob/main/lib/orchestration/summarizers/state-context.ts)。
+
+## MaaS 文档重排
+
+已实现 `model_adapters/xfyun_maas_reranker.py` 与 `rag/reranking.py`。
+只有显式配置后才调用官方 `POST /rerank`：
+
+```text
+XFYUN_MAAS_RERANKER_ENABLED=false
+XFYUN_MAAS_RERANKER_MODEL=
+XFYUN_MAAS_RERANKER_API_KEY=
+XFYUN_MAAS_RERANKER_CANDIDATE_LIMIT=12
+XFYUN_MAAS_RERANKER_TIMEOUT_SECONDS=8
+XFYUN_MAAS_RERANKER_MAX_RETRIES=1
+```
+
+MODEL 填实际重排服务卡的 modelId，不能使用聊天模型ID或文档示例ID代替。
+专用 API Key 留空时复用通用 MaaS Key，前提是该 Key 具有对应服务授权。
+真实凭据仅由部署者保管，不能写进此文档、测试、截图或 Git。
+
+处理顺序：当前课程召回最多一组有限候选 → MaaS 返回候选索引与相关度 →
+本地验证索引范围、唯一性和分数 → 按相关度重新排序 → 辅导模型与质量监督。
+默认候选上限12条，配置最高20条；实际数量受召回结果限制，当前词法后端最多返回10条。超长片段不会被偷偷截断后送出。
+重排只改变候选次序，不更换来源、正文、片段ID或原检索分数。
+供应商只返回子集时保留未评分候选；服务失败时保留原召回顺序，并在执行记录中标记降级。
+
+协议依据：[讯飞 Embedding 与 Rerank HTTP 文档](https://www.xfyun.cn/doc/spark/Embedding%26Rerank%E6%9C%8D%E5%8A%A1_HTTP%E5%8D%8F%E8%AE%AE.html)。
+本轮验证使用 MockTransport 和受控测试输入；尚未验证账户服务授权、实际费用、线上延迟和质量增益。
+接入代码不等于该能力已在运行实例开启。
+
+## 数据库与语义索引边界
+
+PostgreSQL/pgvector 用于本地知识持久化和课程隔离；Redis 及学习数据库承担系统自己的状态。
+这些存储没有迁往 MaaS。当前向量列是384维，使用本地 TokenHash，不是远程语义 Embedding。
+
+若接入 MaaS Embedding，应先核对真实模型维度与版本，使用独立索引/迁移方案和全量重建，
+同时记录 provider、model、dimensions、知识版本及内容哈希；不能截断向量或混用旧索引。
+在事务外完成批量向量化，再短事务写入；查询语义向量与文档向量必须来自同一模型。
+重排能改善已有候选排序，不能补回召回阶段完全漏掉的资料。
+
+## 验收与平台证据
+
+配置验证可运行 `scripts/check_provider_readiness.py`；真实调用应另行明确启用 live 检查。
+代码单元测试不替代账户配置与线上验收。
+
+至少保存三个典型教学任务的完整证据：请求情境、知识来源、片段ID、响应、确定性验证结果、
+MaaS 服务标识、耗时、失败/降级情况和教师核验意见。密钥必须遮蔽。
+比较“原检索”和“增加 MaaS 重排”的同题结果，报告召回、排序、引用支持、响应时延与成本；
+不能只凭模型调用成功或来源级 Recall 声称教学准确率达标。
+
+MaaS 与星辰 Agent 是不同平台。当前三个逻辑智能体由本项目后端编排，
+不能描述为已经部署到星辰 Agent。若以后将规划/监督流程发布为平台工作流，
+应通过官方应用接口接入，保留本地白名单、Schema、确定性判题和引用门禁，
+再记录工作流发布版本、ServiceID及调用证据。
 
 ## 财经场景
 
-当前版本不调用驼灵。财经综合项目使用已登记公开来源的字段结构和项目组固定合成数据。
-模型只在已审核模板内调整场景说明与任务拆分，不获得学生身份、源代码或完整学习记录；
-返回的来源ID必须在课程包中登记，否则自动降级为固定项目。具体见
-`docs/finance-scenario-catalog.md`。
-
-## 自检
-
-```powershell
-python scripts/check_provider_readiness.py
-```
-
-默认只检查配置，不发起外部请求、不消耗额度。确认授权和额度后才运行：
-
-```powershell
-python scripts/check_provider_readiness.py --live
-```
-
-密钥只写入未跟踪的 `.env`，不得出现在代码、截图、日志、Issue 或 Pull Request 中。
+当前版本使用已登记的公开来源字段结构和固定合成数据，不调用驼灵。
+模型只能在已审核模板内组织情境与任务拆分，不能获得学生身份或完整学习日志；
+来源ID须在课程包中登记。详见 `docs/finance-scenario-catalog.md`。

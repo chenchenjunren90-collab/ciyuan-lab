@@ -2,20 +2,32 @@
 
 from __future__ import annotations
 
+import asyncio
+import hashlib
 import json
+import math
 from collections.abc import Sequence
 
 from sqlalchemy import Engine, bindparam, text
+from sqlalchemy.exc import SQLAlchemyError
 
 from app.modules.rag.embeddings import TokenHashEmbedder
 from app.modules.rag.ingestion import EligibleKnowledgeChunk
-from app.modules.rag.ports import KnowledgeRetriever, SearchHit
+from app.modules.rag.ports import (
+    KnowledgeRetrievalError,
+    KnowledgeRetriever,
+    SearchHit,
+    TextEmbedder,
+)
 from app.modules.rag.retriever import query_is_in_course_scope, query_variants, tokenize
 
 _COURSE_IDS = ("c", "python", "data_structures")
+_INDEX_DIMENSIONS = 384
 
 
 def _vector_literal(values: Sequence[float]) -> str:
+    if len(values) != _INDEX_DIMENSIONS or any(not math.isfinite(value) for value in values):
+        raise ValueError("embedding must contain 384 finite values for the current index")
     return "[" + ",".join(f"{value:.9f}" for value in values) + "]"
 
 
@@ -28,12 +40,21 @@ def _or_tsquery(tokens: Sequence[str]) -> str:
 class PgVectorKnowledgeStore:
     """Synchronize the approved repository snapshot into one transaction."""
 
-    def __init__(self, engine: Engine, embedder: TokenHashEmbedder | None = None) -> None:
+    def __init__(self, engine: Engine, embedder: TextEmbedder | None = None) -> None:
         self._engine = engine
         self._embedder = embedder or TokenHashEmbedder()
+        if self._embedder.dimensions != _INDEX_DIMENSIONS:
+            raise ValueError("embedding dimensions must match the 384-dimensional index")
 
     def synchronize(self, chunks: Sequence[EligibleKnowledgeChunk]) -> int:
         chunk_ids = [chunk.chunk_id for chunk in chunks]
+        if len(chunk_ids) != len(set(chunk_ids)):
+            raise ValueError("a knowledge snapshot must not contain duplicate chunk IDs")
+        for chunk in chunks:
+            if chunk.course_id not in _COURSE_IDS:
+                raise ValueError("knowledge snapshot contains an unsupported course")
+            if hashlib.sha256(chunk.content.encode("utf-8")).hexdigest() != chunk.content_hash:
+                raise ValueError("knowledge snapshot content does not match its recorded hash")
         statement = text(
             """
             INSERT INTO knowledge_chunks (
@@ -103,17 +124,25 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
     def __init__(
         self,
         engine: Engine,
-        embedder: TokenHashEmbedder | None = None,
+        embedder: TextEmbedder | None = None,
         *,
         min_score: float = 0.10,
         vector_weight: float = 0.65,
+        statement_timeout_ms: int = 3000,
     ) -> None:
         if not 0 <= vector_weight <= 1:
             raise ValueError("vector_weight must be between 0 and 1")
+        if not 0 <= min_score <= 1:
+            raise ValueError("min_score must be between 0 and 1")
+        if not 1 <= statement_timeout_ms <= 60000:
+            raise ValueError("statement_timeout_ms must be between 1 and 60000")
         self._engine = engine
         self._embedder = embedder or TokenHashEmbedder()
+        if self._embedder.dimensions != _INDEX_DIMENSIONS:
+            raise ValueError("embedding dimensions must match the 384-dimensional index")
         self._min_score = min_score
         self._vector_weight = vector_weight
+        self._statement_timeout_ms = statement_timeout_ms
 
     async def search(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
         if (
@@ -123,13 +152,23 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
             or not query_is_in_course_scope(query, course_id)
         ):
             return ()
+        # SQLAlchemy's engine is synchronous. Keep connection waits, embedding,
+        # result materialization and connection cleanup off the ASGI event loop.
+        try:
+            return await asyncio.to_thread(self._search_sync, query, course_id, top_k)
+        except SQLAlchemyError:
+            # Never include the driver exception: it may carry SQL or connection details.
+            raise KnowledgeRetrievalError("knowledge index is temporarily unavailable") from None
+
+    def _search_sync(self, query: str, course_id: str, top_k: int) -> Sequence[SearchHit]:
         statement = text(
             """
             WITH scored AS (
                 SELECT source_id, chunk_id, content, title, citation,
                        ts_rank_cd(
                            search_vector,
-                           to_tsquery('simple', :token_query)
+                           to_tsquery('simple', :token_query),
+                           32
                        ) AS lexical_score,
                        GREATEST(0.0, 1.0 - (embedding <=> CAST(:embedding AS vector)))
                            AS vector_score
@@ -147,6 +186,12 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
         )
         best_by_chunk: dict[str, SearchHit] = {}
         with self._engine.connect() as connection:
+            # Transaction-local setting is reset when this connection is returned
+            # to the pool; a slow query must not occupy a worker indefinitely.
+            connection.execute(
+                text("SELECT set_config('statement_timeout', :timeout_ms, true)"),
+                {"timeout_ms": str(self._statement_timeout_ms)},
+            )
             for variant in query_variants(query):
                 token_query = _or_tsquery(tuple(tokenize(variant)))
                 if not token_query:
@@ -163,7 +208,10 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
                     },
                 ).mappings()
                 for row in rows:
-                    score = round(float(row["score"]), 6)
+                    raw_score = float(row["score"])
+                    if not math.isfinite(raw_score):
+                        continue
+                    score = round(min(1.0, max(0.0, raw_score)), 6)
                     if score < self._min_score:
                         continue
                     hit = SearchHit(
@@ -171,7 +219,12 @@ class PgVectorKnowledgeRetriever(KnowledgeRetriever):
                         chunk_id=str(row["chunk_id"]),
                         content=str(row["content"]),
                         score=score,
-                        metadata={"title": row["title"], "citation": row["citation"]},
+                        metadata={
+                            "title": row["title"],
+                            "citation": row["citation"],
+                            "course_id": course_id,
+                            "retrieval_backend": "pgvector",
+                        },
                     )
                     previous = best_by_chunk.get(hit.chunk_id)
                     if previous is None or hit.score > previous.score:

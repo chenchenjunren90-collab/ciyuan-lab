@@ -200,6 +200,18 @@ export class ApiError extends Error {
   constructor(public readonly status: number, message: string) { super(message) }
 }
 
+const ACCESS_CODE_STORAGE_KEY = "ciyuan-access-code";
+export const ACCESS_CODE_REQUIRED_EVENT = "access-code-required";
+export const ACCESS_CODE_REQUIRED_DETAIL = "access code required";
+
+export function getAccessCode(): string {
+  try { return localStorage.getItem(ACCESS_CODE_STORAGE_KEY) ?? ""; } catch { return ""; }
+}
+
+export function setAccessCode(code: string): void {
+  try { localStorage.setItem(ACCESS_CODE_STORAGE_KEY, code.trim()); } catch { /* storage may be unavailable */ }
+}
+
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/$/, "");
 const configuredTimeoutMs = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? "10000");
 const defaultTimeoutMs = Number.isFinite(configuredTimeoutMs) && configuredTimeoutMs > 0
@@ -218,6 +230,7 @@ async function request<T>(
 ): Promise<T> {
   const controller = new AbortController();
   const timeoutId = globalThis.setTimeout(() => controller.abort(), timeoutMs);
+  const accessCode = getAccessCode();
 
   try {
     const response = await fetcher(`${apiBaseUrl}${path}`, {
@@ -225,6 +238,7 @@ async function request<T>(
       headers: {
         Accept: "application/json",
         ...(options.body ? { "Content-Type": "application/json" } : {}),
+        ...(accessCode ? { "X-Access-Code": accessCode } : {}),
         ...options.headers
       },
       signal: controller.signal
@@ -244,6 +258,9 @@ async function request<T>(
           message = `参数不合法：${(payload.detail[0] as { msg: string }).msg}`;
         }
       } catch { /* Keep a stable message for non-JSON failures. */ }
+      if (response.status === 403 && message === ACCESS_CODE_REQUIRED_DETAIL) {
+        globalThis.dispatchEvent(new Event(ACCESS_CODE_REQUIRED_EVENT));
+      }
       throw new ApiError(response.status, message);
     }
     return (await response.json()) as T;
@@ -353,13 +370,14 @@ export const api = {
     }),
   classroomDialogue: (
     studentId: string, lessonId: string, phase: ClassroomPhase,
-    role: ClassroomRole, message: string, recentTurns: ClassroomDialogueTurn[] = []
+    role: ClassroomRole, message: string, recentTurns: ClassroomDialogueTurn[] = [], beatId?: string
   ) => request<ClassroomDialogueResponse>("/api/v1/classroom/dialogue", {
     method: "POST", body: JSON.stringify({
       student_id: studentId, lesson_id: lessonId, phase, role, message,
+      beat_id: beatId,
       recent_turns: recentTurns.slice(-8).map((turn) => ({
         role: turn.role,
-        content: turn.content.slice(0, 500),
+        content: turn.content.slice(0, 1500),
       })),
     })
   }, fetch, aiTimeoutMs),
@@ -369,9 +387,21 @@ export const api = {
         student_id: studentId, lesson_id: lessonId, description
       })
     }, fetch, aiTimeoutMs),
-  hint: (studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3) =>
+  hint: (
+    studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3,
+    context: {
+      sourceCode?: string; diagnostics?: string[]; passedTests?: number; totalTests?: number;
+    } = {},
+  ) =>
     request<HintResponse>(`/api/v1/activities/${activityId}/hint?course_id=${courseId}`, {
-      method: "POST", body: JSON.stringify({ student_id: studentId, level })
+      method: "POST", body: JSON.stringify({
+        student_id: studentId,
+        level,
+        source_code: context.sourceCode?.slice(0, 8000) ?? "",
+        diagnostics: context.diagnostics?.slice(0, 8).map((item) => item.slice(0, 500)) ?? [],
+        passed_tests: context.passedTests,
+        total_tests: context.totalTests,
+      })
     }),
   submitProject: (
     studentId: string, courseId: CourseId, projectId: string,

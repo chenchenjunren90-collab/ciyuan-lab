@@ -27,29 +27,26 @@ def main() -> int:
     )
     args = parser.parse_args()
     settings = Settings()
-    maas_ready = bool(settings.xfyun_maas_api_key.get_secret_value().strip())
-    password_ready = bool(settings.xfyun_spark_api_password.get_secret_value().strip())
-    pair_ready = bool(
-        settings.xfyun_spark_api_key.get_secret_value().strip()
-        and settings.xfyun_spark_api_secret.get_secret_value().strip()
-    )
-    provider_mode = (
-        "xfyun_maas"
-        if maas_ready
-        else "legacy_spark_password"
-        if password_ready
-        else "legacy_spark_key_secret"
-        if pair_ready
-        else "mock"
-    )
-    print(f"model_configured={maas_ready or password_ready or pair_ready}")
-    print(f"model_provider_mode={provider_mode}")
-    selected_model = (
-        settings.xfyun_maas_model
-        if maas_ready or not (password_ready or pair_ready)
-        else settings.xfyun_spark_model
-    )
-    print(f"model_id={selected_model}")
+    provider = settings.model_provider
+
+    if provider == "deepseek":
+        ready = bool(settings.deepseek_api_key.get_secret_value().strip())
+        model = settings.deepseek_model
+    elif provider == "xfyun_spark":
+        password_ready = bool(settings.xfyun_spark_api_password.get_secret_value().strip())
+        pair_ready = bool(
+            settings.xfyun_spark_api_key.get_secret_value().strip()
+            and settings.xfyun_spark_api_secret.get_secret_value().strip()
+        )
+        ready = password_ready or pair_ready
+        model = settings.xfyun_spark_model
+    else:  # xfyun_maas (default)
+        ready = bool(settings.xfyun_maas_api_key.get_secret_value().strip())
+        model = settings.xfyun_maas_model
+
+    print(f"model_provider_mode={provider}")
+    print(f"model_configured={ready}")
+    print(f"model_id={model}")
     if args.live:
         asyncio.run(_live_check(settings))
     else:

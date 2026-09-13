@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import tempfile
+from contextlib import suppress
 from pathlib import Path
 from uuid import uuid4
 
@@ -21,9 +22,8 @@ class DockerSandboxRunner:
 
     The source file is mounted read-only. The container has no network, no
     Linux capabilities, a read-only root filesystem, a non-root user, and
-    explicit memory/PID limits. PRACTICE-02 will add adversarial sandbox tests
-    and stronger output-stream limiting; this runner already prevents direct
-    execution in the FastAPI process or host Python runtime.
+    explicit memory/PID limits and a bounded combined output buffer. Submitted
+    programs never execute in the FastAPI process or host Python runtime.
     """
 
     def __init__(
@@ -74,21 +74,26 @@ class DockerSandboxRunner:
                 ) from exc
 
             try:
-                stdout_bytes, stderr_bytes = await asyncio.wait_for(
-                    process.communicate(request.stdin.encode("utf-8")),
+                stdout_bytes, stderr_bytes, output_limit_exceeded = await asyncio.wait_for(
+                    self._capture_bounded(
+                        process, request.stdin.encode("utf-8"), request.output_limit_kb * 1024
+                    ),
                     timeout=(request.time_limit_ms / 1000) + 5,
                 )
             except TimeoutError:
-                process.kill()
-                await process.wait()
+                await self._stop_process(process)
                 await self._remove_container(container_name)
                 return SandboxOutcome(return_code=-1, timed_out=True)
+            except asyncio.CancelledError:
+                await self._stop_process(process)
+                await self._remove_container(container_name)
+                raise
+            if output_limit_exceeded:
+                await self._remove_container(container_name)
 
         output_limit_bytes = request.output_limit_kb * 1024
         if process.returncode == 125:
             raise SandboxUnavailableError("Docker could not start the isolated container or image")
-        combined_size = len(stdout_bytes) + len(stderr_bytes)
-        output_limit_exceeded = combined_size > output_limit_bytes
         stdout_slice = stdout_bytes[:output_limit_bytes]
         remaining = max(0, output_limit_bytes - len(stdout_slice))
         stderr_slice = stderr_bytes[:remaining]
@@ -100,6 +105,69 @@ class DockerSandboxRunner:
             compilation_failed=process.returncode == _COMPILE_FAILURE_EXIT_CODE,
             output_limit_exceeded=output_limit_exceeded,
         )
+
+    @staticmethod
+    async def _capture_bounded(
+        process: asyncio.subprocess.Process, stdin: bytes, limit: int
+    ) -> tuple[bytes, bytes, bool]:
+        """Drain both pipes concurrently while retaining at most limit bytes total."""
+        buffers = [bytearray(), bytearray()]
+        retained = 0
+        exceeded = False
+
+        async def read(stream: asyncio.StreamReader | None, index: int) -> None:
+            nonlocal retained, exceeded
+            if stream is None:
+                return
+            while data := await stream.read(4096):
+                available = max(0, limit - retained)
+                chunk = data[:available]
+                buffers[index].extend(chunk)
+                retained += len(chunk)
+                if len(data) > available and not exceeded:
+                    exceeded = True
+                    if process.returncode is None:
+                        with suppress(ProcessLookupError):
+                            process.kill()
+
+        async def write() -> None:
+            if process.stdin is None:
+                return
+            try:
+                process.stdin.write(stdin)
+                await process.stdin.drain()
+            except (BrokenPipeError, ConnectionResetError):
+                pass
+            finally:
+                process.stdin.close()
+
+        tasks = [
+            asyncio.create_task(read(process.stdout, 0)),
+            asyncio.create_task(read(process.stderr, 1)),
+            asyncio.create_task(write()),
+            asyncio.create_task(process.wait()),
+        ]
+        try:
+            await asyncio.gather(*tasks)
+        finally:
+            for task in tasks:
+                if not task.done():
+                    task.cancel()
+            await asyncio.gather(*tasks, return_exceptions=True)
+        return bytes(buffers[0]), bytes(buffers[1]), exceeded
+
+    @staticmethod
+    async def _stop_process(process: asyncio.subprocess.Process) -> None:
+        if process.returncode is None:
+            with suppress(ProcessLookupError):
+                process.kill()
+
+        async def drain(stream: asyncio.StreamReader | None) -> None:
+            if stream is not None:
+                while await stream.read(4096):
+                    pass
+
+        await asyncio.gather(drain(process.stdout), drain(process.stderr), process.wait())
 
     def _build_docker_command(
         self,

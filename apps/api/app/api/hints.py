@@ -25,6 +25,10 @@ async def create_hint(
             course_id=course_id,
             activity_id=activity_id,
             level=request.level,
+            source_code=request.source_code,
+            diagnostics=request.diagnostics,
+            passed_tests=request.passed_tests,
+            total_tests=request.total_tests,
         )
     except CourseRecordNotFoundError as exc:
         raise HTTPException(status_code=404, detail="activity not found") from exc

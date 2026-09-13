@@ -20,6 +20,8 @@ class VerificationResult:
     passed_tests: int
     total_tests: int
     diagnostics: Sequence[str]
+    # An unavailable runner is not evidence about the learner's code.
+    evidence_available: bool = True
 
 
 class CodeVerifier(Protocol):

@@ -58,11 +58,20 @@ class DeterministicCodeVerifier(CodeVerifier):
                     )
                 )
             except SandboxUnavailableError:
-                diagnostics.append("验证服务暂不可用：隔离运行环境未就绪")
-                break
+                return VerificationResult(
+                    accepted=False,
+                    passed_tests=passed_tests,
+                    total_tests=len(tests),
+                    diagnostics=("验证服务暂不可用：隔离运行环境未就绪",),
+                    evidence_available=False,
+                )
 
             if outcome.compilation_failed:
-                diagnostics.append(f"编译检查失败{self._safe_detail(outcome.stderr)}")
+                diagnostics.append(
+                    "编译检查失败（隐藏测试详细信息已隐藏）"
+                    if test.visibility == "hidden"
+                    else f"编译检查失败{self._safe_detail(outcome.stderr)}"
+                )
                 break
             if outcome.timed_out:
                 diagnostics.append("运行超时：程序未在限定时间内结束")

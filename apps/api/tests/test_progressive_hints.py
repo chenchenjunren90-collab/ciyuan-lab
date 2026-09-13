@@ -59,3 +59,49 @@ def test_project_hint_keeps_focus_on_computer_science_workflow() -> None:
 
     assert "输入校验" in result.hint
     assert "测试证据" in result.hint
+
+
+def test_ta_hint_uses_public_output_difference_instead_of_generic_course_copy() -> None:
+    service = ProgressiveHintService(
+        courses=CoursePackRepository(),
+        repository=ProfileStore(),  # type: ignore[arg-type]
+    )
+
+    result = service.create_hint(
+        student_id="hint-student",
+        course_id="python",
+        activity_id="PY-BASE-01-H1",
+        level=1,
+        source_code='name = input()\nprint(f"你好， {name}！")',
+        diagnostics=["公开测试 public-normal 未通过：期望 '你好，小词！'，实际 '你好， 小词！'"],
+        passed_tests=0,
+        total_tests=2,
+    )
+
+    assert "0/2" in result.hint
+    assert "逗号后多了一个空格" in result.hint
+    assert "CPython" not in result.hint
+    assert not result.answer_revealed
+
+
+def test_ta_hint_hands_off_hidden_boundary_without_revealing_hidden_case() -> None:
+    service = ProgressiveHintService(
+        courses=CoursePackRepository(),
+        repository=ProfileStore(),  # type: ignore[arg-type]
+    )
+
+    result = service.create_hint(
+        student_id="hint-student",
+        course_id="python",
+        activity_id="PY-BASE-01-H1",
+        level=1,
+        source_code='name = input()\nprint(f"你好，{name}！")',
+        diagnostics=["隐藏测试未通过（输入与期望输出已隐藏）"],
+        passed_tests=1,
+        total_tests=2,
+    )
+
+    assert "1/2" in result.hint
+    assert "首尾空格" in result.hint
+    assert "隐藏" in result.hint
+    assert "小元" not in result.hint
