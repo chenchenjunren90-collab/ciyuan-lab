@@ -78,7 +78,7 @@ $env:CIYUAN_TEST_DATABASE_URL="postgresql+psycopg://ciyuan:replace-before-use@12
 
 ```dotenv
 XFYUN_MAAS_BASE_URL=https://maas-api.cn-huabei-1.xf-yun.com/v2
-XFYUN_MAAS_MODEL=xopdeepseekv4flash0731
+XFYUN_MAAS_MODEL=xopdeepseekv4pro0813
 XFYUN_MAAS_API_KEY=从服务管控页面获取的项目密钥
 ```
 

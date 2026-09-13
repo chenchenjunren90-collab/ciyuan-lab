@@ -25,7 +25,7 @@ def test_maas_adapter_uses_openai_compatible_contract() -> None:
         assert request.headers["Authorization"] == "Bearer test-maas-key"
         body = json.loads(request.read().decode())
         assert body == {
-            "model": "xopdeepseekv4flash0731",
+            "model": "xopdeepseekv4pro0813",
             "messages": [{"role": "user", "content": "只回复ok"}],
             "stream": False,
         }
@@ -33,7 +33,7 @@ def test_maas_adapter_uses_openai_compatible_contract() -> None:
             200,
             json={
                 "choices": [{"message": {"role": "assistant", "content": "ok"}}],
-                "model": "xopdeepseekv4flash0731",
+                "model": "xopdeepseekv4pro0813",
                 "usage": {"total_tokens": 3},
             },
         )
@@ -43,7 +43,7 @@ def test_maas_adapter_uses_openai_compatible_contract() -> None:
             adapter = XfyunMaaSAdapter(
                 base_url="https://maas-api.cn-huabei-1.xf-yun.com/v2",
                 api_key="test-maas-key",
-                model="xopdeepseekv4flash0731",
+                model="xopdeepseekv4pro0813",
                 client=client,
             )
             response = await adapter.complete([ChatMessage(role="user", content="只回复ok")])

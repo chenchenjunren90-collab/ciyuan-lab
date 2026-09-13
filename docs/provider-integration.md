@@ -6,12 +6,12 @@
 
 学情规划、C语言/Python/数据结构课程辅导、质量监督与受控项目编排，共用
 `model_adapters/` 内的适配器和并发限制。默认 MaaS 模型服务标识为
-`xopdeepseekv4flash0731`，必须与实际服务卡一致。
+`xopdeepseekv4pro0813`，必须与实际服务卡一致。
 
 ```text
 MODEL_PROVIDER=xfyun_maas
 XFYUN_MAAS_BASE_URL=https://maas-api.cn-huabei-1.xf-yun.com/v2
-XFYUN_MAAS_MODEL=xopdeepseekv4flash0731
+XFYUN_MAAS_MODEL=xopdeepseekv4pro0813
 XFYUN_MAAS_TIMEOUT_SECONDS=45
 XFYUN_MAAS_MAX_RETRIES=2
 ```

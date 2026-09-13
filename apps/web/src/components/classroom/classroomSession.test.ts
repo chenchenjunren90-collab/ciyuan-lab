@@ -103,6 +103,17 @@ describe("classroom session persistence", () => {
     expect(loadClassroomSession(storage, "learner-b")).toBeNull();
   });
 
+  it("keeps board annotations separated by learner, lesson and teaching step", () => {
+    const storage = memoryStorage();
+    const draft = { ...sessionDraft(), boardNotes: {
+      '["lesson-a","step-1"]': { highlights: ["point:检查范围"], pins: { "point:检查范围": { x: 40, y: 50 } } },
+      '["lesson-a","step-2"]': { highlights: ["code:print(1)"], pins: {} },
+    } };
+    saveClassroomSession(storage, "learner-a", draft);
+    expect(loadClassroomSession(storage, "learner-a")?.boardNotes).toEqual(draft.boardNotes);
+    expect(loadClassroomSession(storage, "learner-b")).toBeNull();
+  });
+
   it("drops a corrupt draft instead of resetting the page with partial data", () => {
     const key = classroomSessionKey("learner-a");
     const storage = memoryStorage({ [key]: JSON.stringify({ version: 1, lessonId: "python-list-filter-01" }) });

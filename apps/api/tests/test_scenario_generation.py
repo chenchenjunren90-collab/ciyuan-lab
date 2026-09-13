@@ -40,7 +40,7 @@ class ValidModel:
                 '"source_refs":["SRC-PY-SYNTHETIC-FINANCE-CATALOG"]}'
             ),
             provider="xfyun-maas",
-            model="xopdeepseekv4flash0731",
+            model="xopdeepseekv4pro0813",
             usage={},
         )
 
@@ -54,7 +54,7 @@ class InvalidCitationModel:
                 '"deliverables":["程序"],"source_refs":["FAKE-SOURCE"]}'
             ),
             provider="xfyun-maas",
-            model="xopdeepseekv4flash0731",
+            model="xopdeepseekv4pro0813",
             usage={},
         )
 

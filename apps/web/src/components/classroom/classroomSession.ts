@@ -8,6 +8,7 @@ import type {
   SubmissionResult,
 } from "../../services/api";
 import type { KeyValueStorage } from "../../uiPreferences";
+import type { BoardNotesByBeat } from "./boardTools";
 
 export type ClassroomWorkspaceView = "lecture" | "discussion" | "code" | "materials";
 
@@ -34,6 +35,7 @@ export interface ClassroomSessionDraft {
   furthestIndex?: number;
   selectedChoice: string;
   checkpointResult: ClassroomCheckpointResult | null;
+  boardNotes?: BoardNotesByBeat;
   checkpointDrafts?: Record<string, {
     selectedChoice: string;
     checkpointResult: ClassroomCheckpointResult | null;

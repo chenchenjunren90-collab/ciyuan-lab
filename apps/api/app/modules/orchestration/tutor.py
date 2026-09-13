@@ -114,13 +114,15 @@ class CourseTutor:
             {
                 "chunk_id": hit.chunk_id,
                 "source_id": hit.source_id,
+                "source_type": str(hit.metadata.get("source_type", "course")),
+                "title": str(hit.metadata.get("title", "")),
                 "content": hit.content,
             }
             for hit in evidence
         ]
         user = json.dumps({"question": question, "evidence": evidence_payload}, ensure_ascii=False)
         bounded_conversation = tuple(
-            ChatMessage(role=message.role, content=message.content.strip()[:1000])
+            ChatMessage(role=message.role, content=message.content.strip()[:1500])
             for message in conversation[-8:]
             if message.role != "system" and message.content.strip()
         )

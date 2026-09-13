@@ -370,13 +370,14 @@ export const api = {
     }),
   classroomDialogue: (
     studentId: string, lessonId: string, phase: ClassroomPhase,
-    role: ClassroomRole, message: string, recentTurns: ClassroomDialogueTurn[] = []
+    role: ClassroomRole, message: string, recentTurns: ClassroomDialogueTurn[] = [], beatId?: string
   ) => request<ClassroomDialogueResponse>("/api/v1/classroom/dialogue", {
     method: "POST", body: JSON.stringify({
       student_id: studentId, lesson_id: lessonId, phase, role, message,
+      beat_id: beatId,
       recent_turns: recentTurns.slice(-8).map((turn) => ({
         role: turn.role,
-        content: turn.content.slice(0, 500),
+        content: turn.content.slice(0, 1500),
       })),
     })
   }, fetch, aiTimeoutMs),
@@ -386,9 +387,21 @@ export const api = {
         student_id: studentId, lesson_id: lessonId, description
       })
     }, fetch, aiTimeoutMs),
-  hint: (studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3) =>
+  hint: (
+    studentId: string, courseId: CourseId, activityId: string, level: 1 | 2 | 3,
+    context: {
+      sourceCode?: string; diagnostics?: string[]; passedTests?: number; totalTests?: number;
+    } = {},
+  ) =>
     request<HintResponse>(`/api/v1/activities/${activityId}/hint?course_id=${courseId}`, {
-      method: "POST", body: JSON.stringify({ student_id: studentId, level })
+      method: "POST", body: JSON.stringify({
+        student_id: studentId,
+        level,
+        source_code: context.sourceCode?.slice(0, 8000) ?? "",
+        diagnostics: context.diagnostics?.slice(0, 8).map((item) => item.slice(0, 500)) ?? [],
+        passed_tests: context.passedTests,
+        total_tests: context.totalTests,
+      })
     }),
   submitProject: (
     studentId: string, courseId: CourseId, projectId: string,

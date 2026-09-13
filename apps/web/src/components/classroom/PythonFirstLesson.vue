@@ -32,6 +32,12 @@ import {
 } from "./classroomSession";
 import ClassroomPlanPreview from "./ClassroomPlanPreview.vue";
 import LessonBeatContent from "./LessonBeatContent.vue";
+import ClassroomBoard from "./ClassroomBoard.vue";
+import ClassroomCast from "./ClassroomCast.vue";
+import ClassroomPortrait from "./ClassroomPortrait.vue";
+import ClassroomCodeExample from "./ClassroomCodeExample.vue";
+import { readBoardNotes, type BoardNotes, type BoardNotesByBeat } from "./boardTools";
+import { selectDialogueHistory } from "./dialogueHistory";
 
 const props = defineProps<{ studentId: string; genericMode?: boolean; darkTheme: boolean }>();
 const dispatch = defineEmits<{
@@ -166,52 +172,10 @@ function handleExitKeydown(event: KeyboardEvent): void {
   }
 }
 const isPaused = ref(false);
-const boardCodeExpanded = ref(false);
-const materialCodeExpanded = ref(false);
-// 黑板动作引擎：激光笔 / 高亮笔 / 分步演示。
-const boardLaserOn = ref(false);
-const boardHighlighterOn = ref(false);
-const boardStepping = ref(false);
-const boardStepKey = ref(0);
-const laserPos = ref<{ x: number; y: number } | null>(null);
-
-function toggleBoardLaser(): void {
-  boardLaserOn.value = !boardLaserOn.value;
-  if (!boardLaserOn.value) laserPos.value = null;
-}
-function toggleBoardHighlighter(): void {
-  boardHighlighterOn.value = !boardHighlighterOn.value;
-}
-function replayBoardSteps(): void {
-  boardStepping.value = !boardStepping.value;
-  if (boardStepping.value) boardStepKey.value += 1;
-}
-function onBoardPointerMove(event: PointerEvent): void {
-  if (!boardLaserOn.value) return;
-  const board = event.currentTarget as HTMLElement;
-  const rect = board.getBoundingClientRect();
-  laserPos.value = { x: event.clientX - rect.left, y: event.clientY - rect.top };
-}
-function onBoardPointerLeave(): void {
-  laserPos.value = null;
-}
-function onBoardPointerDown(event: PointerEvent): void {
-  if (!boardLaserOn.value) return;
-  const board = event.currentTarget as HTMLElement;
-  const rect = board.getBoundingClientRect();
-  const mark = document.createElement("i");
-  mark.className = "laser-mark";
-  mark.style.left = `${event.clientX - rect.left - 5}px`;
-  mark.style.top = `${event.clientY - rect.top - 5}px`;
-  board.appendChild(mark);
-  window.setTimeout(() => mark.remove(), 1400);
-}
-function onBoardLineClick(event: MouseEvent): void {
-  if (!boardHighlighterOn.value || boardLaserOn.value) return;
-  const line = (event.target as HTMLElement).closest(
-    ".board-key-points li, .board-trace span, .board-mistakes span",
-  );
-  if (line instanceof HTMLElement) line.classList.toggle("board-highlighted");
+const boardNotes = ref<BoardNotesByBeat>({});
+const boardNotesKey = computed(() => JSON.stringify([activeLessonId.value, currentBeat.value?.id]));
+function annotateBoard(notes: BoardNotes): void {
+  boardNotes.value = { ...boardNotes.value, [boardNotesKey.value]: notes };
 }
 const sessionBeatSnapshot = ref<ClassroomBeat[]>([]);
 const planBuildButton = ref<HTMLButtonElement | null>(null);
@@ -324,11 +288,6 @@ const currentBeat = computed<ClassroomBeat | null>(() => personalizedBeats.value
 watch([dailyMinutes, weeklyDays, preferredMode, planGoal, selfProfile], () => {
   learningPlan.value = null;
 });
-const currentBoardMistakes = computed(() => currentBeat.value?.board_points
-  .filter((point) => point.startsWith("易错提醒："))
-  .map((point) => point.slice("易错提醒：".length)) ?? []);
-const currentBoardPoints = computed(() => currentBeat.value?.board_points
-  .filter((point) => !point.startsWith("易错提醒：")) ?? []);
 const activeRole = computed<ClassroomRole>(() => currentBeat.value?.speaker ?? "teacher");
 const progress = computed(() => {
   if (!personalizedBeats.value.length) return 0;
@@ -516,6 +475,7 @@ function buildSessionDraft(): ClassroomSessionDraft | null {
     selectedChoice: selectedChoice.value,
     checkpointResult: checkpointResult.value,
     checkpointDrafts: checkpointDrafts.value,
+    boardNotes: boardNotes.value,
     messages: messages.value.slice(-200),
     dialogueText: dialogueText.value,
     dialogueRole: dialogueRole.value,
@@ -564,6 +524,7 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
     Math.max(0, beatCount - 1),
   );
   selectedChoice.value = draft.selectedChoice;
+  boardNotes.value = readBoardNotes(draft.boardNotes);
   checkpointResult.value = draft.checkpointResult;
   checkpointDrafts.value = draft.checkpointDrafts ?? (oldBeat ? {
     [oldBeat.id]: {
@@ -609,6 +570,7 @@ watch(() => ({
   selectedChoice: selectedChoice.value,
   checkpointResult: checkpointResult.value,
   checkpointDrafts: checkpointDrafts.value,
+  boardNotes: boardNotes.value,
   messages: messages.value,
   dialogueText: dialogueText.value,
   dialogueRole: dialogueRole.value,
@@ -1309,7 +1271,13 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
         : "课堂任务已通过，点击“进入课堂小结”继续。"
       );
     } else {
-      pushMessage("peer_debugger", "没关系，报错就是线索。我们先看公开测试和第一条诊断，再决定改哪一行。", "reply");
+      const verification = result.verification;
+      const firstDiagnostic = verification?.diagnostics[0] ?? result.feedback;
+      pushMessage(
+        "peer_debugger",
+        `我把这次运行事实交给助教：${verification?.passed_tests ?? 0}/${verification?.total_tests ?? 0} 项通过；${firstDiagnostic}。先围绕这一条定位，不猜隐藏测试。`,
+        "reply",
+      );
       showFeedback("代码已经运行，但尚未通过全部测试；请查看诊断信息或向助教要提示。");
     }
   } catch (cause) {
@@ -1330,7 +1298,15 @@ async function requestHint(task: ClassroomCodeTaskData): Promise<void> {
   error.value = "";
   showFeedback("助教正在结合题目要求和你的当前进度准备提示…");
   try {
-    const result = await api.hint(props.studentId, "python", task.exercise_id, 1);
+    const homework = lesson.value?.homework.exercise_id === task.exercise_id;
+    const sourceCode = homework ? homeworkCode.value : practiceCode.value;
+    const verification = (homework ? homeworkResult.value : practiceResult.value)?.verification;
+    const result = await api.hint(props.studentId, "python", task.exercise_id, 1, {
+      sourceCode,
+      diagnostics: verification?.diagnostics ?? [],
+      passedTests: verification?.passed_tests,
+      totalTests: verification?.total_tests,
+    });
     if (!componentActive) return;
     hint.value = result.hint;
     pushMessage("ta", result.hint, "reply");
@@ -1369,10 +1345,7 @@ async function askRole(): Promise<void> {
   const retrying = dialogueError.value && previousMessage?.kind === "student"
     && previousMessage.content === text && previousMessage.target === role;
   const history = retrying ? messages.value.slice(0, -1) : messages.value;
-  const recentTurns = history.slice(-8).map((message) => ({
-    role: message.role,
-    content: message.content,
-  }));
+  const recentTurns = selectDialogueHistory(history, text);
   dialogueLoading.value = true;
   dialogueError.value = "";
   dialogueText.value = "";
@@ -1385,6 +1358,7 @@ async function askRole(): Promise<void> {
       role,
       text,
       recentTurns,
+      currentBeat.value.id,
     );
     if (!componentActive || lesson.value?.lesson_id !== lessonId) return;
     const onlineEvidence = result.citations.some((citation) => citation.source_type === "online");
@@ -1650,57 +1624,12 @@ onBeforeUnmount(() => {
 
       <div v-if="classroomView === 'lecture'" class="classroom-layout integrated-learning">
         <section class="teacher-lecture-card">
-          <div class="teacher-portrait"><i>林</i></div>
+          <div class="teacher-portrait"><ClassroomPortrait person="teacher" /></div>
           <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="useConversationStarter('teacher', '老师，我对刚才这一步的理解是：')">向老师提问</button></footer></div>
         </section>
         <div class="classroom-scene" :data-phase="currentBeat.phase">
-          <div class="sun-window"><span></span><i></i></div>
-          <div class="wall-note">慢慢来，每一次尝试都算数</div>
-
-          <section
-            class="smart-board"
-            :class="{ 'laser-on': boardLaserOn, 'highlighter-on': boardHighlighterOn, 'stepping': boardStepping }"
-            @pointermove="onBoardPointerMove"
-            @pointerleave="onBoardPointerLeave"
-            @pointerdown="onBoardPointerDown"
-            @click="onBoardLineClick"
-          >
-            <header>
-              <span>{{ currentBeat.eyebrow }}</span><b>{{ currentBeat.board_title }}</b>
-              <div class="board-tools" role="group" aria-label="黑板演示工具">
-                <button type="button" class="board-tool" :class="{ active: boardLaserOn }" :aria-pressed="boardLaserOn" title="激光笔：移动指示，点击留下光点" @click="toggleBoardLaser">⊙<span>激光笔</span></button>
-                <button type="button" class="board-tool" :class="{ active: boardHighlighterOn }" :aria-pressed="boardHighlighterOn" title="高亮笔：点击要点或步骤进行高亮" @click="toggleBoardHighlighter">✎<span>高亮笔</span></button>
-                <button type="button" class="board-tool" :class="{ active: boardStepping }" :aria-pressed="boardStepping" title="分步演示：逐条展示板书内容" @click="replayBoardSteps">▶<span>{{ boardStepping ? "结束分步" : "分步演示" }}</span></button>
-              </div>
-            </header>
-            <i v-if="laserPos" class="laser-dot" :style="{ left: `${laserPos.x}px`, top: `${laserPos.y}px` }" aria-hidden="true"></i>
-            <div class="board-draw" :key="boardStepping ? boardStepKey : 0">
-              <p v-if="currentBeat.board_explanation" class="board-explanation">{{ currentBeat.board_explanation }}</p>
-              <section v-if="currentBoardPoints.length" class="board-key-points"><b>关键要点</b><ul><li v-for="point in currentBoardPoints" :key="point">{{ point }}</li></ul></section>
-              <section v-if="currentBeat.board_code" class="board-code-example" :class="{ expanded: boardCodeExpanded }"><b>示例代码</b><button class="code-expand" @click="boardCodeExpanded = !boardCodeExpanded">{{ boardCodeExpanded ? "收起" : "展开" }}</button><pre><code>{{ currentBeat.board_code }}</code></pre></section>
-              <div v-if="currentBeat.board_trace.length" class="board-trace"><b>逐步拆解</b><span v-for="step in currentBeat.board_trace" :key="step">{{ step }}</span></div>
-              <aside v-if="currentBoardMistakes.length" class="board-mistakes"><b>容易踩坑</b><span v-for="mistake in currentBoardMistakes" :key="mistake">{{ mistake }}</span></aside>
-            </div>
-          </section>
-
-          <div class="teacher-zone">
-            <div class="classmate teacher" :class="{ speaking: activeRole === 'teacher' }">
-              <i>林</i><div><b>林老师</b><small>循循善诱</small></div><span></span>
-            </div>
-            <div class="teacher-desk"><span>{ }</span><i></i></div>
-          </div>
-
-          <div class="desk-row">
-            <button class="classmate" :class="{ speaking: activeRole === 'peer_cautious' }" @click="selectDialogueRole('peer_cautious')">
-              <i>禾</i><div><b>小禾</b><small>认真提问</small></div><span></span>
-            </button>
-            <button class="classmate" :class="{ speaking: activeRole === 'peer_debugger' }" @click="selectDialogueRole('peer_debugger')">
-              <i>拓</i><div><b>阿拓</b><small>一起排错</small></div><span></span>
-            </button>
-            <button class="classmate" :class="{ speaking: activeRole === 'peer_summarizer' }" @click="selectDialogueRole('peer_summarizer')">
-              <i>宁</i><div><b>宁宁</b><small>整理笔记</small></div><span></span>
-            </button>
-          </div>
+          <ClassroomBoard :beat="currentBeat" :notes="boardNotes[boardNotesKey]" @annotate="annotateBoard" />
+          <ClassroomCast :active-role="activeRole" :selected-role="dialogueRole" @select="selectDialogueRole" />
         </div>
 
         <aside class="conversation-dock" aria-label="课堂互动区">
@@ -1729,7 +1658,7 @@ onBeforeUnmount(() => {
 
       <section v-if="classroomView === 'materials'" class="lesson-materials">
         <aside><header><b>本次课程资料</b><span>由测评缺口动态组合</span></header><button v-for="block in selectedLearningBlocks" :key="block.block_id" :class="{ active: selectedMaterial?.block_id === block.block_id }" @click="selectedMaterialId = block.block_id"><b>{{ block.title }}</b><span>{{ block.skill_atoms.map((atom) => atom.label).join(' · ') }}</span></button><p v-if="!selectedLearningBlocks.length">当前使用固定实践课讲义。</p></aside>
-        <article v-if="selectedMaterial"><header><span>{{ selectedMaterial.reason }}</span><h2>{{ selectedMaterial.title }}</h2></header><p>{{ selectedMaterial.summary }}</p><section><b>本节要点</b><ul><li v-for="point in selectedMaterial.key_points" :key="point">{{ point }}</li></ul></section><section v-if="selectedMaterial.example_problem"><b>分步例题</b><p>{{ selectedMaterial.example_problem }}</p><ol><li v-for="step in selectedMaterial.example_steps" :key="step">{{ step }}</li></ol><div class="code-heading"><b>示例代码</b><button class="code-expand" @click="materialCodeExpanded = !materialCodeExpanded">{{ materialCodeExpanded ? "收起" : "展开" }}</button></div><pre v-if="selectedMaterial.example_code" :class="{ expanded: materialCodeExpanded }"><code>{{ selectedMaterial.example_code }}</code></pre></section><small>课程包版本化内容 · 质量监督可追溯</small></article>
+        <article v-if="selectedMaterial"><header><span>{{ selectedMaterial.reason }}</span><h2>{{ selectedMaterial.title }}</h2></header><p>{{ selectedMaterial.summary }}</p><section><b>本节要点</b><ul><li v-for="point in selectedMaterial.key_points" :key="point">{{ point }}</li></ul></section><section v-if="selectedMaterial.example_problem"><b>分步例题</b><p>{{ selectedMaterial.example_problem }}</p><ol><li v-for="step in selectedMaterial.example_steps" :key="step">{{ step }}</li></ol><ClassroomCodeExample :code="selectedMaterial.example_code" /></section><small>课程包版本化内容 · 质量监督可追溯</small></article>
         <article v-else class="material-empty"><h2>{{ currentBeat.board_title }}</h2><p>{{ currentBeat.board_explanation }}</p><ul><li v-for="point in currentBeat.board_points" :key="point">{{ point }}</li></ul><pre v-if="currentBeat.board_code"><code>{{ currentBeat.board_code }}</code></pre></article>
       </section>
 
@@ -1991,4 +1920,11 @@ html[data-motion="reduced"] .smart-board :is(.laser-mark, .board-draw > *) { ani
 .global-action-feedback[data-tone="warning"] > i { background: var(--warning); box-shadow: 0 0 0 4px color-mix(in srgb,var(--warning) 14%,transparent); }
 .global-action-feedback[data-tone="error"] { border-color: color-mix(in srgb,var(--danger) 64%,var(--line)); background: color-mix(in srgb,var(--danger) 8%,var(--surface-raised)); }
 .global-action-feedback[data-tone="error"] > i { background: var(--danger); box-shadow: 0 0 0 4px color-mix(in srgb,var(--danger) 14%,transparent); }
+.classroom-layout .classroom-scene { min-width: 0; min-height: 0; padding: 24px; background: var(--surface-muted); border-color: var(--line); }
+.classroom-layout .classroom-scene::after { display: none; }
+.classroom-layout .conversation-dock { grid-template-rows: auto auto minmax(300px, 1fr) auto; }
+.classroom-layout .discussion-prompts { align-items: center; align-content: start; }
+.focus-toolbar > div:first-child { min-width: 0; }
+html[data-device-resolved="mobile"] .classroom-layout .classroom-scene { min-height: 0; padding: 14px; }
+@media (max-width: 760px) { .classroom-layout .classroom-scene { padding: 14px; } .focus-toolbar { grid-template-columns: minmax(0, 1fr) auto; gap: 8px; } .focus-toolbar > div:first-child { grid-column: 1 / -1; } .focus-toolbar > div:first-child span { display: none; } .focus-toolbar select { min-width: 0; width: 100%; } }
 </style>

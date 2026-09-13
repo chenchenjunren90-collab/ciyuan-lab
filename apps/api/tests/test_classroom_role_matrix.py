@@ -97,7 +97,8 @@ def test_role_fallbacks_are_distinct_and_obey_visible_role_constraints() -> None
         answers[role] = payload["answer"]
 
     assert len(set(answers.values())) == len(_ROLES)
-    assert "？" in answers["teacher"]
+    assert "print" in answers["teacher"]
+    assert "哪些操作改变了值" not in answers["teacher"]
     assert "？" in answers["peer_cautious"]
     assert any(word in answers["peer_debugger"] for word in ("运行", "试", "输出"))
     assert any(word in answers["peer_summarizer"] for word in ("一句", "笔记", "总结"))

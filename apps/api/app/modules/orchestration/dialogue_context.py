@@ -17,8 +17,8 @@ from typing import Protocol
 from app.modules.model_adapters.ports import ChatMessage
 
 _MAX_TURNS = 8
-_MAX_CONTENT_CHARS = 500
-_MAX_RETRIEVAL_ANCHORS = 2
+_MAX_CONTENT_CHARS = 1500
+_MAX_RETRIEVAL_ANCHORS = 1
 _MAX_REVIEW_CHARS = 1800
 _LOW_INFORMATION_REPLIES = {
     "愿意",
@@ -126,11 +126,18 @@ def build_dialogue_context(
 def _clean_turns(recent_turns: Sequence[DialogueTurnLike]) -> tuple[tuple[str, str], ...]:
     cleaned: list[tuple[str, str]] = []
     for turn in recent_turns[-_MAX_TURNS:]:
-        content = turn.content.strip()[:_MAX_CONTENT_CHARS]
+        content = redact_dialogue_text(turn.content.strip())[:_MAX_CONTENT_CHARS]
         if not content or not re.sub(r"[.。…\s]+", "", content):
             continue
         cleaned.append((turn.role, content))
     return tuple(cleaned)
+
+
+def redact_dialogue_text(text: str) -> str:
+    """Minimize obvious personal/contact fields before provider-bound context."""
+    text = re.sub(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", "[邮箱已省略]", text)
+    text = re.sub(r"(?<!\d)1[3-9]\d{9}(?!\d)", "[电话已省略]", text)
+    return re.sub(r"(姓名|学号|手机号|身份证号)\s*[:：]\s*[^\s，。；]+", r"\1：[已省略]", text)
 
 
 def _to_model_message(
@@ -153,6 +160,8 @@ def _contextual_query(
     turns: Sequence[tuple[str, str]],
     lesson_topic: str,
 ) -> str:
+    if any(marker in message for marker in ("板书", "黑板", "本节", "当前这一步")):
+        return f"当前课堂主题：{lesson_topic}\n学生当前追问：{message.strip()}"
     student_anchors: list[str] = []
     for role, content in reversed(turns):
         if role != "student" or _is_low_information(content):
@@ -166,7 +175,9 @@ def _contextual_query(
         return f"学生先前主题：{anchors}\n学生当前追问：{message.strip()}"
 
     for role, content in reversed(turns):
-        if role != "student" and not _is_low_information(content):
+        if role != "student" and not _is_low_information(content) and not any(
+            marker in content for marker in ("完整学习闭环", "别着急，先抓住一句", "先不看完整答案")
+        ):
             return f"上一轮课堂说明：{content}\n学生当前追问：{message.strip()}"
 
     return f"当前课堂主题：{lesson_topic}\n学生当前追问：{message.strip()}"
@@ -187,6 +198,9 @@ def _review_role_label(role: str) -> str:
 
 def _is_low_information(content: str) -> bool:
     normalized = re.sub(r"\s+", "", content.casefold()).strip("，,。！？!?；;.")
-    return normalized in _LOW_INFORMATION_REPLIES or (
+    return normalized in _LOW_INFORMATION_REPLIES or bool(re.fullmatch(
+        r"(?:请|再|能否|能不能|给我|帮我|举|一个|详细|的|代码|示例|例子|讲解|解释|一下|看看|看|说|一遍)+",
+        normalized,
+    )) or (
         len(normalized) <= 20 and any(marker in normalized for marker in _DEICTIC_MARKERS)
     )

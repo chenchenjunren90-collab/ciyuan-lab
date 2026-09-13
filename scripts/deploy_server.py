@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import getpass
+import os
 import shlex
 import tarfile
 import tempfile
@@ -21,6 +22,7 @@ REMOTE_STAGING = BOUNDARY / "deploy_staging"
 REMOTE_BACKUPS = BOUNDARY / "deploy_backups"
 EXCLUDED_PARTS = {
     ".git",
+    ".playwright-cli",
     ".mypy_cache",
     ".pytest_cache",
     ".ruff_cache",
@@ -29,6 +31,7 @@ EXCLUDED_PARTS = {
     "__pycache__",
     "dist",
     "node_modules",
+    "output",
     "_submit_staging",
 }
 
@@ -45,6 +48,49 @@ def create_source_archive(root: Path, destination: Path) -> None:
         for path in sorted(root.rglob("*")):
             if path.is_file() and should_include(path, root):
                 archive.add(path, arcname=path.relative_to(root).as_posix(), recursive=False)
+
+
+def update_remote_production_env(
+    client: paramiko.SSHClient,
+    *,
+    api_key: str,
+    stamp: str,
+) -> None:
+    """Atomically select the reviewed MaaS model without logging credentials."""
+
+    remote_env = TARGET / ".env.production"
+    remote_temp = TARGET / f".env.production.codex-{stamp}"
+    remote_backup = REMOTE_BACKUPS / f"env.production-before-{stamp}"
+    updates = {
+        "MODEL_PROVIDER": "xfyun_maas",
+        "XFYUN_MAAS_BASE_URL": "https://maas-api.cn-huabei-1.xf-yun.com/v2",
+        "XFYUN_MAAS_MODEL": "xopdeepseekv4pro0813",
+        "XFYUN_MAAS_API_KEY": api_key,
+    }
+
+    with client.open_sftp() as sftp:
+        with sftp.open(str(remote_env), "r") as source:
+            original = source.read().decode("utf-8")
+        rendered: list[str] = []
+        seen: set[str] = set()
+        for line in original.splitlines():
+            key, separator, _value = line.partition("=")
+            if separator and key in updates:
+                rendered.append(f"{key}={updates[key]}")
+                seen.add(key)
+            else:
+                rendered.append(line)
+        for key, value in updates.items():
+            if key not in seen:
+                rendered.append(f"{key}={value}")
+        payload = ("\n".join(rendered).rstrip() + "\n").encode("utf-8")
+        with sftp.open(str(remote_backup), "wb") as backup:
+            backup.write(original.encode("utf-8"))
+        sftp.chmod(str(remote_backup), 0o600)
+        with sftp.open(str(remote_temp), "wb") as target:
+            target.write(payload)
+        sftp.chmod(str(remote_temp), 0o600)
+        sftp.posix_rename(str(remote_temp), str(remote_env))
 
 
 def run_remote(
@@ -119,7 +165,12 @@ def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--password", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    password = args.password or getpass.getpass(f"SSH password for {USER}@{HOST}: ")
+    password = (
+        args.password
+        or os.environ.get("CIYUAN_SSH_PASSWORD", "")
+        or getpass.getpass(f"SSH password for {USER}@{HOST}: ")
+    )
+    maas_api_key = os.environ.get("CIYUAN_MAAS_API_KEY", "").strip()
     root = Path(__file__).resolve().parents[1]
     stamp = time.strftime("%Y%m%d-%H%M%S")
     remote_archive = REMOTE_STAGING / f"ciyuan-lab-{stamp}.tar.gz"
@@ -146,6 +197,14 @@ def main() -> None:
             )
             with client.open_sftp() as sftp:
                 sftp.put(str(local_archive), str(remote_archive))
+
+            if maas_api_key:
+                update_remote_production_env(
+                    client,
+                    api_key=maas_api_key,
+                    stamp=stamp,
+                )
+                print("Production model route updated to Xfyun MaaS Pro0813.")
 
             run_remote(
                 client,

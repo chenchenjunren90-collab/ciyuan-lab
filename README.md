@@ -88,6 +88,8 @@ docs/                      架构、范围、标准与决策记录
 Windows + Docker Desktop 环境下：
 
 ```powershell
+Copy-Item .env.example .env
+# 复现真实智能体回答时，请在 .env 中填写自己的 XFYUN_MAAS_API_KEY
 .\scripts\setup_demo.ps1 -PullSandboxImages
 .\scripts\run_demo.ps1 -EnableCodeExecution
 ```
@@ -168,7 +170,7 @@ npm run dev
 75问词法回归的来源级 Recall@5 为100%、MRR为0.9333、库外拒答率100%、跨课程拒答率86.67%、课程隔离率100%。
 这些结果不代表答案正确率或全部知识点已获教师审核；本轮未复测真实 pgvector 环境。学习端已跑通知识学习、
 学情路径、有来源问答、三级提示、确定性练习与项目证据记录入口。综合项目只做材料完整性检查，
-不虚构人工队列或自动分数。历史验收记录记载演示环境已完成讯飞 MaaS 托管
-DeepSeek-V4-Flash-0731 的真实联调；本次工作区修复尚未部署或复测该环境。本地未配置凭据时仍使用明确标识的安全降级，
+不虚构人工队列或自动分数。当前演示环境已完成讯飞星辰 MaaS 托管
+DeepSeek-V4-Pro-0813 的部署和真实调用验证，模型标识为 `xopdeepseekv4pro0813`。本地未配置凭据时仍使用明确标识的安全降级，
 不把 Mock 当作真实调用结果。服务器部署、密钥边界和复现命令见
 [服务器部署说明](docs/server-deployment.md)。

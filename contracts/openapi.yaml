@@ -1669,6 +1669,26 @@ components:
         level:
           type: integer
           enum: [1, 2, 3]
+        source_code:
+          type: string
+          maxLength: 8000
+          default: ""
+        diagnostics:
+          type: array
+          maxItems: 8
+          items:
+            type: string
+            maxLength: 500
+        passed_tests:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          nullable: true
+        total_tests:
+          type: integer
+          minimum: 0
+          maximum: 1000
+          nullable: true
     HintResponse:
       type: object
       additionalProperties: false
@@ -2006,6 +2026,11 @@ components:
       additionalProperties: false
       required: [student_id, lesson_id, phase, role, message]
       properties:
+        beat_id:
+          type: [string, "null"]
+          maxLength: 256
+          default: null
+          description: 当前课堂环节，服务端从所属课程读取板书，不接受客户端伪造讲义。
         student_id:
           type: string
           minLength: 1
@@ -2039,7 +2064,7 @@ components:
         content:
           type: string
           minLength: 1
-          maxLength: 500
+          maxLength: 1500
     ClassroomDialogueResponse:
       type: object
       additionalProperties: false

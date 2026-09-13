@@ -327,7 +327,10 @@ def test_natural_teacher_answer_does_not_require_a_scripted_question() -> None:
         == ""
     )
     clipped = _fit_role_answer("teacher", "print 用于输出。" * 100)
-    assert len(clipped) <= 220
+    # Detailed teaching/code answers now have a larger bounded budget.
+    from app.modules.orchestration.python_tutor_prompts import ROLE_MAX_CHARS
+
+    assert len(clipped) <= ROLE_MAX_CHARS["teacher"]
     assert "可以继续吗" not in clipped
 
 
