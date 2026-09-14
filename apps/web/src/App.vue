@@ -1110,7 +1110,21 @@ onBeforeUnmount(() => {
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
             <button v-else v-ripple @click="startBaseline">建立能力基线</button>
           </div>
-          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
+          <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }">
+            <div>
+              <strong class="mastery-value">
+                <template v-if="courseLoadError || learningLoadError || !hasLearningEvidence(profile)">—</template>
+                <template v-else>
+                  <CountUp class="mastery-number" :value="averageMastery" />
+                  <span class="mastery-unit">%</span>
+                </template>
+              </strong>
+              <span class="mastery-caption">
+                {{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />
+                {{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}
+              </span>
+            </div>
+          </div>
         </section>
         <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
           <div><h3>不是再开一个聊天框，来真正上一节课。</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
