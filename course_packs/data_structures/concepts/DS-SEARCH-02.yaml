@@ -2,18 +2,18 @@ id: DS-SEARCH-02
 title: 二分查找与边界
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - DS-SEARCH-01
 learning_objectives:
-- 能够解释二分查找与边界的核心规则
-- 能够运用二分查找与边界解决边界明确的问题
+- 维护半开查找区间，在重复元素中定位目标首次出现的位置
+- 处理空序列、目标不存在和末尾越界，说明有序前提
 concepts:
-- 二分查找与边界
-- 边界条件
-- 可验证性
+- 二分查找
+- 有序
+- 区间
 lesson:
   summary: 在有序序列上维护不变量并避免区间错误。关键要点包括：二分查找只适用于按同一比较规则有序且支持随机访问的区间；采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间；查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。
   key_points:
@@ -25,8 +25,33 @@ lesson:
   - 混用闭区间与半开区间公式，遗漏端点或形成死循环。
   examples:
   - 示例：在 [1,2,2,2,5] 查找首个2，相等时令 right=mid，最终得到下标1。
+  learning_sequence:
+  - title: "课外阅读 · Hello 算法"
+    content: "可以前往 [Hello 算法固定版本](https://github.com/krahets/hello-algo/tree/28c1e74c1d3594fca7cc41b78a6bd18b700c5ce9) 自主阅读。该资源采用 CC-BY-NC-SA-4.0；这里只提供外链，没有导入其正文、代码或图示，也不作为本平台既有例题的出处。"
+  - title: "OpenDSA：二分查找导读 · 原文与边界"
+    content: "只有在已排序等前提成立时，中间元素的比较才能排除一半候选位置。每一步都要说清楚：还可能含有目标的位置是什么，以及为什么被排除的一段不可能含有答案。\n\n推演任务：在 [1,3,3,3,8] 中找 3。原文的普通查找可以在任一命中处停止；本平台练习明确要求最左位置，因此命中后还需保留候选答案并继续向左缩小。\n\n边界自测：空数组、只有一个元素、全部相等、目标比最小值还小。迭代搜索的比较次数为 O(log n)，但如果先排序，排序成本不能算成免费。\n\n改编来源：[OpenDSA：二分查找导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Searching/BinarySearch.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  - title: "在有序数组中找第一个 2，并演示目标不存在时的结果。"
+    content: "[0,5) 的中点为 2，值等于目标；把 right 缩到 2，继续找更早的位置。"
+  - title: "跟踪状态变化"
+    content: "[0,2) 的中点为 1，继续缩到 [0,1)；中点 0 的值小于 2，left 变为 1。\n\nleft==right 时停止，再判断该位置是否有效且等于目标；空数组直接返回 -1。"
+  - title: "边界与迁移"
+    content: "使用随机访问有序序列时，时间 O(log n)、额外空间 O(1)；不应在无序输入上套用。"
+  worked_example:
+    problem: "在有序数组中找第一个 2，并演示目标不存在时的结果。"
+    steps:
+    - "[0,5) 的中点为 2，值等于目标；把 right 缩到 2，继续找更早的位置。"
+    - "[0,2) 的中点为 1，继续缩到 [0,1)；中点 0 的值小于 2，left 变为 1。"
+    - "left==right 时停止，再判断该位置是否有效且等于目标；空数组直接返回 -1。"
+    code: "def first_index(a, target):\n    left, right = 0, len(a)\n    while left < right:\n        mid = left + (right - left) // 2\n        if a[mid] < target:\n            left = mid + 1\n        else:\n            right = mid\n    return left if left < len(a) and a[left] == target else -1\n\nprint(first_index([1, 2, 2, 2, 5], 2))\nprint(first_index([], 2))\nprint(first_index([1, 3, 5], 4))\n"
+    reflection: "使用随机访问有序序列时，时间 O(log n)、额外空间 O(1)；不应在无序输入上套用。"
+  checkpoint:
+    prompt: "把相等分支改成直接返回 mid，为什么不再保证首次出现？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - DS-SEARCH-02-C1
 source_refs:
+- SRC-DS-HELLO-ALGO-READING
+- SRC-DS-OPENDSA-BINARY
+- SRC-DS-SEARCH-02-WALKTHROUGH
 - SRC-DS-GUIDE-SORTSEARCH
 status: draft

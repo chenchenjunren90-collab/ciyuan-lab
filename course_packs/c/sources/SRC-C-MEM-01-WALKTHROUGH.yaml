@@ -1,0 +1,28 @@
+id: SRC-C-MEM-01-WALKTHROUGH
+title: 动态内存分配：分步例题与边界讲义
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/c/concepts/C-MEM-01.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "C-MEM-01 动态内存分配（自编讲义草稿，待人工审核）\n\n使用 malloc/calloc 获取堆内存并检查失败。关键要点包括：malloc 返回未初始化的动态存储，calloc\
+      \ 会把分配字节置零，但都可能失败；分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出；每块成功分配的内存必须有明确所有者和唯一释放路径，失败分支同样要清理。\n\
+      \nmalloc 返回未初始化的动态存储，calloc 会把分配字节置零，但都可能失败。\n分配大小应以元素数量乘 sizeof *ptr 计算，并在乘法前防止整数溢出。\n每块成功分配的内存必须有明确所有者和唯一释放路径，失败分支同样要清理。\n\
+      \n申请三个整数，写入数值后求和，并沿所有失败路径清理资源。\n\n固定 n=3 不会使乘法溢出；一般输入必须先验证 n <= SIZE_MAX / sizeof *values。\n\
+      malloc 成功后内容尚未初始化，循环先写后读，依次得到 1、2、3。\nfree 只调用一次；之后不再访问该块内存。设为 NULL 不会清空其他别名指针。\n\n#include\
+      \ <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    const size_t n = 3;\n    int *values\
+      \ = malloc(n * sizeof *values);\n    if (values == NULL) return 1;\n    int sum = 0;\n    for\
+      \ (size_t i = 0; i < n; ++i) {\n        values[i] = (int)i + 1;\n        sum += values[i];\n\
+      \    }\n    printf(\"%d\\n\", sum);\n    free(values);\n    values = NULL;\n    return 0;\n\
+      }\n\n\n分配成功、初始化完成、生命周期仍有效是三个独立条件。\n\n常见错误：写成 malloc(n) 却按 n 个 int 使用，导致分配空间不足。；未检查返回值便解引用，内存不足时触发崩溃。\n\
+      \n自测：malloc 成功是否意味着 values[0] 已经是 0？"
+status: draft

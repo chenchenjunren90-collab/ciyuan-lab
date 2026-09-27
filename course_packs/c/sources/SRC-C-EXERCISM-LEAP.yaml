@@ -1,0 +1,37 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "SRC-C-EXERCISM-LEAP",
+  "title": "Exercism C：leap 改编依据",
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "exercises/practice/leap/test_leap.c",
+    "url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/leap/test_leap.c"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "来源：[Exercism C / leap](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/leap/test_leap.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "来源：[Exercism C / leap](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/leap/test_leap.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+    }
+  },
+  "extensions": {
+    "provenance": {
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/leap/test_leap.c",
+      "license": "MIT",
+      "license_url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE",
+      "checked_at": "2026-09-27",
+      "adaptation": "保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。",
+      "human_review": "pending"
+    }
+  }
+}

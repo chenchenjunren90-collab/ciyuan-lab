@@ -1,0 +1,16 @@
+{"id":"c-edge-01","course_id":"c","query":"数组下标越界为什么不可靠？","kind":"answerable","expected_source_ids":["SRC-C-GUIDE-MEMORY"]}
+{"id":"c-edge-02","course_id":"c","query":"字符串结尾的空字符也要占用数组容量吗？","kind":"answerable","expected_source_ids":["SRC-C-GUIDE-MEMORY"]}
+{"id":"c-edge-03","course_id":"c","query":"释放后的指针还能读取原来的数据吗？","kind":"answerable","expected_source_ids":["SRC-C-GUIDE-MEMORY"]}
+{"id":"c-edge-04","course_id":"c","query":"内存申请失败和唯一释放点应该怎么检查？","kind":"answerable","expected_source_ids":["SRC-C-GUIDE-MEMORY"]}
+{"id":"c-edge-05","course_id":"c","query":"推荐附近今晚营业的火锅店","kind":"unanswerable","expected_source_ids":[]}
+{"id":"c-edge-06","course_id":"c","query":"告诉我明天的股票涨跌","kind":"unanswerable","expected_source_ids":[]}
+{"id":"c-edge-07","course_id":"c","query":"Python 装饰器如何包装生成器？","kind":"cross_course","expected_source_ids":[]}
+{"id":"c-edge-08","course_id":"c","query":"Dijkstra 最短路如何使用优先队列？","kind":"cross_course","expected_source_ids":[]}
+{"id":"ds-edge-01","course_id":"data_structures","query":"哈希表为什么不能保证最坏情况也是常数时间？","kind":"answerable","expected_source_ids":["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id":"ds-edge-02","course_id":"data_structures","query":"二分搜索开始前需要满足什么有序条件？","kind":"answerable","expected_source_ids":["SRC-DS-GUIDE-SORTSEARCH"]}
+{"id":"ds-edge-03","course_id":"data_structures","query":"图的 BFS 为什么按层使用队列？","kind":"answerable","expected_source_ids":["SRC-DS-GUIDE-TREEGRAPH"]}
+{"id":"ds-edge-04","course_id":"data_structures","query":"深度优先 DFS 是怎样沿路径深入的？","kind":"answerable","expected_source_ids":["SRC-DS-GUIDE-TREEGRAPH"]}
+{"id":"ds-edge-05","course_id":"data_structures","query":"推荐一款适合油性皮肤的防晒霜","kind":"unanswerable","expected_source_ids":[]}
+{"id":"ds-edge-06","course_id":"data_structures","query":"今天的欧元汇率是多少？","kind":"unanswerable","expected_source_ids":[]}
+{"id":"ds-edge-07","course_id":"data_structures","query":"C语言 printf 的百分号格式是什么？","kind":"cross_course","expected_source_ids":[]}
+{"id":"ds-edge-08","course_id":"data_structures","query":"Python 上下文管理器的 with 语句怎么写？","kind":"cross_course","expected_source_ids":[]}

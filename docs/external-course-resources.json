@@ -1,0 +1,217 @@
+{
+  "checked_at": "2026-09-27",
+  "review_status": "pending",
+  "resources": [
+    {
+      "source_id": "SRC-C-WANGDOC-POINTER",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/pointer.md",
+      "concept_ids": [
+        "C-PTR-01",
+        "C-PTR-02"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-WANGDOC-STRING",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/string.md",
+      "concept_ids": [
+        "C-STR-01"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-WANGDOC-ARRAY",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/array.md",
+      "concept_ids": [
+        "C-ARRAY-01"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-WANGDOC-FUNCTION",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/function.md",
+      "concept_ids": [
+        "C-FUNC-01"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-WANGDOC-FLOW",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/flow-control.md",
+      "concept_ids": [
+        "C-CTRL-01"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-WANGDOC-MEMORY",
+      "course": "c",
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/memory.md",
+      "concept_ids": [
+        "C-MEM-01"
+      ],
+      "license": "CC-BY-SA-3.0",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-STACK",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/List/StackArray.rst",
+      "concept_ids": [
+        "DS-STACK-01"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-QUEUE",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/List/Queue.rst",
+      "concept_ids": [
+        "DS-QUEUE-01"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-BINARY",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Searching/BinarySearch.rst",
+      "concept_ids": [
+        "DS-SEARCH-02"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-INSERTION",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Sorting/InsertionSort.rst",
+      "concept_ids": [
+        "DS-SORT-02"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-GRAPH",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Graph/GraphTraversal.rst",
+      "concept_ids": [
+        "DS-GRAPH-02",
+        "DS-GRAPH-03"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-DS-OPENDSA-HASH",
+      "course": "data_structures",
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Hashing/HashDel.rst",
+      "concept_ids": [
+        "DS-HASH-02"
+      ],
+      "license": "MIT",
+      "adaptation": "Chinese guide"
+    },
+    {
+      "source_id": "SRC-C-EXERCISM-REVERSE",
+      "course": "c",
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/reverse-string/test_reverse_string.c",
+      "exercise_id": "C-EXERCISM-REVERSE",
+      "concept_ids": [
+        "C-STR-01"
+      ],
+      "license": "MIT",
+      "adaptation": "参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。"
+    },
+    {
+      "source_id": "SRC-C-EXERCISM-LEAP",
+      "course": "c",
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/leap/test_leap.c",
+      "exercise_id": "C-EXERCISM-LEAP",
+      "concept_ids": [
+        "C-CTRL-01"
+      ],
+      "license": "MIT",
+      "adaptation": "保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。"
+    },
+    {
+      "source_id": "SRC-C-EXERCISM-RAINDROPS",
+      "course": "c",
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/raindrops/.docs/instructions.md",
+      "exercise_id": "C-EXERCISM-RAINDROPS",
+      "concept_ids": [
+        "C-CTRL-01"
+      ],
+      "license": "MIT",
+      "adaptation": "保留 3/5/7 的编码规则；翻译重写题面和提示，改为标准输入输出，自编覆盖全部命中组合的测试。"
+    },
+    {
+      "source_id": "SRC-C-EXERCISM-HAMMING",
+      "course": "c",
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/hamming/test_hamming.c",
+      "exercise_id": "C-EXERCISM-HAMMING",
+      "concept_ids": [
+        "C-STR-01"
+      ],
+      "license": "MIT",
+      "adaptation": "参考长度不一致返回 -1 和空串测试约定；保留 A/C/G/T 输入范围，中文重写题面、提示和样例，改为两行标准输入。"
+    },
+    {
+      "source_id": "SRC-DS-HELLO-ALGO-READING",
+      "course": "data_structures",
+      "repository": "krahets/hello-algo",
+      "commit": "28c1e74c1d3594fca7cc41b78a6bd18b700c5ce9",
+      "path": "README.md",
+      "concept_ids": [
+        "DS-STACK-01",
+        "DS-SEARCH-02"
+      ],
+      "license": "CC-BY-NC-SA-4.0",
+      "adaptation": "external_link_only"
+    }
+  ]
+}

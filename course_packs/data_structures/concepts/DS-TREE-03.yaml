@@ -2,19 +2,37 @@ id: DS-TREE-03
 title: 二叉搜索树
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - DS-TREE-02
 learning_objectives:
-- 能判断与“二叉搜索树”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“二叉搜索树”的关键状态并验证边界
+- 按明确的重复键策略构造二叉搜索树，使用中序结果检查键集合
+- 区分叶子、单孩子、双孩子和根结点删除，验证删除后的搜索不变量
 concepts:
 - 二叉搜索树
 - 边界条件
 - 可验证性
 lesson:
+  learning_sequence:
+  - title: "先定规则，再插入"
+    content: "本例采用集合语义，重复键忽略。依次插入 5、3、7、6、6，第二个 6 不增加结点。中序遍历应得到 [3, 5, 6, 7]。有序输入可能把普通 BST 变成链，不能假定操作一定为 O(log n)。"
+  - title: "双孩子删除为什么要找后继"
+    content: "删除 5 时，右子树最小键为 6。把 6 移到原根的位置，再删除原来的 6 结点。后继至多只有一个右孩子，因此剩余问题化为单孩子或叶子删除。不能把整棵右子树丢掉。"
+  - title: "根、空树与退化树"
+    content: "删除根可能产生新根，调用方必须执行 root = erase(root, key)。空树或缺失键保持不变。例题用循环与显式栈，避免长链触发 Python 递归深度限制；查找与更新为 O(h)，中序遍历为 O(n)，辅助栈为 O(h)。"
+  worked_example:
+    problem: "插入含重复键的序列，然后分别删除双孩子根、叶子和单孩子根。"
+    code: "class Node:\n    def __init__(self, key):\n        self.key = key\n        self.left = None\n        self.right = None\n\n\ndef insert(root, key):\n    if root is None:\n        return Node(key)\n    node = root\n    while True:\n        if key == node.key:\n            return root  # 集合语义：忽略重复键\n        branch = \"left\" if key < node.key else \"right\"\n        child = getattr(node, branch)\n        if child is None:\n            setattr(node, branch, Node(key))\n            return root\n        node = child\n\n\ndef erase(root, key):\n    parent, node = None, root\n    while node is not None and node.key != key:\n        parent = node\n        node = node.left if key < node.key else node.right\n    if node is None:\n        return root\n    if node.left is not None and node.right is not None:\n        # 找到右子树最小结点；它至多只有一个右孩子\n        parent, successor = node, node.right\n        while successor.left is not None:\n            parent, successor = successor, successor.left\n        node.key = successor.key\n        node = successor\n    child = node.left if node.left is not None else node.right\n    if parent is None:\n        return child  # 删除根时，调用方必须接住新根\n    if parent.left is node:\n        parent.left = child\n    else:\n        parent.right = child\n    return root\n\n\ndef inorder(root):\n    result, stack = [], []\n    node = root\n    while node is not None or stack:\n        while node is not None:\n            stack.append(node)\n            node = node.left\n        node = stack.pop()\n        result.append(node.key)\n        node = node.right\n    return result\n\n\nroot = None\nfor key in [5, 3, 7, 6, 6]:\n    root = insert(root, key)\nprint(inorder(root))\nroot = erase(root, 5)\nprint(inorder(root))\nroot = erase(root, 3)\nroot = erase(root, 6)\nprint(inorder(root))\n"
+    steps:
+    - "初始中序输出 [3, 5, 6, 7]，重复的 6 被忽略。"
+    - "删除 5 后输出 [3, 6, 7]，搜索树不变量保持。"
+    - "先删除叶子 3，再删除单孩子根 6，结果只剩 [7]。"
+    reflection: "为何正确的中序结果还不足以证明树已平衡？比较顺序插入和交错插入得到的树高。"
+  checkpoint:
+    prompt: "删除仅有一个孩子的根时，如果调用方不接住返回值，会出现什么问题？"
+    guidance: "画出根引用指向的结点，再对照 erase 的 parent is None 分支。此处不计分。"
   summary: 维护左小右大的查找不变量并处理删除情形。关键要点包括：二叉搜索树对每个结点维护左子树键较小、右子树键较大的有序约定，重复键策略必须预先定义；查找、插入和删除成本与树高 h 成正比；平衡时为 O(log n)，退化成链时为
     O(n)；删除有两个孩子的结点时可用中序后继或前驱替换，并继续维护整个子树的有序不变量。
   key_points:
@@ -29,5 +47,6 @@ lesson:
 assessment_ids:
 - DS-TREE-03-C1
 source_refs:
+- SRC-DS-TREE-03-WALKTHROUGH
 - SRC-DS-GUIDE-TREEGRAPH
 status: draft

@@ -1,0 +1,18 @@
+id: SRC-C-PTR-02-WALKTHROUGH
+title: "指针算术与数组关系：分步例题与边界讲义"
+course: c
+schema_version: "0.1.0"
+version: 1
+source_type: synthetic
+citation:
+  locator: "项目自编讲义；对应 course_packs/c/concepts/C-PTR-02.yaml"
+rights:
+  basis: synthetic
+  note: "AI 辅助编写的原创教学示例，待课程负责人审核；不冒充教材或官方原文。"
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "指针算术与数组关系（待人工审核）\n\n用指针遍历四个整数，并计算第三个元素到首元素的距离。\n\na + 2 指向第三个元素 30；p - a 得到元素距离 2，而不是字节距离。\n\nend = a + 4 是合法的尾后指针，只作为终止哨兵；循环先判断 cur != end 再读取 *cur。\n\n累加结果为 100；若先读取再判断，就可能解引用尾后指针。\n\n#include <stddef.h>\n#include <stdio.h>\nint main(void) {\n    int a[] = {10, 20, 30, 40};\n    int *p = a + 2;\n    int *end = a + 4;\n    int sum = 0;\n    for (int *cur = a; cur != end; ++cur) sum += *cur;\n    printf(\"%d %td %d\\n\", *p, p - a, sum);\n    return 0;\n}\n\n\n输出 30 2 100。这里只对同一数组内指针做减法，结果能用 ptrdiff_t 表示；不比较独立分配块的地址大小。数组有 n 项，遍历时间 O(n)、额外空间 O(1)。\n\na + 4 可以保存，为什么 *(a + 4) 不能读取？"
+status: draft

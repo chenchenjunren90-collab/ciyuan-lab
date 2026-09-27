@@ -1,0 +1,26 @@
+id: SRC-C-PTR-01-WALKTHROUGH
+title: 指针、地址与解引用：分步例题与边界讲义
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/c/concepts/C-PTR-01.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "C-PTR-01 指针、地址与解引用（自编讲义草稿，待人工审核）\n\n理解指针保存地址以及解引用访问对象的含义。关键要点包括：取地址运算符 & 获得对象地址，指针变量保存兼容类型的地址，*p\
+      \ 访问所指对象；解引用前必须证明指针非空、指向仍处于生命周期内且满足对齐与类型要求；修改调用方对象时传入其地址，同时用清晰命名和 const 标注读写意图。\n\n取地址运算符 &\
+      \ 获得对象地址，指针变量保存兼容类型的地址，*p 访问所指对象。\n解引用前必须证明指针非空、指向仍处于生命周期内且满足对齐与类型要求。\n修改调用方对象时传入其地址，同时用清晰命名和\
+      \ const 标注读写意图。\n\n通过两个指针交换对象的数值，观察地址与值的区别。\n\n&x 和 &y 分别传入 x、y 的地址，a、b 是函数内的指针副本。\ntemp 先保存\
+      \ x 的原值 2；*a = *b 后两个对象都暂时等于 9。\n*b = temp 把 2 写入 y；交换结束时 a、b 指向的对象没有改变。\n\n#include <stdio.h>\n\
+      static void swap(int *a, int *b) {\n    if (a == NULL || b == NULL) return;\n    int temp =\
+      \ *a;\n    *a = *b;\n    *b = temp;\n}\nint main(void) {\n    int x = 2, y = 9;\n    swap(&x,\
+      \ &y);\n    printf(\"%d %d\\n\", x, y);\n    return 0;\n}\n\n\n传入非空但已失效的地址仍会出错；调用方必须保证对象生命周期。\n\
+      \n常见错误：未初始化指针就执行 *p = 1，向不确定地址写入。；返回局部变量地址，函数结束后指针立即悬空。\n\n自测：如果省略 temp 并顺序执行 *a=*b; *b=*a;，最终两个对象是什么？"
+status: draft

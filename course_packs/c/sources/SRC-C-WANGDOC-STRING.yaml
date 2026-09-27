@@ -1,0 +1,41 @@
+{
+  "id": "SRC-C-WANGDOC-STRING",
+  "title": "网道：字符串导读",
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "简介、字符串声明、strlen",
+    "url": "https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/string.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[网道：字符串导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/string.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。 许可声明依据：https://wangdoc.com/clang/ （核对日期 2026-09-27）。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "把字符串看成以空字符结束的一段字符序列，先画出字符，再标出终止符的位置。strlen 统计终止符之前的字节数；sizeof 数组得到整个数组所占字节数，二者不是同一个问题。\n\n动手：对于 char word[8]=\"cat\";，分别写出数组容量、字符串长度以及剩余元素的值。修改 word[0] 是修改可写数组；对 const char *label=\"cat\"; 指向的字符串字面量尝试写入则不合法。\n\n阅读修正：char a[3]=\"cat\"; 在 C 中允许省略放不下的终止符，但结果不是以空字符终止的字符串，不能直接交给 strlen 或 %s。长度采用 size_t，输出使用 %zu。\n\n改编来源：[网道：字符串导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/string.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/string.md",
+      "scope": "简介、字符串声明、strlen",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "C-STR-01"
+    ]
+  }
+}

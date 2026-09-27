@@ -2,18 +2,18 @@ id: C-STR-01
 title: 字符数组与 C 字符串
 course: c
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-ARRAY-01
 learning_objectives:
-- 能够解释字符数组与 C 字符串的核心规则
-- 能够运用字符数组与 C 字符串解决边界明确的问题
+- 区分字符数组容量与以空字符结束的字符串长度
+- 使用可修改字符数组保存文本，并为结尾空字符预留空间
 concepts:
-- 字符数组与 C 字符串
-- 边界条件
-- 可验证性
+- 字符数组
+- 字符串
+- strlen
 lesson:
   summary: 理解空字符终止约定和缓冲区容量。关键要点包括：C 字符串是以 '\0' 结尾的字符序列，缓冲区容量必须包含终止符位置；字符串长度不包含终止符，但复制和拼接时必须为终止符保留空间；读取和遍历必须设置上界，不能假设外部输入一定包含合法终止符。
   key_points:
@@ -25,8 +25,32 @@ lesson:
   - 用 == 比较两个字符数组内容，而不是使用受控的字符串比较。
   examples:
   - 代码示例：char name[16]; if (scanf("%15s", name) == 1) printf("%zu\n", strlen(name));
+  learning_sequence:
+  - title: "网道：字符串导读 · 原文与边界"
+    content: "把字符串看成以空字符结束的一段字符序列，先画出字符，再标出终止符的位置。strlen 统计终止符之前的字节数；sizeof 数组得到整个数组所占字节数，二者不是同一个问题。\n\n动手：对于 char word[8]=\"cat\";，分别写出数组容量、字符串长度以及剩余元素的值。修改 word[0] 是修改可写数组；对 const char *label=\"cat\"; 指向的字符串字面量尝试写入则不合法。\n\n阅读修正：char a[3]=\"cat\"; 在 C 中允许省略放不下的终止符，但结果不是以空字符终止的字符串，不能直接交给 strlen 或 %s。长度采用 size_t，输出使用 %zu。\n\n改编来源：[网道：字符串导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/string.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+  - title: "观察字符串的字符数和数组容量为什么不同。"
+    content: "初始化会保存 c、a、t、\\0 四个字符，sizeof word 为 4。"
+  - title: "跟踪状态变化"
+    content: "strlen 统计终止符之前的三个字符；它要求可达范围内存在终止符。\n\nword 是可修改数组，替换首字符得到 bat；不能把字符串字面量当可写数组。"
+  - title: "边界与迁移"
+    content: "无终止符的字符数组不满足 C 字符串接口的前提，不能靠碰巧相邻的零字节。"
+  worked_example:
+    problem: "观察字符串的字符数和数组容量为什么不同。"
+    steps:
+    - "初始化会保存 c、a、t、\\0 四个字符，sizeof word 为 4。"
+    - "strlen 统计终止符之前的三个字符；它要求可达范围内存在终止符。"
+    - "word 是可修改数组，替换首字符得到 bat；不能把字符串字面量当可写数组。"
+    code: "#include <stdio.h>\n#include <string.h>\nint main(void) {\n    char word[] = \"cat\";\n    printf(\"%zu %zu\\n\", strlen(word), sizeof word);\n    word[0] = 'b';\n    puts(word);\n    return 0;\n}\n"
+    reflection: "无终止符的字符数组不满足 C 字符串接口的前提，不能靠碰巧相邻的零字节。"
+  checkpoint:
+    prompt: "char word[3]={'c','a','t'} 能直接传给 puts 吗？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
+- C-EXERCISM-HAMMING
+- C-EXERCISM-REVERSE
 - C-STR-01-C1
 source_refs:
+- SRC-C-WANGDOC-STRING
+- SRC-C-STR-01-WALKTHROUGH
 - SRC-C-GUIDE-MEMORY
 status: draft

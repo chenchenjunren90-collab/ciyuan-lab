@@ -1,0 +1,42 @@
+{
+  "id": "SRC-DS-OPENDSA-GRAPH",
+  "title": "OpenDSA：图遍历导读",
+  "course": "data_structures",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "Graph Traversals / DFS / BFS",
+    "url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Graph/GraphTraversal.rst"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[OpenDSA：图遍历导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Graph/GraphTraversal.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "访问标记有两个任务：防止环导致重复展开，以及帮助发现尚未遍历的分量。单个起点只能访问从它可达的顶点；若要覆盖全图，还需依次选择未访问顶点作为新起点。\n\n推演任务：用含一个环和一个孤立点的图，分别记录 BFS 的队列、DFS 的调用栈或显式栈。BFS 在发现顶点、入队时标记，可避免同一顶点反复入队。\n\n本平台固定邻接点顺序以便复现；不同合法邻接顺序可能产生不同遍历序列。O(V+E) 的全图遍历时间依赖邻接表等适当表示，邻接矩阵扫描通常为 O(V²)。BFS 按边数得到的最短路结论针对无权图，不能直接替代带权最短路。\n\n改编来源：[OpenDSA：图遍历导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Graph/GraphTraversal.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Graph/GraphTraversal.rst",
+      "scope": "Graph Traversals / DFS / BFS",
+      "license": "MIT",
+      "license_url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "DS-GRAPH-02",
+      "DS-GRAPH-03"
+    ]
+  }
+}

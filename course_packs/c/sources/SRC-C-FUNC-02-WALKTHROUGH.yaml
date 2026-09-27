@@ -1,0 +1,26 @@
+id: SRC-C-FUNC-02-WALKTHROUGH
+title: 参数传递与返回值：分步例题与边界讲义
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/c/concepts/C-FUNC-02.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "C-FUNC-02 参数传递与返回值（自编讲义草稿，待人工审核）\n\n理解 C 的值传递并用返回值表达计算结果。关键要点包括：C 函数参数按值传递，形参是实参值的副本；修改形参本身不会改变调用者变量；需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功；返回指针时所指对象的生命周期必须超过函数调用，不能返回自动局部变量地址。\n\
+      \nC 函数参数按值传递，形参是实参值的副本；修改形参本身不会改变调用者变量。\n需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功。\n返回指针时所指对象的生命周期必须超过函数调用，不能返回自动局部变量地址。\n\
+      \n比较值传递和传地址后修改调用方对象的区别。\n\nby_value 收到 x 的数值副本，局部赋值不会改变 x。\nby_address 仍是值传递，但复制的值是 &x。\n通过有效指针解引用才修改\
+      \ x；空指针检查不能判断任意非空指针是否有效。\n\n#include <stdio.h>\nstatic void by_value(int value) { value = 9;\
+      \ (void)value; }\nstatic void by_address(int *value) { if (value != NULL) *value = 9; }\nint\
+      \ main(void) {\n    int x = 3;\n    by_value(x);\n    printf(\"%d \", x);\n    by_address(&x);\n\
+      \    printf(\"%d\\n\", x);\n    return 0;\n}\n\n\n要区分修改指针副本、修改指向的对象和修改调用方指针这三件事。\n\n常见错误：误以为C\
+      \ 语言把数组之外的所有函数参数按引用传递，因此修改形参会修改实参。；误以为返回函数内局部数组的地址是安全的，因为 return 会延长局部对象生命周期。\n\n自测：指针形参在函数内被重新赋值为\
+      \ NULL，调用方的指针变量会自动变吗？"
+status: draft

@@ -2,18 +2,18 @@ id: DS-LINEAR-03
 title: 单链表
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - DS-FOUND-01
 learning_objectives:
-- 能够解释单链表的核心规则
-- 能够运用单链表解决边界明确的问题
+- 用 prev、current、next 三个引用逐步反转单链表
+- 在改写链接前保存后继，处理空链表和单结点链表
 concepts:
 - 单链表
-- 边界条件
-- 可验证性
+- 反转
+- 后继
 lesson:
   summary: 通过结点链接实现线性序列并维护头指针。关键要点包括：单链表结点保存数据和后继引用，头指针确定整个可达序列；已知前驱时插入和删除只改常数个链接，但按位置查找仍需线性遍历；操作后必须保持无意外环、尾结点后继为空和所有有效结点可达。
   key_points:
@@ -25,8 +25,27 @@ lesson:
   - 删除结点后仍保留并使用指向该结点的失效引用。
   examples:
   - 示例：在结点 p 后插入 q 时，先令 q.next=p.next，再令 p.next=q。
+  learning_sequence:
+  - title: "反转单链表，显式保存下一节点避免丢失剩余链。"
+    content: "previous 指向已反转部分，head 指向未处理部分。"
+  - title: "跟踪状态变化"
+    content: "修改 head.next 之前先保存 following，否则下一段链会失去入口。\n\n每轮移动两个边界指针；head 变成 None 时 previous 即为新表头。"
+  - title: "边界与迁移"
+    content: "时间 O(n)、辅助指针空间 O(1)；演示中为展示输出建立的列表不属于反转算法本身。"
+  worked_example:
+    problem: "反转单链表，显式保存下一节点避免丢失剩余链。"
+    steps:
+    - "previous 指向已反转部分，head 指向未处理部分。"
+    - "修改 head.next 之前先保存 following，否则下一段链会失去入口。"
+    - "每轮移动两个边界指针；head 变成 None 时 previous 即为新表头。"
+    code: "class Node:\n    def __init__(self, value, next_node=None):\n        self.value, self.next = value, next_node\n\ndef reverse(head):\n    previous = None\n    while head is not None:\n        following = head.next\n        head.next = previous\n        previous, head = head, following\n    return previous\n\nhead = reverse(Node(1, Node(2, Node(3))))\nvalues = []\nwhile head is not None:\n    values.append(head.value)\n    head = head.next\nprint(values)\nprint(reverse(None))\n"
+    reflection: "时间 O(n)、辅助指针空间 O(1)；演示中为展示输出建立的列表不属于反转算法本身。"
+  checkpoint:
+    prompt: "只有一个节点或空链表时，是否需要特殊改写循环？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - DS-LINEAR-03-C1
 source_refs:
+- SRC-DS-LINEAR-03-WALKTHROUGH
 - SRC-DS-GUIDE-LINEAR
 status: draft

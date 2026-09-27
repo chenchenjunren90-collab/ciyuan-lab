@@ -2,18 +2,18 @@ id: C-FUNC-02
 title: 参数传递与返回值
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-FUNC-01
 learning_objectives:
-- 能判断与“参数传递与返回值”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“参数传递与返回值”的关键状态并验证边界
+- 区分形参副本与实参对象，解释按值传递的效果
+- 通过指针参数修改调用者对象，并判断返回值与输出参数的用途
 concepts:
-- 参数传递与返回值
-- 边界条件
-- 可验证性
+- 按值传递
+- 指针参数
+- 返回值
 lesson:
   summary: 理解 C 的值传递并用返回值表达计算结果。关键要点包括：C 函数参数按值传递，形参是实参值的副本；修改形参本身不会改变调用者变量；需要修改调用者对象时传入有效指针，并通过返回值或约定报告操作是否成功；返回指针时所指对象的生命周期必须超过函数调用，不能返回自动局部变量地址。
   key_points:
@@ -25,8 +25,27 @@ lesson:
   - 误以为返回函数内局部数组的地址是安全的，因为 return 会延长局部对象生命周期。
   examples:
   - 代码片段：void swap(int *a,int *b){int t=*a;*a=*b;*b=t;} 调用 swap(&x,&y) 后调用者变量交换。
+  learning_sequence:
+  - title: "比较值传递和传地址后修改调用方对象的区别。"
+    content: "by_value 收到 x 的数值副本，局部赋值不会改变 x。"
+  - title: "跟踪状态变化"
+    content: "by_address 仍是值传递，但复制的值是 &x。\n\n通过有效指针解引用才修改 x；空指针检查不能判断任意非空指针是否有效。"
+  - title: "边界与迁移"
+    content: "要区分修改指针副本、修改指向的对象和修改调用方指针这三件事。"
+  worked_example:
+    problem: "比较值传递和传地址后修改调用方对象的区别。"
+    steps:
+    - "by_value 收到 x 的数值副本，局部赋值不会改变 x。"
+    - "by_address 仍是值传递，但复制的值是 &x。"
+    - "通过有效指针解引用才修改 x；空指针检查不能判断任意非空指针是否有效。"
+    code: "#include <stdio.h>\nstatic void by_value(int value) { value = 9; (void)value; }\nstatic void by_address(int *value) { if (value != NULL) *value = 9; }\nint main(void) {\n    int x = 3;\n    by_value(x);\n    printf(\"%d \", x);\n    by_address(&x);\n    printf(\"%d\\n\", x);\n    return 0;\n}\n"
+    reflection: "要区分修改指针副本、修改指向的对象和修改调用方指针这三件事。"
+  checkpoint:
+    prompt: "指针形参在函数内被重新赋值为 NULL，调用方的指针变量会自动变吗？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - C-FUNC-02-Q1
 source_refs:
+- SRC-C-FUNC-02-WALKTHROUGH
 - SRC-C-GUIDE-CONTROL
 status: draft

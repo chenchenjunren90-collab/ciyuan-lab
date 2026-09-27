@@ -2,7 +2,7 @@ id: DS-SEARCH-02-C1
 title: 编程实践：二分查找与边界
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: intermediate
 estimated_minutes: 20
@@ -59,4 +59,29 @@ evaluation:
     expected_output: '0
 
       '
+  - id: hidden-empty
+    visibility: hidden
+    input: "0\n\n2\n"
+    expected_output: "-1\n"
+  - id: hidden-all-equal
+    visibility: hidden
+    input: "4\n2 2 2 2\n2\n"
+    expected_output: "0\n"
+  - id: hidden-after-end
+    visibility: hidden
+    input: "3\n1 3 5\n6\n"
+    expected_output: "-1\n"
+extensions:
+  learning_stage: in_class
+  input_format: 先读取 n，再读取 n 个非递减排列的整数，最后读取目标值。
+  output_format: 第一个匹配元素的下标，从 0 开始；不存在输出 -1。
+  constraints:
+  - 0 <= n <= 10000
+  - 元素和目标的绝对值均不超过 1000000
+  - 要求使用二分查找，额外空间 O(1)，查找时间 O(log n)
+  scaffolding:
+  - 统一采用 [left, right) 或闭区间，不能混用更新规则。
+  - 命中目标时保留继续向左寻找的可能。
+  - 区间收敛后先检查下标范围，再验证值是否等于目标。
+  reflection_prompt: 输出测试不证明复杂度；请解释每轮区间如何缩小，以及重复值为何返回首个位置。
 status: draft

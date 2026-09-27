@@ -1,0 +1,18 @@
+id: SRC-DS-GRAPH-03-WALKTHROUGH
+title: "深度优先搜索：分步例题与边界讲义"
+course: data_structures
+schema_version: "0.1.0"
+version: 1
+source_type: synthetic
+citation:
+  locator: "项目自编讲义；对应 course_packs/data_structures/concepts/DS-GRAPH-03.yaml"
+rights:
+  basis: synthetic
+  note: "AI 辅助编写的原创教学示例，待课程负责人审核；不冒充教材或官方原文。"
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "深度优先搜索（待人工审核）\n\n按邻接表顺序遍历含环的图，并在连通分量结束后访问孤立点。\n\n发现根 0 后，将其邻居迭代器放到栈顶；每发现一个新邻居，就保存它的迭代器继续深入。\n\n走到已发现顶点时跳过；当前顶点的邻居耗尽后弹栈，回到父顶点未完成的位置。\n\n从 0 的访问顺序为 0、1、3、2；外层根循环再发现孤立点 4，整个图最终为 0、1、3、2、4。\n\ndef dfs_forest(graph):\n    seen = set()\n    order = []\n    for root in range(len(graph)):\n        if root in seen:\n            continue\n        seen.add(root)\n        order.append(root)\n        stack = [iter(graph[root])]\n        while stack:\n            try:\n                vertex = next(stack[-1])\n            except StopIteration:\n                stack.pop()\n                continue\n            if vertex not in seen:\n                seen.add(vertex)\n                order.append(vertex)\n                stack.append(iter(graph[vertex]))\n    return order\n\nprint(dfs_forest([[1, 2], [0, 3], [0, 3], [1, 2], []]))\nprint(dfs_forest([]))\nprint(dfs_forest([[0]]))\n\n\n输出 [0, 1, 3, 2, 4]、[]、[0]。输入约定邻居编号有效，不在遍历中修改图。邻接表扫描时间 O(V+E)，seen、输出和显式栈空间 O(V)；顺序依赖邻接表，不保证最短路径。\n\n去掉外层 root 循环，只从 0 开始，会遗漏哪些顶点？"
+status: draft

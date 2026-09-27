@@ -1,0 +1,25 @@
+id: SRC-DS-QUEUE-01-WALKTHROUGH
+title: 队列及其不变量：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-QUEUE-01.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-QUEUE-01 队列及其不变量（自编讲义草稿，待人工审核）\n\n实现先进先出操作并维护队首队尾。关键要点包括：队列保持先进先出，入队只在队尾加入元素，出队只从队头移除元素；实现必须保持空队列、单元素队列以及入队出队后\
+      \ head、tail 与 size 的一致性；链式队列删除最后一个元素后要同时更新头尾指针，避免 tail 残留为悬空指针。\n\n队列保持先进先出，入队只在队尾加入元素，出队只从队头移除元素。\n\
+      实现必须保持空队列、单元素队列以及入队出队后 head、tail 与 size 的一致性。\n链式队列删除最后一个元素后要同时更新头尾指针，避免 tail 残留为悬空指针。\n\n用队列模拟任务依次进入并按先来先服务处理。\n\
+      \n三个任务从队尾加入，队头始终指向最早尚未处理的任务 A。\n每次 popleft 取走最早到达者，顺序为 A、B、C。\n队列为空时停止读取；不能把列表 pop(0) 的移动成本当作队列抽象的\
+      \ O(1) 保证。\n\nfrom collections import deque\nqueue = deque()\nfor task in [\"A\", \"B\", \"\
+      C\"]:\n    queue.append(task)\norder = []\nwhile queue:\n    order.append(queue.popleft())\n\
+      print(\" \".join(order))\nprint(len(queue))\n\n\n抽象的先进先出语义与具体容器的操作复杂度需要分别验证。\n\n常见错误：误以为队列允许从任意位置删除元素而仍保持先进先出语义。；误以为链式队列删除唯一结点后只需修改\
+      \ head，tail 可以继续指向已释放结点。\n\n自测：若把 popleft 换成 pop，处理顺序会变成什么？"
+status: draft

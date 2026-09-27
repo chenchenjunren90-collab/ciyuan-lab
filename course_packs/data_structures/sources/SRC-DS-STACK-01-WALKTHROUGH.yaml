@@ -1,0 +1,27 @@
+id: SRC-DS-STACK-01-WALKTHROUGH
+title: 栈及其不变量：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-STACK-01.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-STACK-01 栈及其不变量（自编讲义草稿，待人工审核）\n\n实现后进先出操作并维护栈顶边界。关键要点包括：栈只在同一端压入和弹出，保持后进先出顺序；数组实现维护\
+      \ top 边界，链式实现维护栈顶结点；空栈弹出必须有明确策略；调用栈、括号匹配和深度优先过程都依赖尚未完成任务的逆序恢复。\n\n栈只在同一端压入和弹出，保持后进先出顺序。\n数组实现维护\
+      \ top 边界，链式实现维护栈顶结点；空栈弹出必须有明确策略。\n调用栈、括号匹配和深度优先过程都依赖尚未完成任务的逆序恢复。\n\n用栈保存尚未匹配的左括号，判断嵌套结构。\n\n\
+      遇到 ( 和 [ 后栈为 ['(', '[']，后打开的括号必须先闭合。\n读到 ] 时取出 [，读到 ) 时取出 (；整串结束还需检查栈是否为空。\n对于 ([)]，遇到 ) 时栈顶是\
+      \ [，立刻失败；空串无需入栈，结果为真。\n\ndef balanced(text):\n    stack = []\n    pairs = {\")\": \"(\", \"\
+      ]\": \"[\", \"}\": \"{\"}\n    for ch in text:\n        if ch in \"([{\":\n            stack.append(ch)\n\
+      \        elif ch in pairs:\n            if not stack or stack.pop() != pairs[ch]:\n        \
+      \        return False\n        else:\n            return False\n    return not stack\n\nprint(balanced(\"\
+      ([]){}\"))\nprint(balanced(\"([)]\"))\nprint(balanced(\"\"))\n\n\n时间 O(n)，最坏空间 O(n)；空栈取顶和遗留左括号都必须检查。\n\
+      \n常见错误：遇到任意右括号都只弹栈，不检查括号类型。；空栈时仍读取栈顶元素。\n\n自测：只检查左右括号数量相等，能区分 () 和 )( 吗？"
+status: draft

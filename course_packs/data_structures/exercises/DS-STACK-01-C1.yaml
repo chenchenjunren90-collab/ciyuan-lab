@@ -2,13 +2,13 @@ id: DS-STACK-01-C1
 title: 编程实践：栈及其不变量
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: beginner
 estimated_minutes: 20
 concept_ids:
 - DS-STACK-01
-prompt: 判断只含 ()[]{} 的字符串括号是否匹配，输出 true 或 false。
+prompt: 判断一行字符串的括号是否匹配，允许 ()[]{} 六种字符；出现其他字符时视为不合法。空串匹配，输出小写 true 或 false。
 source_refs:
 - SRC-DS-GUIDE-LINEAR
 evaluation:
@@ -47,4 +47,24 @@ evaluation:
     expected_output: 'false
 
       '
+  - id: hidden-empty
+    visibility: hidden
+    input: "\n"
+    expected_output: "true\n"
+  - id: hidden-leading-close
+    visibility: hidden
+    input: ") (\n"
+    expected_output: "false\n"
+extensions:
+  learning_stage: in_class
+  input_format: 一行括号字符串，可为空；任何非括号字符均视为不合法。
+  output_format: 匹配输出小写 true，否则输出小写 false。
+  constraints:
+  - 字符串长度不超过 10000
+  - 读取时只去掉行尾换行，不应忽略字符串中间的空白
+  scaffolding:
+  - 保存还没匹配的左括号，最后入栈的应最先匹配。
+  - 右括号到来时先检查空栈，再比较对应类型。
+  - 扫描结束时栈里不能留有左括号。
+  reflection_prompt: 计数相等并不保证嵌套正确；时间 O(n)，最坏空间 O(n)。
 status: draft

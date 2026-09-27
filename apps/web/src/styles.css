@@ -135,7 +135,10 @@ h1, h2, h3, p { margin-top: 0; }
 .primary:disabled { opacity: .6; cursor: wait; }
 .mastery-orbit { --mastery:0deg;width:216px;height:168px;flex:0 0 auto;display:grid;place-items:center;border-left:1px solid var(--line);border-radius:0;background:transparent;box-shadow:none;text-align:center; }
 .mastery-orbit > div { width:auto;height:auto;display:grid;place-items:center;align-content:center;border:0;border-radius:0;background:transparent; }
-.mastery-orbit strong { color:var(--accent-ink);font:800 clamp(64px,5.4vw,88px)/.92 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.04em; }.mastery-orbit span { margin-top:12px;color:var(--muted);font-size:13px;font-weight:650;line-height:1.5; }
+.mastery-orbit .mastery-value { display:inline-flex;align-items:flex-start;justify-content:center;color:var(--accent-ink);font:800 clamp(64px,5.4vw,88px)/.92 var(--font-data);font-variant-numeric:tabular-nums;letter-spacing:-.04em; }
+.mastery-orbit .mastery-number { margin:0;color:inherit;font:inherit;line-height:inherit; }
+.mastery-orbit .mastery-unit { margin:.08em 0 0 .12em;color:inherit;font:800 clamp(20px,1.8vw,28px)/1 var(--font-data);letter-spacing:-.02em; }
+.mastery-orbit .mastery-caption { margin-top:12px;color:var(--muted);font-size:13px;font-weight:650;line-height:1.5; }
 .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 18px; }
 .metrics article { position:relative;overflow:hidden;padding:20px;border:1px solid var(--line);border-radius:10px;background:var(--surface-raised);box-shadow:none; }
 .metrics article::before { content:"";position:absolute;inset:0 0 auto;height:1px;background:var(--accent);opacity:.75; }

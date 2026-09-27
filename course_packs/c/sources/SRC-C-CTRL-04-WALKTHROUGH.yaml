@@ -1,0 +1,24 @@
+id: SRC-C-CTRL-04-WALKTHROUGH
+title: for 循环与计数模式：分步例题与边界讲义
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/c/concepts/C-CTRL-04.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "C-CTRL-04 for 循环与计数模式（自编讲义草稿，待人工审核）\n\n用初始化、条件和更新表达确定次数的迭代。关键要点包括：for 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行；计数循环应明确闭区间或半开区间，数组遍历通常使用\
+      \ 0 <= i < n；循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。\n\nfor 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行。\n计数循环应明确闭区间或半开区间，数组遍历通常使用\
+      \ 0 <= i < n。\n循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。\n\n用 for 循环累加 1 到 4，并解释每轮的不变量。\n\n进入第 i 轮前，sum\
+      \ 是从 1 到 i-1 的和。\n四次累加后 sum 依次为 1、3、6、10。\ni 增加到 5 时条件为假，循环结束；把 <= 改成 < 会漏掉 4。\n\n#include <stdio.h>\n\
+      int main(void) {\n    int sum = 0;\n    for (int i = 1; i <= 4; ++i) {\n        sum += i;\n\
+      \    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n\n\n先检查空循环、恰好一轮、最后一轮，再推导一般输入。\n\n常见错误：把\
+      \ i < n 写成 i <= n 后访问 a[n]，发生越界。；更新方向与终止条件相反，循环永远无法结束。\n\n自测：将循环上界改成 0 时执行几次，sum 是多少？"
+status: draft

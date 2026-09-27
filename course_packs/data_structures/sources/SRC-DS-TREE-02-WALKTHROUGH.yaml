@@ -1,0 +1,27 @@
+id: SRC-DS-TREE-02-WALKTHROUGH
+title: 二叉树遍历：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-TREE-02.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-TREE-02 二叉树遍历（自编讲义草稿，待人工审核）\n\n实现前序、中序、后序和层序遍历。关键要点包括：先序、中序、后序分别在左右子树之前、中间、之后访问根结点；层序遍历使用队列按深度逐层访问；深度优先遍历可用递归或显式栈；仅给先序和后序通常不能唯一恢复普通二叉树，配合含唯一键的中序序列才常可唯一确定。\n\
+      \n先序、中序、后序分别在左右子树之前、中间、之后访问根结点。\n层序遍历使用队列按深度逐层访问；深度优先遍历可用递归或显式栈。\n仅给先序和后序通常不能唯一恢复普通二叉树，配合含唯一键的中序序列才常可唯一确定。\n\
+      \n用同一棵树比较前序、中序和后序遍历。\n\n前序在左右子树之前访问根，得到 A、B、C。\n中序在左子树之后、右子树之前访问根，得到 B、A、C。\n后序在左右子树完成后访问根，得到\
+      \ B、C、A；None 是递归终止条件。\n\ntree = (\"A\", (\"B\", None, None), (\"C\", None, None))\ndef traverse(node,\
+      \ mode):\n    if node is None:\n        return []\n    value, left, right = node\n    a, b =\
+      \ traverse(left, mode), traverse(right, mode)\n    if mode == \"pre\":\n        return [value]\
+      \ + a + b\n    if mode == \"in\":\n        return a + [value] + b\n    return a + b + [value]\n\
+      for mode in [\"pre\", \"in\", \"post\"]:\n    print(\" \".join(traverse(tree, mode)))\n\n\n\
+      仅二叉搜索树满足相应有序性质。此教学代码用列表拼接便于阅读，偏斜树上复制成本可能 O(n²)，不能当作线性实现。\n\n常见错误：误以为二叉树的中序遍历总会得到按键升序序列，与树是否为搜索树无关。；误以为只凭任意二叉树的先序和后序序列就一定可以唯一重建原树。\n\
+      \n自测：任意二叉树的中序序列都递增吗，还需要什么结构约束？"
+status: draft

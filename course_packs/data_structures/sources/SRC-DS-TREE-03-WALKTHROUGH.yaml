@@ -1,0 +1,18 @@
+id: SRC-DS-TREE-03-WALKTHROUGH
+title: 二叉搜索树插入与删除：分步例题
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编 BST 讲义，配套 DS-TREE-03，不冒充外部教材内容。
+rights:
+  basis: synthetic
+  note: AI 辅助编写的原创教学例题，待课程负责人核对与审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "BST 本例采用忽略重复键的集合语义。双孩子删除用右子树最小结点替代，再移除后继。删除根需接住新根。循环实现避免递归深度限制，操作成本 O(h)，退化时 O(n)。\n\nclass Node:\n    def __init__(self, key):\n        self.key = key\n        self.left = None\n        self.right = None\n\n\ndef insert(root, key):\n    if root is None:\n        return Node(key)\n    node = root\n    while True:\n        if key == node.key:\n            return root  # 集合语义：忽略重复键\n        branch = \"left\" if key < node.key else \"right\"\n        child = getattr(node, branch)\n        if child is None:\n            setattr(node, branch, Node(key))\n            return root\n        node = child\n\n\ndef erase(root, key):\n    parent, node = None, root\n    while node is not None and node.key != key:\n        parent = node\n        node = node.left if key < node.key else node.right\n    if node is None:\n        return root\n    if node.left is not None and node.right is not None:\n        # 找到右子树最小结点；它至多只有一个右孩子\n        parent, successor = node, node.right\n        while successor.left is not None:\n            parent, successor = successor, successor.left\n        node.key = successor.key\n        node = successor\n    child = node.left if node.left is not None else node.right\n    if parent is None:\n        return child  # 删除根时，调用方必须接住新根\n    if parent.left is node:\n        parent.left = child\n    else:\n        parent.right = child\n    return root\n\n\ndef inorder(root):\n    result, stack = [], []\n    node = root\n    while node is not None or stack:\n        while node is not None:\n            stack.append(node)\n            node = node.left\n        node = stack.pop()\n        result.append(node.key)\n        node = node.right\n    return result\n\n\nroot = None\nfor key in [5, 3, 7, 6, 6]:\n    root = insert(root, key)\nprint(inorder(root))\nroot = erase(root, 5)\nprint(inorder(root))\nroot = erase(root, 3)\nroot = erase(root, 6)\nprint(inorder(root))\n"
+status: draft

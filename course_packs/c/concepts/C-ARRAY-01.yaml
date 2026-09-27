@@ -2,18 +2,18 @@ id: C-ARRAY-01
 title: 一维数组
 course: c
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-CTRL-04
 learning_objectives:
-- 能判断与“一维数组”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“一维数组”的关键状态并验证边界
+- 使用长度参数遍历数组，保证每次下标访问都在合法范围内
+- 处理空数组和重复最大值，解释数组传参后不能靠 sizeof 求长度
 concepts:
-- 一维数组
-- 边界条件
-- 可验证性
+- 数组
+- 下标
+- 长度
 lesson:
   summary: 按连续同类型元素建模并安全控制下标范围。关键要点包括：一维数组在创建时确定元素类型和长度，合法下标范围是 0 到 n-1；数组表达式传入函数时通常转换为首元素指针，因此长度必须通过独立参数或结构一并传递；聚合操作在读取 a[0]
     前必须先定义并处理 n==0 的空序列结果。
@@ -27,8 +27,30 @@ lesson:
   examples:
   - 代码片段：if(n==0){puts("empty");}else{int max=a[0]; for(size_t i=1;i<n;++i) if(a[i]>max) max=a[i]; printf("%d\n",max);}；空数组先输出
     empty，不读取 a[0]。
+  learning_sequence:
+  - title: "网道：数组导读 · 原文与边界"
+    content: "数组把同一类型的元素连续存放。长度为 n 的数组，其有效元素下标是 0 到 n-1。部分初始化时，未显式列出的元素会被零初始化；没有初始化的自动存储期数组不能假定全为零。\n\n动手：画出 int marks[4]={7,2}; 的四个格子，再写出遍历条件 i<4。把条件改成 i<=4，指出第一处越界访问。\n\n阅读修正：越界访问属于未定义行为，不能承诺它会正常运行或只改写相邻变量。数组初始化时可由初始化列表推导长度，例如 int a[]={2,5};，并非每次声明都必须显式填写长度。\n\n改编来源：[网道：数组导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/array.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+  - title: "安全遍历一个固定数组，空区间返回 0。"
+    content: "在 a 仍为数组的调用方，sizeof a / sizeof a[0] 计算元素数。"
+  - title: "跟踪状态变化"
+    content: "函数收到指针和长度；total 累积的顺序为 3、1、6。\n\nn 为 0 时循环不进入，因此不会读取 NULL；n>0 时调用方必须提供足够长的有效数组。"
+  - title: "边界与迁移"
+    content: "数组传参后的长度要显式传递；整数求和还需根据实际输入上界评估溢出。"
+  worked_example:
+    problem: "安全遍历一个固定数组，空区间返回 0。"
+    steps:
+    - "在 a 仍为数组的调用方，sizeof a / sizeof a[0] 计算元素数。"
+    - "函数收到指针和长度；total 累积的顺序为 3、1、6。"
+    - "n 为 0 时循环不进入，因此不会读取 NULL；n>0 时调用方必须提供足够长的有效数组。"
+    code: "#include <stdio.h>\n#include <stddef.h>\nstatic int sum(const int *a, size_t n) {\n    int total = 0;\n    for (size_t i = 0; i < n; ++i) total += a[i];\n    return total;\n}\nint main(void) {\n    int a[] = {3, -2, 5};\n    printf(\"%d %d\\n\", sum(a, sizeof a / sizeof a[0]), sum(NULL, 0));\n    return 0;\n}\n"
+    reflection: "数组传参后的长度要显式传递；整数求和还需根据实际输入上界评估溢出。"
+  checkpoint:
+    prompt: "为什么不能在 sum 的参数 a 上用 sizeof 得到调用方数组长度？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - C-ARRAY-01-C1
 source_refs:
+- SRC-C-WANGDOC-ARRAY
+- SRC-C-ARRAY-01-WALKTHROUGH
 - SRC-C-GUIDE-MEMORY
 status: draft

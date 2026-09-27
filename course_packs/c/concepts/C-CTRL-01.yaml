@@ -2,19 +2,24 @@ id: C-CTRL-01
 title: if 条件分支
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-BASE-05
 learning_objectives:
-- 能够解释if 条件分支的核心规则
-- 能够运用if 条件分支解决边界明确的问题
+- 区分独立 if 与 if/else if 的执行路径，预测多个条件同时成立时的输出
+- 实现闰年与多条件编码判断，用世纪年份和条件交集检查分支遗漏
 concepts:
-- if 条件分支
-- 边界条件
-- 可验证性
+- if
+- 分支
+- 条件
 lesson:
+  learning_sequence:
+  - title: "网道：条件分支导读 · 原文与边界"
+    content: "if 判断标量表达式是否为零：零走假分支，非零走真分支。if/else 表示互斥选择，而多个独立 if 可以在一次执行中命中多项条件。\n\n动手：先用表格列出一个数分别能否被 3、5、7 整除，再做本节的雨滴编码练习。思考输入同时满足两个条件时，为什么 else if 会遗漏输出。\n\n书写边界：用大括号明确分支范围，避免 else 与最近的未匹配 if 绑定时产生歧义。闰年练习再要求你将“4 的倍数”和“世纪例外”组合起来。\n\n改编来源：[网道：条件分支导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/flow-control.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+  - title: "本节概念"
+    content: "把互斥业务规则表达为边界清晰的条件分支。关键要点包括：条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径；互斥区间应从边界值开始设计，例如负数、零和正数必须完整且不重叠；复杂条件先命名中间布尔含义，并利用短路求值保护除法或指针解引用。"
   summary: 把互斥业务规则表达为边界清晰的条件分支。关键要点包括：条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径；互斥区间应从边界值开始设计，例如负数、零和正数必须完整且不重叠；复杂条件先命名中间布尔含义，并利用短路求值保护除法或指针解引用。
   key_points:
   - 条件表达式的结果为零或非零，分支顺序会影响重叠条件最终落入哪一条路径。
@@ -26,7 +31,10 @@ lesson:
   examples:
   - 代码示例：if (x > 0) puts("positive"); else if (x == 0) puts("zero"); else puts("negative");
 assessment_ids:
+- C-EXERCISM-RAINDROPS
+- C-EXERCISM-LEAP
 - C-CTRL-01-C1
 source_refs:
+- SRC-C-WANGDOC-FLOW
 - SRC-C-GUIDE-CONTROL
 status: draft

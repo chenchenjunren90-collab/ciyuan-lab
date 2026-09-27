@@ -2,18 +2,18 @@ id: DS-GRAPH-03
 title: 深度优先搜索
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - DS-GRAPH-01
 learning_objectives:
-- 能判断与“深度优先搜索”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“深度优先搜索”的关键状态并验证边界
+- "用显式栈保存邻居迭代进度，复现递归 DFS 的深入与回溯"
+- "在首次发现时标记顶点，处理环、孤立点和不连通图"
 concepts:
-- 深度优先搜索
-- 边界条件
-- 可验证性
+- "深度优先搜索"
+- "显式栈"
+- "回溯"
 lesson:
   summary: 使用递归或显式栈探索路径并标记访问状态。关键要点包括：深度优先搜索沿未访问邻接点继续深入，回溯后再探索其他分支，可用递归或显式栈实现；必须在顶点首次发现时标记访问，否则含环图可能重复入栈并无法终止；邻接表实现遍历全部可达顶点和边的时间为
     O(V+E)，邻接顺序会影响访问序列。
@@ -26,8 +26,30 @@ lesson:
   - 误以为在无向图中不需要 visited 标记，因为每条边只会被存储一次。
   examples:
   - 轨迹示例：邻接次序 A:[B,C]、B:[D]；从 A 递归 DFS 的一种顺序为 A、B、D、C。
+  learning_sequence:
+  - title: "OpenDSA：图遍历导读 · 原文与边界"
+    content: "访问标记有两个任务：防止环导致重复展开，以及帮助发现尚未遍历的分量。单个起点只能访问从它可达的顶点；若要覆盖全图，还需依次选择未访问顶点作为新起点。\n\n推演任务：用含一个环和一个孤立点的图，分别记录 BFS 的队列、DFS 的调用栈或显式栈。BFS 在发现顶点、入队时标记，可避免同一顶点反复入队。\n\n本平台固定邻接点顺序以便复现；不同合法邻接顺序可能产生不同遍历序列。O(V+E) 的全图遍历时间依赖邻接表等适当表示，邻接矩阵扫描通常为 O(V²)。BFS 按边数得到的最短路结论针对无权图，不能直接替代带权最短路。\n\n改编来源：[OpenDSA：图遍历导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Graph/GraphTraversal.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  - title: "按邻接表顺序遍历含环的图，并在连通分量结束后访问孤立点。"
+    content: "发现根 0 后，将其邻居迭代器放到栈顶；每发现一个新邻居，就保存它的迭代器继续深入。"
+  - title: "状态推演"
+    content: "走到已发现顶点时跳过；当前顶点的邻居耗尽后弹栈，回到父顶点未完成的位置。\n\n从 0 的访问顺序为 0、1、3、2；外层根循环再发现孤立点 4，整个图最终为 0、1、3、2、4。"
+  - title: "边界与代价"
+    content: "输出 [0, 1, 3, 2, 4]、[]、[0]。输入约定邻居编号有效，不在遍历中修改图。邻接表扫描时间 O(V+E)，seen、输出和显式栈空间 O(V)；顺序依赖邻接表，不保证最短路径。"
+  worked_example:
+    problem: "按邻接表顺序遍历含环的图，并在连通分量结束后访问孤立点。"
+    steps:
+    - "发现根 0 后，将其邻居迭代器放到栈顶；每发现一个新邻居，就保存它的迭代器继续深入。"
+    - "走到已发现顶点时跳过；当前顶点的邻居耗尽后弹栈，回到父顶点未完成的位置。"
+    - "从 0 的访问顺序为 0、1、3、2；外层根循环再发现孤立点 4，整个图最终为 0、1、3、2、4。"
+    code: "def dfs_forest(graph):\n    seen = set()\n    order = []\n    for root in range(len(graph)):\n        if root in seen:\n            continue\n        seen.add(root)\n        order.append(root)\n        stack = [iter(graph[root])]\n        while stack:\n            try:\n                vertex = next(stack[-1])\n            except StopIteration:\n                stack.pop()\n                continue\n            if vertex not in seen:\n                seen.add(vertex)\n                order.append(vertex)\n                stack.append(iter(graph[vertex]))\n    return order\n\nprint(dfs_forest([[1, 2], [0, 3], [0, 3], [1, 2], []]))\nprint(dfs_forest([]))\nprint(dfs_forest([[0]]))\n"
+    reflection: "输出 [0, 1, 3, 2, 4]、[]、[0]。输入约定邻居编号有效，不在遍历中修改图。邻接表扫描时间 O(V+E)，seen、输出和显式栈空间 O(V)；顺序依赖邻接表，不保证最短路径。"
+  checkpoint:
+    prompt: "去掉外层 root 循环，只从 0 开始，会遗漏哪些顶点？"
+    guidance: "先手动推演，再对照例题；此处自测不计入掌握度。"
 assessment_ids:
 - DS-GRAPH-03-Q1
 source_refs:
+- SRC-DS-OPENDSA-GRAPH
+- SRC-DS-GRAPH-03-WALKTHROUGH
 - SRC-DS-GUIDE-TREEGRAPH
 status: draft

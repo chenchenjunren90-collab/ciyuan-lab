@@ -2,18 +2,18 @@ id: C-IO-01
 title: 文本文件读写
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - C-STR-01
 learning_objectives:
-- 能判断与“文本文件读写”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“文本文件读写”的关键状态并验证边界
+- 检查文件打开、写入、定位、读取和关闭操作的返回值
+- 以读取函数的结果控制循环，区分正常读完与输入输出错误
 concepts:
-- 文本文件读写
-- 边界条件
-- 可验证性
+- 文件
+- fgets
+- fclose
 lesson:
   summary: 检查打开结果并用循环可靠处理文本记录。关键要点包括：fopen 可能因路径、权限或资源问题失败，任何读写前都必须检查返回的 FILE 指针；fgets 按容量读取并保留可能出现的换行符，解析前要区分完整行、截断行、文件结束和读取错误；写入完成后应检查输出操作与
     fclose 的结果，确保错误路径也关闭已打开的流。
@@ -27,8 +27,27 @@ lesson:
   examples:
   - 代码片段：FILE *in=fopen(path,"r"); if(!in) return OPEN_ERROR; while(fgets(line,sizeof line,in)){/* 解析完整记录 */}；最后检查 ferror(in)
     并 fclose(in)。
+  learning_sequence:
+  - title: "使用临时文件写入再读取一行，检查打开、定位、读取和关闭结果。"
+    content: "tmpfile 创建可读写临时流；失败时立即结束，不能使用空 FILE 指针。"
+  - title: "跟踪状态变化"
+    content: "写入后先 fseek 回到开头，满足更新流切换方向的定位要求。\n\nfgets 最多读取容量减一的字符并补终止符；返回 NULL 时不能把缓冲区当作有效新输入。"
+  - title: "边界与迁移"
+    content: "应根据读取操作的返回值控制循环，读完后再区分 EOF 与错误。"
+  worked_example:
+    problem: "使用临时文件写入再读取一行，检查打开、定位、读取和关闭结果。"
+    steps:
+    - "tmpfile 创建可读写临时流；失败时立即结束，不能使用空 FILE 指针。"
+    - "写入后先 fseek 回到开头，满足更新流切换方向的定位要求。"
+    - "fgets 最多读取容量减一的字符并补终止符；返回 NULL 时不能把缓冲区当作有效新输入。"
+    code: "#include <stdio.h>\nint main(void) {\n    FILE *file = tmpfile();\n    if (file == NULL) return 1;\n    if (fputs(\"alpha\\n\", file) == EOF || fseek(file, 0, SEEK_SET) != 0) {\n        fclose(file); return 1;\n    }\n    char line[32];\n    if (fgets(line, sizeof line, file) == NULL) {\n        fclose(file); return 1;\n    }\n    fputs(line, stdout);\n    return fclose(file) == EOF ? 1 : 0;\n}\n"
+    reflection: "应根据读取操作的返回值控制循环，读完后再区分 EOF 与错误。"
+  checkpoint:
+    prompt: "为什么 while(!feof(file)) 不能保证下一次读取成功？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - C-IO-01-C1
 source_refs:
+- SRC-C-IO-01-WALKTHROUGH
 - SRC-C-GUIDE-ENGINEERING
 status: draft

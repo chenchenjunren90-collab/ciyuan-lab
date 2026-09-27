@@ -1,0 +1,28 @@
+id: SRC-C-IO-01-WALKTHROUGH
+title: 文本文件读写：分步例题与边界讲义
+course: c
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/c/concepts/C-IO-01.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "C-IO-01 文本文件读写（自编讲义草稿，待人工审核）\n\n检查打开结果并用循环可靠处理文本记录。关键要点包括：fopen 可能因路径、权限或资源问题失败，任何读写前都必须检查返回的\
+      \ FILE 指针；fgets 按容量读取并保留可能出现的换行符，解析前要区分完整行、截断行、文件结束和读取错误；写入完成后应检查输出操作与 fclose 的结果，确保错误路径也关闭已打开的流。\n\
+      \nfopen 可能因路径、权限或资源问题失败，任何读写前都必须检查返回的 FILE 指针。\nfgets 按容量读取并保留可能出现的换行符，解析前要区分完整行、截断行、文件结束和读取错误。\n\
+      写入完成后应检查输出操作与 fclose 的结果，确保错误路径也关闭已打开的流。\n\n使用临时文件写入再读取一行，检查打开、定位、读取和关闭结果。\n\ntmpfile 创建可读写临时流；失败时立即结束，不能使用空\
+      \ FILE 指针。\n写入后先 fseek 回到开头，满足更新流切换方向的定位要求。\nfgets 最多读取容量减一的字符并补终止符；返回 NULL 时不能把缓冲区当作有效新输入。\n\
+      \n#include <stdio.h>\nint main(void) {\n    FILE *file = tmpfile();\n    if (file == NULL) return\
+      \ 1;\n    if (fputs(\"alpha\\n\", file) == EOF || fseek(file, 0, SEEK_SET) != 0) {\n       \
+      \ fclose(file); return 1;\n    }\n    char line[32];\n    if (fgets(line, sizeof line, file)\
+      \ == NULL) {\n        fclose(file); return 1;\n    }\n    fputs(line, stdout);\n    return fclose(file)\
+      \ == EOF ? 1 : 0;\n}\n\n\n应根据读取操作的返回值控制循环，读完后再区分 EOF 与错误。\n\n常见错误：误以为用 while(!feof(fp)) 读取可以保证循环体每次都获得一条新的有效记录。；误以为fgets\
+      \ 总会去掉行末换行符，因此字符串可直接与不含换行的文本比较。\n\n自测：为什么 while(!feof(file)) 不能保证下一次读取成功？"
+status: draft

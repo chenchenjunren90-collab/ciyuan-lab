@@ -1,0 +1,26 @@
+id: SRC-DS-SORT-02-WALKTHROUGH
+title: 插入排序：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-SORT-02.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-SORT-02 插入排序（自编讲义草稿，待人工审核）\n\n维护已排序前缀并分析近乎有序输入。关键要点包括：插入排序在第 i 轮开始前保持前缀 [0,i) 已有序，再把当前元素插入正确位置；最坏时间为\
+      \ Θ(n²)，但对近乎有序数据移动较少，最好可达 Θ(n)；移动时只跨过严格大于当前键的元素可保持相等键的原相对顺序。\n\n插入排序在第 i 轮开始前保持前缀 [0,i) 已有序，再把当前元素插入正确位置。\n\
+      最坏时间为 Θ(n²)，但对近乎有序数据移动较少，最好可达 Θ(n)。\n移动时只跨过严格大于当前键的元素可保持相等键的原相对顺序。\n\n对含重复值的数组做稳定插入排序，逐轮维护有序前缀。\n\
+      \n先把第一个 2 插入 5 前面，数组变成 [2,5,2,1]。\n处理第二个 2 时只右移 5，不跨过相等的第一个 2，因此保持相对次序。\n最后把 1 插入开头；移动过程中的重复值是暂时状态，key\
+      \ 单独保存待插元素。\n\ndef insertion_sort(a):\n    for i in range(1, len(a)):\n        key, j = a[i],\
+      \ i - 1\n        while j >= 0 and a[j] > key:\n            a[j + 1] = a[j]\n            j -=\
+      \ 1\n        a[j + 1] = key\n    return a\n\nprint(insertion_sort([5, 2, 2, 1]))\nprint(insertion_sort([]))\n\
+      \n\n最好 O(n)，最坏 O(n²)，额外空间 O(1)；稳定性需要观察相等键的身份。\n\n常见错误：误以为插入排序每轮都在整个数组中寻找最小值，因此与选择排序过程完全相同。；误以为插入排序无论输入是否已有序都必须执行\
+      \ Θ(n²) 次元素移动。\n\n自测：把 a[j] > key 改为 >= 会影响数值排序结果、稳定性中的哪一项？"
+status: draft

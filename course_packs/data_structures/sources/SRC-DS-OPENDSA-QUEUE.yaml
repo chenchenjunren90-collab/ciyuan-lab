@@ -1,0 +1,41 @@
+{
+  "id": "SRC-DS-OPENDSA-QUEUE",
+  "title": "OpenDSA：循环队列导读",
+  "course": "data_structures",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "The Circular Queue",
+    "url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/Queue.rst"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[OpenDSA：循环队列导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/Queue.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "FIFO 要求从队尾加入、从队首取出。数组实现若每次出队都搬移元素，会增加不必要的工作。循环下标使位置走到数组末端后重新回到开头。\n\n推演任务：物理长度为 4，约定 front 指向下一次读取位置、rear 指向下一次写入位置，并预留一个空槽。空条件 front==rear，满条件 (rear+1)%4==front，最多存 3 个元素。\n\n先入队 1、2、3，出队一次，再入队 4，画出跨越末端的下标变化。区别“物理数组顺序”和“逻辑出队顺序”。这是本平台选定的下标约定，不能把不同实现的公式混用。\n\n改编来源：[OpenDSA：循环队列导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/Queue.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/List/Queue.rst",
+      "scope": "The Circular Queue",
+      "license": "MIT",
+      "license_url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "DS-QUEUE-01"
+    ]
+  }
+}

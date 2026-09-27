@@ -1,0 +1,41 @@
+{
+  "id": "SRC-C-WANGDOC-ARRAY",
+  "title": "网道：数组导读",
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "简介：下标和初始化",
+    "url": "https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/array.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[网道：数组导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/array.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。 许可声明依据：https://wangdoc.com/clang/ （核对日期 2026-09-27）。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "数组把同一类型的元素连续存放。长度为 n 的数组，其有效元素下标是 0 到 n-1。部分初始化时，未显式列出的元素会被零初始化；没有初始化的自动存储期数组不能假定全为零。\n\n动手：画出 int marks[4]={7,2}; 的四个格子，再写出遍历条件 i<4。把条件改成 i<=4，指出第一处越界访问。\n\n阅读修正：越界访问属于未定义行为，不能承诺它会正常运行或只改写相邻变量。数组初始化时可由初始化列表推导长度，例如 int a[]={2,5};，并非每次声明都必须显式填写长度。\n\n改编来源：[网道：数组导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/array.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/array.md",
+      "scope": "简介：下标和初始化",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "C-ARRAY-01"
+    ]
+  }
+}

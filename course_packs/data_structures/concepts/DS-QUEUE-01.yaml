@@ -2,18 +2,18 @@ id: DS-QUEUE-01
 title: 队列及其不变量
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - DS-LINEAR-01
 learning_objectives:
-- 能判断与“队列及其不变量”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“队列及其不变量”的关键状态并验证边界
+- 逐步推演入队与出队，验证先进先出的顺序
+- 比较双端队列与数组头部删除的成本，处理空队列
 concepts:
-- 队列及其不变量
-- 边界条件
-- 可验证性
+- 队列
+- 先进先出
+- deque
 lesson:
   summary: 实现先进先出操作并维护队首队尾。关键要点包括：队列保持先进先出，入队只在队尾加入元素，出队只从队头移除元素；实现必须保持空队列、单元素队列以及入队出队后 head、tail 与 size 的一致性；链式队列删除最后一个元素后要同时更新头尾指针，避免
     tail 残留为悬空指针。
@@ -26,8 +26,30 @@ lesson:
   - 误以为链式队列删除唯一结点后只需修改 head，tail 可以继续指向已释放结点。
   examples:
   - 轨迹示例：空队列依次 enqueue(A)、enqueue(B)、dequeue()；返回 A，队头与队尾都指向剩余的 B。
+  learning_sequence:
+  - title: "OpenDSA：循环队列导读 · 原文与边界"
+    content: "FIFO 要求从队尾加入、从队首取出。数组实现若每次出队都搬移元素，会增加不必要的工作。循环下标使位置走到数组末端后重新回到开头。\n\n推演任务：物理长度为 4，约定 front 指向下一次读取位置、rear 指向下一次写入位置，并预留一个空槽。空条件 front==rear，满条件 (rear+1)%4==front，最多存 3 个元素。\n\n先入队 1、2、3，出队一次，再入队 4，画出跨越末端的下标变化。区别“物理数组顺序”和“逻辑出队顺序”。这是本平台选定的下标约定，不能把不同实现的公式混用。\n\n改编来源：[OpenDSA：循环队列导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/Queue.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  - title: "用队列模拟任务依次进入并按先来先服务处理。"
+    content: "三个任务从队尾加入，队头始终指向最早尚未处理的任务 A。"
+  - title: "跟踪状态变化"
+    content: "每次 popleft 取走最早到达者，顺序为 A、B、C。\n\n队列为空时停止读取；不能把列表 pop(0) 的移动成本当作队列抽象的 O(1) 保证。"
+  - title: "边界与迁移"
+    content: "抽象的先进先出语义与具体容器的操作复杂度需要分别验证。"
+  worked_example:
+    problem: "用队列模拟任务依次进入并按先来先服务处理。"
+    steps:
+    - "三个任务从队尾加入，队头始终指向最早尚未处理的任务 A。"
+    - "每次 popleft 取走最早到达者，顺序为 A、B、C。"
+    - "队列为空时停止读取；不能把列表 pop(0) 的移动成本当作队列抽象的 O(1) 保证。"
+    code: "from collections import deque\nqueue = deque()\nfor task in [\"A\", \"B\", \"C\"]:\n    queue.append(task)\norder = []\nwhile queue:\n    order.append(queue.popleft())\nprint(\" \".join(order))\nprint(len(queue))\n"
+    reflection: "抽象的先进先出语义与具体容器的操作复杂度需要分别验证。"
+  checkpoint:
+    prompt: "若把 popleft 换成 pop，处理顺序会变成什么？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - DS-QUEUE-01-C1
 source_refs:
+- SRC-DS-OPENDSA-QUEUE
+- SRC-DS-QUEUE-01-WALKTHROUGH
 - SRC-DS-GUIDE-LINEAR
 status: draft

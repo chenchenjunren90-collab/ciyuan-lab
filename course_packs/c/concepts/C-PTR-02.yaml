@@ -2,18 +2,18 @@ id: C-PTR-02
 title: 指针算术与数组关系
 course: c
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - C-PTR-01
 learning_objectives:
-- 能判断与“指针算术与数组关系”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“指针算术与数组关系”的关键状态并验证边界
+- "在同一数组中计算指针移动和元素距离，区分元素数与字节数"
+- "构造尾后指针作为遍历终点，但不读取尾后位置"
 concepts:
-- 指针算术与数组关系
-- 边界条件
-- 可验证性
+- "指针"
+- "数组"
+- "ptrdiff_t"
 lesson:
   summary: 在同一数组对象范围内进行合法指针移动。关键要点包括：指针加减只在同一数组对象及其尾后位置范围内有定义，尾后指针可以比较但不能解引用；p+i 按所指类型的元素大小移动，两个同数组指针相减得到 ptrdiff_t 类型的元素距离；数组表达式在多数场景转换为首元素指针，但
     sizeof 和一元 & 等场景不发生该转换。
@@ -26,8 +26,30 @@ lesson:
   - 误以为int 指针 p 加一只前进一个字节，与元素类型大小无关。
   examples:
   - 代码片段：int a[4]={10,20,30,40}; int *p=a+2; printf("%d %td\n",*p,p-a); 输出 30 2。
+  learning_sequence:
+  - title: "网道：指针导读 · 原文与边界"
+    content: "先区分三个对象：变量 x、保存 &x 的指针 p、表达式 *p 所访问的对象。把地址传给函数时，形参仍是指针值的副本；通过副本访问同一个有效对象，才会改变调用者的数据。\n\n阅读边界：指针不是 C 语言中的整数类型。指针加减整数只在同一数组及其尾后位置范围内有定义，尾后位置不能解引用；两个指针相减还要求它们来自同一数组，结果可由 ptrdiff_t 表示。不能用任意数字地址练习指针运算。\n\n动手：画出 int a[3]={4,8,12}; int *p=a; 的关系图，比较 p+1 与 *p+1。再预测 *(p+2)，并解释为什么 *(p+3) 不合法。\n\n改编来源：[网道：指针导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/pointer.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+  - title: "用指针遍历四个整数，并计算第三个元素到首元素的距离。"
+    content: "a + 2 指向第三个元素 30；p - a 得到元素距离 2，而不是字节距离。"
+  - title: "状态推演"
+    content: "end = a + 4 是合法的尾后指针，只作为终止哨兵；循环先判断 cur != end 再读取 *cur。\n\n累加结果为 100；若先读取再判断，就可能解引用尾后指针。"
+  - title: "边界与代价"
+    content: "输出 30 2 100。这里只对同一数组内指针做减法，结果能用 ptrdiff_t 表示；不比较独立分配块的地址大小。数组有 n 项，遍历时间 O(n)、额外空间 O(1)。"
+  worked_example:
+    problem: "用指针遍历四个整数，并计算第三个元素到首元素的距离。"
+    steps:
+    - "a + 2 指向第三个元素 30；p - a 得到元素距离 2，而不是字节距离。"
+    - "end = a + 4 是合法的尾后指针，只作为终止哨兵；循环先判断 cur != end 再读取 *cur。"
+    - "累加结果为 100；若先读取再判断，就可能解引用尾后指针。"
+    code: "#include <stddef.h>\n#include <stdio.h>\nint main(void) {\n    int a[] = {10, 20, 30, 40};\n    int *p = a + 2;\n    int *end = a + 4;\n    int sum = 0;\n    for (int *cur = a; cur != end; ++cur) sum += *cur;\n    printf(\"%d %td %d\\n\", *p, p - a, sum);\n    return 0;\n}\n"
+    reflection: "输出 30 2 100。这里只对同一数组内指针做减法，结果能用 ptrdiff_t 表示；不比较独立分配块的地址大小。数组有 n 项，遍历时间 O(n)、额外空间 O(1)。"
+  checkpoint:
+    prompt: "a + 4 可以保存，为什么 *(a + 4) 不能读取？"
+    guidance: "先手动推演，再对照例题；此处自测不计入掌握度。"
 assessment_ids:
 - C-PTR-02-Q1
 source_refs:
+- SRC-C-WANGDOC-POINTER
+- SRC-C-PTR-02-WALKTHROUGH
 - SRC-C-GUIDE-MEMORY
 status: draft
