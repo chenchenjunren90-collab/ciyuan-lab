@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 
-import type { DeviceMode, LocalLearnerAccount, ThemeMode, UiPreferences } from "../uiPreferences";
+import ThemeToggle from "./ThemeToggle.vue";
+import { resolvePalette } from "../uiPreferences";
+
+import type { DeviceMode, LocalLearnerAccount, UiPreferences } from "../uiPreferences";
 
 const props = defineProps<{
   open: boolean;
@@ -21,11 +24,7 @@ const emit = defineEmits<{
   reset: [];
 }>();
 
-const themes: { id: ThemeMode; label: string }[] = [
-  { id: "light", label: "红白模式" },
-  { id: "dark", label: "紫黑模式" },
-  { id: "system", label: "跟随系统" },
-];
+
 const deviceModes: { id: DeviceMode; label: string }[] = [
   { id: "auto", label: "自动" },
   { id: "mobile", label: "手机" },
@@ -111,8 +110,8 @@ onBeforeUnmount(() => {
         </section>
 
         <section class="settings-section">
-          <div><b>明暗模式</b><span>红白模式明亮锐利，紫黑模式深邃专注；主色跟随模式自动切换。</span></div>
-          <div class="theme-options"><button v-for="item in themes" :key="item.id" :class="{ active: preferences.theme === item.id }" :aria-pressed="preferences.theme === item.id" @click="emit('update', { theme: item.id })"><span>{{ item.label }}</span></button></div>
+          <div><b>配色方案</b><span>四种底色与主色搭配，同步应用于整个学习空间。</span></div>
+          <ThemeToggle :theme="resolvePalette(preferences.theme)" @select="emit('update', { theme: $event })" />
         </section>
 
         <section class="settings-section">

@@ -31,7 +31,8 @@ import {
   loadUiPreferences,
   saveLocalAccounts,
   saveUiPreferences,
-  resolveTheme,
+  resolvePalette,
+  type PaletteId,
   type LocalLearnerAccount,
   type UiPreferences,
 } from "./uiPreferences";
@@ -68,10 +69,10 @@ const workspacePreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get("preview") === "workspace";
 const systemPrefersDark = ref(systemThemeQuery.matches);
 const uiPreferences = reactive<UiPreferences>(loadUiPreferences(localStorage, new URLSearchParams(window.location.search).get("theme")));
-const darkTheme = computed(() => resolveTheme(uiPreferences.theme, systemPrefersDark.value) === "dark");
+const currentPalette = computed(() => resolvePalette(uiPreferences.theme, systemPrefersDark.value));
 let themeTransitionTimer: number | undefined;
-function toggleTheme(): void {
-  uiPreferences.theme = darkTheme.value ? "light" : "dark";
+function toggleTheme(theme: PaletteId): void {
+  uiPreferences.theme = theme;
   const root = document.documentElement;
   if (uiPreferences.reducedMotion) return;
   root.classList.add("theming");
@@ -1050,7 +1051,7 @@ onBeforeUnmount(() => {
     v-if="welcomeOpen"
     :display-name="displayName"
     :device-mode="uiPreferences.deviceMode"
-    :dark-theme="darkTheme"
+    :theme="currentPalette"
     :inert="settingsOpen"
     @toggle-theme="toggleTheme"
     @start="finishWelcome"
@@ -1090,7 +1091,7 @@ onBeforeUnmount(() => {
       <header v-if="!classroomFocusMode" class="topbar">
         <div class="taskbar-title"><h1>学习任务台</h1><span>{{ selectedCourse?.title ?? "课程工作台" }}</span></div>
         <div class="taskbar-status" :data-state="connection"><i></i><span><b>服务状态</b><small>{{ connection === "online" ? "课程服务已连接" : connection === "offline" ? "课程服务暂不可用" : connection === "degraded" ? "部分学习服务暂不可用" : "正在连接课程服务" }}</small></span></div>
-        <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :dark="darkTheme" @toggle="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
+        <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :theme="currentPalette" @select="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
       </header>
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>
       <nav v-if="!classroomFocusMode" class="tabs">
@@ -1293,7 +1294,7 @@ onBeforeUnmount(() => {
           :key="studentId"
           :student-id="studentId"
           :generic-mode="genericMode"
-          :dark-theme="darkTheme"
+          :theme="currentPalette"
           @toggle-theme="toggleTheme"
           @profile-updated="onProfileResolved"
           @profile-resolved="onProfileResolved"

@@ -87,3 +87,51 @@ html[data-theme="light"] .settings-panel { background:var(--surface-raised); box
   .taskbar-user .taskbar-appearance { gap:6px; }
   .focus-actions { gap:6px; }
 }
+
+/* Four complete palettes. data-theme keeps existing light/dark content rules compatible. */
+html[data-palette="dusk"] {
+  --surface:#042341; --surface-raised:#0c2e4c; --surface-muted:#153957;
+  --ink:#f7f1fa; --muted:#c5bdd2; --line:#49617a;
+  --accent:#ba5bb8; --accent-dark:#d790d5; --accent-bright:#e5a5e2;
+  --accent-ink:#f0b8ed; --accent-contrast:#180c22; --accent-soft:#393254; --accent-pale:#242e4d;
+  --code:#082038; --code-ink:#f4edf8; --code-muted:#c5bdd2; --code-line:#49617a;
+}
+html[data-palette="peach"] {
+  --surface:#1a1a1d; --surface-raised:#242327; --surface-muted:#302b31;
+  --ink:#fff3f7; --muted:#d1bac5; --line:#66515e;
+  --accent:#e6397c; --accent-dark:#f184af; --accent-bright:#ff9bc3;
+  --accent-ink:#ff9bc3; --accent-contrast:#200b14; --accent-soft:#512538; --accent-pale:#39232e;
+  --code:#1d191d; --code-ink:#fff3f7; --code-muted:#d1bac5; --code-line:#66515e;
+}
+html[data-palette="violet"] {
+  --surface:#8a3bec; --surface-raised:#54238d; --surface-muted:#452073;
+  --ink:#fffaff; --muted:#f6eaff; --line:#ac85d6;
+  --accent:#b2fc06; --accent-dark:#c6ff50; --accent-bright:#daff8a;
+  --accent-ink:#ceff65; --accent-contrast:#203000; --accent-soft:#425324; --accent-pale:#343d25;
+  --code:#2c154b; --code-ink:#fffaff; --code-muted:#f6eaff; --code-line:#ac85d6;
+}
+html[data-palette="dawn"] {
+  --surface:#ffffcd; --surface-raised:#fffef0; --surface-muted:#f4efcd;
+  --ink:#30291f; --muted:#6e583b; --line:#b4a17c;
+  --accent:#ff8d10; --accent-dark:#a44800; --accent-bright:#ffac43;
+  --accent-ink:#974100; --accent-contrast:#382000; --accent-soft:#ffe0a8; --accent-pale:#fff0cc;
+  --code:#f5efd9; --code-ink:#30291f; --code-muted:#6e583b; --code-line:#b4a17c;
+}
+html[data-palette] {
+  color:var(--ink); background:var(--surface);
+  --red:var(--accent); --red-dark:var(--accent-dark); --red-soft:var(--accent-soft); --red-pale:var(--accent-pale);
+  scrollbar-color:var(--line) var(--surface);
+}
+html[data-theme][data-palette] body, html[data-theme][data-palette] .workspace { color:var(--ink); background:var(--surface); }
+html[data-palette] .immersive-lesson .smart-board { color:var(--ink); border-color:var(--line); background:var(--surface-raised); box-shadow:none; }
+html[data-palette] :is(.primary,.welcome-primary,.done-button,.talk-composer button),
+html[data-palette] .immersive-lesson .code-task .primary { color:var(--accent-contrast); background:var(--accent); box-shadow:none; }
+html[data-palette] ::selection { color:var(--accent-contrast); background:var(--accent); }
+html[data-palette][data-contrast="high"] { --muted:var(--ink); --line:var(--ink); }
+
+@media (max-width:560px) {
+  html[data-palette] .topbar { display:flex; flex-wrap:wrap; gap:12px; padding-block:16px; }
+  html[data-palette] .topbar > div:first-child { flex:1 0 100%; }
+  html[data-palette] .taskbar-user { width:100%; }
+  html[data-palette] .taskbar-appearance { width:100%; justify-content:space-between; }
+}

@@ -20,6 +20,7 @@ import {
 } from "../../services/api";
 import SafeMarkdown from "../SafeMarkdown.vue";
 import ThemeToggle from "../ThemeToggle.vue";
+import type { PaletteId } from "../../uiPreferences";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
 import {
   loadClassroomSession,
@@ -39,7 +40,7 @@ import ClassroomCodeExample from "./ClassroomCodeExample.vue";
 import { readBoardNotes, type BoardNotes, type BoardNotesByBeat } from "./boardTools";
 import { selectDialogueHistory } from "./dialogueHistory";
 
-const props = defineProps<{ studentId: string; genericMode?: boolean; darkTheme: boolean }>();
+const props = defineProps<{ studentId: string; genericMode?: boolean; theme: PaletteId }>();
 const dispatch = defineEmits<{
   profileUpdated: [profile: LearnerProfile];
   profileResolved: [profile: LearnerProfile | null];
@@ -48,7 +49,7 @@ const dispatch = defineEmits<{
   requestAssessment: [];
   focusChanged: [active: boolean];
   openProjects: [];
-  toggleTheme: [];
+  toggleTheme: [theme: PaletteId];
 }>();
 let componentActive = true;
 // Detached classrooms must not overwrite the newly selected account or course.
@@ -1554,7 +1555,7 @@ onBeforeUnmount(() => {
         <div><b>专注课堂</b><span>讲解与互动在同一空间持续进行</span></div>
         <select :value="classroomView" aria-label="选择课堂工作区" @change="handleViewSelect"><option value="lecture">课堂学习</option><option value="code">代码练习</option><option value="materials">课程资料</option></select>
         <div class="focus-view-buttons"><button v-for="item in ([['lecture','课堂'],['code','写代码'],['materials','看资料']] as const)" :key="item[0]" :class="{ active: classroomView === item[0] }" @click="changeClassroomView(item[0])">{{ item[1] }}</button></div>
-        <div class="focus-actions"><ThemeToggle :dark="darkTheme" @toggle="emit('toggleTheme')" /><button class="exit-class" @click="requestEarlyExit">提前下课</button></div>
+        <div class="focus-actions"><ThemeToggle :theme="theme" @select="emit('toggleTheme', $event)" /><button class="exit-class" @click="requestEarlyExit">提前下课</button></div>
       </nav>
       <header class="lesson-masthead">
         <div>

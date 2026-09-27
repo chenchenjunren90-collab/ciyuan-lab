@@ -141,6 +141,14 @@ h1, h2, h3, p { margin-top: 0; }
 .metrics article::before { content:"";position:absolute;inset:0 0 auto;height:1px;background:var(--accent);opacity:.75; }
 .metrics article:hover { transform: translateY(-3px); border-color: #f0c6cc; box-shadow: 0 16px 38px #67101c10; }
 .metrics span, .metrics small { display: block; color: #8a91a1; font-size: 12px; } .metrics strong { display: block; margin: 12px 0 7px; font-size: 30px; }
+/* CountUp renders a span inside each number; keep it out of caption rules. */
+html[data-theme] .workspace :is(.mastery-orbit, .metrics) strong > .count-up {
+  display: inline;
+  margin: 0;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+}
 .panel { margin-top:18px;padding:28px;border:1px solid var(--line);border-radius:12px;background:var(--surface-raised);box-shadow:none; }
 .panel > header { display: flex; align-items: flex-end; justify-content: space-between; gap: 24px; margin-bottom: 22px; }
 .panel > header h2 { margin-bottom: 0; font-size: 25px; letter-spacing: -.035em; } .panel > header > p { max-width: 440px; margin-bottom: 0; color: var(--muted); font-size: 12px; line-height: 1.7; }

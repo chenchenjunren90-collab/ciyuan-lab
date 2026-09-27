@@ -1,4 +1,11 @@
-export type ThemeMode = "light" | "dark" | "system";
+export const PALETTES = [
+  { id: "dusk", label: "暮紫沉蓝", background: "#042341", accent: "#ba5bb8" },
+  { id: "peach", label: "桃焰玄夜", background: "#1a1a1d", accent: "#e6397c" },
+  { id: "violet", label: "星绿堇夜", background: "#8a3bec", accent: "#b2fc06" },
+  { id: "dawn", label: "凝光橙晓", background: "#ffffcd", accent: "#ff8d10" },
+] as const;
+export type PaletteId = typeof PALETTES[number]["id"];
+export type ThemeMode = PaletteId | "light" | "dark" | "system";
 export type DeviceMode = "auto" | "mobile" | "desktop";
 
 export interface UiPreferences {
@@ -35,7 +42,7 @@ export const DEFAULT_UI_PREFERENCES: UiPreferences = {
   welcomeOnLaunch: false,
 };
 
-const THEMES: ThemeMode[] = ["light", "dark", "system"];
+const THEMES: ThemeMode[] = ["light", "dark", "system", ...PALETTES.map((item) => item.id)];
 const DEVICE_MODES: DeviceMode[] = ["auto", "mobile", "desktop"];
 
 export function loadUiPreferences(storage: KeyValueStorage, requestedTheme: string | null = null): UiPreferences {
@@ -72,7 +79,14 @@ export function saveUiPreferences(storage: KeyValueStorage, preferences: UiPrefe
 }
 
 export function resolveTheme(theme: ThemeMode, prefersDark: boolean): "light" | "dark" {
-  return theme === "system" ? (prefersDark ? "dark" : "light") : theme;
+  return resolvePalette(theme, prefersDark) === "dawn" ? "light" : "dark";
+}
+
+export function resolvePalette(theme: ThemeMode, prefersDark = false): PaletteId {
+  if (theme === "system") return prefersDark ? "dusk" : "dawn";
+  if (theme === "light") return "dawn";
+  if (theme === "dark") return "dusk";
+  return theme;
 }
 
 export function applyUiPreferences(
@@ -81,6 +95,7 @@ export function applyUiPreferences(
   prefersDark: boolean,
 ): void {
   root.dataset.theme = resolveTheme(preferences.theme, prefersDark);
+  root.dataset.palette = resolvePalette(preferences.theme, prefersDark);
   root.dataset.device = preferences.deviceMode;
   root.dataset.motion = preferences.reducedMotion ? "reduced" : "full";
   root.dataset.contrast = preferences.highContrast ? "high" : "standard";
