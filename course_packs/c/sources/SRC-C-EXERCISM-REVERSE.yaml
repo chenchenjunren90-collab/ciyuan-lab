@@ -1,0 +1,37 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "SRC-C-EXERCISM-REVERSE",
+  "title": "Exercism C：reverse-string 改编依据",
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "exercises/practice/reverse-string/test_reverse_string.c",
+    "url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/reverse-string/test_reverse_string.c"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "来源：[Exercism C / reverse-string](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/reverse-string/test_reverse_string.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "来源：[Exercism C / reverse-string](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/reverse-string/test_reverse_string.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+    }
+  },
+  "extensions": {
+    "provenance": {
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/reverse-string/test_reverse_string.c",
+      "license": "MIT",
+      "license_url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE",
+      "checked_at": "2026-09-27",
+      "adaptation": "参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。",
+      "human_review": "pending"
+    }
+  }
+}

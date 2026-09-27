@@ -1,0 +1,41 @@
+{
+  "id": "SRC-C-WANGDOC-MEMORY",
+  "title": "网道：动态内存导读",
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "void 指针与 malloc；简介纠错",
+    "url": "https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/memory.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[网道：动态内存导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/memory.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。 许可声明依据：https://wangdoc.com/clang/ （核对日期 2026-09-27）。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "malloc 申请指定字节数，失败返回空指针；成功后取得的是尚未初始化的存储空间。使用前检查申请结果，写入确定的值，再读取；最终由明确的所有者释放。\n\n动手：为 4 个 int 设计申请、检查、初始化、使用、释放五步流程。说明为什么 sizeof *p 比把一个平台上的 int 字节数写死更合适；元素数来自输入时还应检查乘法溢出。\n\n阅读修正：普通全局变量具有静态存储期，不需要也不能通过 free(&global) 释放。需要手动管理的是动态申请的存储空间，不能把“全局变量”与“堆分配”混为一谈。\n\n改编来源：[网道：动态内存导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/memory.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/memory.md",
+      "scope": "void 指针与 malloc；简介纠错",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "C-MEM-01"
+    ]
+  }
+}

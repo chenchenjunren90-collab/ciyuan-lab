@@ -1,0 +1,36 @@
+{
+  "id": "SRC-DS-HELLO-ALGO-READING",
+  "title": "Hello 算法：课外阅读链接（未导入正文）",
+  "course": "data_structures",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "仓库阅读入口；不作为本平台现有讲义的来源声明",
+    "url": "https://github.com/krahets/hello-algo/tree/28c1e74c1d3594fca7cc41b78a6bd18b700c5ce9"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "原仓库 CC-BY-NC-SA-4.0。本平台仅登记外链，不复制其正文、代码、图示或动画，不纳入 RAG。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "reference_only"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "krahets/hello-algo",
+      "commit": "28c1e74c1d3594fca7cc41b78a6bd18b700c5ce9",
+      "path": "README.md",
+      "license": "CC-BY-NC-SA-4.0",
+      "license_url": "https://github.com/krahets/hello-algo/blob/28c1e74c1d3594fca7cc41b78a6bd18b700c5ce9/LICENSE",
+      "checked_at": "2026-09-27",
+      "adaptation": "external_link_only",
+      "human_review": "pending"
+    }
+  }
+}

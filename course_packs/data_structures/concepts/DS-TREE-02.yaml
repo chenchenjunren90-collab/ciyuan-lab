@@ -2,18 +2,18 @@ id: DS-TREE-02
 title: 二叉树遍历
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: intermediate
 estimated_minutes: 30
 prerequisites:
 - DS-TREE-01
 learning_objectives:
-- 能判断与“二叉树遍历”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“二叉树遍历”的关键状态并验证边界
+- 根据根结点访问时机推演前序、中序和后序遍历
+- 识别空树与递归终止条件，区分遍历本身和列表拼接的成本
 concepts:
-- 二叉树遍历
-- 边界条件
-- 可验证性
+- 前序
+- 中序
+- 后序
 lesson:
   summary: 实现前序、中序、后序和层序遍历。关键要点包括：先序、中序、后序分别在左右子树之前、中间、之后访问根结点；层序遍历使用队列按深度逐层访问；深度优先遍历可用递归或显式栈；仅给先序和后序通常不能唯一恢复普通二叉树，配合含唯一键的中序序列才常可唯一确定。
   key_points:
@@ -25,8 +25,27 @@ lesson:
   - 误以为只凭任意二叉树的先序和后序序列就一定可以唯一重建原树。
   examples:
   - 示例：根A、左B、右C的二叉树，先序 A B C，中序 B A C，后序 B C A，层序 A B C。
+  learning_sequence:
+  - title: "用同一棵树比较前序、中序和后序遍历。"
+    content: "前序在左右子树之前访问根，得到 A、B、C。"
+  - title: "跟踪状态变化"
+    content: "中序在左子树之后、右子树之前访问根，得到 B、A、C。\n\n后序在左右子树完成后访问根，得到 B、C、A；None 是递归终止条件。"
+  - title: "边界与迁移"
+    content: "仅二叉搜索树满足相应有序性质。此教学代码用列表拼接便于阅读，偏斜树上复制成本可能 O(n²)，不能当作线性实现。"
+  worked_example:
+    problem: "用同一棵树比较前序、中序和后序遍历。"
+    steps:
+    - "前序在左右子树之前访问根，得到 A、B、C。"
+    - "中序在左子树之后、右子树之前访问根，得到 B、A、C。"
+    - "后序在左右子树完成后访问根，得到 B、C、A；None 是递归终止条件。"
+    code: "tree = (\"A\", (\"B\", None, None), (\"C\", None, None))\ndef traverse(node, mode):\n    if node is None:\n        return []\n    value, left, right = node\n    a, b = traverse(left, mode), traverse(right, mode)\n    if mode == \"pre\":\n        return [value] + a + b\n    if mode == \"in\":\n        return a + [value] + b\n    return a + b + [value]\nfor mode in [\"pre\", \"in\", \"post\"]:\n    print(\" \".join(traverse(tree, mode)))\n"
+    reflection: "仅二叉搜索树满足相应有序性质。此教学代码用列表拼接便于阅读，偏斜树上复制成本可能 O(n²)，不能当作线性实现。"
+  checkpoint:
+    prompt: "任意二叉树的中序序列都递增吗，还需要什么结构约束？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - DS-TREE-02-Q1
 source_refs:
+- SRC-DS-TREE-02-WALKTHROUGH
 - SRC-DS-GUIDE-TREEGRAPH
 status: draft

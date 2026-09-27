@@ -1,0 +1,28 @@
+id: SRC-DS-SEARCH-02-WALKTHROUGH
+title: 二分查找与边界：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-SEARCH-02.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-SEARCH-02 二分查找与边界（自编讲义草稿，待人工审核）\n\n在有序序列上维护不变量并避免区间错误。关键要点包括：二分查找只适用于按同一比较规则有序且支持随机访问的区间；采用半开区间\
+      \ [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间；查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。\n\n二分查找只适用于按同一比较规则有序且支持随机访问的区间。\n\
+      采用半开区间 [left,right) 时，循环条件为 left<right，每轮必须严格缩小区间。\n查找首次出现位置要在相等时继续收缩右边界，而不是立即返回任意命中。\n\n在有序数组中找第一个\
+      \ 2，并演示目标不存在时的结果。\n\n[0,5) 的中点为 2，值等于目标；把 right 缩到 2，继续找更早的位置。\n[0,2) 的中点为 1，继续缩到 [0,1)；中点 0\
+      \ 的值小于 2，left 变为 1。\nleft==right 时停止，再判断该位置是否有效且等于目标；空数组直接返回 -1。\n\ndef first_index(a, target):\n\
+      \    left, right = 0, len(a)\n    while left < right:\n        mid = left + (right - left) //\
+      \ 2\n        if a[mid] < target:\n            left = mid + 1\n        else:\n            right\
+      \ = mid\n    return left if left < len(a) and a[left] == target else -1\n\nprint(first_index([1,\
+      \ 2, 2, 2, 5], 2))\nprint(first_index([], 2))\nprint(first_index([1, 3, 5], 4))\n\n\n使用随机访问有序序列时，时间\
+      \ O(log n)、额外空间 O(1)；不应在无序输入上套用。\n\n常见错误：在无序数组上使用二分查找。；混用闭区间与半开区间公式，遗漏端点或形成死循环。\n\n自测：把相等分支改成直接返回\
+      \ mid，为什么不再保证首次出现？"
+status: draft

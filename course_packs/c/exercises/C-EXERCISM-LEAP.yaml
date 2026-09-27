@@ -1,0 +1,102 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "C-EXERCISM-LEAP",
+  "title": "判断闰年：处理世纪例外",
+  "type": "code",
+  "difficulty": "beginner",
+  "estimated_minutes": 20,
+  "concept_ids": [
+    "C-CTRL-01"
+  ],
+  "prompt": "读取一个公元年份。能被 400 整除，或者能被 4 整除但不能被 100 整除的年份为闰年。闰年输出 1，平年输出 0。\n\n来源：[Exercism C / leap](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/leap/test_leap.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。",
+  "source_refs": [
+    "SRC-C-EXERCISM-LEAP"
+  ],
+  "evaluation": {
+    "mode": "tests",
+    "runtime": {
+      "language": "c",
+      "version": "C17",
+      "entrypoint": "main.c",
+      "time_limit_ms": 2000,
+      "memory_limit_mb": 128,
+      "output_limit_kb": 64,
+      "network_access": false,
+      "filesystem_access": "isolated"
+    },
+    "tests": [
+      {
+        "id": "case-1",
+        "visibility": "public",
+        "input": "2024\n",
+        "expected_output": "1\n"
+      },
+      {
+        "id": "case-2",
+        "visibility": "hidden",
+        "input": "2023\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-3",
+        "visibility": "hidden",
+        "input": "1700\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-4",
+        "visibility": "hidden",
+        "input": "1600\n",
+        "expected_output": "1\n"
+      },
+      {
+        "id": "case-5",
+        "visibility": "hidden",
+        "input": "2200\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-6",
+        "visibility": "hidden",
+        "input": "1\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-7",
+        "visibility": "hidden",
+        "input": "9996\n",
+        "expected_output": "1\n"
+      }
+    ]
+  },
+  "extensions": {
+    "learning_stage": "after_class",
+    "audience": "chinese_beginner",
+    "scaffolding": [
+      "先分清一般规则和世纪年份例外。",
+      "分别列出被 4、100、400 整除的条件。",
+      "检查只使用 year%4==0 时会误判哪一类输入。"
+    ],
+    "input_format": "一行整数 year，1≤year≤9999。",
+    "output_format": "一行 0 或 1。",
+    "constraints": [
+      "采用 C17；标准输入输出；不得输出交互提示。"
+    ],
+    "public_examples": [
+      {
+        "input": "2024\n",
+        "expected_output": "1\n",
+        "explanation": "按题面逐项处理后得到该结果。"
+      }
+    ],
+    "reflection_prompt": "为什么能被 100 整除还不足以判断闰年？",
+    "source_adaptation": {
+      "source_id": "SRC-C-EXERCISM-LEAP",
+      "source_scope": "exercises/practice/leap/test_leap.c",
+      "method": "保留闰年规则与世纪边界分类；中文重写题面，自编输入输出用例，将 bool 函数接口改为整数输出。"
+    }
+  }
+}

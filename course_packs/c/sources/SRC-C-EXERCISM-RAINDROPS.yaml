@@ -1,0 +1,37 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "SRC-C-EXERCISM-RAINDROPS",
+  "title": "Exercism C：raindrops 改编依据",
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "exercises/practice/raindrops/.docs/instructions.md",
+    "url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/raindrops/.docs/instructions.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "来源：[Exercism C / raindrops](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/raindrops/.docs/instructions.md)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。保留 3/5/7 的编码规则；翻译重写题面和提示，改为标准输入输出，自编覆盖全部命中组合的测试。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "来源：[Exercism C / raindrops](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/raindrops/.docs/instructions.md)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。保留 3/5/7 的编码规则；翻译重写题面和提示，改为标准输入输出，自编覆盖全部命中组合的测试。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。"
+    }
+  },
+  "extensions": {
+    "provenance": {
+      "repository": "exercism/c",
+      "commit": "0ccc17ab44048668bedc2d2cf28d4bf84f8dec42",
+      "path": "exercises/practice/raindrops/.docs/instructions.md",
+      "license": "MIT",
+      "license_url": "https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE",
+      "checked_at": "2026-09-27",
+      "adaptation": "保留 3/5/7 的编码规则；翻译重写题面和提示，改为标准输入输出，自编覆盖全部命中组合的测试。",
+      "human_review": "pending"
+    }
+  }
+}

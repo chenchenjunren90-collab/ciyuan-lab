@@ -1,0 +1,41 @@
+{
+  "id": "SRC-C-WANGDOC-FLOW",
+  "title": "网道：条件分支导读",
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "if 语句",
+    "url": "https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/flow-control.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[网道：条件分支导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/flow-control.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。 许可声明依据：https://wangdoc.com/clang/ （核对日期 2026-09-27）。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "if 判断标量表达式是否为零：零走假分支，非零走真分支。if/else 表示互斥选择，而多个独立 if 可以在一次执行中命中多项条件。\n\n动手：先用表格列出一个数分别能否被 3、5、7 整除，再做本节的雨滴编码练习。思考输入同时满足两个条件时，为什么 else if 会遗漏输出。\n\n书写边界：用大括号明确分支范围，避免 else 与最近的未匹配 if 绑定时产生歧义。闰年练习再要求你将“4 的倍数”和“世纪例外”组合起来。\n\n改编来源：[网道：条件分支导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/flow-control.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/flow-control.md",
+      "scope": "if 语句",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "C-CTRL-01"
+    ]
+  }
+}

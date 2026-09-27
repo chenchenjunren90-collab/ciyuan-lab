@@ -1,0 +1,27 @@
+id: SRC-DS-LINEAR-03-WALKTHROUGH
+title: 单链表：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-LINEAR-03.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-LINEAR-03 单链表（自编讲义草稿，待人工审核）\n\n通过结点链接实现线性序列并维护头指针。关键要点包括：单链表结点保存数据和后继引用，头指针确定整个可达序列；已知前驱时插入和删除只改常数个链接，但按位置查找仍需线性遍历；操作后必须保持无意外环、尾结点后继为空和所有有效结点可达。\n\
+      \n单链表结点保存数据和后继引用，头指针确定整个可达序列。\n已知前驱时插入和删除只改常数个链接，但按位置查找仍需线性遍历。\n操作后必须保持无意外环、尾结点后继为空和所有有效结点可达。\n\
+      \n反转单链表，显式保存下一节点避免丢失剩余链。\n\nprevious 指向已反转部分，head 指向未处理部分。\n修改 head.next 之前先保存 following，否则下一段链会失去入口。\n\
+      每轮移动两个边界指针；head 变成 None 时 previous 即为新表头。\n\nclass Node:\n    def __init__(self, value, next_node=None):\n\
+      \        self.value, self.next = value, next_node\n\ndef reverse(head):\n    previous = None\n\
+      \    while head is not None:\n        following = head.next\n        head.next = previous\n\
+      \        previous, head = head, following\n    return previous\n\nhead = reverse(Node(1, Node(2,\
+      \ Node(3))))\nvalues = []\nwhile head is not None:\n    values.append(head.value)\n    head\
+      \ = head.next\nprint(values)\nprint(reverse(None))\n\n\n时间 O(n)、辅助指针空间 O(1)；演示中为展示输出建立的列表不属于反转算法本身。\n\
+      \n常见错误：先修改 p.next 再保存旧后继，导致后半段链表丢失。；删除结点后仍保留并使用指向该结点的失效引用。\n\n自测：只有一个节点或空链表时，是否需要特殊改写循环？"
+status: draft

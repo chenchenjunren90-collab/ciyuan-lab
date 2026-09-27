@@ -2,23 +2,23 @@ id: C-MEM-02
 title: realloc、free 与所有权
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: advanced
 estimated_minutes: 30
 prerequisites:
 - C-MEM-01
 learning_objectives:
-- 能判断与“realloc、free 与所有权”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“realloc、free 与所有权”的关键状态并验证边界
+- "使用临时指针接收正尺寸 realloc 的结果，分别处理成功与失败"
+- "扩容后初始化新元素，并只释放当前拥有的分配块一次"
 concepts:
-- realloc、free 与所有权
-- 边界条件
-- 可验证性
+- "realloc"
+- "free"
+- "所有权"
 lesson:
-  summary: 维护内存所有权，避免泄漏、重复释放和悬空指针。关键要点包括：realloc 成功后旧指针不再可用，失败时返回 NULL 且原内存块仍保持有效；应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量；每个成功分配的内存块应有唯一清晰的释放责任，free
+  summary: 维护内存所有权，避免泄漏、重复释放和悬空指针。关键要点包括：realloc 成功后旧指针不再可用，请求正尺寸且分配失败时返回 NULL，原内存块仍保持有效；应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量；每个成功分配的内存块应有唯一清晰的释放责任，free
     后不得再次解引用或重复释放。
   key_points:
-  - realloc 成功后旧指针不再可用，失败时返回 NULL 且原内存块仍保持有效。
+  - realloc 成功后旧指针不再可用，请求正尺寸且分配失败时返回 NULL，原内存块仍保持有效。
   - 应先把 realloc 结果保存到临时指针，确认成功后再更新所有权变量。
   - 每个成功分配的内存块应有唯一清晰的释放责任，free 后不得再次解引用或重复释放。
   common_mistakes:
@@ -26,8 +26,27 @@ lesson:
   - 误以为free(p) 会自动把变量 p 设置为 NULL，因此后续无需处理悬空指针。
   examples:
   - 代码片段：int *tmp=realloc(p,new_n*sizeof *p); if(tmp){p=tmp;} else {/* p 仍有效，处理失败 */}
+  learning_sequence:
+  - title: "把含 7、8 的动态数组扩展为四个元素，并补入 9、10。"
+    content: "先检查 malloc 是否成功，再写入前两个元素。扩容前 p 拥有旧块。"
+  - title: "状态推演"
+    content: "把 realloc 的结果交给 tmp：正尺寸扩容失败时，旧块仍属于 p，释放它后报告失败。\n\n成功后只使用返回的新指针，新增两个元素并没有自动初始化，必须先写入后读取。"
+  - title: "边界与代价"
+    content: "分配成功时输出 7 8 9 10；失败时退出码为 1。本例只申请固定的正尺寸，避开零尺寸 realloc 的特殊规则。成功后不可再使用旧指针及旧别名，即使返回地址看似未变。实际接收用户数量时还要先检查乘法溢出；不保证分配器时间复杂度。"
+  worked_example:
+    problem: "把含 7、8 的动态数组扩展为四个元素，并补入 9、10。"
+    steps:
+    - "先检查 malloc 是否成功，再写入前两个元素。扩容前 p 拥有旧块。"
+    - "把 realloc 的结果交给 tmp：正尺寸扩容失败时，旧块仍属于 p，释放它后报告失败。"
+    - "成功后只使用返回的新指针，新增两个元素并没有自动初始化，必须先写入后读取。"
+    code: "#include <stdio.h>\n#include <stdlib.h>\nint main(void) {\n    int *p = malloc(2 * sizeof *p);\n    if (p == NULL) return 1;\n    p[0] = 7; p[1] = 8;\n    int *tmp = realloc(p, 4 * sizeof *p);\n    if (tmp == NULL) {\n        free(p);\n        return 1;\n    }\n    p = tmp;\n    p[2] = 9; p[3] = 10;\n    printf(\"%d %d %d %d\\n\", p[0], p[1], p[2], p[3]);\n    free(p);\n    p = NULL;\n    return 0;\n}\n"
+    reflection: "分配成功时输出 7 8 9 10；失败时退出码为 1。本例只申请固定的正尺寸，避开零尺寸 realloc 的特殊规则。成功后不可再使用旧指针及旧别名，即使返回地址看似未变。实际接收用户数量时还要先检查乘法溢出；不保证分配器时间复杂度。"
+  checkpoint:
+    prompt: "直接写 p = realloc(p, bytes)，在正尺寸分配失败时会丢失什么？"
+    guidance: "先手动推演，再对照例题；此处自测不计入掌握度。"
 assessment_ids:
 - C-MEM-02-Q1
 source_refs:
+- SRC-C-MEM-02-WALKTHROUGH
 - SRC-C-GUIDE-MEMORY
 status: draft

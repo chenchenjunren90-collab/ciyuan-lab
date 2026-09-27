@@ -2,13 +2,13 @@ id: C-MEM-01-C1
 title: 编程实践：动态内存分配
 course: c
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: intermediate
 estimated_minutes: 20
 concept_ids:
 - C-MEM-01
-prompt: 动态申请 n 个整数，读取后输出平均值，保留两位小数。
+prompt: 动态申请 n 个整数，读取后输出平均值，保留两位小数。n 为 0 时输出 empty；分配失败时返回非零退出码，不能解引用空指针。
 source_refs:
 - SRC-C-GUIDE-MEMORY
 evaluation:
@@ -53,4 +53,25 @@ evaluation:
     expected_output: '5.00
 
       '
+  - id: hidden-empty
+    visibility: hidden
+    input: "0\n"
+    expected_output: "empty\n"
+  - id: hidden-fraction
+    visibility: hidden
+    input: "4\n1 2 3 5\n"
+    expected_output: "2.75\n"
+extensions:
+  learning_stage: in_class
+  input_format: 首行为 n；随后恰好 n 个整数。
+  output_format: 非空时输出平均值，保留两位小数；空序列输出 empty。
+  constraints:
+  - 0 <= n <= 10000
+  - 每个整数的绝对值不超过 10000
+  - 成功分配后只释放一次；分配失败分支不访问对象。
+  scaffolding:
+  - n 为 0 时在分配和除法之前返回空序列结果。
+  - 按 n * sizeof *p 申请空间，并检查返回值。
+  - 使用浮点除法输出平均值，在退出之前释放分配块。
+  reflection_prompt: 测试覆盖空输入与平均值，但未注入分配失败；失败清理路径和是否动态分配仍需审阅。
 status: draft

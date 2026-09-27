@@ -1,0 +1,41 @@
+{
+  "id": "SRC-DS-OPENDSA-INSERTION",
+  "title": "OpenDSA：插入排序导读",
+  "course": "data_structures",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "Insertion Sort / Analysis",
+    "url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Sorting/InsertionSort.rst"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[OpenDSA：插入排序导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Sorting/InsertionSort.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "插入排序维持一个已排序前缀，每轮把下一个记录放到前缀中合适的位置。读动画时不要只看最后结果，要标出当前记录、正在比较的元素和前缀边界。\n\n推演任务：把 [5,2,4,2] 中两个 2 标为 2A、2B。向右移动严格大于当前键的记录，相等时不越过，观察 2A 是否仍在 2B 之前。只比较整数输出无法单独证明稳定性。\n\n将已排序、逆序、近乎有序三组输入放在一起比较移动次数。普通实现最佳时间 O(n)，最坏 O(n²)，移位式实现额外空间 O(1)。本平台采用保存当前键再移位的版本，不复制原文的 Java 代码。\n\n改编来源：[OpenDSA：插入排序导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Sorting/InsertionSort.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/Sorting/InsertionSort.rst",
+      "scope": "Insertion Sort / Analysis",
+      "license": "MIT",
+      "license_url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "DS-SORT-02"
+    ]
+  }
+}

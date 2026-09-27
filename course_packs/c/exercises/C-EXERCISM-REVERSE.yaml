@@ -1,0 +1,102 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "C-EXERCISM-REVERSE",
+  "title": "字符串反转：保留空格与标点",
+  "type": "code",
+  "difficulty": "beginner",
+  "estimated_minutes": 20,
+  "concept_ids": [
+    "C-STR-01"
+  ],
+  "prompt": "读取一行 ASCII 文本，按字节逆序输出。输入行的换行符不参与反转；空格和标点也是内容。空行应输出空行。本题不处理中文或其他多字节字符。\n\n来源：[Exercism C / reverse-string](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/reverse-string/test_reverse_string.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。",
+  "source_refs": [
+    "SRC-C-EXERCISM-REVERSE"
+  ],
+  "evaluation": {
+    "mode": "tests",
+    "runtime": {
+      "language": "c",
+      "version": "C17",
+      "entrypoint": "main.c",
+      "time_limit_ms": 2000,
+      "memory_limit_mb": 128,
+      "output_limit_kb": 64,
+      "network_access": false,
+      "filesystem_access": "isolated"
+    },
+    "tests": [
+      {
+        "id": "case-1",
+        "visibility": "public",
+        "input": "code!\n",
+        "expected_output": "!edoc\n"
+      },
+      {
+        "id": "case-2",
+        "visibility": "hidden",
+        "input": "\n",
+        "expected_output": "\n"
+      },
+      {
+        "id": "case-3",
+        "visibility": "hidden",
+        "input": "Z\n",
+        "expected_output": "Z\n"
+      },
+      {
+        "id": "case-4",
+        "visibility": "hidden",
+        "input": "ab ba\n",
+        "expected_output": "ab ba\n"
+      },
+      {
+        "id": "case-5",
+        "visibility": "hidden",
+        "input": "a B?\n",
+        "expected_output": "?B a\n"
+      },
+      {
+        "id": "case-6",
+        "visibility": "hidden",
+        "input": "  xy \n",
+        "expected_output": " yx  \n"
+      },
+      {
+        "id": "case-7",
+        "visibility": "hidden",
+        "input": "abcd\n",
+        "expected_output": "dcba\n"
+      }
+    ]
+  },
+  "extensions": {
+    "learning_stage": "after_class",
+    "audience": "chinese_beginner",
+    "scaffolding": [
+      "用能保留空格的方式读取整行。",
+      "去掉输入行末尾的换行，但不要去掉内容中的空格。",
+      "空串没有最后一个字符，先判断长度再计算末尾下标。"
+    ],
+    "input_format": "一行 0～100 个 ASCII 可打印字符，以换行结束。",
+    "output_format": "反转后的内容及一个换行，不添加提示语。",
+    "constraints": [
+      "采用 C17；标准输入输出；不得输出交互提示。"
+    ],
+    "public_examples": [
+      {
+        "input": "code!\n",
+        "expected_output": "!edoc\n",
+        "explanation": "按题面逐项处理后得到该结果。"
+      }
+    ],
+    "reflection_prompt": "为什么直接使用 scanf(\"%s\", ...) 不能满足本题？",
+    "source_adaptation": {
+      "source_id": "SRC-C-EXERCISM-REVERSE",
+      "source_scope": "exercises/practice/reverse-string/test_reverse_string.c",
+      "method": "参考 reverse 的字符串边界测试思想；改为 main.c 标准输入输出，允许原地反转，不继承原题分配返回字符串的所有权接口。"
+    }
+  }
+}

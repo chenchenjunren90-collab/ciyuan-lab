@@ -1,0 +1,18 @@
+id: SRC-DS-HASH-02-WALKTHROUGH
+title: "冲突处理与扩容：分步例题与边界讲义"
+course: data_structures
+schema_version: "0.1.0"
+version: 1
+source_type: synthetic
+citation:
+  locator: "项目自编讲义；对应 course_packs/data_structures/concepts/DS-HASH-02.yaml"
+rights:
+  basis: synthetic
+  note: "AI 辅助编写的原创教学示例，待课程负责人审核；不冒充教材或官方原文。"
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "冲突处理与扩容（待人工审核）\n\n容量为 5 时插入 1、6、11，删除 1 后查找 11，再扩容为 11。\n\nh(k)=k mod 5 把三个键都映射到槽 1；线性探测依次使用槽 1、2、3。\n\n删除 1 留下墓碑。查找 11 必须跳过墓碑继续前进，遇到从未使用的空槽才能提前判定不存在。\n\n扩容后重插现存的 6、11，按新模数重新定位；墓碑不搬入新表。\n\nEMPTY = None\nDELETED = object()\n\ndef insert(table, key):\n    first_deleted = None\n    for step in range(len(table)):\n        i = (key + step) % len(table)\n        if table[i] is DELETED:\n            if first_deleted is None:\n                first_deleted = i\n        elif table[i] is EMPTY:\n            table[i if first_deleted is None else first_deleted] = key\n            return\n        elif table[i] == key:\n            return\n    if first_deleted is not None:\n        table[first_deleted] = key\n        return\n    raise ValueError('table full')\n\ndef find(table, key):\n    for step in range(len(table)):\n        i = (key + step) % len(table)\n        if table[i] is EMPTY:\n            return -1\n        if table[i] is not DELETED and table[i] == key:\n            return i\n    return -1\n\ntable = [EMPTY] * 5\nfor key in [1, 6, 11]:\n    insert(table, key)\ntable[find(table, 1)] = DELETED\nprint(find(table, 11), find(table, 1))\ngrown = [EMPTY] * 11\nfor key in table:\n    if key is not EMPTY and key is not DELETED:\n        insert(grown, key)\nprint(find(grown, 6), find(grown, 11))\n\n\n输出两行：3 -1 和 6 0。示例只存整数键，None 表示空槽；自动扩容策略未实现。每次探测最多检查容量个槽，不因满表死循环。单次操作最坏 O(m)，平均性能依赖散列分布和装载因子，不能保证始终 O(1)。\n\n如果把删除后的槽直接设为 None，find(table, 11) 会在哪一步误判？"
+status: draft

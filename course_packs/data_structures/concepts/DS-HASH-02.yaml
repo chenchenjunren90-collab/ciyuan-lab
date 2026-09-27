@@ -2,18 +2,18 @@ id: DS-HASH-02
 title: 冲突处理与扩容
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: advanced
 estimated_minutes: 30
 prerequisites:
 - DS-HASH-01
 learning_objectives:
-- 能判断与“冲突处理与扩容”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“冲突处理与扩容”的关键状态并验证边界
+- "跟踪线性探测的冲突路径，用墓碑保留删除后的查找链"
+- "在新容量下重新计算每个键的位置，解释扩容不能只追加空槽"
 concepts:
-- 冲突处理与扩容
-- 边界条件
-- 可验证性
+- "线性探测"
+- "墓碑"
+- "扩容"
 lesson:
   summary: 比较链地址和开放寻址并设计扩容策略。关键要点包括：链地址法让同槽元素进入桶结构，平均桶长由装载因子决定；开放寻址沿探测序列寻找位置，删除时通常使用墓碑，不能直接改为空槽中断后续查找；装载因子过高会增加探测或桶遍历成本，应在阈值前扩容并重新散列。
   key_points:
@@ -25,8 +25,30 @@ lesson:
   - 误以为线性探测完全消除了聚集现象，因此装载因子接近 1 时仍保持稳定常数时间。
   examples:
   - 轨迹示例：容量 5，键 1、6 经 h(k)=k mod 5 冲突；线性探测把 1 放槽1、6 放槽2，查找6需经过槽1。
+  learning_sequence:
+  - title: "OpenDSA：散列表删除导读 · 原文与边界"
+    content: "开放寻址删除后不能直接把槽位改成“从未使用”，否则后续查找可能在这里提前停止，找不到探测序列更后面的键。墓碑表示曾经占用但已删除，查找遇到它应继续。\n\n推演任务：容量 5，散列函数 key%5，线性探测，依次插入 1、6、11，再删除 6。解释查找 11 为什么必须越过墓碑；重新插入 11 时为什么不能见墓碑就立即写入。\n\n本平台补充有限探测边界：最多检查一整圈，记录首个墓碑，确认无重复后才复用。即使没有真正的空槽，只要存在墓碑仍可插入；两种位置都没有时应报告满表，而不是无限循环。\n\n改编来源：[OpenDSA：散列表删除导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Hashing/HashDel.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  - title: "容量为 5 时插入 1、6、11，删除 1 后查找 11，再扩容为 11。"
+    content: "h(k)=k mod 5 把三个键都映射到槽 1；线性探测依次使用槽 1、2、3。"
+  - title: "状态推演"
+    content: "删除 1 留下墓碑。查找 11 必须跳过墓碑继续前进，遇到从未使用的空槽才能提前判定不存在。\n\n扩容后重插现存的 6、11，按新模数重新定位；墓碑不搬入新表。"
+  - title: "边界与代价"
+    content: "输出两行：3 -1 和 6 0。示例只存整数键，None 表示空槽；自动扩容策略未实现。每次探测最多检查容量个槽，不因满表死循环。单次操作最坏 O(m)，平均性能依赖散列分布和装载因子，不能保证始终 O(1)。"
+  worked_example:
+    problem: "容量为 5 时插入 1、6、11，删除 1 后查找 11，再扩容为 11。"
+    steps:
+    - "h(k)=k mod 5 把三个键都映射到槽 1；线性探测依次使用槽 1、2、3。"
+    - "删除 1 留下墓碑。查找 11 必须跳过墓碑继续前进，遇到从未使用的空槽才能提前判定不存在。"
+    - "扩容后重插现存的 6、11，按新模数重新定位；墓碑不搬入新表。"
+    code: "EMPTY = None\nDELETED = object()\n\ndef insert(table, key):\n    first_deleted = None\n    for step in range(len(table)):\n        i = (key + step) % len(table)\n        if table[i] is DELETED:\n            if first_deleted is None:\n                first_deleted = i\n        elif table[i] is EMPTY:\n            table[i if first_deleted is None else first_deleted] = key\n            return\n        elif table[i] == key:\n            return\n    if first_deleted is not None:\n        table[first_deleted] = key\n        return\n    raise ValueError('table full')\n\ndef find(table, key):\n    for step in range(len(table)):\n        i = (key + step) % len(table)\n        if table[i] is EMPTY:\n            return -1\n        if table[i] is not DELETED and table[i] == key:\n            return i\n    return -1\n\ntable = [EMPTY] * 5\nfor key in [1, 6, 11]:\n    insert(table, key)\ntable[find(table, 1)] = DELETED\nprint(find(table, 11), find(table, 1))\ngrown = [EMPTY] * 11\nfor key in table:\n    if key is not EMPTY and key is not DELETED:\n        insert(grown, key)\nprint(find(grown, 6), find(grown, 11))\n"
+    reflection: "输出两行：3 -1 和 6 0。示例只存整数键，None 表示空槽；自动扩容策略未实现。每次探测最多检查容量个槽，不因满表死循环。单次操作最坏 O(m)，平均性能依赖散列分布和装载因子，不能保证始终 O(1)。"
+  checkpoint:
+    prompt: "如果把删除后的槽直接设为 None，find(table, 11) 会在哪一步误判？"
+    guidance: "先手动推演，再对照例题；此处自测不计入掌握度。"
 assessment_ids:
 - DS-HASH-02-Q1
 source_refs:
+- SRC-DS-OPENDSA-HASH
+- SRC-DS-HASH-02-WALKTHROUGH
 - SRC-DS-GUIDE-SORTSEARCH
 status: draft

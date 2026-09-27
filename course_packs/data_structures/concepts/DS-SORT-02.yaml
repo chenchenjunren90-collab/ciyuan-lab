@@ -2,18 +2,18 @@ id: DS-SORT-02
 title: 插入排序
 course: data_structures
 schema_version: 0.1.0
-version: 3
+version: 5
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - DS-SORT-01
 learning_objectives:
-- 能判断与“插入排序”有关的合法操作、适用条件和结果
-- 能根据给定输入推演“插入排序”的关键状态并验证边界
+- 追踪插入排序的 key 暂存、元素右移与有序前缀
+- 解释严格比较为何保持稳定性，分析最好与最坏时间复杂度
 concepts:
 - 插入排序
-- 边界条件
-- 可验证性
+- 稳定
+- 有序
 lesson:
   summary: 维护已排序前缀并分析近乎有序输入。关键要点包括：插入排序在第 i 轮开始前保持前缀 [0,i) 已有序，再把当前元素插入正确位置；最坏时间为 Θ(n²)，但对近乎有序数据移动较少，最好可达 Θ(n)；移动时只跨过严格大于当前键的元素可保持相等键的原相对顺序。
   key_points:
@@ -25,8 +25,30 @@ lesson:
   - 误以为插入排序无论输入是否已有序都必须执行 Θ(n²) 次元素移动。
   examples:
   - 轨迹示例：[2,5,3] 的有序前缀 [2,5] 插入3时，先右移5，再把3放到位置1，得到 [2,3,5]。
+  learning_sequence:
+  - title: "OpenDSA：插入排序导读 · 原文与边界"
+    content: "插入排序维持一个已排序前缀，每轮把下一个记录放到前缀中合适的位置。读动画时不要只看最后结果，要标出当前记录、正在比较的元素和前缀边界。\n\n推演任务：把 [5,2,4,2] 中两个 2 标为 2A、2B。向右移动严格大于当前键的记录，相等时不越过，观察 2A 是否仍在 2B 之前。只比较整数输出无法单独证明稳定性。\n\n将已排序、逆序、近乎有序三组输入放在一起比较移动次数。普通实现最佳时间 O(n)，最坏 O(n²)，移位式实现额外空间 O(1)。本平台采用保存当前键再移位的版本，不复制原文的 Java 代码。\n\n改编来源：[OpenDSA：插入排序导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/Sorting/InsertionSort.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  - title: "对含重复值的数组做稳定插入排序，逐轮维护有序前缀。"
+    content: "先把第一个 2 插入 5 前面，数组变成 [2,5,2,1]。"
+  - title: "跟踪状态变化"
+    content: "处理第二个 2 时只右移 5，不跨过相等的第一个 2，因此保持相对次序。\n\n最后把 1 插入开头；移动过程中的重复值是暂时状态，key 单独保存待插元素。"
+  - title: "边界与迁移"
+    content: "最好 O(n)，最坏 O(n²)，额外空间 O(1)；稳定性需要观察相等键的身份。"
+  worked_example:
+    problem: "对含重复值的数组做稳定插入排序，逐轮维护有序前缀。"
+    steps:
+    - "先把第一个 2 插入 5 前面，数组变成 [2,5,2,1]。"
+    - "处理第二个 2 时只右移 5，不跨过相等的第一个 2，因此保持相对次序。"
+    - "最后把 1 插入开头；移动过程中的重复值是暂时状态，key 单独保存待插元素。"
+    code: "def insertion_sort(a):\n    for i in range(1, len(a)):\n        key, j = a[i], i - 1\n        while j >= 0 and a[j] > key:\n            a[j + 1] = a[j]\n            j -= 1\n        a[j + 1] = key\n    return a\n\nprint(insertion_sort([5, 2, 2, 1]))\nprint(insertion_sort([]))\n"
+    reflection: "最好 O(n)，最坏 O(n²)，额外空间 O(1)；稳定性需要观察相等键的身份。"
+  checkpoint:
+    prompt: "把 a[j] > key 改为 >= 会影响数值排序结果、稳定性中的哪一项？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - DS-SORT-02-C1
 source_refs:
+- SRC-DS-OPENDSA-INSERTION
+- SRC-DS-SORT-02-WALKTHROUGH
 - SRC-DS-GUIDE-SORTSEARCH
 status: draft

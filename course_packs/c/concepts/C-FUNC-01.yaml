@@ -2,19 +2,24 @@ id: C-FUNC-01
 title: 函数声明、定义与调用
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-CTRL-04
 learning_objectives:
-- 能够解释函数声明、定义与调用的核心规则
-- 能够运用函数声明、定义与调用解决边界明确的问题
+- 从函数原型中识别返回类型和参数类型，区分声明、定义与调用
+- 将输入输出与计算拆为 main 和独立函数，用相等、正数和负数测试返回值
 concepts:
-- 函数声明、定义与调用
-- 边界条件
-- 可验证性
+- 函数原型
+- 参数
+- 返回类型
 lesson:
+  learning_sequence:
+  - title: "网道：函数导读 · 原文与边界"
+    content: "阅读函数时依次找出返回类型、名称、形参和函数体。调用前应有兼容的声明；return 结束当前函数调用，并在需要时把值交回调用位置。无参数原型可写成 int task(void)。\n\n动手：将“两个整数取较大值”拆成 max_value 函数和负责输入输出的 main。分别用大小相反和相等的输入解释返回位置。\n\n阅读修正：C 不支持在另一个函数体内定义普通函数，但块作用域内可以有函数声明。这里采用 hosted 环境的 int main(void)，不把它泛化到所有嵌入式启动环境。\n\n改编来源：[网道：函数导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/function.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+  - title: "本节概念"
+    content: "使用函数原型拆分程序并理解调用关系。关键要点包括：函数原型让编译器在调用点检查参数数量、参数类型和返回类型；函数定义包含唯一实现，调用表达式建立新的调用帧并在返回后继续执行；一个函数应有单一、可测试的职责，并通过参数和返回值显式表达接口。"
   summary: 使用函数原型拆分程序并理解调用关系。关键要点包括：函数原型让编译器在调用点检查参数数量、参数类型和返回类型；函数定义包含唯一实现，调用表达式建立新的调用帧并在返回后继续执行；一个函数应有单一、可测试的职责，并通过参数和返回值显式表达接口。
   key_points:
   - 函数原型让编译器在调用点检查参数数量、参数类型和返回类型。
@@ -28,5 +33,6 @@ lesson:
 assessment_ids:
 - C-FUNC-01-C1
 source_refs:
+- SRC-C-WANGDOC-FUNCTION
 - SRC-C-GUIDE-CONTROL
 status: draft

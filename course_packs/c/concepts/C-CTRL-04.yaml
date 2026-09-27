@@ -2,18 +2,18 @@ id: C-CTRL-04
 title: for 循环与计数模式
 course: c
 schema_version: 0.1.0
-version: 3
+version: 4
 difficulty: beginner
 estimated_minutes: 30
 prerequisites:
 - C-CTRL-03
 learning_objectives:
-- 能够解释for 循环与计数模式的核心规则
-- 能够运用for 循环与计数模式解决边界明确的问题
+- 逐轮写出 for 循环的计数器、条件和累加器状态
+- 检查循环零次执行与末次执行，避免多算或少算一个元素
 concepts:
-- for 循环与计数模式
-- 边界条件
-- 可验证性
+- for
+- 循环条件
+- 累加
 lesson:
   summary: 用初始化、条件和更新表达确定次数的迭代。关键要点包括：for 的初始化只执行一次，条件在每轮前判断，更新表达式在循环体后执行；计数循环应明确闭区间或半开区间，数组遍历通常使用 0 <= i < n；循环不变量描述每轮开始时已经完成的工作，可用于检查算法和边界是否正确。
   key_points:
@@ -25,8 +25,27 @@ lesson:
   - 更新方向与终止条件相反，循环永远无法结束。
   examples:
   - 代码示例：long long sum = 0; for (int i = 1; i <= n; ++i) sum += i;
+  learning_sequence:
+  - title: "用 for 循环累加 1 到 4，并解释每轮的不变量。"
+    content: "进入第 i 轮前，sum 是从 1 到 i-1 的和。"
+  - title: "跟踪状态变化"
+    content: "四次累加后 sum 依次为 1、3、6、10。\n\ni 增加到 5 时条件为假，循环结束；把 <= 改成 < 会漏掉 4。"
+  - title: "边界与迁移"
+    content: "先检查空循环、恰好一轮、最后一轮，再推导一般输入。"
+  worked_example:
+    problem: "用 for 循环累加 1 到 4，并解释每轮的不变量。"
+    steps:
+    - "进入第 i 轮前，sum 是从 1 到 i-1 的和。"
+    - "四次累加后 sum 依次为 1、3、6、10。"
+    - "i 增加到 5 时条件为假，循环结束；把 <= 改成 < 会漏掉 4。"
+    code: "#include <stdio.h>\nint main(void) {\n    int sum = 0;\n    for (int i = 1; i <= 4; ++i) {\n        sum += i;\n    }\n    printf(\"%d\\n\", sum);\n    return 0;\n}\n"
+    reflection: "先检查空循环、恰好一轮、最后一轮，再推导一般输入。"
+  checkpoint:
+    prompt: "将循环上界改成 0 时执行几次，sum 是多少？"
+    guidance: "先写下预测，再对照例题和交互实验；随堂练习提交后才形成评分证据。"
 assessment_ids:
 - C-CTRL-04-C1
 source_refs:
+- SRC-C-CTRL-04-WALKTHROUGH
 - SRC-C-GUIDE-CONTROL
 status: draft

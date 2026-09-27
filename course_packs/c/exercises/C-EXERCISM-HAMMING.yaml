@@ -1,0 +1,108 @@
+{
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "status": "draft",
+  "id": "C-EXERCISM-HAMMING",
+  "title": "逐字符比较：计算汉明距离",
+  "type": "code",
+  "difficulty": "beginner",
+  "estimated_minutes": 20,
+  "concept_ids": [
+    "C-STR-01"
+  ],
+  "prompt": "读取两行仅由 A、C、G、T 组成的字符串，空行表示空串。若长度不同，输出 -1；否则统计相同下标处字符不同的位置数。两空串的距离为 0。不要把换行符计入长度。\n\n来源：[Exercism C / hamming](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/exercises/practice/hamming/test_hamming.c)（0ccc17a），Copyright (c) 2021 Exercism，[MIT](https://github.com/exercism/c/blob/0ccc17ab44048668bedc2d2cf28d4bf84f8dec42/LICENSE)。中文教学适配：词元研究所（AI 辅助），待教师审核。参考长度不一致返回 -1 和空串测试约定；保留 A/C/G/T 输入范围，中文重写题面、提示和样例，改为两行标准输入。 完整许可随课程包 sources/EXERCISM-LICENSE.txt 分发。",
+  "source_refs": [
+    "SRC-C-EXERCISM-HAMMING"
+  ],
+  "evaluation": {
+    "mode": "tests",
+    "runtime": {
+      "language": "c",
+      "version": "C17",
+      "entrypoint": "main.c",
+      "time_limit_ms": 2000,
+      "memory_limit_mb": 128,
+      "output_limit_kb": 64,
+      "network_access": false,
+      "filesystem_access": "isolated"
+    },
+    "tests": [
+      {
+        "id": "case-1",
+        "visibility": "public",
+        "input": "ACGT\nAGGT\n",
+        "expected_output": "1\n"
+      },
+      {
+        "id": "case-2",
+        "visibility": "hidden",
+        "input": "\n\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-3",
+        "visibility": "hidden",
+        "input": "AC\nAC\n",
+        "expected_output": "0\n"
+      },
+      {
+        "id": "case-4",
+        "visibility": "hidden",
+        "input": "AAAA\nTTTT\n",
+        "expected_output": "4\n"
+      },
+      {
+        "id": "case-5",
+        "visibility": "hidden",
+        "input": "ACG\nAC\n",
+        "expected_output": "-1\n"
+      },
+      {
+        "id": "case-6",
+        "visibility": "hidden",
+        "input": "AC\nACG\n",
+        "expected_output": "-1\n"
+      },
+      {
+        "id": "case-7",
+        "visibility": "hidden",
+        "input": "\nA\n",
+        "expected_output": "-1\n"
+      },
+      {
+        "id": "case-8",
+        "visibility": "hidden",
+        "input": "G\n\n",
+        "expected_output": "-1\n"
+      }
+    ]
+  },
+  "extensions": {
+    "learning_stage": "after_class",
+    "audience": "chinese_beginner",
+    "scaffolding": [
+      "使用保留空行的读取方式读取两行。",
+      "比较前先检查长度，不越过任一字符串终止符。",
+      "长度相同时，按同一下标比较并累加差异。"
+    ],
+    "input_format": "两行字符串，各含 0～100 个 A/C/G/T 字符，以换行结束。",
+    "output_format": "一行整数：长度不等为 -1，否则为不同位置数量。",
+    "constraints": [
+      "采用 C17；标准输入输出；不得输出交互提示。"
+    ],
+    "public_examples": [
+      {
+        "input": "ACGT\nAGGT\n",
+        "expected_output": "1\n",
+        "explanation": "按题面逐项处理后得到该结果。"
+      }
+    ],
+    "reflection_prompt": "为什么不能只遍历较短字符串并忽略另一行的剩余部分？",
+    "source_adaptation": {
+      "source_id": "SRC-C-EXERCISM-HAMMING",
+      "source_scope": "exercises/practice/hamming/test_hamming.c",
+      "method": "参考长度不一致返回 -1 和空串测试约定；保留 A/C/G/T 输入范围，中文重写题面、提示和样例，改为两行标准输入。"
+    }
+  }
+}

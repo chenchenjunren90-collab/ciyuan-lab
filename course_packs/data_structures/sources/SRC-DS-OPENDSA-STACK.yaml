@@ -1,0 +1,41 @@
+{
+  "id": "SRC-DS-OPENDSA-STACK",
+  "title": "OpenDSA：顺序栈导读",
+  "course": "data_structures",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "Stack Terminology / Array-Based Stacks",
+    "url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/StackArray.rst"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[OpenDSA：顺序栈导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/StackArray.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "栈只允许在同一端插入和移除。先约定 top 表示下一次写入位置，则元素数就是 top：入栈先检查容量，再写入并递增；出栈先检查非空，再递减并读取。\n\n推演任务：容量为 3，从空栈执行 push(6)、push(9)、pop()、push(2)，每一步同时记录数组、top 和返回值。最后继续 pop，指出何时开始应报告空栈。\n\n衔接：本平台使用自己的步骤演示和判定器，没有嵌入 OpenDSA 的 Java/JSAV 运行时。比较它的 push/pop 分步教学，再回到交互实验验证你画出的轨迹。\n\n改编来源：[OpenDSA：顺序栈导读](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/RST/en/List/StackArray.rst)，Cliff Shaffer / OpenDSA Project Contributors，版本 cf5f5d9。许可：[MIT](https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。完整版权与许可见课程包 sources/OPENDSA-LICENSE.txt。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "OpenDSA/OpenDSA",
+      "commit": "cf5f5d9fc0e2743a6664777ab35adae79ab5b121",
+      "path": "RST/en/List/StackArray.rst",
+      "scope": "Stack Terminology / Array-Based Stacks",
+      "license": "MIT",
+      "license_url": "https://github.com/OpenDSA/OpenDSA/blob/cf5f5d9fc0e2743a6664777ab35adae79ab5b121/MIT-license.txt",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "DS-STACK-01"
+    ]
+  }
+}

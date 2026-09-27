@@ -16,6 +16,20 @@ ASCII_WORD = re.compile(r"[a-z0-9_+#.-]+")
 CODE_IDENTIFIER = re.compile(r"(?i)(?<![a-z0-9_])([a-z_][a-z0-9_]*)(?![a-z0-9_])")
 CJK_RUN = re.compile(r"[\u3400-\u9fff]+")
 
+# Explicit course vocabulary only; do not broaden unrelated questions via an LLM.
+_COURSE_TERM_ALIASES = {
+    "二分搜索": "二分查找",
+    "折半查找": "二分查找",
+    "哈希表": "散列表",
+}
+
+
+def _canonical_course_terms(text: str) -> str:
+    for alias, canonical in _COURSE_TERM_ALIASES.items():
+        text = text.replace(alias, canonical)
+    return text
+
+
 _QUERY_IDENTIFIER_STOP_WORDS = frozenset(
     {"python", "language", "code", "program", "please", "help"}
 )
@@ -154,6 +168,9 @@ def query_variants(
     if not normalized:
         return ()
     variants = [normalized]
+    canonical = _canonical_course_terms(normalized)
+    if canonical != normalized:
+        variants.append(canonical)
     for clause in re.split(r"[。！？!?；;\n]+", normalized):
         clause = clause.strip(" ，,：:")
         if len(clause) >= 2 and clause not in variants:
@@ -173,8 +190,8 @@ def query_variants(
             break
     variants.extend(identifier for identifier in identifiers if identifier not in variants)
     cjk_terms = sorted(
-        (term for term in _CJK_TECHNICAL_QUERY_TERMS if term in normalized),
-        key=lambda term: (normalized.find(term), -len(term)),
+        (term for term in _CJK_TECHNICAL_QUERY_TERMS if term in canonical),
+        key=lambda term: (canonical.find(term), -len(term)),
     )[:max_cjk_terms]
     variants.extend(term for term in cjk_terms if term not in variants)
     return tuple(variants)
@@ -188,7 +205,7 @@ def query_is_in_course_scope(text: str, course_id: str) -> bool:
     normal score threshold still decide whether it can be answered.
     """
 
-    normalized = re.sub(r"\s+", "", text.casefold())
+    normalized = _canonical_course_terms(re.sub(r"\s+", "", text.casefold()))
     mentioned = {
         candidate
         for candidate, markers in _COURSE_SCOPE_MARKERS.items()

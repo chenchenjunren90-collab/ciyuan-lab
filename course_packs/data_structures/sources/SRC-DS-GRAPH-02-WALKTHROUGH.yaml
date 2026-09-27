@@ -1,0 +1,26 @@
+id: SRC-DS-GRAPH-02-WALKTHROUGH
+title: 广度优先搜索：分步例题与边界讲义
+course: data_structures
+schema_version: 0.1.0
+version: 1
+source_type: synthetic
+citation:
+  locator: 项目自编讲义；对应 course_packs/data_structures/concepts/DS-GRAPH-02.yaml 的分步例题。
+rights:
+  basis: synthetic
+  note: 本次开发辅助编写的原创教学示例，不冒充教材或官方文档；待课程负责人逐项审核。
+data_classification: synthetic
+rag:
+  eligible: false
+  content:
+    mode: inline
+    text: "DS-GRAPH-02 广度优先搜索（自编讲义草稿，待人工审核）\n\n使用队列按层访问并求无权最短路。关键要点包括：BFS 用队列保存已发现但尚未展开的顶点，按距离层次访问；顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入；在无权图中首次到达顶点的层数就是最少边数距离，并可用前驱数组恢复路径。\n\
+      \nBFS 用队列保存已发现但尚未展开的顶点，按距离层次访问。\n顶点入队时立即标记已访问，避免同一顶点被多个邻居重复加入。\n在无权图中首次到达顶点的层数就是最少边数距离，并可用前驱数组恢复路径。\n\
+      \n对有环且不连通的图做 BFS，求从 0 出发的访问顺序和最少边数。\n\n0 入队时标记距离 0，展开后发现 1、2，距离均为 1。\n从 1 发现 3 并立即标记；随后展开 2\
+      \ 时不会把 3 再次入队。\n4 是孤立点，距离保持 -1；访问序列只有 0、1、2、3。\n\nfrom collections import deque\ngraph = [[1,\
+      \ 2], [0, 3], [0, 3], [1, 2], []]\ndistance = [-1] * len(graph)\ndistance[0] = 0\nqueue = deque([0])\n\
+      order = []\nwhile queue:\n    u = queue.popleft()\n    order.append(u)\n    for v in graph[u]:\n\
+      \        if distance[v] == -1:\n            distance[v] = distance[u] + 1\n            queue.append(v)\n\
+      print(order)\nprint(distance)\n\n\n邻接表遍历为 O(V+E)，额外空间 O(V)；最少边数只适用于无权或等权图。\n\n常见错误：顶点出队时才标记，造成队列中大量重复顶点。；图不连通时只从一个起点运行却宣称遍历了整张图。\n\
+      \n自测：如果直到出队才标记，同一层的两个顶点会不会重复加入共同邻居？"
+status: draft

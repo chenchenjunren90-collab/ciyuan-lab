@@ -1,0 +1,42 @@
+{
+  "id": "SRC-C-WANGDOC-POINTER",
+  "title": "网道：指针导读",
+  "course": "c",
+  "schema_version": "0.1.0",
+  "version": 1,
+  "source_type": "open_resource",
+  "citation": {
+    "locator": "简介、* 与 &、初始化及指针运算",
+    "url": "https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/pointer.md"
+  },
+  "rights": {
+    "basis": "open_license",
+    "note": "改编来源：[网道：指针导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/pointer.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。 许可声明依据：https://wangdoc.com/clang/ （核对日期 2026-09-27）。"
+  },
+  "data_classification": "public",
+  "rag": {
+    "eligible": false,
+    "content": {
+      "mode": "inline",
+      "text": "先区分三个对象：变量 x、保存 &x 的指针 p、表达式 *p 所访问的对象。把地址传给函数时，形参仍是指针值的副本；通过副本访问同一个有效对象，才会改变调用者的数据。\n\n阅读边界：指针不是 C 语言中的整数类型。指针加减整数只在同一数组及其尾后位置范围内有定义，尾后位置不能解引用；两个指针相减还要求它们来自同一数组，结果可由 ptrdiff_t 表示。不能用任意数字地址练习指针运算。\n\n动手：画出 int a[3]={4,8,12}; int *p=a; 的关系图，比较 p+1 与 *p+1。再预测 *(p+2)，并解释为什么 *(p+3) 不合法。\n\n改编来源：[网道：指针导读](https://github.com/wangdoc/clang-tutorial/blob/96e02b1bfb98243703f4dced594f6893bda5565d/docs/pointer.md)，网道（WangDoc）及其贡献者，版本 96e02b1。许可：[CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)。本段由词元研究所借助 AI 重写导读、练习任务和边界说明，待教师审核；不表示原作者认可本平台。本改编段落同以 CC-BY-SA-3.0 提供；不改变平台其他独立内容的许可。"
+    }
+  },
+  "status": "draft",
+  "extensions": {
+    "provenance": {
+      "repository": "wangdoc/clang-tutorial",
+      "commit": "96e02b1bfb98243703f4dced594f6893bda5565d",
+      "path": "docs/pointer.md",
+      "scope": "简介、* 与 &、初始化及指针运算",
+      "license": "CC-BY-SA-3.0",
+      "license_url": "https://creativecommons.org/licenses/by-sa/3.0/",
+      "checked_at": "2026-09-27",
+      "adaptation": "Chinese reading guide, local practice prompts and explicit corrections; no upstream runtime copied",
+      "human_review": "pending"
+    },
+    "concept_ids": [
+      "C-PTR-01",
+      "C-PTR-02"
+    ]
+  }
+}

@@ -14,6 +14,7 @@ import { createRequestScope, hasLearningEvidence, loadCourseWorkspace, measuredM
 import SafeMarkdown from "./components/SafeMarkdown.vue";
 import ThemeToggle from "./components/ThemeToggle.vue";
 import PythonFirstLesson from "./components/classroom/PythonFirstLesson.vue";
+import CourseClassroom from "./components/classroom/CourseClassroom.vue";
 import SettingsPanel from "./components/SettingsPanel.vue";
 import WelcomeExperience from "./components/WelcomeExperience.vue";
 import CountUp from "./components/CountUp.vue";
@@ -491,7 +492,7 @@ function openClassroom(): void {
     return;
   }
   notice.value = "";
-  tab.value = courseId.value === "python" ? "classroom" : "overview";
+  tab.value = "classroom";
 }
 function openOverview(): void {
   cancelPendingDetails();
@@ -606,6 +607,12 @@ function continueWithGenericCourse(): void {
   notice.value = "已进入通用课程模式；完成能力测评后可随时切换为个性化路线。";
 }
 function goToAssessment(): void {
+  if (courseId.value !== "python") {
+    tab.value = "overview";
+    void loadDiagnostic(hasLearningEvidence(profile.value) ? "reassessment" : "initial");
+    notice.value = "已打开当前课程的能力摸底。";
+    return;
+  }
   genericMode.value = false;
   sessionStorage.removeItem(genericModeKey());
   assessmentWarningOpen.value = false;
@@ -695,7 +702,7 @@ async function loadCourse(id: CourseId): Promise<void> {
   restorePracticeHistory();
   learnerContextResolved.value = false;
   genericMode.value = sessionStorage.getItem(genericModeKey()) === "true";
-  if (id !== "python" && tab.value === "classroom") tab.value = "overview";
+  classroomFocusMode.value = false;
   loading.value = true;
   connection.value = "connecting";
   notice.value = "";
@@ -1095,7 +1102,7 @@ onBeforeUnmount(() => {
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>
       <nav v-if="!classroomFocusMode" class="tabs">
         <button :class="{ active: tab === 'overview' }" :aria-current="tab === 'overview' ? 'page' : undefined" @click="openOverview">学习总览</button>
-        <button v-if="courseId === 'python'" :class="{ active: tab === 'classroom' }" :aria-current="tab === 'classroom' ? 'page' : undefined" @click="openClassroom">沉浸课堂</button>
+        <button :class="{ active: tab === 'classroom' }" :aria-current="tab === 'classroom' ? 'page' : undefined" @click="openClassroom">沉浸课堂</button>
         <button :class="{ active: tab === 'path' }" :aria-current="tab === 'path' ? 'page' : undefined" @click="openPath">个性路径</button>
         <button :class="{ active: tab === 'tutor' }" :aria-current="tab === 'tutor' ? 'page' : undefined" @click="openTutor">课程辅导</button>
         <button :class="{ active: tab === 'practice' }" :aria-current="tab === 'practice' ? 'page' : undefined" @click="openPractice">练习工坊</button>
@@ -1129,6 +1136,10 @@ onBeforeUnmount(() => {
         <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
           <div><h3>不是再开一个聊天框，来真正上一节课。</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
           <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button v-ripple @click="openClassroom">进入温暖的 Python 教室 <b>→</b></button></aside>
+        </section>
+        <section v-else class="classroom-invitation" v-reveal>
+          <div><h3>{{ courseId === 'c' ? '看清指针与内存里的每一次变化。' : '把算法拆成能观察、能验证的步骤。' }}</h3><p>按前置知识分段学习，通过交互演示预测结果，再用随堂题和代码测试检查理解。</p></div>
+          <aside><button v-ripple @click="openClassroom">进入{{ courseId === 'c' ? ' C 语言' : '数据结构' }}课堂 <b>→</b></button></aside>
         </section>
         <section class="metrics" v-reveal>
           <article data-spotlight><span>课程知识点</span><strong><CountUp :value="courseLoadError ? '—' : knowledge.length" /></strong><small>{{ courseLoadError ? "课程索引未载入" : "统一课程包" }}</small></article>
@@ -1303,6 +1314,7 @@ onBeforeUnmount(() => {
 
       <template v-else>
         <PythonFirstLesson
+          v-if="courseId === 'python'"
           ref="activeClassroom"
           :key="studentId"
           :student-id="studentId"
@@ -1316,6 +1328,17 @@ onBeforeUnmount(() => {
           @request-assessment="goToAssessment"
           @focus-changed="onClassroomFocusChanged"
           @open-projects="openProjects"
+        />
+        <CourseClassroom
+          v-else
+          :key="`${studentId}:${courseId}`"
+          :course-id="courseId"
+          :student-id="studentId"
+          :points="knowledge"
+          :profile="profile"
+          @profile-updated="onProfileResolved"
+          @open-projects="openProjects"
+          @open-assessment="goToAssessment"
         />
       </template>
     </main>

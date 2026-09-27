@@ -2,14 +2,15 @@ id: DS-TREE-03-C1
 title: 编程实践：二叉搜索树
 course: data_structures
 schema_version: 0.1.0
-version: 1
+version: 2
 type: code
 difficulty: intermediate
 estimated_minutes: 20
 concept_ids:
 - DS-TREE-03
-prompt: 按顺序插入整数构造二叉搜索树，输出其中序遍历。
+prompt: 读取 n 和 n 个整数，按输入顺序构造二叉搜索树。采用集合语义，重复键忽略。输出中序遍历，元素之间用一个空格分隔；空树输出空行。要求实现结点插入和中序遍历，不用 sorted 或 sort 代替建树。顺序输入可能形成长链，建议使用循环和显式栈。
 source_refs:
+- SRC-DS-TREE-03-WALKTHROUGH
 - SRC-DS-GUIDE-TREEGRAPH
 evaluation:
   mode: tests
@@ -53,4 +54,32 @@ evaluation:
     expected_output: '1 2 3 4
 
       '
+  - id: hidden-empty
+    visibility: hidden
+    input: "0\n\n"
+    expected_output: "\n"
+  - id: hidden-duplicates
+    visibility: hidden
+    input: "6\n5 3 5 3 7 7\n"
+    expected_output: "3 5 7\n"
+  - id: hidden-negative
+    visibility: hidden
+    input: "5\n0 -3 -1 2 -3\n"
+    expected_output: "-3 -1 0 2\n"
+  - id: hidden-descending
+    visibility: hidden
+    input: "6\n6 5 4 3 2 1\n"
+    expected_output: "1 2 3 4 5 6\n"
+extensions:
+  learning_stage: after_class
+  audience: chinese_beginner
+  input_format: 第一行 n（0≤n≤2000）；后续提供 n 个 -100000 到 100000 的整数，空白分隔。
+  output_format: 一行严格递增的中序键序列，重复键只输出一次；空树输出空行。
+  constraints:
+  - 用结点和左右孩子构造 BST，不用排序函数代替；输出测试不能单独证明实现方式，这项需要代码审阅。
+  scaffolding:
+  - 先定义空根、结点以及重复键策略。
+  - 循环比较目标键与当前结点，选择左孩子或右孩子。
+  - 使用显式栈模拟左子树、当前结点、右子树的访问顺序。
+  reflection_prompt: 为什么顺序插入 n 个不同键可能花 O(n²) 时间？
 status: draft
