@@ -16,7 +16,7 @@ REQUEST_TIMEOUT_SECONDS = 90.0
 COURSE_QUESTIONS = {
     "c": "动态内存为什么要检查分配结果并避免重复释放？",
     "python": "Python 数据清洗如何处理缺失值并保留错误原因？",
-    "data_structures": "BFS 为什么使用队列？Dijkstra 对权重有什么要求？",
+    "data_structures": "BFS 为什么使用队列？",
 }
 
 CODE_SAMPLES = {
