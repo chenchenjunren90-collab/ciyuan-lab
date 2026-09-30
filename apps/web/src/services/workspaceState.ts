@@ -1,6 +1,6 @@
 import {
   ApiError, type api, type CourseId, type CourseSummary, type KnowledgePoint,
-  type ActivitySummary, type LearnerProfile, type NextActivity, type DiagnosticQuiz,
+  type ActivitySummary, type LearnerProfile, type NextActivity, type PlanStage, type DiagnosticQuiz,
   type QaResponse,
 } from "./api";
 
@@ -38,13 +38,14 @@ export interface CourseWorkspace {
   activities: ActivitySummary[];
   profile: LearnerProfile | null;
   next: NextActivity | null;
+  stages: PlanStage[];
   diagnostic: DiagnosticQuiz | null;
   catalogError: string;
   learningError: string;
 }
 
 type WorkspaceApi = Pick<typeof api,
-  "courses" | "knowledgePoints" | "activities" | "profile" | "nextActivity" | "diagnostic"
+  "courses" | "knowledgePoints" | "activities" | "profile" | "plan" | "diagnostic"
 >;
 
 /** Keep public course content usable when learning persistence is unavailable. */
@@ -60,7 +61,7 @@ export async function loadCourseWorkspace(
     knowledge: knowledge.status === "fulfilled" ? knowledge.value.items : [],
     activities: activities.status === "fulfilled" ? activities.value : [],
     profile: profile.status === "fulfilled" ? profile.value : null,
-    next: null, diagnostic: null, catalogError: "", learningError: "",
+    next: null, stages: [], diagnostic: null, catalogError: "", learningError: "",
   };
   const catalogFailure = [courses, knowledge, activities].find((result) => result.status === "rejected");
   if (catalogFailure?.status === "rejected") state.catalogError = serviceFailure(catalogFailure.reason);
@@ -68,13 +69,15 @@ export async function loadCourseWorkspace(
     && !(profile.reason instanceof ApiError && profile.reason.status === 404)) {
     state.learningError = serviceFailure(profile.reason);
   }
-  const [next, diagnostic] = await Promise.allSettled([
+  const [plan, diagnostic] = await Promise.allSettled([
     hasLearningEvidence(state.profile)
-      ? client.nextActivity(studentId, courseId) : Promise.resolve(null),
+      ? client.plan(studentId, courseId) : Promise.resolve(null),
     client.diagnostic(courseId, hasLearningEvidence(state.profile) ? "reassessment" : "initial"),
   ]);
-  if (next.status === "fulfilled") state.next = next.value;
-  else state.learningError ||= serviceFailure(next.reason);
+  if (plan.status === "fulfilled" && plan.value) {
+    state.next = plan.value.next_activity;
+    state.stages = plan.value.stages;
+  } else if (plan.status === "rejected") state.learningError ||= serviceFailure(plan.reason);
   if (diagnostic.status === "fulfilled") state.diagnostic = diagnostic.value;
   else state.learningError ||= serviceFailure(diagnostic.reason);
   return state;

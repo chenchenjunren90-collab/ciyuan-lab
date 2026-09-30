@@ -110,6 +110,6 @@ class ScenarioContextService:
             data_classification="synthetic",
             notice=(
                 "当前使用固定合成背景，不含真实主体或经营结论；课程评价仅考查"
-                "Python 数据处理、异常处理和测试能力。"
+                "本项目列明的计算机能力目标及测试证据。"
             ),
         )

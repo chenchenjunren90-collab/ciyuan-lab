@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import ThemeToggle from "./ThemeToggle.vue";
-import type { DeviceMode } from "../uiPreferences";
+import type { DeviceMode, PaletteId } from "../uiPreferences";
 
-const props = defineProps<{ displayName: string; deviceMode: DeviceMode; darkTheme: boolean }>();
+const props = defineProps<{ displayName: string; deviceMode: DeviceMode; theme: PaletteId }>();
 const emit = defineEmits<{
   start: [displayName: string];
   settings: [];
   "update-device": [mode: DeviceMode];
-  "toggle-theme": [];
+  "toggle-theme": [theme: PaletteId];
 }>();
 
 const name = ref(props.displayName);
@@ -36,7 +36,7 @@ function startLearning(): void {
     </div>
     <header class="welcome-nav">
       <div class="welcome-brand"><i>&lt;/&gt;</i><span><b>词元研究所</b><small>计算机专业学习平台</small></span></div>
-      <div class="welcome-appearance"><ThemeToggle :dark="darkTheme" @toggle="emit('toggle-theme')" /><button class="welcome-settings" @click="emit('settings')" aria-label="打开外观设置"><span aria-hidden="true">Aa</span> 设置外观</button></div>
+      <div class="welcome-appearance"><ThemeToggle :theme="theme" @select="emit('toggle-theme', $event)" /><button class="welcome-settings" @click="emit('settings')" aria-label="打开外观设置"><span aria-hidden="true">Aa</span> 设置外观</button></div>
     </header>
 
     <main class="welcome-main">

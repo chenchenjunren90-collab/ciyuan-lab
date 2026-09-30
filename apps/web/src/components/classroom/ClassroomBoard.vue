@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { motionDirective as vMotion } from "../../directives/motion";
 import { computed, nextTick, ref, watch } from "vue";
 import type { ClassroomBeat } from "../../services/api";
 import { boardItems, type BoardNotes } from "./boardTools";
@@ -77,8 +78,8 @@ function clearNotes() {
       <button type="button" :disabled="shownCount >= items.length" @click="shownCount = Math.min(items.length, shownCount + 1)">下一步</button>
     </div>
     <div ref="viewport" class="board-viewport" tabindex="0" aria-label="板书内容，可上下滚动" @scroll="laser = null">
-    <div class="board-content" :data-tool="tool" @pointermove="moveLaser" @pointerleave="laser = null">
-      <div v-for="item in visibleItems" :key="item.id" class="board-item" :data-board-item="item.id" :data-highlighted="notes.highlights.includes(item.id)" @click="markContent(item.id, $event)">
+    <div class="board-content" v-motion.change.board="beat.id" :data-tool="tool" @pointermove="moveLaser" @pointerleave="laser = null">
+      <div v-for="item in visibleItems" :key="item.id" class="board-item" v-motion="notes.highlights.includes(item.id)" :data-board-item="item.id" :data-highlighted="notes.highlights.includes(item.id)" @click="markContent(item.id, $event)">
         <button v-if="tool" class="mark-item" type="button" :aria-label="`${tool === 'highlight' ? '高亮' : '定位'}${item.label}`" :aria-pressed="tool === 'highlight' ? notes.highlights.includes(item.id) : !!notes.pins[item.id]" @click.stop="mark(item.id)">{{ tool === 'highlight' ? '标记' : '定位' }}</button>
         <ClassroomCodeExample v-if="item.kind === 'code'" :code="item.text" />
         <template v-else><span v-if="item.kind !== 'explanation'" class="board-item-label">{{ item.label }}</span><p>{{ item.text }}</p></template>

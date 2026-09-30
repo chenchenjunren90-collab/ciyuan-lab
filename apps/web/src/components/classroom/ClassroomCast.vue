@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { motionDirective as vMotion } from "../../directives/motion";
 import type { ClassroomRole } from "../../services/api";
 import ClassroomPortrait from "./ClassroomPortrait.vue";
 defineProps<{ activeRole: ClassroomRole; selectedRole: ClassroomRole }>();
@@ -19,7 +20,7 @@ const cast = [
         <ClassroomPortrait :person="person.role" />
         <span class="cast-name">{{ person.name }}</span>
         <span class="cast-description">{{ person.description }}</span>
-        <span class="cast-status">{{ activeRole === person.role ? '正在发言' : selectedRole === person.role ? '已选择' : '参与课堂' }}</span>
+        <span class="cast-status" v-motion.change="`${activeRole === person.role}-${selectedRole === person.role}`">{{ activeRole === person.role ? '正在发言' : selectedRole === person.role ? '已选择' : '参与课堂' }}</span>
       </button>
     </div>
   </section>

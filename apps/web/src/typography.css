@@ -1,0 +1,229 @@
+/* Reading roles live after the legacy component/theme styles. No layout scaling. */
+@font-face {
+  font-family: "Ciyuan Sans";
+  src: url("./assets/fonts/noto-sans-sc-400.woff") format("woff");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Ciyuan Sans";
+  src: url("./assets/fonts/noto-sans-sc-600.woff") format("woff");
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  --font-body: "Ciyuan Sans", "Noto Sans SC", "PingFang SC", "Microsoft YaHei", sans-serif;
+  --font-display: var(--font-body);
+  --type-caption: .8125rem;
+  --type-label: .875rem;
+  --type-body: 1rem;
+  --type-subtitle: 1.125rem;
+  --type-section: 1.375rem;
+  --type-page: 1.625rem;
+  --type-intro: 2rem;
+  font-family: var(--font-body);
+  line-height: 1.6;
+}
+
+/* Two real font weights, with monospace reserved for code and numeric data. */
+html[data-theme] :is(button, input, select, textarea) {
+  font-family: var(--font-body);
+}
+
+html[data-theme] :is(.workspace, .welcome-experience, .settings-panel) :is(h1, h2, h3, h4) {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+html[data-theme] :is(.workspace, .sidebar, .welcome-experience, .settings-panel) :is(b, strong) {
+  font-weight: 600;
+}
+
+html[data-theme] .taskbar-title h1 {
+  font-size: var(--type-page);
+}
+
+html[data-theme] :is(.hero-card h2, .project-center-hero h2) {
+  font-size: var(--type-intro);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+html[data-theme] .welcome-experience .welcome-copy h1 {
+  max-width: none;
+  font-size: clamp(1.875rem, 3vw, 2.75rem);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+html[data-theme] :is(.panel > header h2, .activity-title h2, .lesson-detail h2, .settings-panel h2) {
+  font-size: var(--type-section);
+  font-weight: 600;
+  line-height: 1.45;
+  letter-spacing: 0;
+}
+
+html[data-theme] .immersive-lesson :is(.assessment-welcome h1, .result-celebration h2, .returning-planner-gate > header h2) {
+  font-size: var(--type-intro);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+}
+
+html[data-theme] .immersive-lesson :is(.single-question h2, .lesson-masthead h2, .lesson-materials article h2) {
+  font-size: var(--type-section);
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0;
+}
+
+html[data-theme] .immersive-lesson :is(.board-heading h3, .code-task header h3, .teacher-lecture-card h3) {
+  font-size: var(--type-subtitle);
+  font-weight: 600;
+}
+
+/* Main reading copy: around 35 Chinese characters per line, not edge to edge. */
+html[data-theme] .workspace :is(.hero-card p, .prompt, .lesson-detail p, .lesson-detail li, .chat .safe-markdown, .project-brief li, .scenario-card p) {
+  max-inline-size: 70ch;
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+html[data-theme] .immersive-lesson :is(.message-list article .safe-markdown, .teacher-lecture-card .safe-markdown, .board-item p, .assessment-welcome p, .lesson-materials article > p, .lesson-materials article li, .problem-statement > p) {
+  max-inline-size: 70ch;
+  font-family: var(--font-body);
+  font-size: var(--type-body);
+  font-weight: 400;
+  line-height: 1.8;
+}
+
+html[data-theme] .immersive-lesson .single-question button span {
+  font-size: var(--type-body);
+  line-height: 1.7;
+}
+
+html[data-theme] .welcome-experience .welcome-copy > p {
+  max-inline-size: 32em;
+  font-size: var(--type-body);
+  line-height: 1.8;
+}
+
+/* Short instructions and compact controls stay quieter than long-form reading. */
+html[data-theme] .workspace :is(.panel > header > p, .classroom-invitation p, .diagnostic-list article > p, .verification p, .verification li, .hint-box p, .project-shelf article p, .generated-columns li, .project-objectives span) {
+  font-size: var(--type-label);
+  line-height: 1.75;
+}
+
+html[data-theme] :is(.workspace, .welcome-experience, .settings-panel) :is(.primary, .secondary, .text-button, .beginner-shortcut button) {
+  font-size: var(--type-label);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+html[data-theme] .workspace :is(.tabs button, .hero-card button, .next-card button, .classroom-invitation aside button, .diagnostic-list article button, .options label) {
+  font-size: var(--type-label);
+  line-height: 1.6;
+  font-weight: 600;
+}
+
+html[data-theme] .immersive-lesson :is(.focus-toolbar button, .board-tools button, .board-step-controls button, .mark-item, .plan-controls label, .io-format span, .code-workspace aside article p) {
+  font-size: var(--type-label);
+  line-height: 1.6;
+}
+
+html[data-theme] .welcome-experience :is(.welcome-actions button, .welcome-device button, .welcome-route li b, .welcome-name span, .welcome-device > span) {
+  font-size: var(--type-label);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+html[data-theme] .welcome-experience :is(.welcome-route li span, .welcome-route > header strong, .welcome-footer, .welcome-brand small) {
+  font-size: var(--type-caption);
+  line-height: 1.65;
+  font-weight: 400;
+}
+
+html[data-theme] .settings-panel :is(.settings-section > div:first-child b, .toggle-list > button span > b, .theme-options button, footer button) {
+  font-size: var(--type-label);
+  font-weight: 600;
+  line-height: 1.6;
+}
+
+html[data-theme] .settings-panel :is(.settings-section > div:first-child span, .toggle-list > button span > small) {
+  font-size: var(--type-caption);
+  line-height: 1.7;
+}
+
+html[data-theme] :is(.beginner-shortcut p, .board-tool-hint, .board-heading > span, .board-item-label, .metrics small, .metrics span, .knowledge-legend span) {
+  font-size: var(--type-caption);
+  line-height: 1.65;
+}
+
+html[data-theme] .workspace .metrics strong {
+  font-size: var(--type-page);
+  font-variant-numeric: tabular-nums;
+}
+
+html[data-theme] .workspace .mastery-orbit strong {
+  font-size: 3rem;
+  line-height: 1.2;
+}
+
+html[data-theme] :is(.editor textarea, .code-task .code-editor textarea, .safe-markdown pre code, .lesson-materials pre code, .board-code-example pre code, .worked-example pre code) {
+  font-family: var(--font-data);
+  font-size: var(--type-label);
+  font-weight: 400;
+  line-height: 1.75;
+  letter-spacing: 0;
+}
+
+html[data-theme] .safe-markdown :is(h1, h2, h3, h4) {
+  margin-block: 1.2em .5em;
+  font-size: var(--type-subtitle);
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+@media (max-width: 760px) {
+  :root {
+    --type-page: 1.375rem;
+    --type-section: 1.25rem;
+    --type-intro: 1.625rem;
+  }
+
+  /* Keep inputs at 16px and allow browser/user text zoom. */
+  html[data-theme] :is(input, textarea, select, .editor textarea, .code-task .code-editor textarea) {
+    font-size: var(--type-body);
+  }
+
+  html[data-theme] .welcome-experience .welcome-copy h1 {
+    font-size: 1.875rem;
+  }
+
+  html[data-theme] .welcome-experience :is(.welcome-brand b, .welcome-settings) {
+    font-size: var(--type-caption);
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 620px) {
+  /* Font zoom and the four palette controls must not squeeze the brand vertically. */
+  html[data-theme] .welcome-experience .welcome-nav {
+    height: auto;
+    min-height: 64px;
+    padding-block: 12px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+}

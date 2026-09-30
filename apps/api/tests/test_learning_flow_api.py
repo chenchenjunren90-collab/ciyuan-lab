@@ -156,7 +156,7 @@ def test_self_report_initializes_profile_without_inventing_objective_evidence(
 def test_profile_and_next_activity_are_available_after_assessment(
     client_and_store: tuple[TestClient, MemoryLearningStore],
 ) -> None:
-    client, _ = client_and_store
+    client, store = client_and_store
     request = {
         "student_id": "demo-student-2",
         "course_id": "python",
@@ -172,11 +172,20 @@ def test_profile_and_next_activity_are_available_after_assessment(
         "/api/v1/next-activity",
         params={"student_id": "demo-student-2", "course_id": "python"},
     )
+    event_count = len(store.events)
+    plan = client.get(
+        "/api/v1/plan",
+        params={"student_id": "demo-student-2", "course_id": "python"},
+    )
 
     assert profile.status_code == 200
     assert profile.json()["mastery"] == []
     assert next_activity.status_code == 200
     assert next_activity.json()["activity_id"]
+    assert plan.status_code == 200
+    assert len(plan.json()["stages"]) == 3
+    assert plan.json()["next_activity"]["activity_id"] == next_activity.json()["activity_id"]
+    assert len(store.events) == event_count
 
 
 def test_two_learners_keep_independent_profiles(
@@ -244,6 +253,11 @@ def test_profile_returns_not_found_before_assessment(
     )
 
     assert response.status_code == 404
+    plan = client.get(
+        "/api/v1/plan",
+        params={"student_id": "missing", "course_id": "python"},
+    )
+    assert plan.status_code == 404
 
 
 def test_diagnostic_hides_answers_and_server_grades_submission(

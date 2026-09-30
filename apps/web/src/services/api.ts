@@ -73,9 +73,12 @@ export interface NextActivity {
 export interface PlanStage {
   stage: string; objective: string; knowledge_point_ids: string[]; reason: string;
 }
+export interface Plan {
+  student_id: string; course_id: CourseId; stages: PlanStage[]; next_activity: NextActivity;
+}
 export interface AssessmentResult {
   profile: LearnerProfile;
-  plan: { student_id: string; course_id: CourseId; stages: PlanStage[]; next_activity: NextActivity };
+  plan: Plan;
 }
 export type DiagnosticPhase = "initial" | "reassessment";
 export interface DiagnosticSkillAtom {
@@ -315,6 +318,11 @@ export const api = {
   }, fetch, aiTimeoutMs),
   profile: (studentId: string, courseId: CourseId) =>
     request<LearnerProfile>(`/api/v1/profile?student_id=${encodeURIComponent(studentId)}&course_id=${courseId}`),
+  plan: (studentId: string, courseId: CourseId) =>
+    request<Plan>(
+      `/api/v1/plan?student_id=${encodeURIComponent(studentId)}&course_id=${courseId}`,
+      {}, fetch, aiTimeoutMs
+    ),
   nextActivity: (studentId: string, courseId: CourseId) =>
     request<NextActivity>(
       `/api/v1/next-activity?student_id=${encodeURIComponent(studentId)}&course_id=${courseId}`,
