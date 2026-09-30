@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import BeginnerShortcut from "../BeginnerShortcut.vue";
+import { beginnerDiagnosticAnswers } from "../../services/beginnerDiagnostic";
+import { motionDirective as vMotion } from "../../directives/motion";
 import { hasLearningEvidence, measuredMastery, qaFeedbackLabel, readSavedIds, serviceFailure, verificationUnavailable } from "../../services/workspaceState";
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 
@@ -20,6 +23,7 @@ import {
 } from "../../services/api";
 import SafeMarkdown from "../SafeMarkdown.vue";
 import ThemeToggle from "../ThemeToggle.vue";
+import type { PaletteId } from "../../uiPreferences";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
 import {
   loadClassroomSession,
@@ -39,7 +43,7 @@ import ClassroomCodeExample from "./ClassroomCodeExample.vue";
 import { readBoardNotes, type BoardNotes, type BoardNotesByBeat } from "./boardTools";
 import { selectDialogueHistory } from "./dialogueHistory";
 
-const props = defineProps<{ studentId: string; genericMode?: boolean; darkTheme: boolean }>();
+const props = defineProps<{ studentId: string; genericMode?: boolean; theme: PaletteId }>();
 const dispatch = defineEmits<{
   profileUpdated: [profile: LearnerProfile];
   profileResolved: [profile: LearnerProfile | null];
@@ -48,7 +52,7 @@ const dispatch = defineEmits<{
   requestAssessment: [];
   focusChanged: [active: boolean];
   openProjects: [];
-  toggleTheme: [];
+  toggleTheme: [theme: PaletteId];
 }>();
 let componentActive = true;
 // Detached classrooms must not overwrite the newly selected account or course.
@@ -717,6 +721,14 @@ function selectBaselineAnswer(exerciseId: string, response: string, index: numbe
     ? `第 ${index + 1} 题已记录为“我不知道”；这不会被误判为已经掌握。`
     : `第 ${index + 1} 题已选择 ${response}，还可随时修改。`
   );
+}
+
+async function skipInitialBaseline(): Promise<void> {
+  if (baselineLoading.value || diagnosticLoading.value || assessmentResultVisible.value) return;
+  const answers = beginnerDiagnosticAnswers(diagnostic.value, diagnosticAnswers.value);
+  if (!answers) { showFeedback("当前摸底暂不支持跳过，请稍后重试或逐题作答。"); return; }
+  diagnosticAnswers.value = answers;
+  await submitBaseline();
 }
 
 async function submitBaseline(): Promise<void> {
@@ -1489,6 +1501,7 @@ onBeforeUnmount(() => {
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
         <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
+          <BeginnerShortcut v-if="diagnostic.phase === 'initial' && !assessmentResultVisible" :busy="baselineLoading" :disabled="diagnosticLoading" @skip="skipInitialBaseline" />
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
           <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
@@ -1509,6 +1522,7 @@ onBeforeUnmount(() => {
         <div v-if="planLoading" class="plan-progress" role="status" aria-live="polite"><span v-for="(label, index) in PLAN_PROGRESS_LABELS" :key="label" :class="{ done: index + 1 < planProgressStep, active: index + 1 === planProgressStep }"><i>{{ index + 1 < planProgressStep ? "✓" : index + 1 }}</i>{{ label }}</span></div>
         <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
+          <BeginnerShortcut v-if="diagnostic.phase === 'initial' && !assessmentResultVisible" :busy="baselineLoading" :disabled="diagnosticLoading" @skip="skipInitialBaseline" />
           <header><div><b>{{ diagnostic.title }}</b><span>阶段重测会刷新画像并改变下一节课</span></div><button @click="baselineOpen = false">收起</button></header>
           <div v-if="currentDiagnosticItem" class="single-question"><header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header><h2>{{ currentDiagnosticItem.prompt }}</h2><div><button v-for="option in currentDiagnosticItem.options" :key="option.id" :class="{ selected: diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[currentDiagnosticItem.exercise_id] === option.id" :disabled="baselineLoading" @click="selectBaselineAnswer(currentDiagnosticItem.exercise_id, option.id, assessmentIndex)"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b><span>{{ option.text }}</span><i>✓</i></button></div></div>
           <footer class="assessment-navigation"><button class="secondary" :disabled="assessmentIndex === 0" @click="previousAssessmentQuestion">← 上一题</button><button v-if="assessmentIndex < diagnostic.items.length - 1" class="primary" @click="nextAssessmentQuestion">下一题 →</button><button v-else class="primary" :disabled="!baselineComplete || baselineLoading" @click="submitBaseline">{{ baselineLoading ? "正在分析…" : "提交并更新学习画像" }}</button></footer>
@@ -1519,6 +1533,7 @@ onBeforeUnmount(() => {
 
     <section v-else-if="!hasObjectiveProfile && !props.genericMode && !(learningContextError && (planConfirmed || sessionBeatSnapshot.length))" class="assessment-gate">
       <header><div><b>能力摸底</b><small>{{ diagnostic?.items.length ?? 12 }} 道跨层级短题，约 8 分钟，不计入成绩</small></div></header>
+      <BeginnerShortcut v-if="diagnostic?.phase === 'initial'" :busy="baselineLoading" :disabled="diagnosticLoading" @skip="skipInitialBaseline" />
       <p class="honest-answer-note">这是跨知识点抽样摸底，题号表示测评顺序，不代表教材章节。未抽到的知识点不视为已掌握，后续课堂和练习会继续补充证据。</p>
       <template v-if="!assessmentStarted">
         <div class="assessment-welcome">
@@ -1554,7 +1569,7 @@ onBeforeUnmount(() => {
         <div><b>专注课堂</b><span>讲解与互动在同一空间持续进行</span></div>
         <select :value="classroomView" aria-label="选择课堂工作区" @change="handleViewSelect"><option value="lecture">课堂学习</option><option value="code">代码练习</option><option value="materials">课程资料</option></select>
         <div class="focus-view-buttons"><button v-for="item in ([['lecture','课堂'],['code','写代码'],['materials','看资料']] as const)" :key="item[0]" :class="{ active: classroomView === item[0] }" @click="changeClassroomView(item[0])">{{ item[1] }}</button></div>
-        <div class="focus-actions"><ThemeToggle :dark="darkTheme" @toggle="emit('toggleTheme')" /><button class="exit-class" @click="requestEarlyExit">提前下课</button></div>
+        <div class="focus-actions"><ThemeToggle :theme="theme" @select="emit('toggleTheme', $event)" /><button class="exit-class" @click="requestEarlyExit">提前下课</button></div>
       </nav>
       <header class="lesson-masthead">
         <div>
@@ -1598,6 +1613,7 @@ onBeforeUnmount(() => {
         </details>
         <ClassroomPlanPreview v-if="learningPlan" :plan="learningPlan" />
         <section v-if="baselineOpen && diagnostic" ref="baselinePanel" class="baseline-panel">
+          <BeginnerShortcut v-if="diagnostic.phase === 'initial' && !assessmentResultVisible" :busy="baselineLoading" :disabled="diagnosticLoading" @skip="skipInitialBaseline" />
           <header><div><b>{{ diagnostic.title }}</b><span>每次完成一题，全部提交后更新学习画像</span></div><button @click="baselineOpen = false; showFeedback('阶段重测已收起，已选答案会保留。')">收起</button></header>
           <div v-if="currentDiagnosticItem" class="single-question">
             <header><span>第 {{ assessmentIndex + 1 }} 题，共 {{ diagnostic.items.length }} 题</span></header>
@@ -1691,7 +1707,7 @@ onBeforeUnmount(() => {
         </template>
 
         <template v-else-if="currentBeat.action === 'homework'">
-          <div v-if="lessonComplete" class="lesson-complete">
+          <div v-if="lessonComplete" class="lesson-complete" v-motion="lessonComplete">
             <h3>本次个性化课堂完成，做得很好。</h3>
             <p>随堂练习和课后作业都已通过真实测试，画像获得两份新的代码证据。助教不会机械进入固定下一章，而会重新检查薄弱点、前置断层与已掌握内容。</p>
             <div><b>下一步</b>{{ lesson.unlock_title }}</div>

@@ -32,7 +32,11 @@ function client() {
     knowledgePoints: vi.fn().mockResolvedValue({ course_id: "python", items: [{ id: "PY-LIST-03" }] as KnowledgePoint[] }),
     activities: vi.fn().mockResolvedValue([]),
     profile: vi.fn().mockResolvedValue(profile),
-    nextActivity: vi.fn().mockResolvedValue({ activity_id: "PY-LIST-03", activity_type: "concept", reason: "依据测评" }),
+    plan: vi.fn().mockResolvedValue({
+      student_id: "test-student", course_id: "python",
+      stages: [{ stage: "阶段一", objective: "巩固列表", knowledge_point_ids: ["PY-LIST-03"], reason: "依据测评" }],
+      next_activity: { activity_id: "PY-LIST-03", activity_type: "concept", reason: "依据测评" },
+    }),
     diagnostic: vi.fn().mockResolvedValue({ course_id: "python", phase: "initial", items: [] } as unknown as DiagnosticQuiz),
   };
 }
@@ -46,7 +50,7 @@ describe("course workspace and evidence boundaries", () => {
     expect(state.catalogError).toBe("");
     expect(state.learningError).toContain("暂时不可用");
     expect(state.profile).toBeNull();
-    expect(api.nextActivity).not.toHaveBeenCalled();
+    expect(api.plan).not.toHaveBeenCalled();
     expect(api.diagnostic).toHaveBeenCalledWith("python", "initial");
   });
   it("treats a missing profile as unassessed, not a service failure", async () => {
@@ -60,7 +64,7 @@ describe("course workspace and evidence boundaries", () => {
     const api = client();
     api.profile.mockResolvedValue({ ...profile, mastery: [] });
     await loadCourseWorkspace(api, "test-student", "python");
-    expect(api.nextActivity).not.toHaveBeenCalled();
+    expect(api.plan).not.toHaveBeenCalled();
     expect(api.diagnostic).toHaveBeenCalledWith("python", "initial");
   });
   it("selects reassessment and the server's next activity after objective evidence", async () => {
@@ -68,6 +72,8 @@ describe("course workspace and evidence boundaries", () => {
     const state = await loadCourseWorkspace(api, "test-student", "python");
     expect(api.diagnostic).toHaveBeenCalledWith("python", "reassessment");
     expect(state.next?.activity_id).toBe("PY-LIST-03");
+    expect(state.stages).toHaveLength(1);
+    expect(api.plan).toHaveBeenCalledWith("test-student", "python");
     expect(state.profile).toEqual(profile);
   });
   it("separates catalog failures from learning service failures", async () => {
@@ -80,10 +86,11 @@ describe("course workspace and evidence boundaries", () => {
   });
   it("keeps the profile when planning fails instead of claiming it does not exist", async () => {
     const api = client();
-    api.nextActivity.mockRejectedValue(new ApiError(503, "unavailable"));
+    api.plan.mockRejectedValue(new ApiError(503, "unavailable"));
     const state = await loadCourseWorkspace(api, "test-student", "python");
     expect(state.profile).toEqual(profile);
     expect(state.next).toBeNull();
+    expect(state.stages).toEqual([]);
     expect(state.learningError).not.toBe("");
     expect(state.catalogError).toBe("");
   });

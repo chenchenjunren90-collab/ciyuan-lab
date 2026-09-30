@@ -145,6 +145,25 @@ class LearningFlowService:
         self._validate_student_id(student_id)
         return self._require_profile(student_id=student_id, course_id=course_id)
 
+    async def get_plan(self, *, student_id: str, course_id: CourseId) -> AssessmentOutcome:
+        """Rebuild the current plan from persisted evidence without writing new events."""
+        self._validate_student_id(student_id)
+        profile = self._require_profile(student_id=student_id, course_id=course_id)
+        next_activity = await self._next_activity(student_id=student_id, course_id=course_id)
+        knowledge_point_ids = [
+            item.id for item in self._courses.list_knowledge_points(course_id)
+        ]
+        return AssessmentOutcome(
+            profile=profile,
+            stages=self._build_stages(
+                profile=profile,
+                course_id=course_id,
+                next_activity=next_activity,
+                knowledge_point_ids=knowledge_point_ids,
+            ),
+            next_activity=next_activity,
+        )
+
     async def next_activity(self, *, student_id: str, course_id: CourseId) -> PlannedActivity:
         self._validate_student_id(student_id)
         self._require_profile(student_id=student_id, course_id=course_id)

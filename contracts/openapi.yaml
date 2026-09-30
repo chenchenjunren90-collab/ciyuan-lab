@@ -436,6 +436,30 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/LearnerProfile"
+  /api/v1/plan:
+    get:
+      operationId: getPlan
+      summary: 根据已保存的学习画像获取完整学习路径
+      parameters:
+        - name: student_id
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: course_id
+          in: query
+          required: true
+          schema:
+            $ref: "#/components/schemas/CourseId"
+      responses:
+        "200":
+          description: 三阶段学习路径与下一任务推荐
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Plan"
+        "404":
+          $ref: "#/components/responses/NotFound"
   /api/v1/next-activity:
     get:
       operationId: getNextActivity

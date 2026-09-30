@@ -209,6 +209,36 @@ async def get_profile(
         raise HTTPException(status_code=404, detail="learner profile not found") from exc
 
 
+@router.get("/plan", response_model=Plan)
+async def get_plan(
+    service: LearningFlowDependency,
+    student_id: StudentIdQuery,
+    course_id: CourseIdQuery,
+) -> Plan:
+    try:
+        result = await service.get_plan(student_id=student_id, course_id=course_id)
+    except LookupError as exc:
+        raise HTTPException(status_code=404, detail="learner profile not found") from exc
+    return Plan(
+        student_id=student_id,
+        course_id=course_id,
+        stages=[
+            PlanStage(
+                stage=stage.stage,
+                objective=stage.objective,
+                knowledge_point_ids=list(stage.knowledge_point_ids),
+                reason=stage.reason,
+            )
+            for stage in result.stages
+        ],
+        next_activity=NextActivity(
+            activity_id=result.next_activity.activity_id,
+            activity_type=cast(Any, result.next_activity.activity_type),
+            reason=result.next_activity.reason,
+        ),
+    )
+
+
 @router.get("/next-activity", response_model=NextActivity)
 async def get_next_activity(
     service: LearningFlowDependency,

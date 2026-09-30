@@ -72,6 +72,18 @@ def test_scenario_endpoint_uses_reviewed_fixed_synthetic_context() -> None:
     assert payload["data_classification"] == "synthetic"
     assert "SRC-PY-SYNTHETIC-FINANCE-CATALOG" in payload["source_refs"]
     assert "虚构客户编号" in payload["context"]
+    assert "本项目列明的计算机能力目标" in payload["notice"]
+
+
+def test_data_structures_scenario_notice_does_not_claim_python_data_processing() -> None:
+    with TestClient(app) as client:
+        response = client.get(
+            "/api/v1/courses/data_structures/projects/DS-PROJ-NETWORK-01/scenario"
+        )
+
+    assert response.status_code == 200
+    assert "本项目列明的计算机能力目标" in response.json()["notice"]
+    assert "Python 数据处理" not in response.json()["notice"]
 
 
 def test_scenario_endpoint_rejects_non_finance_project() -> None:
