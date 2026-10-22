@@ -1,0 +1,803 @@
+{
+  "tool": "comp-diff",
+  "version": 1,
+  "createdAt": "2026-09-05T00:46:10.133Z",
+  "label": "hero",
+  "comp": ".impeccable\\mocks\\study-index.png",
+  "build": ".impeccable\\review\\hero-repro.png",
+  "spec": ".impeccable\\build\\spec.json",
+  "compSize": "1505x1045",
+  "buildSize": "1505x1045",
+  "align": "top",
+  "overall": 0.6018,
+  "verdict": "drift",
+  "scores": {
+    "overall": 0.6018,
+    "structure": 0.6762,
+    "color": 0.8937,
+    "colorIntersection": 0.8265,
+    "paletteMatch": 0.9299,
+    "detail": 0.2996,
+    "detailRaw": 0.4663,
+    "detailAdded": 0.3333,
+    "bands": 0.4455
+  },
+  "palette": {
+    "comp": [
+      {
+        "hex": "#161718",
+        "coverage": 0.9748
+      },
+      {
+        "hex": "#34beca",
+        "coverage": 0.0099
+      },
+      {
+        "hex": "#7e7e7e",
+        "coverage": 0.0052
+      },
+      {
+        "hex": "#484848",
+        "coverage": 0.0043
+      },
+      {
+        "hex": "#eeeeee",
+        "coverage": 0.0034
+      },
+      {
+        "hex": "#b7b7b7",
+        "coverage": 0.0024
+      }
+    ],
+    "build": [
+      {
+        "hex": "#15181a",
+        "coverage": 0.9369
+      },
+      {
+        "hex": "#f4f8f8",
+        "coverage": 0.0394
+      },
+      {
+        "hex": "#273737",
+        "coverage": 0.0149
+      },
+      {
+        "hex": "#38b8c8",
+        "coverage": 0.0058
+      },
+      {
+        "hex": "#98a8a8",
+        "coverage": 0.003
+      }
+    ]
+  },
+  "regions": [
+    {
+      "id": "rail",
+      "x": 0,
+      "y": 0,
+      "w": 0.1,
+      "h": 1,
+      "kind": "chrome",
+      "score": {
+        "overall": 0.6055,
+        "structure": 0.8593,
+        "color": 0.7189,
+        "colorIntersection": 0.4749,
+        "paletteMatch": 0.8502,
+        "detail": 0.3623,
+        "detailRaw": 0.3727,
+        "detailAdded": 0.0208,
+        "bands": 0.23
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 33,
+          "y": 30,
+          "w": 85,
+          "h": 958
+        },
+        "build": {
+          "x": 0,
+          "y": 0,
+          "w": 151,
+          "h": 1045
+        }
+      }
+    },
+    {
+      "id": "brand",
+      "x": 0.0159,
+      "y": 0.023,
+      "w": 0.0678,
+      "h": 0.0919,
+      "kind": "text",
+      "score": {
+        "overall": 0.4499,
+        "structure": 0.5723,
+        "color": 0.6067,
+        "colorIntersection": 0.3721,
+        "paletteMatch": 0.733,
+        "detail": 0.0804,
+        "detailRaw": 0.1429,
+        "detailAdded": 0.125,
+        "bands": 0
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 10,
+          "y": 6,
+          "w": 84,
+          "h": 82
+        },
+        "build": {
+          "x": 5,
+          "y": 0,
+          "w": 57,
+          "h": 87
+        }
+      }
+    },
+    {
+      "id": "rail-nav",
+      "x": 0.0159,
+      "y": 0.2172,
+      "w": 0.0279,
+      "h": 0.0402,
+      "kind": "control",
+      "score": {
+        "overall": 0.4847,
+        "structure": 0.6789,
+        "color": 0.512,
+        "colorIntersection": 0.349,
+        "paletteMatch": 0.5998,
+        "detail": 0,
+        "detailRaw": 0,
+        "detailAdded": 0,
+        "bands": 0.4
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 12,
+          "y": 13,
+          "w": 25,
+          "h": 26
+        },
+        "build": null
+      }
+    },
+    {
+      "id": "header",
+      "x": 0.1,
+      "y": 0,
+      "w": 0.9,
+      "h": 0.2,
+      "kind": "chrome",
+      "score": {
+        "overall": 0.4568,
+        "structure": 0.7516,
+        "color": 0.775,
+        "colorIntersection": 0.6608,
+        "paletteMatch": 0.8364,
+        "detail": 0,
+        "detailRaw": 0.2211,
+        "detailAdded": 0.4792,
+        "bands": 0
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 53,
+          "y": 67,
+          "w": 1227,
+          "h": 48
+        },
+        "build": {
+          "x": 10,
+          "y": 0,
+          "w": 1299,
+          "h": 177
+        }
+      }
+    },
+    {
+      "id": "page-title",
+      "x": 0.1282,
+      "y": 0.0574,
+      "w": 0.1196,
+      "h": 0.0431,
+      "kind": "text",
+      "score": {
+        "overall": 0.3801,
+        "structure": 0.3088,
+        "color": 0.5929,
+        "colorIntersection": 0.5745,
+        "paletteMatch": 0.6028,
+        "detail": 0.1247,
+        "detailRaw": 0.1351,
+        "detailAdded": 0.0208,
+        "bands": 0.5875
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 11,
+          "y": 8,
+          "w": 162,
+          "h": 32
+        },
+        "build": {
+          "x": 0,
+          "y": 32,
+          "w": 180,
+          "h": 16
+        }
+      }
+    },
+    {
+      "id": "local-status",
+      "x": 0.3282,
+      "y": 0.0632,
+      "w": 0.0638,
+      "h": 0.0344,
+      "kind": "text",
+      "score": {
+        "overall": 0.5965,
+        "structure": 0.6196,
+        "color": 0.6623,
+        "colorIntersection": 0.6259,
+        "paletteMatch": 0.6819,
+        "detail": 0.1411,
+        "detailRaw": 0.1723,
+        "detailAdded": 0.0625,
+        "bands": 1
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 7,
+          "y": 14,
+          "w": 82,
+          "h": 20
+        },
+        "build": {
+          "x": 0,
+          "y": 31,
+          "w": 96,
+          "h": 1
+        }
+      }
+    },
+    {
+      "id": "accent-switch",
+      "x": 0.6518,
+      "y": 0.0574,
+      "w": 0.0279,
+      "h": 0.0431,
+      "kind": "control",
+      "score": {
+        "overall": 0.4921,
+        "structure": 0.6131,
+        "color": 0.5607,
+        "colorIntersection": 0.5694,
+        "paletteMatch": 0.5559,
+        "detail": 0.0997,
+        "detailRaw": 0.1518,
+        "detailAdded": 0.1042,
+        "bands": 0
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 10,
+          "y": 11,
+          "w": 27,
+          "h": 28
+        },
+        "build": {
+          "x": 0,
+          "y": 32,
+          "w": 48,
+          "h": 1
+        }
+      }
+    },
+    {
+      "id": "task-field",
+      "x": 0.1,
+      "y": 0.2,
+      "w": 0.4,
+      "h": 0.7,
+      "kind": "chrome",
+      "score": {
+        "overall": 0.6464,
+        "structure": 0.6655,
+        "color": 0.8756,
+        "colorIntersection": 0.8139,
+        "paletteMatch": 0.9088,
+        "detail": 0.3418,
+        "detailRaw": 0.5397,
+        "detailAdded": 0.3958,
+        "bands": 0.7276
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 54,
+          "y": 28,
+          "w": 409,
+          "h": 569
+        },
+        "build": {
+          "x": 17,
+          "y": 58,
+          "w": 585,
+          "h": 670
+        }
+      }
+    },
+    {
+      "id": "task-kicker",
+      "x": 0.1322,
+      "y": 0.2172,
+      "w": 0.0678,
+      "h": 0.0402,
+      "kind": "text",
+      "score": {
+        "overall": 0.5366,
+        "structure": 0.6487,
+        "color": 0.8487,
+        "colorIntersection": 0.7647,
+        "paletteMatch": 0.894,
+        "detail": 0,
+        "detailRaw": 0,
+        "detailAdded": 0.1042,
+        "bands": 0
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 7,
+          "y": 13,
+          "w": 88,
+          "h": 22
+        },
+        "build": {
+          "x": 20,
+          "y": 43,
+          "w": 81,
+          "h": 5
+        }
+      }
+    },
+    {
+      "id": "task-title",
+      "x": 0.1322,
+      "y": 0.3005,
+      "w": 0.0957,
+      "h": 0.0574,
+      "kind": "text",
+      "score": {
+        "overall": 0.5299,
+        "structure": 0.3855,
+        "color": 0.8658,
+        "colorIntersection": 0.7685,
+        "paletteMatch": 0.9182,
+        "detail": 0.332,
+        "detailRaw": 0.457,
+        "detailAdded": 0.25,
+        "bands": 0.7086
+      },
+      "verdict": "contradicted",
+      "inkBox": {
+        "comp": {
+          "x": 8,
+          "y": 10,
+          "w": 129,
+          "h": 41
+        },
+        "build": {
+          "x": 19,
+          "y": 3,
+          "w": 125,
+          "h": 41
+        }
+      }
+    },
+    {
+      "id": "task-copy",
+      "x": 0.1322,
+      "y": 0.4,
+      "w": 0.2831,
+      "h": 0.023,
+      "kind": "text",
+      "score": {
+        "overall": 0.4862,
+        "structure": 0.5048,
+        "color": 0.7708,
+        "colorIntersection": 0.707,
+        "paletteMatch": 0.8051,
+        "detail": 0.0071,
+        "detailRaw": 0.0592,
+        "detailAdded": 0.1042,
+        "bands": 0.4
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 7,
+          "y": 8,
+          "w": 408,
+          "h": 21
+        },
+        "build": {
+          "x": 19,
+          "y": 15,
+          "w": 108,
+          "h": 33
+        }
+      }
+    },
+    {
+      "id": "task-progress",
+      "x": 0.2199,
+      "y": 0.5751,
+      "w": 0.1834,
+      "h": 0.023,
+      "kind": "control",
+      "score": {
+        "overall": 0.4445,
+        "structure": 0.7366,
+        "color": 0.3229,
+        "colorIntersection": 0.0854,
+        "paletteMatch": 0.4507,
+        "detail": 0,
+        "detailRaw": 0.0634,
+        "detailAdded": 0.375,
+        "bands": 0
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 9,
+          "y": 21,
+          "w": 256,
+          "h": 7
+        },
+        "build": {
+          "x": 5,
+          "y": 8,
+          "w": 271,
+          "h": 11
+        }
+      }
+    },
+    {
+      "id": "task-action",
+      "x": 0.1322,
+      "y": 0.7005,
+      "w": 0.1475,
+      "h": 0.0804,
+      "kind": "control",
+      "score": {
+        "overall": 0.1997,
+        "structure": 0.2369,
+        "color": 0.2431,
+        "colorIntersection": 0.1517,
+        "paletteMatch": 0.2924,
+        "detail": 0.04,
+        "detailRaw": 0.0765,
+        "detailAdded": 0.0729,
+        "bands": 0.175
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 0,
+          "y": 0,
+          "w": 222,
+          "h": 84
+        },
+        "build": {
+          "x": 0,
+          "y": 15,
+          "w": 33,
+          "h": 11
+        }
+      }
+    },
+    {
+      "id": "learning-index",
+      "x": 0.5,
+      "y": 0.2,
+      "w": 0.5,
+      "h": 0.7,
+      "kind": "chrome",
+      "score": {
+        "overall": 0.5046,
+        "structure": 0.8016,
+        "color": 0.8962,
+        "colorIntersection": 0.8502,
+        "paletteMatch": 0.921,
+        "detail": 0,
+        "detailRaw": 0.1082,
+        "detailAdded": 0.25,
+        "bands": 0
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 120,
+          "y": 28,
+          "w": 561,
+          "h": 492
+        },
+        "build": {
+          "x": 0,
+          "y": 119,
+          "w": 700,
+          "h": 609
+        }
+      }
+    },
+    {
+      "id": "index-title",
+      "x": 0.5761,
+      "y": 0.2172,
+      "w": 0.0678,
+      "h": 0.0402,
+      "kind": "text",
+      "score": {
+        "overall": 0.5739,
+        "structure": 0.6772,
+        "color": 0.781,
+        "colorIntersection": 0.7369,
+        "paletteMatch": 0.8048,
+        "detail": 0,
+        "detailRaw": 0,
+        "detailAdded": 0,
+        "bands": 0.4
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 6,
+          "y": 13,
+          "w": 86,
+          "h": 21
+        },
+        "build": null
+      }
+    },
+    {
+      "id": "course-c",
+      "x": 0.7914,
+      "y": 0.3407,
+      "w": 0.0877,
+      "h": 0.0344,
+      "kind": "text",
+      "score": {
+        "overall": 0.4676,
+        "structure": 0.4431,
+        "color": 0.7997,
+        "colorIntersection": 0.7039,
+        "paletteMatch": 0.8512,
+        "detail": 0.0481,
+        "detailRaw": 0.1211,
+        "detailAdded": 0.1458,
+        "bands": 0.3886
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 9,
+          "y": 13,
+          "w": 116,
+          "h": 22
+        },
+        "build": {
+          "x": 90,
+          "y": 0,
+          "w": 42,
+          "h": 48
+        }
+      }
+    },
+    {
+      "id": "course-python",
+      "x": 0.5761,
+      "y": 0.4861,
+      "w": 0.0797,
+      "h": 0.0459,
+      "kind": "text",
+      "score": {
+        "overall": 0.4318,
+        "structure": 0.5133,
+        "color": 0.5757,
+        "colorIntersection": 0.5174,
+        "paletteMatch": 0.6072,
+        "detail": 0.0195,
+        "detailRaw": 0.0507,
+        "detailAdded": 0.0625,
+        "bands": 0.2833
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 7,
+          "y": 5,
+          "w": 103,
+          "h": 34
+        },
+        "build": null
+      }
+    },
+    {
+      "id": "course-ds",
+      "x": 0.5761,
+      "y": 0.6459,
+      "w": 0.0877,
+      "h": 0.0459,
+      "kind": "text",
+      "score": {
+        "overall": 0.4122,
+        "structure": 0.3968,
+        "color": 0.6953,
+        "colorIntersection": 0.5467,
+        "paletteMatch": 0.7754,
+        "detail": 0,
+        "detailRaw": 0.0077,
+        "detailAdded": 0.0208,
+        "bands": 0.4
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 6,
+          "y": 7,
+          "w": 115,
+          "h": 30
+        },
+        "build": {
+          "x": 0,
+          "y": 0,
+          "w": 12,
+          "h": 9
+        }
+      }
+    },
+    {
+      "id": "footer",
+      "x": 0.1,
+      "y": 0.9,
+      "w": 0.9,
+      "h": 0.1,
+      "kind": "chrome",
+      "score": {
+        "overall": 0.5526,
+        "structure": 0.8885,
+        "color": 0.8232,
+        "colorIntersection": 0.6155,
+        "paletteMatch": 0.9351,
+        "detail": 0.1434,
+        "detailRaw": 0.2684,
+        "detailAdded": 0.25,
+        "bands": 0
+      },
+      "verdict": "drift",
+      "inkBox": {
+        "comp": {
+          "x": 52,
+          "y": 55,
+          "w": 1262,
+          "h": 19
+        },
+        "build": {
+          "x": 0,
+          "y": 30,
+          "w": 1354,
+          "h": 74
+        }
+      }
+    },
+    {
+      "id": "agent-chain",
+      "x": 0.4512,
+      "y": 0.9464,
+      "w": 0.0598,
+      "h": 0.0344,
+      "kind": "text",
+      "score": {
+        "overall": 0.4983,
+        "structure": 0.4747,
+        "color": 0.7717,
+        "colorIntersection": 0.7083,
+        "paletteMatch": 0.8058,
+        "detail": 0.0532,
+        "detailRaw": 0.0793,
+        "detailAdded": 0.0521,
+        "bands": 0.6
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 10,
+          "y": 14,
+          "w": 73,
+          "h": 18
+        },
+        "build": {
+          "x": 0,
+          "y": 33,
+          "w": 90,
+          "h": 15
+        }
+      }
+    },
+    {
+      "id": "system-meta",
+      "x": 0.796,
+      "y": 0.9522,
+      "w": 0.0957,
+      "h": 0.023,
+      "kind": "text",
+      "score": {
+        "overall": 0.4851,
+        "structure": 0.548,
+        "color": 0.8445,
+        "colorIntersection": 0.7031,
+        "paletteMatch": 0.9207,
+        "detail": 0,
+        "detailRaw": 0,
+        "detailAdded": 0.1458,
+        "bands": 0
+      },
+      "verdict": "missing",
+      "inkBox": {
+        "comp": {
+          "x": 7,
+          "y": 17,
+          "w": 131,
+          "h": 11
+        },
+        "build": {
+          "x": 0,
+          "y": 3,
+          "w": 144,
+          "h": 45
+        }
+      }
+    }
+  ],
+  "files": {
+    "sideBySide": ".impeccable\\review\\diff\\hero\\side-by-side.png",
+    "heatmap": ".impeccable\\review\\diff\\hero\\heatmap.png",
+    "regionFiles": [
+      ".impeccable\\review\\diff\\hero\\regions\\rail.png",
+      ".impeccable\\review\\diff\\hero\\regions\\brand.png",
+      ".impeccable\\review\\diff\\hero\\regions\\rail-nav.png",
+      ".impeccable\\review\\diff\\hero\\regions\\header.png",
+      ".impeccable\\review\\diff\\hero\\regions\\page-title.png",
+      ".impeccable\\review\\diff\\hero\\regions\\local-status.png",
+      ".impeccable\\review\\diff\\hero\\regions\\accent-switch.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-field.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-kicker.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-title.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-copy.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-progress.png",
+      ".impeccable\\review\\diff\\hero\\regions\\task-action.png",
+      ".impeccable\\review\\diff\\hero\\regions\\learning-index.png",
+      ".impeccable\\review\\diff\\hero\\regions\\index-title.png",
+      ".impeccable\\review\\diff\\hero\\regions\\course-c.png",
+      ".impeccable\\review\\diff\\hero\\regions\\course-python.png",
+      ".impeccable\\review\\diff\\hero\\regions\\course-ds.png",
+      ".impeccable\\review\\diff\\hero\\regions\\footer.png",
+      ".impeccable\\review\\diff\\hero\\regions\\agent-chain.png",
+      ".impeccable\\review\\diff\\hero\\regions\\system-meta.png"
+    ]
+  }
+}

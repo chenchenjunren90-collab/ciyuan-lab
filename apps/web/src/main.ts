@@ -6,6 +6,7 @@ import { rippleDirective } from "./directives/ripple";
 import "./styles.css";
 import "./themes.css";
 import "./typography.css";
+import "./luckystar-adapter.css";
 
 const app = createApp(App);
 app.directive("reveal", revealDirective);

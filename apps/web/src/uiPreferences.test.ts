@@ -3,13 +3,13 @@ import { describe, expect, it } from "vitest";
 import {
   DEFAULT_UI_PREFERENCES,
   PALETTES,
+  resolvePalette,
   UI_PREFERENCES_KEY,
   applyUiPreferences,
   createLocalLearnerId,
   ensureLocalStudentId,
   loadLocalAccounts,
   loadUiPreferences,
-  resolvePalette,
   resolveTheme,
   saveUiPreferences,
   saveLocalAccounts,
@@ -26,12 +26,11 @@ function memoryStorage(initial: Record<string, string> = {}): KeyValueStorage {
 }
 
 describe("UI preferences", () => {
-  it("opens a new learner workspace in the dawn palette", () => {
+  it("opens a new learner workspace in white mode", () => {
     expect(loadUiPreferences(memoryStorage()).theme).toBe("light");
     const root = { dataset: {}, style: {} } as unknown as HTMLElement;
     applyUiPreferences(root, loadUiPreferences(memoryStorage()), true);
     expect(root.dataset.theme).toBe("light");
-    expect(root.dataset.palette).toBe("dawn");
     expect(root.style.colorScheme).toBe("light");
   });
 
@@ -83,7 +82,7 @@ describe("UI preferences", () => {
     });
   });
 
-  it("applies the selected palette while preserving the legacy dark link", () => {
+  it("applies theme-derived palettes without accent attributes", () => {
     const storage = memoryStorage();
     const preferences = { ...DEFAULT_UI_PREFERENCES, theme: "dark" as const };
     saveUiPreferences(storage, preferences);
@@ -92,7 +91,6 @@ describe("UI preferences", () => {
     const root = { dataset: {}, style: {} } as unknown as HTMLElement;
     applyUiPreferences(root, preferences, false);
     expect(root.dataset.theme).toBe("dark");
-    expect(root.dataset.palette).toBe("dusk");
     expect(root.dataset.accent).toBeUndefined();
   });
 
@@ -102,31 +100,10 @@ describe("UI preferences", () => {
     applyUiPreferences(root, { ...DEFAULT_UI_PREFERENCES, theme: "system" }, false);
     expect(root.dataset).toMatchObject({
       theme: "light",
-      palette: "dawn",
       motion: "full",
       contrast: "standard",
     });
     expect(root.dataset.accent).toBeUndefined();
-  });
-
-  it.each(PALETTES)("persists and applies $label across reloads and shared links", ({ id }) => {
-    const storage = memoryStorage();
-    const preferences = { ...DEFAULT_UI_PREFERENCES, theme: id, highContrast: true };
-    saveUiPreferences(storage, preferences);
-    expect(loadUiPreferences(storage)).toEqual(preferences);
-    expect(loadUiPreferences(memoryStorage(), id).theme).toBe(id);
-    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
-    applyUiPreferences(root, loadUiPreferences(storage), false);
-    expect(root.dataset.palette).toBe(id);
-    expect(root.dataset.theme).toBe(id === "dawn" ? "light" : "dark");
-    expect(root.dataset.contrast).toBe("high");
-  });
-
-  it("maps legacy light, dark and system preferences to complete palettes", () => {
-    expect(resolvePalette("light")).toBe("dawn");
-    expect(resolvePalette("dark")).toBe("dusk");
-    expect(resolvePalette("system", true)).toBe("dusk");
-    expect(resolvePalette("system", false)).toBe("dawn");
   });
 
   it("creates one stable anonymous learner identity per browser", () => {
@@ -150,5 +127,27 @@ describe("UI preferences", () => {
       { id: "learner-first123", displayName: "甲同学" },
       { id: "learner-second456", displayName: "乙同学" },
     ]);
+  });
+});
+
+
+describe("four complete palettes", () => {
+  it.each(PALETTES)("persists and applies $label across reloads and shared links", ({ id }) => {
+    const storage = memoryStorage();
+    const preferences = { ...DEFAULT_UI_PREFERENCES, theme: id, highContrast: true };
+    saveUiPreferences(storage, preferences);
+    expect(loadUiPreferences(storage)).toEqual(preferences);
+    expect(loadUiPreferences(memoryStorage(), id).theme).toBe(id);
+    const root = { dataset: {}, style: {} } as unknown as HTMLElement;
+    applyUiPreferences(root, loadUiPreferences(storage), false);
+    expect(root.dataset.palette).toBe(id);
+    expect(root.dataset.theme).toBe(id === "dawn" ? "light" : "dark");
+    expect(root.dataset.contrast).toBe("high");
+  });
+  it("maps legacy light, dark and system preferences to complete palettes", () => {
+    expect(resolvePalette("light")).toBe("dawn");
+    expect(resolvePalette("dark")).toBe("dusk");
+    expect(resolvePalette("system", true)).toBe("dusk");
+    expect(resolvePalette("system", false)).toBe("dawn");
   });
 });

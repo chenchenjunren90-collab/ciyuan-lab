@@ -18,8 +18,10 @@ try {
 
     if (-not (Test-Path -LiteralPath $Python)) {
         py -3.11 -m venv .venv
+        if ($LASTEXITCODE -ne 0) { throw "Python 虚拟环境创建失败。" }
     }
     & $Python -m pip install -e ".[dev]"
+    if ($LASTEXITCODE -ne 0) { throw "后端依赖安装失败。" }
 
     Push-Location (Join-Path $RepoRoot "apps\web")
     try {
@@ -27,7 +29,7 @@ try {
         if ($LASTEXITCODE -ne 0) { throw "前端依赖安装失败。" }
     } finally { Pop-Location }
 
-    docker compose -f infra/compose.yaml up -d postgres redis
+    docker compose -f infra/compose.yaml up -d --wait --wait-timeout 120 postgres redis
     if ($LASTEXITCODE -ne 0) { throw "PostgreSQL/Redis 启动失败。" }
 
     $env:DATABASE_URL = if ($env:DATABASE_URL) {
@@ -42,10 +44,13 @@ try {
 
     if ($PullSandboxImages) {
         docker pull python:3.11.15-alpine3.24
+        if ($LASTEXITCODE -ne 0) { throw "Python 沙箱镜像下载失败。" }
         docker pull gcc:13.4.0-bookworm
+        if ($LASTEXITCODE -ne 0) { throw "C 沙箱镜像下载失败。" }
     }
 
     & $Python scripts/validate_course_pack.py
+    if ($LASTEXITCODE -ne 0) { throw "课程包校验失败。" }
     Write-Host "演示环境准备完成。下一步运行：.\scripts\run_demo.ps1 -EnableCodeExecution"
 } finally {
     Pop-Location
