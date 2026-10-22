@@ -1,0 +1,50 @@
+/* Compatibility only. The luckystar-2 styles/themes/typography remain authoritative.
+   Do not override its welcome page, palettes, dashboard or motion here. */
+.assessment-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0; }
+.assessment-page-heading p { margin: 0; color: var(--muted); font-size: var(--type-body); }
+.assessment-page-heading button { flex: 0 0 auto; }
+.assessment-page-heading .secondary,
+.assessment-unavailable .secondary,
+.assessment-page :is(.secondary,.primary) { min-height: 44px; padding: 11px 18px; border-radius: 8px; font-size: var(--type-label); }
+.assessment-page-heading .secondary,
+.assessment-unavailable .secondary,
+.assessment-page .secondary { color: var(--ink); border: 1px solid var(--line); background: var(--surface-raised); }
+.assessment-page-heading .secondary:hover,
+.assessment-page .secondary:hover:not(:disabled) { border-color: var(--accent); background: var(--accent-pale); }
+.assessment-page { max-width: 920px; margin-inline: auto; }
+.assessment-page progress { display: block; width: 100%; height: 6px; margin: 12px 0 24px; border: 0; appearance: none; background: var(--surface-muted); }
+.assessment-page progress::-webkit-progress-bar { background: var(--surface-muted); }
+.assessment-page progress::-webkit-progress-value { background: var(--accent); }
+.assessment-page progress::-moz-progress-bar { background: var(--accent); }
+.assessment-progress-summary { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; color: var(--muted); font-size: var(--type-caption); }
+.assessment-page .diagnostic-list { display: block; margin-top: 24px; }
+.assessment-page .diagnostic-list article { padding: 0; border: 0; border-radius: 0; background: transparent; }
+.assessment-page .diagnostic-list article > header { display: block; }
+.assessment-page .diagnostic-list article > header em { display: block; width: auto; height: auto; margin-bottom: 12px; color: var(--muted); background: transparent; font: normal var(--type-caption)/1.5 var(--font-body); }
+.assessment-page .diagnostic-list article button { min-height: 44px; font-size: var(--type-body); }
+.assessment-question-nav { display: flex; justify-content: space-between; gap: 16px; margin-top: 20px; }
+.assessment-page .diagnostic-actions { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; padding-top: 24px; margin-top: 24px; border-top: 1px solid var(--line); }
+.assessment-page .diagnostic-actions > span { color: var(--muted); font-size: var(--type-caption); max-width: 32em; }
+.assessment-complete p { margin: 12px 0 24px; line-height: 1.8; color: var(--muted); }
+.assessment-complete > div { display: flex; flex-wrap: wrap; gap: 12px; }
+.assessment-unavailable p { margin: 12px 0 24px; color: var(--muted); }
+.assessment-page :is(button,progress):focus-visible,
+.assessment-page-heading button:focus-visible { outline: 2px solid var(--accent-ink); outline-offset: 3px; }
+.assessment-page button:disabled { cursor: not-allowed; opacity: .5; }
+
+/* New C/DS components share the existing class names, not the shell's padding. */
+.foundation-classroom > .workspace { padding: 0; margin: 0; width: auto; max-width: none; }
+.algorithm-lab .notice { position: static; padding: 0; margin: 12px 0 20px; border: 0; background: transparent; color: var(--muted); cursor: auto; }
+
+/* Resolve legacy classroom selector conflicts using the original palette tokens. */
+html[data-theme][data-palette] .immersive-lesson .smart-board { color:var(--ink); border-color:var(--line); background:var(--surface-raised); box-shadow:none; }
+html[data-theme][data-palette] .immersive-lesson .smart-board :is(h3,.board-explanation,.board-key-points li,.board-trace span,.board-mistakes span) { color:var(--ink); }
+html[data-theme][data-palette] .immersive-lesson .smart-board :is(header span,.board-key-points > b,.board-trace > b,.board-code-example > b,.board-mistakes > b,.board-trace span::before) { color:var(--accent-ink); }
+html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-trace,.board-code-example,.board-mistakes) { border-color:var(--line); }
+html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-code-example pre,.board-code-example pre code) { color:var(--code-ink); background:var(--code); border-color:var(--code-line); }
+
+@media (max-width: 560px) {
+  .assessment-page-heading { align-items: flex-start; flex-direction: column; }
+  .assessment-page { padding: 20px 16px; }
+  .assessment-page .diagnostic-actions { align-items: stretch; flex-direction: column; }
+}

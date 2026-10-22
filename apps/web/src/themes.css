@@ -88,7 +88,7 @@ html[data-theme="light"] .settings-panel { background:var(--surface-raised); box
   .focus-actions { gap:6px; }
 }
 
-/* Four complete palettes from luckystar-2; data-theme preserves existing course rules. */
+/* Four complete palettes. data-theme keeps existing light/dark content rules compatible. */
 html[data-palette="dusk"] {
   --surface:#042341; --surface-raised:#0c2e4c; --surface-muted:#153957;
   --ink:#f7f1fa; --muted:#c5bdd2; --line:#49617a;
@@ -123,11 +123,7 @@ html[data-palette] {
   scrollbar-color:var(--line) var(--surface);
 }
 html[data-theme][data-palette] body, html[data-theme][data-palette] .workspace { color:var(--ink); background:var(--surface); }
-html[data-theme][data-palette] .immersive-lesson .smart-board { color:var(--ink); border-color:var(--line); background:var(--surface-raised); box-shadow:none; }
-html[data-theme][data-palette] .immersive-lesson .smart-board :is(h3,.board-explanation,.board-key-points li,.board-trace span,.board-mistakes span) { color:var(--ink); }
-html[data-theme][data-palette] .immersive-lesson .smart-board :is(header span,.board-key-points > b,.board-trace > b,.board-code-example > b,.board-mistakes > b,.board-trace span::before) { color:var(--accent-ink); }
-html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-trace,.board-code-example,.board-mistakes) { border-color:var(--line); }
-html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-code-example pre,.board-code-example pre code) { color:var(--code-ink); background:var(--code); border-color:var(--code-line); }
+html[data-palette] .immersive-lesson .smart-board { color:var(--ink); border-color:var(--line); background:var(--surface-raised); box-shadow:none; }
 html[data-palette] :is(.primary,.welcome-primary,.done-button,.talk-composer button),
 html[data-palette] .immersive-lesson .code-task .primary { color:var(--accent-contrast); background:var(--accent); box-shadow:none; }
 html[data-palette] ::selection { color:var(--accent-contrast); background:var(--accent); }

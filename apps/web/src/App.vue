@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import BeginnerShortcut from "./components/BeginnerShortcut.vue";
+import DiagnosticAssessment from "./components/DiagnosticAssessment.vue";
 import { beginnerDiagnosticAnswers } from "./services/beginnerDiagnostic";
+import { createWorkspaceNavigation, workspaceScrollY, type WorkspacePage } from "./services/workspaceNavigation";
 import { motionDirective as vMotion } from "./directives/motion";
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 
@@ -41,7 +42,7 @@ import {
   type UiPreferences,
 } from "./uiPreferences";
 
-type Tab = "overview" | "path" | "tutor" | "practice" | "projects" | "classroom";
+type Tab = WorkspacePage;
 type ActivityFilter = "all" | "homework" | "code" | "debug" | "project";
 type ActivitySort = "recommended" | "catalog" | "shortest";
 type KnowledgeState = "mastered" | "learning" | "recommended" | "ready" | "locked" | "unassessed";
@@ -63,11 +64,9 @@ const PYTHON_KNOWLEDGE_CHAPTERS = [
   { key: "design", order: "05", title: "对象与算法", description: "理解对象建模、复杂度和基本问题求解策略。", prefixes: ["OOP", "ALGO"] },
   { key: "application", order: "06", title: "数据应用", description: "把 Python 能力迁移到结构化数据分析和综合实践。", prefixes: ["DATA"] }
 ] as const;
-const initialQueryTab = new URLSearchParams(window.location.search).get("tab");
-const supportedTabs: Tab[] = ["overview", "path", "tutor", "practice", "projects", "classroom"];
-const initialTab: Tab = supportedTabs.includes(initialQueryTab as Tab)
-  ? initialQueryTab as Tab
-  : "overview";
+const navigation = createWorkspaceNavigation(window);
+const initialRoute = navigation.read();
+const PAGE_TITLES: Record<Tab, string> = { overview: "学习任务台", assessment: "能力摸底", classroom: "沉浸课堂", path: "个性路径", tutor: "课程辅导", practice: "练习工坊", projects: "项目实战" };
 const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const workspacePreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get("preview") === "workspace";
@@ -122,10 +121,9 @@ const activityLoading = ref(false);
 const diagnosticLoading = ref(false);
 const pendingKnowledgeId = ref("");
 const hintLoading = ref(false);
-const tab = ref<Tab>(initialTab);
+const tab = ref<Tab>(initialRoute.page);
 const courses = ref<CourseSummary[]>([]);
-const initialQueryCourse = new URLSearchParams(window.location.search).get("course");
-const courseId = ref<CourseId>(["python", "c", "data_structures"].includes(initialQueryCourse ?? "") ? initialQueryCourse as CourseId : "python");
+const courseId = ref<CourseId>(initialRoute.course);
 const knowledge = ref<KnowledgePoint[]>([]);
 const selectedKnowledge = ref<KnowledgePointDetail | null>(null);
 const selectedHomework = ref<ActivitySummary | null>(null);
@@ -138,6 +136,7 @@ const diagnostic = ref<DiagnosticQuiz | null>(null);
 const diagnosticPhase = ref<DiagnosticPhase>("initial");
 const diagnosticAnswers = reactive<Record<string, string>>({});
 const diagnosticResult = ref<DiagnosticSubmissionResult | null>(null);
+const diagnosticQuestionIndex = ref(0);
 const question = ref("数据清洗时应该如何处理缺失值和异常记录？");
 const qa = ref<QaResponse | null>(null);
 const qaLoading = ref(false);
@@ -169,7 +168,7 @@ const adaptiveSubmission = ref<GeneratedProblemSubmissionResponse | null>(null);
 const adaptiveAttemptIndex = ref(1);
 const adaptiveLoading = ref(false);
 const selectedKnowledgeLoading = ref(false);
-const diagnosticSection = ref<HTMLElement | null>(null);
+const pageHeading = ref<HTMLElement | null>(null);
 const knowledgeMapSection = ref<HTMLElement | null>(null);
 const knowledgeDetailSection = ref<HTMLElement | null>(null);
 const learnerContextResolved = ref(false);
@@ -184,12 +183,51 @@ const activeClassroom = ref<InstanceType<typeof PythonFirstLesson> | null>(null)
 const savedProjectIds = ref<string[]>([]);
 const workedExampleExpanded = ref(false);
 const workspaceBusy = computed(() => submitting.value || diagnosticSubmitting.value || adaptiveLoading.value || projectSubmitting.value || qaLoading.value || projectGenerating.value);
+const pageNavigationScope = createRequestScope();
+let pendingHistoryNavigation = false;
+let previousScrollRestoration: ScrollRestoration = "auto";
 
-watch([tab, courseId], ([currentTab, currentCourse]) => {
-  const url = new URL(window.location.href);
-  url.searchParams.set("tab", currentTab);
-  url.searchParams.set("course", currentCourse);
-  window.history.replaceState(null, "", url);
+watch([tab, courseId], async ([currentTab, currentCourse]) => {
+  document.title = `${PAGE_TITLES[currentTab]} · 词元研究所`;
+  if (!navigation.commit({ page: currentTab, course: currentCourse }, window.scrollY)) return;
+  pendingHistoryNavigation = false;
+  const token = pageNavigationScope.begin();
+  if (currentTab !== "classroom") classroomFocusMode.value = false;
+  await nextTick();
+  if (!pageNavigationScope.isCurrent(token)) return;
+  window.scrollTo({ top: 0, behavior: "instant" });
+  pageHeading.value?.focus({ preventScroll: true });
+}, { immediate: true });
+
+async function restoreHistoryPage(): Promise<void> {
+  const route = navigation.read();
+  // Let an in-flight submission finish before replacing its course/account context.
+  if (workspaceBusy.value && route.course !== courseId.value) {
+    pendingHistoryNavigation = true;
+    notice.value = "任务正在处理，完成后将返回所选课程页面。";
+    return;
+  }
+  pendingHistoryNavigation = false;
+  const token = pageNavigationScope.begin();
+  const scrollY = workspaceScrollY(window.history.state);
+  cancelPendingDetails();
+  settingsOpen.value = false;
+  assessmentWarningOpen.value = false;
+  notice.value = "";
+  classroomFocusMode.value = false;
+  tab.value = route.page;
+  if (route.course !== courseId.value) await loadCourse(route.course);
+  if (route.page === "assessment" && !diagnostic.value && !loading.value) {
+    await loadDiagnostic(hasLearningEvidence(profile.value) ? "reassessment" : "initial");
+  }
+  await nextTick();
+  if (!pageNavigationScope.isCurrent(token)) return;
+  pageHeading.value?.focus({ preventScroll: true });
+  window.scrollTo({ top: scrollY, behavior: "instant" });
+}
+
+watch(workspaceBusy, (busy) => {
+  if (!busy && pendingHistoryNavigation) void restoreHistoryPage();
 });
 
 const greeting = computed(() => {
@@ -282,7 +320,7 @@ watch(uiPreferences, (value) => {
   applyUiPreferences(document.documentElement, value, systemPrefersDark.value);
   const url = new URL(window.location.href);
   url.searchParams.set("theme", value.theme);
-  window.history.replaceState(null, "", url);
+  window.history.replaceState(window.history.state, "", url);
 }, { deep: true, immediate: true });
 
 const viewportIsMobile = ref(window.innerWidth < 768);
@@ -611,17 +649,8 @@ function continueWithGenericCourse(): void {
   notice.value = "已进入通用课程模式；完成能力测评后可随时切换为个性化路线。";
 }
 function goToAssessment(): void {
-  if (courseId.value !== "python") {
-    tab.value = "overview";
-    void loadDiagnostic(hasLearningEvidence(profile.value) ? "reassessment" : "initial");
-    notice.value = "已打开当前课程的能力摸底。";
-    return;
-  }
-  genericMode.value = false;
-  sessionStorage.removeItem(genericModeKey());
   assessmentWarningOpen.value = false;
-  tab.value = "classroom";
-  notice.value = "已返回摸底测试，完成后将自动生成个性化第一课。";
+  void startBaseline();
 }
 
 watch(assessmentWarningOpen, async (open) => {
@@ -638,14 +667,12 @@ watch(assessmentWarningOpen, async (open) => {
   assessmentWarningReturnFocus = null;
 });
 async function startBaseline(): Promise<void> {
-  tab.value = "overview";
-  if (!diagnostic.value) {
-    notice.value = "能力诊断尚未载入，请稍后重试。";
-    return;
+  cancelPendingDetails();
+  notice.value = "";
+  tab.value = "assessment";
+  if (!diagnostic.value && !loading.value) {
+    await loadDiagnostic(hasLearningEvidence(profile.value) ? "reassessment" : "initial");
   }
-  notice.value = "能力基线已定位：请完成下方诊断题，提交后会立即更新画像。";
-  await nextTick();
-  diagnosticSection.value?.scrollIntoView({ behavior: preferredScrollBehavior.value, block: "start" });
 }
 async function openKnowledgeMap(): Promise<void> {
   tab.value = "overview";
@@ -715,6 +742,7 @@ async function loadCourse(id: CourseId): Promise<void> {
   knowledge.value = []; activities.value = [];
   profile.value = null; next.value = null; stages.value = [];
   diagnostic.value = null; diagnosticResult.value = null;
+  diagnosticQuestionIndex.value = 0;
   Object.keys(diagnosticAnswers).forEach((key) => delete diagnosticAnswers[key]);
   qa.value = null; activity.value = null;
   selectedKnowledge.value = null; selectedHomework.value = null;
@@ -752,6 +780,7 @@ async function loadDiagnostic(phase: DiagnosticPhase): Promise<void> {
     const quiz = await api.diagnostic(courseId.value, phase);
     if (!diagnosticScope.isCurrent(token)) return;
     diagnostic.value = quiz;
+    diagnosticQuestionIndex.value = 0;
     diagnosticPhase.value = quiz.phase;
     diagnosticResult.value = null;
     Object.keys(diagnosticAnswers).forEach((key) => delete diagnosticAnswers[key]);
@@ -788,7 +817,6 @@ async function submitDiagnostic(): Promise<void> {
     );
     diagnosticResult.value = result;
     onProfileResolved(result.profile); stages.value = result.plan.stages; next.value = result.plan.next_activity;
-    tab.value = "overview";
     notice.value = `${result.phase === "initial" ? "初始诊断" : "阶段重测"}完成：${result.correct_count}/${result.total_count}，画像和学习路径已更新。`;
   } catch (error) { fail(error) } finally { diagnosticSubmitting.value = false }
 }
@@ -1021,6 +1049,10 @@ async function submit(): Promise<void> {
 }
 
 onMounted(async () => {
+  navigation.initialize({ page: tab.value, course: courseId.value });
+  previousScrollRestoration = window.history.scrollRestoration;
+  window.history.scrollRestoration = "manual";
+  window.addEventListener("popstate", restoreHistoryPage);
   systemThemeQuery.addEventListener("change", syncSystemTheme);
   window.addEventListener("resize", syncViewport);
   window.addEventListener(ACCESS_CODE_REQUIRED_EVENT, onAccessCodeRequired);
@@ -1040,6 +1072,9 @@ function confirmAccessCode(): void {
 }
 
 onBeforeUnmount(() => {
+  pageNavigationScope.invalidate();
+  window.removeEventListener("popstate", restoreHistoryPage);
+  window.history.scrollRestoration = previousScrollRestoration;
   workspaceScope.invalidate();
   activityScope.invalidate(); knowledgeScope.invalidate(); diagnosticScope.invalidate();
   if (noticeTimer) clearTimeout(noticeTimer);
@@ -1051,7 +1086,7 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="aurora" aria-hidden="true"></div>
-  <ParticleField />
+  <ParticleField :key="uiPreferences.reducedMotion ? 'reduced' : 'full'" />
   <div v-if="accessGateOpen" class="access-gate" role="dialog" aria-modal="true" aria-label="访问口令">
     <form class="access-gate-card" @submit.prevent="confirmAccessCode">
       <div class="access-gate-mark" aria-hidden="true">&lt;/&gt;</div>
@@ -1098,9 +1133,9 @@ onBeforeUnmount(() => {
   <div v-if="!welcomeOpen" class="app-shell" :inert="settingsOpen || assessmentWarningOpen" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
     <aside v-if="!classroomFocusMode" class="sidebar">
       <div class="brand"><span aria-hidden="true">&lt;/&gt;</span><div><strong>词元研究所</strong><small>LEARNING CORE</small></div></div>
-      <nav class="course-nav">
+      <nav class="course-nav" aria-label="选择课程">
         <p>课程索引</p>
-        <button v-for="item in courses" :key="item.id" :disabled="workspaceBusy" :class="{ active: courseId === item.id }" :title="item.title" @click="loadCourse(item.id)">
+        <button v-for="item in courses" :key="item.id" :disabled="workspaceBusy" :class="{ active: courseId === item.id }" :aria-current="courseId === item.id ? 'page' : undefined" :title="item.title" @click="loadCourse(item.id)">
           <b>{{ item.id === "data_structures" ? "DS" : item.id === "python" ? "PY" : "C" }}</b>
           <span><strong>{{ item.title }}</strong><small>{{ item.status === "offline_preview" ? "等待载入" : `${item.implemented_core_concepts} 个知识点` }}</small></span>
         </button>
@@ -1111,12 +1146,12 @@ onBeforeUnmount(() => {
 
     <main class="workspace" v-motion.change="tab">
       <header v-if="!classroomFocusMode" class="topbar">
-        <div class="taskbar-title"><h1>学习任务台</h1><span>{{ selectedCourse?.title ?? "课程工作台" }}</span></div>
+        <div class="taskbar-title"><h1 ref="pageHeading" tabindex="-1">{{ PAGE_TITLES[tab] }}</h1><span>{{ selectedCourse?.title ?? "课程工作台" }}</span></div>
         <div class="taskbar-status" :data-state="connection"><i></i><span><b>服务状态</b><small>{{ connection === "online" ? "课程服务已连接" : connection === "offline" ? "课程服务暂不可用" : connection === "degraded" ? "部分学习服务暂不可用" : "正在连接课程服务" }}</small></span></div>
         <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :theme="currentPalette" @select="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
       </header>
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>
-      <nav v-if="!classroomFocusMode" class="tabs">
+      <nav v-if="!classroomFocusMode" class="tabs" aria-label="学习功能">
         <button :class="{ active: tab === 'overview' }" :aria-current="tab === 'overview' ? 'page' : undefined" @click="openOverview">学习总览</button>
         <button :class="{ active: tab === 'classroom' }" :aria-current="tab === 'classroom' ? 'page' : undefined" @click="openClassroom">沉浸课堂</button>
         <button :class="{ active: tab === 'path' }" :aria-current="tab === 'path' ? 'page' : undefined" @click="openPath">个性路径</button>
@@ -1131,7 +1166,7 @@ onBeforeUnmount(() => {
         <section class="hero-card" data-spotlight v-reveal>
           <div><h2>理解知识。编写代码。验证能力。</h2><p>课堂助教结合学情安排节奏，质量监督在后台检查依据、安全与事实。</p>
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
-            <button v-else v-ripple @click="startBaseline">建立能力基线</button>
+            <button v-else v-ripple @click="startBaseline">{{ Object.keys(diagnosticAnswers).length && !diagnosticResult ? '继续能力摸底' : '开始能力摸底' }}</button>
           </div>
           <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
@@ -1148,18 +1183,6 @@ onBeforeUnmount(() => {
           <article data-spotlight><span>已有证据</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : measuredMastery(profile).length" /></strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
           <article data-spotlight><span>达到掌握</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : masteredCount" /></strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
           <article data-spotlight><span>实践活动</span><strong><CountUp :value="courseLoadError ? '—' : activities.length" /></strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
-        </section>
-        <section v-if="diagnostic" ref="diagnosticSection" class="panel assessment baseline-target">
-          <header><div><h2>{{ diagnostic.title }}</h2></div><p>{{ diagnostic.instructions }}</p></header>
-          <BeginnerShortcut v-if="diagnostic.phase === 'initial' && !diagnosticResult" :busy="diagnosticSubmitting" :disabled="diagnosticLoading" @skip="skipInitialDiagnostic" />
-          <div class="diagnostic-list">
-            <article v-for="(item, index) in diagnostic.items" :key="item.exercise_id">
-              <header><em>{{ String(index + 1).padStart(2, "0") }}</em><div><strong>{{ item.prompt }}</strong></div></header>
-              <div><button v-for="option in item.options" :key="option.id" :class="{ active: diagnosticAnswers[item.exercise_id] === option.id, unknown: option.id === 'UNKNOWN' }" :aria-pressed="diagnosticAnswers[item.exercise_id] === option.id" :disabled="diagnosticSubmitting || diagnosticLoading || Boolean(diagnosticResult)" @click="diagnosticAnswers[item.exercise_id] = option.id"><b>{{ option.id === 'UNKNOWN' ? '?' : option.id }}</b>{{ option.text }}</button></div>
-            </article>
-          </div>
-          <footer class="diagnostic-actions"><span>{{ Object.keys(diagnosticAnswers).length }} / {{ diagnostic.items.length }} 已作答</span><button class="primary" :disabled="!diagnosticComplete || diagnosticSubmitting || diagnosticLoading || Boolean(diagnosticResult)" @click="submitDiagnostic">{{ diagnosticResult ? "本轮已提交" : diagnosticSubmitting ? "正在生成个性化路径…" : diagnostic.phase === "initial" ? "提交诊断并生成路径" : "提交重测并更新画像" }}</button></footer>
-          <div v-if="diagnosticResult" class="diagnostic-result"><strong>本轮 {{ diagnosticResult.correct_count }} / {{ diagnosticResult.total_count }}</strong><span>结果已转化为学习证据；{{ diagnosticResult.unknown_count ? `“我不知道” ${diagnosticResult.unknown_count} 题已安排回补。` : "画像和后续路径已经刷新。" }}</span><button :disabled="diagnosticLoading" @click="loadDiagnostic('reassessment')">{{ diagnosticLoading ? "正在载入…" : "准备阶段重测" }}</button></div>
         </section>
         <section ref="knowledgeMapSection" class="panel knowledge-map-target" v-reveal>
           <header><div><span class="eyebrow">COURSE LEARNING ROADMAP</span><h2>{{ selectedCourse?.title ?? "课程" }} · 知识路线</h2></div><p>先看全局，再按前置关系逐步推进；每个节点都连接讲解、练习与学习证据。</p></header>
@@ -1313,6 +1336,25 @@ onBeforeUnmount(() => {
             <div v-if="projectSubmission" v-motion="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? "✓" : "!" }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
           </template><div v-else class="empty">从左侧选择一道练习，或按照学习路径进入推荐活动。</div></div>
         </section>
+      </template>
+
+      <template v-else-if="tab === 'assessment'">
+        <div class="assessment-page-heading"><p>专注完成当前课程的能力测评，题目一次显示一道。</p><button class="secondary" @click="openOverview">返回学习总览</button></div>
+        <DiagnosticAssessment
+          v-if="diagnostic"
+          :quiz="diagnostic"
+          :answers="diagnosticAnswers"
+          :question-index="diagnosticQuestionIndex"
+          :busy="diagnosticSubmitting || diagnosticLoading"
+          :result="diagnosticResult"
+          @answer="(id, option) => diagnosticAnswers[id] = option"
+          @update:question-index="diagnosticQuestionIndex = $event"
+          @submit="submitDiagnostic"
+          @skip="skipInitialDiagnostic"
+          @retake="loadDiagnostic('reassessment')"
+          @path="openPath"
+        />
+        <section v-else class="panel assessment-unavailable" role="status"><h2>{{ diagnosticLoading ? '正在准备摸底题目…' : '暂时没能载入摸底题目' }}</h2><p v-if="!diagnosticLoading">请稍后重试，未作答的内容不会计入学习结果。</p><button class="secondary" :disabled="diagnosticLoading" @click="loadDiagnostic(hasLearningEvidence(profile) ? 'reassessment' : 'initial')">重新载入题目</button></section>
       </template>
 
       <template v-else>
