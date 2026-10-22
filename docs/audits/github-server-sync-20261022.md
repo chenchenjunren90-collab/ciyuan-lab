@@ -34,7 +34,11 @@
 - Vitest：16 个测试文件、121 项测试全部通过。
 - Vite 生产构建通过，JS/CSS 与当前线上资源的 SHA-256 相同。
 - 只读审核确认新增运行时依赖随同提交，未发现明确的发布阻碍。
-- 课程与仓库契约校验、Python 静态检查及隔离测试的结果在 PR 描述中记录；未运行的生产写入或容器场景不计为通过。
+- 三课程包校验、仓库契约与 Compose scaffold 校验通过。
+- `ruff check apps/api scripts` 通过；项目标准 `mypy apps/api` 的 142 个文件通过。
+- 后端隔离测试：530 passed、3 skipped、1 warning（187.20 秒）。从空临时目录运行，使用内存 SQLite、关闭真实模型和在线检索，仅允许本机 socket 通信，避免载入仓库环境文件或访问生产服务。
+- 3 项 PostgreSQL/pgvector 集成测试因未配置独立测试库跳过；`test_external_c_sandbox.py` 和 `test_practice_docker_integration.py` 两文件中的 14 项测试主动排除，不计入 3 skipped。本次未重新验收真实 Docker/数据库集成。
+- 告警为既有 `StarletteDeprecationWarning`。非标准的额外 Mypy 命令曾因模块重复命名中止，项目标准命令通过；未为检查结果修改依赖或源码。
 
 本日只读公网检查还确认首页、健康接口和三课程目录可读：C 为 42 个知识点、47 个活动、8 道初始摸底题；Python 为 40、86、12；数据结构为 40、42、8。目录与抽查详情均 HTTP 200。
 
