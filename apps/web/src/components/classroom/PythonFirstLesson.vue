@@ -19,11 +19,11 @@ import {
   type DiagnosticLearningBlock,
   type DiagnosticSubmissionResult,
   type LearnerProfile,
-  type SubmissionResult,
 } from "../../services/api";
 import SafeMarkdown from "../SafeMarkdown.vue";
 import ThemeToggle from "../ThemeToggle.vue";
 import type { PaletteId } from "../../uiPreferences";
+import { currentVerification, type ReviewedSubmission } from "../../services/submittedCode";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
 import {
   loadClassroomSession,
@@ -89,11 +89,12 @@ const messageCounter = ref(0);
 const messageList = ref<HTMLElement | null>(null);
 const practiceCode = ref("");
 const homeworkCode = ref("");
-const practiceResult = ref<SubmissionResult | null>(null);
-const homeworkResult = ref<SubmissionResult | null>(null);
+const practiceResult = ref<ReviewedSubmission | null>(null);
+const homeworkResult = ref<ReviewedSubmission | null>(null);
 const submitting = ref(false);
 const hint = ref("");
 const hintLoading = ref(false);
+watch([practiceCode, homeworkCode], () => { hint.value = ""; }, { flush: "sync" });
 const dialogueRole = ref<ClassroomRole>("teacher");
 const dialogueText = ref("");
 const dialogueLoading = ref(false);
@@ -298,8 +299,8 @@ const progress = computed(() => {
   if (lessonComplete.value) return 100;
   return Math.round(furthestIndex.value / personalizedBeats.value.length * 100);
 });
-const isPracticeAccepted = computed(() => practiceResult.value?.verification?.accepted === true);
-const isHomeworkAccepted = computed(() => homeworkResult.value?.verification?.accepted === true);
+const isPracticeAccepted = computed(() => currentVerification(practiceResult.value, practiceCode.value)?.accepted === true);
+const isHomeworkAccepted = computed(() => currentVerification(homeworkResult.value, homeworkCode.value)?.accepted === true);
 const canAdvance = computed(() => {
   const action = currentBeat.value?.action;
   if (action === "choice") return checkpointResult.value?.accepted === true;
@@ -544,7 +545,7 @@ function restoreSession(draft: ClassroomSessionDraft): boolean {
   homeworkCode.value = draft.homeworkCode;
   practiceResult.value = draft.practiceResult;
   homeworkResult.value = draft.homeworkResult;
-  hint.value = draft.hint;
+  hint.value = "";
   lessonComplete.value = draft.lessonComplete;
   diagnosticResult.value = draft.diagnosticResult;
   const validExerciseIds = new Set(diagnostic.value?.items.map((item) => item.exercise_id) ?? []);
@@ -608,6 +609,7 @@ function pushMessage(
   scopeNotice?: string,
   suggestedKnowledgePointIds?: string[],
   evidenceSource?: ClassroomMessage["evidenceSource"],
+  citations?: ClassroomMessage["citations"],
 ): void {
   messageCounter.value += 1;
   messages.value.push({
@@ -619,6 +621,7 @@ function pushMessage(
     review,
     evidenceCount,
     evidenceSource,
+    citations,
     target,
     scopeNotice,
     suggestedKnowledgePointIds,
@@ -637,7 +640,7 @@ function announceBeat(): void {
     "dict-beat-summary": { role: "peer_summarizer", message: "这次我想把步骤记成“设计键值—处理缺失—累计更新—验证输出”。你会怎样用自己的话总结？" },
   };
   const commentary = peerCommentary[currentBeat.value.id];
-  if (commentary) pushMessage(commentary.role, commentary.message, "reply", "approved", 1);
+  if (commentary) pushMessage(commentary.role, commentary.message, "reply");
 }
 
 async function ensureProfile(isCorrect = true): Promise<void> {
@@ -1246,15 +1249,17 @@ async function submitCode(task: ClassroomCodeTaskData, sourceCode: string, homew
   error.value = "";
   showFeedback("代码已提交，正在隔离环境中运行公开样例和隐藏测试…");
   try {
+    const submittedLesson = lesson.value;
     await ensureProfile(true);
-    if (!componentActive) return;
+    if (!componentActive || lesson.value !== submittedLesson) return;
     const result = await api.submit(props.studentId, "python", task.exercise_id, {
       language: "python",
       source_code: sourceCode,
     });
-    if (!componentActive) return;
-    if (homework) homeworkResult.value = result;
-    else practiceResult.value = result;
+    if (!componentActive || lesson.value !== submittedLesson) return;
+    const reviewed = { ...result, submittedSource: sourceCode };
+    if (homework) homeworkResult.value = reviewed;
+    else practiceResult.value = reviewed;
     if (verificationUnavailable(result)) {
       pushMessage("ta", result.feedback, "reply");
       showFeedback("验证服务暂不可用，本次未产生代码成绩；请稍后重试。");
@@ -1312,14 +1317,17 @@ async function requestHint(task: ClassroomCodeTaskData): Promise<void> {
   try {
     const homework = lesson.value?.homework.exercise_id === task.exercise_id;
     const sourceCode = homework ? homeworkCode.value : practiceCode.value;
-    const verification = (homework ? homeworkResult.value : practiceResult.value)?.verification;
+    const beat = currentBeat.value?.id;
+    const currentLesson = lesson.value;
+    const verification = currentVerification(homework ? homeworkResult.value : practiceResult.value, sourceCode);
     const result = await api.hint(props.studentId, "python", task.exercise_id, 1, {
       sourceCode,
       diagnostics: verification?.diagnostics ?? [],
       passedTests: verification?.passed_tests,
       totalTests: verification?.total_tests,
     });
-    if (!componentActive) return;
+    if (!componentActive || lesson.value !== currentLesson || currentBeat.value?.id !== beat
+        || sourceCode !== (homework ? homeworkCode.value : practiceCode.value)) return;
     hint.value = result.hint;
     pushMessage("ta", result.hint, "reply");
     showFeedback("助教提示已显示在公开样例下方。");
@@ -1384,6 +1392,7 @@ async function askRole(): Promise<void> {
       result.scope_notice ?? undefined,
       result.suggested_knowledge_point_ids,
       onlineEvidence ? "online" : "course",
+      result.citations,
     );
     const finalTrace = result.trace.at(-1)?.detail ?? "";
     if (result.trace.some((step) => step.status === "degraded")) {
@@ -1641,7 +1650,7 @@ onBeforeUnmount(() => {
       <div v-if="classroomView === 'lecture'" class="classroom-layout integrated-learning">
         <section class="teacher-lecture-card">
           <div class="teacher-portrait"><ClassroomPortrait person="teacher" /></div>
-          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "✓ 课程讲义已审核" }}</span><button @click="useConversationStarter('teacher', '老师，我对刚才这一步的理解是：')">向老师提问</button></footer></div>
+          <div><header><span>林老师</span></header><p v-if="latestTeacherQuestion" class="teacher-question">你刚才问：{{ latestTeacherQuestion.content }}</p><p v-if="latestTeacherMessage?.scopeNotice" class="scope-notice"><b>本节外延伸</b>{{ latestTeacherMessage.scopeNotice }}</p><SafeMarkdown :source="latestTeacherMessage?.content ?? '我们从你的当前起点出发。每讲一小步，我都会停下来等你确认。'" /><footer><span>{{ latestTeacherMessage?.review === "limited" ? "△ 依据有限 · 保守回答" : latestTeacherMessage?.review === "approved" ? `✓ 质量监督已审核 · ${latestTeacherMessage.evidenceCount ?? 0} 条${latestTeacherMessage.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "课程讲解" }}</span><button @click="useConversationStarter('teacher', '老师，我对刚才这一步的理解是：')">向老师提问</button></footer></div>
         </section>
         <div class="classroom-scene" :data-phase="currentBeat.phase">
           <ClassroomBoard :beat="currentBeat" :notes="boardNotes[boardNotesKey]" @annotate="annotateBoard" />
@@ -1649,13 +1658,13 @@ onBeforeUnmount(() => {
         </div>
 
         <aside class="conversation-dock" aria-label="课堂互动区">
-          <header><div><p>LIVE CLASS</p><h3>{{ currentBeat.phase === "homework" ? "课后互动区" : "课堂互动区" }}</h3><small>左侧黑板是主线。你可以随时向老师追问、让助教判断理解，或和同伴讨论。</small></div><span><i></i>围绕当前环节</span></header>
+          <header><div><p>{{ currentBeat.title }}</p><h3>{{ currentBeat.phase === "homework" ? "课后互动区" : "课堂互动区" }}</h3><small>提问会附带当前讲解环节。</small></div><span><i></i>围绕当前环节</span></header>
           <div class="discussion-prompts"><button @click="useConversationStarter('teacher', '老师，请把黑板上的这一步再讲细一点：')">请老师讲细一点</button><button @click="useConversationStarter('ta', '助教，请判断我对当前内容的理解是否到位：')">请助教判断理解</button><button @click="useConversationStarter('peer_cautious', '我对这一步的理解是：')">分享我的理解</button><button @click="useConversationStarter('peer_debugger', '阿拓，我卡在这里，我们一起找找原因：')">一起找错误</button></div>
           <div ref="messageList" class="message-list" aria-live="polite">
             <div v-if="!conversationMessages.length" class="discussion-empty"><b>讲解和互动不再分开</b><span>先跟着左侧黑板学习；遇到不明白的地方，可以立即提问或说出自己的理解。</span></div>
             <article v-for="message in conversationMessages" :key="message.id" :class="[`role-${message.role}`, `kind-${message.kind}`]">
               <i :style="{ background: roleMeta[message.role].color }">{{ roleMeta[message.role].icon }}</i>
-              <div><b>{{ message.name }}</b><p v-if="message.scopeNotice" class="scope-notice compact"><b>本节外延伸</b>{{ message.scopeNotice }}</p><SafeMarkdown :source="message.content" /><small v-if="message.review" class="message-audit">{{ message.review === "approved" ? `✓ 已审核 · ${message.evidenceCount ?? 0} 条${message.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "△ 依据有限 · 保守回答" }}</small></div>
+              <div><b>{{ message.name }}</b><p v-if="message.scopeNotice" class="scope-notice compact"><b>本节外延伸</b>{{ message.scopeNotice }}</p><SafeMarkdown :source="message.content" /><details v-if="message.citations?.length" class="message-sources"><summary>查看回答依据</summary><ul><li v-for="item in message.citations" :key="item.chunk_id">{{ item.source_title || item.source_id }} · {{ item.source_id }} / {{ item.chunk_id }}</li></ul></details><small v-if="message.review" class="message-audit">{{ message.review === "approved" ? `✓ 已审核 · ${message.evidenceCount ?? 0} 条${message.evidenceSource === 'online' ? ' Python 官方资料' : '课程依据'}` : "△ 依据有限 · 保守回答" }}</small></div>
             </article>
           </div>
           <footer>
@@ -1667,7 +1676,7 @@ onBeforeUnmount(() => {
             <p v-if="dialogueError" class="dialogue-error" role="alert">{{ dialogueError }}</p>
             <div class="talk-composer"><textarea ref="dialogueComposer" v-model="dialogueText" :disabled="dialogueLoading" rows="2" maxlength="1000" :placeholder="`和${roleMeta[dialogueRole].name}说说你的想法…`" @keydown.ctrl.enter.prevent="askRole"></textarea><button :disabled="dialogueLoading || !dialogueText.trim()" @click="askRole">{{ dialogueLoading ? "思考中" : dialogueError ? "重试发送" : "发送" }}</button></div>
             <small v-if="dialogueLoading" role="status">{{ roleMeta[dialogueRole].name }}正在查阅课程资料并组织回复…</small>
-            <small>回答经过课程资料检索与质量监督</small>
+            <small>Ctrl + Enter 发送 · 可在回复中查看依据</small>
           </footer>
         </aside>
       </div>
@@ -1754,6 +1763,8 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.message-sources { margin:8px 0; color:var(--muted); font-size:13px; overflow-wrap:anywhere }
+.message-sources summary { cursor:pointer }
 .immersive-lesson { min-width: 0; display: grid; gap: 18px; color: #30252a; }
 .classroom-loading, .classroom-error { min-height: 520px; display: grid; place-items: center; align-content: center; gap: 10px; border: 1px solid #eedfe1; border-radius: 22px; background: #fffaf7; }
 .classroom-loading i { width: 34px; height: 34px; border: 3px solid #f1d7d8; border-top-color: #b4233b; border-radius: 50%; animation: spin .8s linear infinite; }

@@ -15,6 +15,7 @@ class QaRequest(StrictModel):
     student_id: str = Field(min_length=1, max_length=128)
     course_id: CourseId
     question: str = Field(min_length=2, max_length=1000)
+    knowledge_point_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 class Citation(StrictModel):

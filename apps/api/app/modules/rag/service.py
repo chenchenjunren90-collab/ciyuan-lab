@@ -41,7 +41,9 @@ class RagQaService:
         self._online_retriever = online_retriever
         self._supplement_enabled = supplement_enabled
 
-    async def answer(self, *, course_id: CourseId, question: str) -> QaResponse:
+    async def answer(
+        self, *, course_id: CourseId, question: str, source_scope: frozenset[str] | None = None
+    ) -> QaResponse:
         # Deterministic security gate runs before ANY retrieval: attempts to
         # extract protected information never reach the index, the model or
         # the online supplement.
@@ -59,7 +61,11 @@ class RagQaService:
                 ],
             )
         try:
-            hits = await self._retriever.search(question, course_id, self._top_k)
+            hits = await self._retriever.search(
+                question, course_id, self._top_k if source_scope is None else 10
+            )
+            if source_scope is not None:
+                hits = [hit for hit in hits if hit.source_id in source_scope][:self._top_k]
         except KnowledgeRetrievalError:
             return QaResponse(
                 status="insufficient_evidence",
@@ -74,7 +80,7 @@ class RagQaService:
                 ],
             )
         weak_hits = bool(hits) and max(hit.score for hit in hits) < _WEAK_HIT_SCORE_FLOOR
-        if not hits or weak_hits:
+        if source_scope is None and (not hits or weak_hits):
             supplement = await self._maybe_supplement(course_id=course_id, question=question)
             if supplement is not None:
                 return supplement

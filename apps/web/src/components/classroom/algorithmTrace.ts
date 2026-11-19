@@ -2,9 +2,30 @@ export type TraceKind = "pointer" | "array" | "memory" | "stack" | "queue" | "bi
 export interface TraceFrame { cells: string[]; active: number[]; note: string; variables: Record<string, string>; output: string }
 export interface TeachingTrace { title: string; code: string; invariant: string; complexity: string; frames: TraceFrame[] }
 
+/** Capture the visible frame at the learner's request, even if playback resumes. */
+export function frameQuestion(trace: TeachingTrace, index: number, target?: number, input?: number[]): string {
+  const frame = trace.frames[index];
+  if (!frame) throw new RangeError("当前步骤不存在");
+  const variables = Object.entries(frame.variables).map(([key, value]) => `${key}=${value}`);
+  if (target !== undefined && frame.variables.target === undefined) variables.push(`target=${target}`);
+  return [
+    `我在看「${trace.title}」第 ${index + 1} 步。`,
+    input ? "输入：[" + input.join("，") + "]。" : "",
+    `画面：${frame.cells.join("，") || "空结构"}。`,
+    variables.join("，"),
+    frame.note,
+    frame.output ? "当前输出：" + frame.output : "",
+    "这一步为什么这样做？",
+  ].filter(Boolean).join("\n");
+}
+
 export const traceKinds: Record<TraceKind, string> = {
   pointer: "指针交换", array: "数组遍历", memory: "动态内存生命周期", stack: "栈：后进先出",
   queue: "队列：先进先出", binary: "二分查找首个位置", insertion: "插入排序", bfs: "图的广度优先搜索",
+};
+export const traceConcepts: Record<TraceKind, string> = {
+  pointer: "C-PTR-01", array: "C-ARRAY-01", memory: "C-MEM-01", stack: "DS-STACK-01",
+  queue: "DS-QUEUE-01", binary: "DS-SEARCH-02", insertion: "DS-SORT-02", bfs: "DS-GRAPH-02",
 };
 export function traceForConcept(id: string): TraceKind | null {
   if (id.startsWith("C-PTR")) return "pointer";
@@ -87,8 +108,11 @@ export function buildTrace(kind: TraceKind, input: number[], target = 2): Teachi
     while (left < right) {
       const mid = left + Math.floor((right - left) / 2);
       frame(values, [mid], `比较 a[${mid}] = ${values[mid]} 与 ${target}。`, { left: String(left), right: String(right), mid: String(mid) });
-      if (values[mid]! < target) left = mid + 1; else right = mid;
-      frame(values, [], "缩小区间；相等时继续收缩右边界以找第一次出现。", { left: String(left), right: String(right) });
+      const moveLeft = values[mid]! < target;
+      if (moveLeft) left = mid + 1; else right = mid;
+      const reason = moveLeft ? "中点值小于目标，令 left = mid + 1。"
+        : values[mid] === target ? "命中目标，令 right = mid，继续找更早的匹配。" : "中点值大于目标，令 right = mid。";
+      frame(values, [mid], reason, { left: String(left), right: String(right), mid: String(mid) });
     }
     const found = left < values.length && values[left] === target;
     frame(values, found ? [left] : [], found ? "已找到第一个匹配位置。" : "区间收敛，但该位置不等于目标或已越过末尾。", { left: String(left), right: String(right) }, found ? String(left) : "-1");

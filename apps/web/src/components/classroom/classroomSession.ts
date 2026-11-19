@@ -5,8 +5,8 @@ import type {
   ClassroomLesson,
   ClassroomRole,
   DiagnosticSubmissionResult,
-  SubmissionResult,
 } from "../../services/api";
+import type { ReviewedSubmission } from "../../services/submittedCode";
 import type { KeyValueStorage } from "../../uiPreferences";
 import type { BoardNotesByBeat } from "./boardTools";
 
@@ -20,6 +20,7 @@ export interface PersistedClassroomMessage {
   kind: "lesson" | "reply" | "student" | "checkpoint";
   review?: "approved" | "limited";
   evidenceCount?: number;
+  citations?: ClassroomDialogueResponse["citations"];
   evidenceSource?: "course" | "online";
   target?: ClassroomRole;
   scopeNotice?: string;
@@ -45,8 +46,8 @@ export interface ClassroomSessionDraft {
   dialogueRole?: ClassroomRole;
   practiceCode: string;
   homeworkCode: string;
-  practiceResult: SubmissionResult | null;
-  homeworkResult: SubmissionResult | null;
+  practiceResult: ReviewedSubmission | null;
+  homeworkResult: ReviewedSubmission | null;
   hint: string;
   lessonComplete: boolean;
   diagnosticResult: DiagnosticSubmissionResult | null;

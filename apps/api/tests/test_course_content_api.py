@@ -75,6 +75,22 @@ def test_filters_activities_by_knowledge_point() -> None:
     assert all("PY-FUNC-01" in item["concept_ids"] for item in response.json())
 
 
+def test_project_links_to_runnable_course_exercises() -> None:
+    for course, project in (
+        ("c", "C-PROJ-RECORD-01"),
+        ("python", "PY-PROJ-STAGE-CONTROL-01"),
+        ("data_structures", "DS-PROJ-NETWORK-01"),
+    ):
+        base = f"/api/v1/courses/{course}/activities/"
+        detail = client.get(base + project).json()
+        assert detail["verification_exercise_ids"]
+        for exercise_id in detail["verification_exercise_ids"]:
+            task = client.get(base + exercise_id).json()
+            assert task["type"] in {"code", "debug"}
+            assert task["course"] == course
+            assert task["verification_exercise_ids"] == []
+
+
 def test_exposes_beginner_scaffolding_without_hidden_tests() -> None:
     response = client.get("/api/v1/courses/python/activities/PY-BASE-04-H1")
 

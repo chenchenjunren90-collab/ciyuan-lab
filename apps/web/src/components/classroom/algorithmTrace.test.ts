@@ -1,7 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { buildTrace, parseTraceInput } from "./algorithmTrace";
+import { buildTrace, frameQuestion, parseTraceInput } from "./algorithmTrace";
 
 describe("deterministic teaching models", () => {
+  it("captures the branch, target and boundaries at the selected binary-search step", () => {
+    const input = [1, 2, 2, 5, 8];
+    const trace = buildTrace("binary", input, 2);
+    const first = frameQuestion(trace, 2, 2, input);
+    expect(first).toContain("命中目标");
+    expect(first).toContain("right=2");
+    expect(frameQuestion(trace, 6, 2, input)).toContain("left=1");
+    expect(first).not.toContain("left=1");
+    expect(frameQuestion(trace, trace.frames.length - 1, 2)).toContain("当前输出：1");
+  });
   it("parses empty, signed and Chinese comma input without interpreting code", () => {
     expect(parseTraceInput("")).toEqual([]);
     expect(parseTraceInput("-3，0 5")).toEqual([-3, 0, 5]);

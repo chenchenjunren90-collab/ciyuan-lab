@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from "vue";
-import { api, type ActivityDetail, type ActivitySummary, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile, type QaResponse, type SubmissionResult } from "../../services/api";
-import { qaFeedbackLabel, serviceFailure, verificationUnavailable } from "../../services/workspaceState";
+import { computed, nextTick, onBeforeUnmount, ref, watch } from "vue";
+import { api, type ActivityDetail, type ActivitySummary, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile } from "../../services/api";
+import { serviceFailure, verificationUnavailable } from "../../services/workspaceState";
 import SafeMarkdown from "../SafeMarkdown.vue";
 import ClassroomCodeTask from "./ClassroomCodeTask.vue";
+import { currentVerification, type ReviewedSubmission } from "../../services/submittedCode";
+import CourseQuestionPanel from "./CourseQuestionPanel.vue";
 import AlgorithmLab from "./AlgorithmLab.vue";
 import { traceForConcept } from "./algorithmTrace";
 import { asCodeTask, chapters, courseNames, lessonScenes, orderKnowledge, readLessonPosition, recommendPoint, type FoundationCourse } from "./courseLearning";
@@ -12,10 +14,25 @@ const props = defineProps<{ courseId: FoundationCourse; studentId: string; point
 const emit = defineEmits<{ profileUpdated: [profile: LearnerProfile]; openProjects: []; openAssessment: [] }>();
 const selected = ref(""), point = ref<KnowledgePointDetail | null>(null), exercises = ref<ActivitySummary[]>([]);
 const activity = ref<ActivityDetail | null>(null), view = ref("learn"), sceneIndex = ref(0);
-const loading = ref(false), taskLoading = ref(false), busy = ref(false), hintBusy = ref(false), asking = ref(false);
-const error = ref(""), taskError = ref(""), qaError = ref(""), search = ref(""), code = ref(""), answer = ref("");
-const question = ref(""), qa = ref<QaResponse | null>(null), result = ref<SubmissionResult | null>(null);
+const loading = ref(false), taskLoading = ref(false), busy = ref(false), hintBusy = ref(false);
+const error = ref(""), taskError = ref(""), search = ref(""), code = ref(""), answer = ref("");
+const result = ref<ReviewedSubmission | null>(null);
 const hint = ref(""), hintLevel = ref(0), reflection = ref("");
+const syllabusExpanded = ref(false);
+const syllabusToggle = ref<HTMLButtonElement>();
+const directoryBody = ref<HTMLElement>();
+watch([selected, syllabusExpanded], async () => {
+  await nextTick();
+  const directory = directoryBody.value;
+  const current = directory?.querySelector<HTMLElement>('[aria-current="step"]');
+  if (!directory?.clientHeight || !current) return;
+  const bounds = directory.getBoundingClientRect();
+  const row = current.getBoundingClientRect();
+  const searchHeight = directory.querySelector('label')?.clientHeight ?? 0;
+  if (row.top < bounds.top + searchHeight || row.bottom > bounds.bottom) {
+    directory.scrollTop += row.top - bounds.top - (directory.clientHeight - row.height) / 2;
+  }
+});
 let scope = 0, taskScope = 0, alive = true;
 const name = computed(() => courseNames[props.courseId]);
 const coursePoints = computed(() => props.points.filter(item => item.id.startsWith(props.courseId === 'c' ? 'C-' : 'DS-')));
@@ -46,10 +63,14 @@ function restoredCode(): string { try { return sessionStorage.getItem(taskKey())
 
 async function selectPoint(id: string) {
   if (busy.value || !coursePoints.value.some(item => item.id === id)) return;
+  if (syllabusExpanded.value) {
+    syllabusExpanded.value = false;
+    syllabusToggle.value?.focus();
+  }
   const token = ++scope; ++taskScope;
   selected.value = id; point.value = null; activity.value = null; exercises.value = [];
-  error.value = ""; taskError.value = ""; qa.value = null; qaError.value = ""; asking.value = false;
-  question.value = ""; reflection.value = ""; result.value = null; hint.value = ""; hintBusy.value = false;
+  error.value = ""; taskError.value = "";
+  reflection.value = ""; result.value = null; hint.value = ""; hintBusy.value = false;
   view.value = "learn"; sceneIndex.value = 0; loading.value = true; taskLoading.value = false;
   try {
     const [detail, items] = await Promise.all([api.knowledgePoint(props.courseId, id), api.activities(props.courseId, { knowledgePointId: id })]);
@@ -80,13 +101,14 @@ async function submit() {
   const isCode = current.type === "code" || current.type === "debug";
   if (!(isCode ? code.value : answer.value).trim()) { taskError.value = "请先填写答案。"; return; }
   const token = taskScope;
+  const submittedSource = code.value;
   busy.value = true; taskError.value = ""; result.value = null;
   try {
     const response = await api.submit(props.studentId, props.courseId, current.id, isCode
-      ? { language: current.evaluation.runtime?.language, source_code: code.value }
+      ? { language: current.evaluation.runtime?.language, source_code: submittedSource }
       : { response: answer.value });
     if (!alive || token !== taskScope) return;
-    result.value = response;
+    result.value = isCode ? { ...response, submittedSource } : response;
     const mastery = new Map((props.profile?.mastery ?? []).map(item => [item.knowledge_point_id, item]));
     response.mastery_updated.forEach(item => mastery.set(item.knowledge_point_id, item));
     emit("profileUpdated", { student_id: props.studentId, course_id: props.courseId, mastery: [...mastery.values()] });
@@ -97,24 +119,22 @@ async function requestHint() {
   if (!activity.value || hintBusy.value || hintLevel.value >= 3) return;
   const token = taskScope;
   hintBusy.value = true;
+  const draft = code.value;
+  const verification = currentVerification(result.value, draft);
   try {
-    const response = await api.hint(props.studentId, props.courseId, activity.value.id, (hintLevel.value + 1) as 1 | 2 | 3, { sourceCode: code.value, diagnostics: result.value?.verification?.diagnostics });
-    if (alive && token === taskScope) { hint.value = response.hint; hintLevel.value = response.level; }
+    const response = await api.hint(props.studentId, props.courseId, activity.value.id, (hintLevel.value + 1) as 1 | 2 | 3, {
+      sourceCode: draft, diagnostics: verification?.diagnostics,
+      passedTests: verification?.passed_tests, totalTests: verification?.total_tests,
+    });
+    if (alive && token === taskScope && code.value === draft) { hint.value = response.hint; hintLevel.value = response.level; }
   } catch (cause) { if (alive && token === taskScope) taskError.value = serviceFailure(cause); }
   finally { if (alive && token === taskScope) hintBusy.value = false; }
 }
-async function ask() {
-  if (!question.value.trim() || asking.value) return;
-  const token = scope;
-  asking.value = true; qa.value = null; qaError.value = "";
-  try {
-    // Preserve the student's literal question; server applies course isolation and evidence gates.
-    const response = await api.ask(props.studentId, props.courseId, question.value.trim());
-    if (alive && token === scope) qa.value = response;
-  } catch (cause) { if (alive && token === scope) qaError.value = serviceFailure(cause); }
-  finally { if (alive && token === scope) asking.value = false; }
-}
-watch(code, value => { if (activity.value) saveValue(taskKey(), value); });
+watch(code, value => {
+  hint.value = "";
+  hintLevel.value = 0;
+  if (activity.value) saveValue(taskKey(), value);
+});
 watch(() => [props.courseId, props.studentId, props.points.map(item => item.id).join(",")], () => {
   if (!coursePoints.value.length) return;
   let saved = ""; try { saved = readLessonPosition(sessionStorage, positionKey()); } catch { /* SSR / unavailable storage */ }
@@ -125,13 +145,36 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
 
 <template>
   <section class="foundation-classroom">
-    <header class="masthead"><div><small>{{ name }} · 分段学习与验证</small><h1>把每一步，想明白。</h1><p>{{ courseId === 'c' ? '从变量走到指针与内存，观察对象怎样被程序改变。' : '从结构走到算法，跟踪每一次入队、移动和边界收缩。' }}</p></div><div class="entry-actions"><button @click="emit('openAssessment')">能力摸底</button><button @click="emit('openProjects')">进入项目实践 →</button></div></header>
-    <div class="workspace">
-      <aside class="syllabus" aria-label="课程目录"><label>查找知识点<input v-model="search" placeholder="名称或知识点编号" /></label><button class="recommend" :disabled="busy || !recommended" @click="selectPoint(recommended)">从推荐起点继续 →</button><p class="small">{{ profile?.mastery.some(item => item.evidence_count > 0) ? '推荐依据：已有测评与前置关系' : '尚无测评证据，按前置顺序学习' }}</p><section v-for="group in groups" :key="group.title"><h2>{{ group.title }}</h2><button v-for="item in group.points" :key="item.id" :disabled="busy" :class="{ selected: selected === item.id }" :aria-current="selected === item.id ? 'step' : undefined" @click="selectPoint(item.id)"><span>{{ item.title }}</span><small>{{ mastered.has(item.id) ? '已掌握' : item.id }}</small></button></section><p v-if="!groups.length">没有匹配的知识点。</p></aside>
+    <div class="course-layout">
+      <aside class="syllabus" aria-label="课程目录">
+        <h2 class="directory-title">课程目录</h2>
+        <button ref="syllabusToggle" class="directory-toggle" aria-controls="course-directory" :aria-expanded="syllabusExpanded" @click="syllabusExpanded = !syllabusExpanded">
+          <strong>课程目录</strong><span>{{ syllabusExpanded ? '收起 −' : '展开 ＋' }}</span>
+        </button>
+        <div id="course-directory" ref="directoryBody" class="directory-body" :class="{ expanded: syllabusExpanded }">
+          <label><span class="search-label">查找知识点</span><input v-model="search" type="search" placeholder="搜索名称或编号" /></label>
+          <button class="recommend" :disabled="busy || !recommended" @click="selectPoint(recommended)">从推荐起点继续 →</button>
+          <p class="small">{{ profile?.mastery.some(item => item.evidence_count > 0) ? '依据已有测评与前置关系推荐' : '暂无测评，按前置顺序推荐' }}</p>
+          <section v-for="group in groups" :key="group.title"><h3>{{ group.title }}</h3>
+            <button v-for="item in group.points" :key="item.id" :disabled="busy" :class="{ selected: selected === item.id }" :aria-current="selected === item.id ? 'step' : undefined" @click="selectPoint(item.id)">
+              <span>{{ item.title }}</span><small>{{ mastered.has(item.id) ? '已掌握' : item.id }}</small>
+            </button>
+          </section>
+          <p v-if="!groups.length">没有匹配的知识点。</p>
+        </div>
+      </aside>
       <section class="lesson" aria-label="当前知识点课堂">
         <p v-if="loading" role="status">正在读取课程讲解与练习…</p><div v-else-if="error" role="alert"><p>{{ error }}</p><button @click="selectPoint(selected)">重新加载</button></div>
         <template v-else-if="point">
-          <header class="lesson-heading"><small>{{ point.id }} · 约 {{ point.estimated_minutes }} 分钟 · {{ point.status === 'reviewed' ? '已审核' : '教学草稿，待教师审核' }}</small><h2>{{ point.title }}</h2><p v-for="objective in point.learning_objectives" :key="objective">{{ objective }}</p><div v-if="prerequisites.length" class="prerequisites"><span>前置知识</span><button v-for="item in prerequisites" :key="item.id" :disabled="busy" @click="selectPoint(item.id)">{{ item.title }} {{ item.mastered ? '✓' : '↗' }}</button></div></header>
+          <header class="lesson-heading">
+            <div class="course-links"><span>{{ name }} · {{ point.id }}</span><div><button @click="emit('openAssessment')">能力摸底</button><button @click="emit('openProjects')">项目实践 ↗</button></div></div>
+            <h2>{{ point.title }}</h2>
+            <small>约 {{ point.estimated_minutes }} 分钟 · {{ point.status === 'reviewed' ? '已审核' : '教学草稿，待教师审核' }}</small>
+            <details class="lesson-goals" :open="view === 'learn'"><summary>学习目标与前置知识</summary>
+              <ul><li v-for="objective in point.learning_objectives" :key="objective">{{ objective }}</li></ul>
+              <div v-if="prerequisites.length" class="prerequisites"><span>前置知识</span><button v-for="item in prerequisites" :key="item.id" :disabled="busy" @click="selectPoint(item.id)">{{ item.title }} {{ item.mastered ? '✓' : '↗' }}</button></div>
+            </details>
+          </header>
           <nav class="views" aria-label="课堂学习环节"><button v-for="[id, title] in [['learn','分段讲解'],['lab','交互实验'],['practice','随堂练习'],['ask','课程答疑']]" :key="id" :aria-pressed="view === id" @click="view = id">{{ title }}</button></nav>
           <section v-if="view === 'learn'" class="reading">
             <div v-if="scene" class="scene"><small>讲解 {{ sceneIndex + 1 }} / {{ scenes.length }}</small><h3>{{ scene.title }}</h3><SafeMarkdown :source="scene.content" /><div class="controls"><button :disabled="sceneIndex === 0" @click="sceneIndex--">上一段</button><button :disabled="sceneIndex === scenes.length - 1" @click="sceneIndex++">下一段 →</button></div></div>
@@ -141,7 +184,7 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
             <label v-if="point.lesson.checkpoint" class="reflection">先说说你的理解：{{ point.lesson.checkpoint.prompt }}<textarea v-model="reflection" rows="3" placeholder="写下预测，再去实验或练习区验证。此处不计分。" /><small>{{ point.lesson.checkpoint.guidance }}</small></label>
             <footer class="reading-footer"><span>讲解来源：{{ point.source_refs.join('、') }}</span><button @click="view = 'practice'">用练习检验理解 →</button></footer>
           </section>
-          <section v-else-if="view === 'lab'"><p v-if="!traceKind" class="small">当前知识点暂无专属演示。你可以探索本课程的实验主题，再回到本节练习。</p><AlgorithmLab :key="selected" :course-id="courseId" :initial-kind="traceKind ?? (courseId === 'c' ? 'array' : 'stack')" /></section>
+          <section v-else-if="view === 'lab'"><p v-if="!traceKind" class="small">当前知识点暂无专属演示。你可以探索本课程的实验主题，再回到本节练习。</p><AlgorithmLab :key="selected" :student-id="studentId" :course-id="courseId" :initial-kind="traceKind ?? (courseId === 'c' ? 'array' : 'stack')" /></section>
           <section v-else-if="view === 'practice'" class="practice">
             <nav class="task-picker" aria-label="本节练习"><button v-for="item in exercises" :key="item.id" :disabled="busy" :aria-pressed="activity?.id === item.id" @click="selectTask(item.id)">{{ item.title }}</button></nav>
             <p v-if="taskLoading" role="status">正在读取题目…</p><p v-if="taskError" role="alert">{{ taskError }}</p>
@@ -150,7 +193,7 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
               <p v-if="result && activity.reflection_prompt">复盘：{{ activity.reflection_prompt }}</p><button v-if="result && !verificationUnavailable(result)" :disabled="busy || !recommended" @click="selectPoint(recommended)">继续推荐知识点 →</button>
             </template><p v-else-if="!taskLoading && !exercises.length">本知识点暂无可用练习。</p>
           </section>
-          <section v-else class="tutor"><p>提问当前课程的概念、代码或算法边界。回答依据已审核课程资料，证据不足时会明确提示。</p><form @submit.prevent="ask"><label>你的问题<textarea v-model="question" rows="4" maxlength="2000" :placeholder="courseId === 'c' ? '例如：为什么修改指针指向的值会改变原变量？' : '例如：为什么二分查找命中后还要继续缩小右边界？'" /></label><button :disabled="asking || !question.trim()">{{ asking ? '正在检索与复核…' : '发送问题' }}</button></form><p v-if="qaError" role="alert">{{ qaError }}</p><article v-if="qa"><h3>{{ qaFeedbackLabel(qa) }}</h3><SafeMarkdown :source="qa.answer || '当前没有足够的课程证据。'" /><ul><li v-for="citation in qa.citations" :key="citation.chunk_id">{{ citation.source_title ?? citation.source_id }} · {{ citation.chunk_id }}</li></ul><details><summary>检索与复核过程</summary><p v-for="(step, i) in qa.trace" :key="i">{{ step.detail }}</p></details></article></section>
+          <CourseQuestionPanel v-show="view === 'ask'" :key="selected" :student-id="studentId" :course-id="courseId" />
         </template><p v-else>课程目录载入后即可选择知识点开始学习。</p>
       </section>
     </div>
@@ -158,5 +201,59 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
 </template>
 
 <style scoped>
-.foundation-classroom{color:var(--ink);font-size:16px;}.masthead{display:flex;justify-content:space-between;gap:24px;align-items:center;margin:12px 0 28px;}.masthead h1{font-size:clamp(25px,3vw,36px);margin:10px 0;}.masthead p,.small,small{color:var(--muted);line-height:1.7;}.entry-actions{display:flex;gap:8px;flex-wrap:wrap;}button,input,textarea{font:inherit;color:var(--ink);border:1px solid var(--line);background:var(--surface-raised);border-radius:8px;}button{min-height:44px;padding:10px 14px;cursor:pointer;}button:disabled{opacity:.45;cursor:default;}input,textarea{padding:10px;max-width:100%;}textarea{width:100%;resize:vertical;line-height:1.7;}.workspace{display:grid;grid-template-columns:245px minmax(0,1fr);gap:24px;}.syllabus{max-height:calc(100vh - 160px);overflow:auto;position:sticky;top:20px;padding:16px;background:var(--surface-raised);border:1px solid var(--line);border-radius:12px;align-self:start;}.syllabus label{display:grid;gap:8px;font-size:13px;}.syllabus input{width:100%;}.syllabus h2{font-size:13px;margin:24px 0 10px;color:var(--muted);}.syllabus button{display:grid;width:100%;text-align:left;gap:5px;margin:4px 0;border-color:transparent;background:transparent;font-size:13px;}.syllabus .selected{border-color:var(--accent);background:var(--accent-pale);color:var(--accent-ink);}.syllabus .recommend{margin-top:12px;color:var(--accent-ink);border-color:var(--line);}.lesson{min-width:0;}.lesson-heading{border-bottom:1px solid var(--line);padding-bottom:20px;}.lesson-heading h2{margin:10px 0;font-size:25px;}.lesson-heading p{font-size:14px;line-height:1.7;margin:6px 0;}.prerequisites{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;margin-top:15px;}.views{display:flex;gap:8px;margin:20px 0;flex-wrap:wrap;}.views [aria-pressed=true],.task-picker [aria-pressed=true]{background:var(--accent-pale);color:var(--accent-ink);border-color:var(--accent);}.reading>article,.scene,.reflection,.tutor>article,.practice>form{display:block;margin-bottom:20px;padding:24px;background:var(--surface-raised);border:1px solid var(--line);border-radius:12px;line-height:1.85;}.reading h3{margin:0 0 14px;}.scene h3{margin-top:8px;}.controls{display:flex;justify-content:space-between;margin-top:20px;}pre{white-space:pre;overflow:auto;padding:18px;background:var(--code);color:var(--code-ink);border-radius:8px;font:13px/1.8 Consolas,monospace;}.reading li{margin:8px 0;}.reflection textarea{display:block;margin:12px 0;}.reading-footer{display:flex;justify-content:space-between;gap:20px;align-items:center;flex-wrap:wrap;font-size:12px;overflow-wrap:anywhere;}.task-picker{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;}fieldset{border:0;padding:0;margin:20px 0;}fieldset label{display:flex;gap:10px;align-items:center;min-height:48px;line-height:1.7;}form>label{display:grid;gap:8px;}form>button{margin-top:12px;}.tutor li{overflow-wrap:anywhere;}button:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:3px;}@media(max-width:1000px){.workspace{grid-template-columns:200px minmax(0,1fr);gap:14px;}}@media(max-width:760px){input,textarea{font-size:16px;}.workspace{grid-template-columns:1fr;}.syllabus{position:static;max-height:240px;}.masthead{display:block;}.entry-actions{margin-top:14px;}.reading>article,.scene,.reflection{padding:16px;}}
+.foundation-classroom { color:var(--ink); font-size:16px; }
+.course-layout { display:grid; grid-template-columns:clamp(168px,14vw,210px) minmax(0,1fr); gap:clamp(12px,1.4vw,24px); align-items:start; margin-top:20px; }
+button,input,textarea { font:inherit; color:var(--ink); border:1px solid var(--line); border-radius:8px; background:var(--surface-raised); }
+button { min-height:44px; padding:8px 12px; cursor:pointer; }
+button:disabled { opacity:.5; cursor:default; }
+input,textarea { max-width:100%; padding:10px; } textarea { width:100%; resize:vertical; line-height:1.7; }
+.syllabus { min-width:0; position:sticky; top:16px; padding:4px 12px 0 0; border-inline-end:1px solid var(--line); }
+.directory-body { max-height:calc(100vh - 78px); overflow-y:auto; overscroll-behavior-y:contain; scrollbar-width:thin; }
+.directory-title { margin:0 0 12px; font-size:16px; }
+.syllabus .directory-toggle { display:none; }
+.directory-body label { display:grid; position:sticky; top:0; z-index:1; background:var(--surface); }
+.search-label { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.syllabus input { width:100%; min-height:42px; font-size:14px; }
+.directory-body section { margin-top:18px; }
+.directory-body h3 { font-size:13px; margin:0 0 5px; color:var(--muted); }
+.directory-body button { display:grid; width:100%; gap:1px; text-align:left; border:0; background:transparent; font-size:14px; padding:7px 10px; line-height:1.45; }
+.directory-body button:hover { background:var(--surface-muted); }
+.directory-body button.selected { color:var(--accent-ink); background:var(--accent-pale); box-shadow:inset 3px 0 var(--accent); font-weight:700; }
+.directory-body button small,.small { font-size:12px; color:var(--muted); }
+.directory-body .recommend { margin-top:6px; color:var(--accent-ink); padding-inline:0; font-weight:650; }
+.directory-body .small { margin:0; line-height:1.5; }
+.lesson { min-width:0; }.lesson-heading h2 { margin:3px 0; font-size:clamp(24px,2.4vw,34px); }.lesson-heading small { color:var(--muted); }
+.course-links { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:4px 12px; }
+.course-links span { color:var(--accent-ink); font-size:13px; font-weight:650; }
+.course-links div { display:flex; gap:6px; }
+.course-links button { padding:4px 8px; min-height:40px; color:var(--muted); background:transparent; border:0; font-size:13px; }
+.course-links button:hover { background:var(--surface-muted); color:var(--ink); }
+.lesson-goals { margin-top:10px; font-size:14px; }
+.lesson-goals summary { cursor:pointer; padding-block:8px; font-weight:600; }
+.lesson-goals ul { margin:6px 0; padding-inline-start:20px; line-height:1.7; }
+.prerequisites,.views,.task-picker,.controls,.reading-footer { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.prerequisites { font-size:13px; } .prerequisites button { min-height:36px; }
+.views { margin:12px 0 18px; border-bottom:1px solid var(--line); gap:0; }
+.views button { border:0; border-radius:0; padding-inline:clamp(8px,1.3vw,19px); color:var(--muted); background:transparent; }
+.views [aria-pressed=true] { color:var(--accent-ink); font-weight:700; box-shadow:inset 0 -3px var(--accent); }
+.reading>article,.scene,.reflection,.practice>form { display:block; margin-bottom:16px; padding:clamp(16px,2vw,26px); border:1px solid var(--line); border-radius:14px; background:var(--surface-raised); line-height:1.85; }
+.reading h3 { margin:0 0 12px; } .reading li { margin:8px 0; }
+.controls,.reading-footer { justify-content:space-between; margin-top:18px; }
+.reading-footer { font-size:12px; overflow-wrap:anywhere; }
+pre { white-space:pre; overflow:auto; padding:16px; background:var(--code); color:var(--code-ink); border-radius:8px; font:14px/1.7 Consolas,monospace; }
+.reflection textarea { display:block; margin:12px 0; }
+.task-picker { margin-bottom:16px; }.task-picker [aria-pressed=true] { color:var(--accent-ink); background:var(--accent-pale); }
+fieldset { border:0; padding:0; margin:16px 0; } fieldset label { display:flex; align-items:center; gap:10px; min-height:48px; }
+form>button { margin-top:12px; } :is(button,input,textarea,summary):focus-visible { outline:2px solid var(--accent-ink); outline-offset:2px; }
+@media(max-width:1050px) {
+  .course-layout { grid-template-columns:minmax(0,1fr); }
+  .syllabus { position:static; max-height:none; padding:0; border:1px solid var(--line); border-radius:10px; background:var(--surface-raised); overflow:visible; }
+  .directory-title { display:none; } .syllabus .directory-toggle { display:flex; width:100%; align-items:center; justify-content:space-between; padding:10px 14px; border:0; }
+  .directory-toggle span { color:var(--muted); font-size:13px; }
+  .directory-body { display:none; } .directory-body.expanded { display:block; max-height:45vh; padding:12px; overflow:auto; border-top:1px solid var(--line); }
+}
+@media(max-width:600px) {
+  .course-layout { margin-top:12px; }.views { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }.views button { font-size:14px; padding-inline:2px; }
+  input,textarea,.syllabus input { font-size:16px; }
+}
 </style>

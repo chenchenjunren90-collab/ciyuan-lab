@@ -240,6 +240,7 @@ class CoursePackRepository:
             prompt=self._optional_string(document.get("prompt")),
             summary=self._optional_string(document.get("summary")),
             requirements=self._string_list(document.get("requirements")),
+            verification_exercise_ids=self._string_list(document.get("verification_exercise_ids")),
             deliverables=self._string_list(document.get("deliverables")),
             evaluation=evaluation,
             scenario_scope=self._optional_string(document.get("scenario_scope")),

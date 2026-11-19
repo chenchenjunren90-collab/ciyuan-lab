@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import ProjectStudio from "./components/ProjectStudio.vue";
+import { currentVerification, type ReviewedSubmission } from "./services/submittedCode";
+import { projectCheck, readProjectChecks, type ProjectCheck } from "./services/projectChecks";
 import DiagnosticAssessment from "./components/DiagnosticAssessment.vue";
 import { beginnerDiagnosticAnswers } from "./services/beginnerDiagnostic";
 import { createWorkspaceNavigation, workspaceScrollY, type WorkspacePage } from "./services/workspaceNavigation";
@@ -12,7 +15,7 @@ import {
   type HintResponse, type KnowledgePoint, type KnowledgePointDetail, type LearnerProfile,
   type NextActivity, type PlanStage, type ProjectSubmissionResponse, type QaResponse,
   type GeneratedCodeProblem, type GeneratedProblemSubmissionResponse,
-  type GeneratedScenarioProject, type ScenarioContext, type SubmissionResult
+  type GeneratedScenarioProject, type ScenarioContext
 } from "./services/api";
 import { createRequestScope, hasLearningEvidence, loadCourseWorkspace, measuredMastery, qaFeedbackLabel, readProjectDraft, readSavedIds, serviceFailure, verificationUnavailable } from "./services/workspaceState";
 import SafeMarkdown from "./components/SafeMarkdown.vue";
@@ -142,7 +145,7 @@ const qa = ref<QaResponse | null>(null);
 const qaLoading = ref(false);
 const answer = ref("");
 const code = ref("");
-const submission = ref<SubmissionResult | null>(null);
+const submission = ref<ReviewedSubmission | null>(null);
 const submitting = ref(false);
 const scenario = ref<ScenarioContext | null>(null);
 const generatedProject = ref<GeneratedScenarioProject | null>(null);
@@ -156,6 +159,25 @@ const projectRepository = ref("");
 const projectTests = ref("");
 const projectSubmission = ref<ProjectSubmissionResponse | null>(null);
 const projectSubmitting = ref(false);
+const projectChecks = ref<Record<string, ProjectCheck>>({});
+const originProject = ref<ActivityDetail | null>(null);
+const resumeProjectChecks = ref(false);
+function openProjectExercise(id: string) {
+  const project = activity.value;
+  if (project?.type === "project" && project.verification_exercise_ids?.includes(id)) {
+    void openActivity(id, "practice", project);
+  }
+}
+function projectCheckKey(id: string) { return projectDraftKey(id) + ":checks"; }
+function projectCodeKey(projectId: string, exerciseId: string) {
+  return projectDraftKey(projectId) + ":exercise:" + exerciseId;
+}
+function recordProjectCheck(project: ActivityDetail, exercise: string, check: ProjectCheck) {
+  const key = projectCheckKey(project.id);
+  const checks = readProjectChecks(localStorage.getItem(key), project.verification_exercise_ids ?? []);
+  checks[exercise] = check;
+  localStorage.setItem(key, JSON.stringify(checks));
+}
 const knowledgeQuery = ref("");
 const activityFilter = ref<ActivityFilter>("all");
 const activitySort = ref<ActivitySort>("recommended");
@@ -166,6 +188,7 @@ const adaptiveProblem = ref<GeneratedCodeProblem | null>(null);
 const adaptiveCode = ref("");
 const adaptiveSubmission = ref<GeneratedProblemSubmissionResponse | null>(null);
 const adaptiveAttemptIndex = ref(1);
+const adaptiveSubmittedSource = ref("");
 const adaptiveLoading = ref(false);
 const selectedKnowledgeLoading = ref(false);
 const pageHeading = ref<HTMLElement | null>(null);
@@ -729,6 +752,8 @@ async function loadCourse(id: CourseId): Promise<void> {
   activityLoading.value = false; hintLoading.value = false; selectedKnowledgeLoading.value = false; diagnosticLoading.value = false;
   pendingKnowledgeId.value = "";
   courseId.value = id;
+  originProject.value = null;
+  resumeProjectChecks.value = false;
   knowledgeQuery.value = ""; activityQuery.value = ""; activityFilter.value = "all"; activitySort.value = "recommended";
   restorePracticeHistory();
   learnerContextResolved.value = false;
@@ -843,9 +868,11 @@ async function submitAdaptiveProblem(): Promise<void> {
   if (!adaptiveProblem.value || !adaptiveCode.value.trim() || adaptiveLoading.value) return;
   adaptiveLoading.value = true;
   try {
+    const submittedSource = adaptiveCode.value;
     const result = await api.submitAdaptiveProblem(
-      studentId.value, adaptiveProblem.value.problem_id, adaptiveCode.value
+      studentId.value, adaptiveProblem.value.problem_id, submittedSource
     );
+    adaptiveSubmittedSource.value = submittedSource;
     adaptiveSubmission.value = result;
     profile.value = result.profile;
     if (!verificationUnavailable(result)) adaptiveAttemptIndex.value += 1;
@@ -871,7 +898,7 @@ async function ask(): Promise<void> {
   finally { qaLoading.value = false; }
 }
 
-async function openActivity(id: string, destination?: "practice" | "projects"): Promise<void> {
+async function openActivity(id: string, destination?: "practice" | "projects", project: ActivityDetail | null = null): Promise<void> {
   if (submitting.value || projectSubmitting.value || projectGenerating.value) {
     notice.value = "当前任务正在处理，完成后即可切换练习或项目。";
     return;
@@ -892,6 +919,8 @@ async function openActivity(id: string, destination?: "practice" | "projects"): 
     }
     // Commit the selection and its saved draft together, without an intervening await.
     persistProjectWorkspace();
+    resumeProjectChecks.value = originProject.value?.id === loaded.id;
+    originProject.value = project;
     activity.value = loaded;
     lastActivityId.value = id;
     localStorage.setItem(practiceHistoryKey(), id);
@@ -902,11 +931,15 @@ async function openActivity(id: string, destination?: "practice" | "projects"): 
     if (activity.value.type === "project") {
       rememberProject(activity.value.id);
       restoreProjectWorkspace(activity.value.id);
+      projectChecks.value = readProjectChecks(localStorage.getItem(projectCheckKey(loaded.id)), loaded.verification_exercise_ids ?? []);
     }
     const language = activity.value.evaluation.runtime?.language;
     code.value = activity.value.evaluation.starter_code ?? (language === "c"
       ? "#include <stdio.h>\n\nint main(void) {\n    // 在这里完成程序\n    return 0;\n}\n"
       : language === "python" ? "# 在这里完成程序\n" : "");
+    if (project) {
+      code.value = sessionStorage.getItem(projectCodeKey(project.id, loaded.id)) ?? code.value;
+    }
     tab.value = loaded.type === "project" ? "projects" : destination ?? "practice";
     notice.value = contextError || `已打开“${activity.value.title}”，可以开始作答。`;
   } catch (error) { if (activityScope.isCurrent(token)) fail(error); }
@@ -961,12 +994,26 @@ async function openNextActivity(): Promise<void> {
   else await openActivity(next.value.activity_id);
 }
 
+watch(code, draft => {
+  hint.value = null;
+  hintLevel.value = 1;
+  if (originProject.value && activity.value && originProject.value.verification_exercise_ids?.includes(activity.value.id)) {
+    sessionStorage.setItem(projectCodeKey(originProject.value.id, activity.value.id), draft);
+  }
+});
 async function requestHint(): Promise<void> {
   if (!activity.value || activityLoading.value || hintLoading.value) return;
   const token = activityScope.capture();
   hintLoading.value = true;
   try {
-    const result = await api.hint(studentId.value, courseId.value, activity.value.id, hintLevel.value);
+    const draft = code.value;
+    const verification = currentVerification(submission.value, draft);
+    const isCode = activity.value.type === "code" || activity.value.type === "debug";
+    const result = await api.hint(studentId.value, courseId.value, activity.value.id, hintLevel.value, isCode ? {
+      sourceCode: draft, diagnostics: verification?.diagnostics,
+      passedTests: verification?.passed_tests, totalTests: verification?.total_tests,
+    } : {});
+    if (draft !== code.value) return;
     if (!activityScope.isCurrent(token)) return;
     hint.value = result;
     if (hintLevel.value < 3) hintLevel.value = (hintLevel.value + 1) as 1 | 2 | 3;
@@ -1040,11 +1087,18 @@ async function submit(): Promise<void> {
   }
   submitting.value = true;
   try {
-    submission.value = await api.submit(studentId.value, courseId.value, activity.value.id,
-      isCode ? { language: activity.value.evaluation.runtime?.language, source_code: code.value } : { response: answer.value });
+    const submittedSource = code.value;
+    const result = await api.submit(studentId.value, courseId.value, activity.value.id,
+      isCode ? { language: activity.value.evaluation.runtime?.language, source_code: submittedSource } : { response: answer.value });
+    submission.value = isCode ? { ...result, submittedSource } : result;
     profile.value = { student_id: studentId.value, course_id: courseId.value, mastery: submission.value.mastery_updated };
     next.value = submission.value.next_activity;
     notice.value = verificationUnavailable(submission.value) ? submission.value.feedback : submission.value.verification?.accepted ? "验证通过，学习画像已更新。" : "已返回可操作的验证反馈，请继续修改。";
+    const check = projectCheck(result);
+    if (originProject.value && check) {
+      try { recordProjectCheck(originProject.value, activity.value.id, check); }
+      catch { notice.value += " 当前浏览器无法保存项目练习记录。"; }
+    }
   } catch (error) { fail(error) } finally { submitting.value = false }
 }
 
@@ -1130,7 +1184,7 @@ onBeforeUnmount(() => {
     @replay="replayWelcome"
     @reset="resetUiPreferences"
   />
-  <div v-if="!welcomeOpen" class="app-shell" :inert="settingsOpen || assessmentWarningOpen" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
+  <div v-if="!welcomeOpen" class="app-shell study-shell" :inert="settingsOpen || assessmentWarningOpen" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
     <aside v-if="!classroomFocusMode" class="sidebar">
       <div class="brand"><span aria-hidden="true">&lt;/&gt;</span><div><strong>词元研究所</strong><small>LEARNING CORE</small></div></div>
       <nav class="course-nav" aria-label="选择课程">
@@ -1139,6 +1193,14 @@ onBeforeUnmount(() => {
           <b>{{ item.id === "data_structures" ? "DS" : item.id === "python" ? "PY" : "C" }}</b>
           <span><strong>{{ item.title }}</strong><small>{{ item.status === "offline_preview" ? "等待载入" : `${item.implemented_core_concepts} 个知识点` }}</small></span>
         </button>
+      </nav>
+      <nav class="study-nav" aria-label="学习功能">
+        <button :class="{ active: tab === 'overview' }" :aria-current="tab === 'overview' ? 'page' : undefined" @click="openOverview">学习总览</button>
+        <button :class="{ active: tab === 'classroom' }" :aria-current="tab === 'classroom' ? 'page' : undefined" @click="openClassroom">沉浸课堂</button>
+        <button :class="{ active: tab === 'path' }" :aria-current="tab === 'path' ? 'page' : undefined" @click="openPath">个性路径</button>
+        <button :class="{ active: tab === 'tutor' }" :aria-current="tab === 'tutor' ? 'page' : undefined" @click="openTutor">课程辅导</button>
+        <button :class="{ active: tab === 'practice' }" :aria-current="tab === 'practice' ? 'page' : undefined" @click="openPractice">练习工坊</button>
+        <button :class="{ active: tab === 'projects' }" :aria-current="tab === 'projects' ? 'page' : undefined" @click="openProjects">项目实战</button>
       </nav>
       <div class="sidebar-progress"><div><span>课程进度</span><strong>{{ (loading || courseLoadError || learningLoadError) ? "—" : `${masteredCount}/${knowledge.length}` }}</strong></div><i><span :style="{ width: `${!courseLoadError && knowledge.length ? masteredCount / knowledge.length * 100 : 0}%` }"></span></i><small>由测评、练习和代码验证持续更新</small></div>
       <div class="connection" :data-state="connection"><i></i> API {{ connection === "online" ? "服务正常" : connection === "offline" ? "未连接" : connection === "degraded" ? "部分功能暂不可用" : "连接中" }}</div>
@@ -1151,28 +1213,20 @@ onBeforeUnmount(() => {
         <div class="taskbar-user"><span>{{ greeting }}</span><div class="taskbar-appearance"><ThemeToggle :theme="currentPalette" @select="toggleTheme" /><button class="settings-trigger" aria-label="打开个性化设置" @click="settingsOpen = true"><i aria-hidden="true">UI</i><span>界面设置</span></button></div></div>
       </header>
       <div v-if="notice" class="notice" :data-tone="noticeTone" :role="noticeTone === 'error' ? 'alert' : 'status'" aria-live="polite"><span>{{ notice }}</span><button type="button" aria-label="关闭通知" @click="notice = ''">×</button></div>
-      <nav v-if="!classroomFocusMode" class="tabs" aria-label="学习功能">
-        <button :class="{ active: tab === 'overview' }" :aria-current="tab === 'overview' ? 'page' : undefined" @click="openOverview">学习总览</button>
-        <button :class="{ active: tab === 'classroom' }" :aria-current="tab === 'classroom' ? 'page' : undefined" @click="openClassroom">沉浸课堂</button>
-        <button :class="{ active: tab === 'path' }" :aria-current="tab === 'path' ? 'page' : undefined" @click="openPath">个性路径</button>
-        <button :class="{ active: tab === 'tutor' }" :aria-current="tab === 'tutor' ? 'page' : undefined" @click="openTutor">课程辅导</button>
-        <button :class="{ active: tab === 'practice' }" :aria-current="tab === 'practice' ? 'page' : undefined" @click="openPractice">练习工坊</button>
-        <button :class="{ active: tab === 'projects' }" :aria-current="tab === 'projects' ? 'page' : undefined" @click="openProjects">项目实战</button>
-      </nav>
       <section v-if="courseLoadError || learningLoadError" class="panel service-recovery" role="status"><p>{{ courseLoadError || learningLoadError }}</p><button class="secondary" :disabled="loading" @click="loadCourse(courseId)">重新载入课程</button></section>
       <div v-if="loading && !(tab === 'classroom' && activeClassroom)" class="loading" role="status" aria-live="polite"><i></i>正在同步课程与学情数据…</div>
 
       <template v-else-if="tab === 'overview'">
         <section class="hero-card" data-spotlight v-reveal>
-          <div><h2>理解知识。编写代码。验证能力。</h2><p>课堂助教结合学情安排节奏，质量监督在后台检查依据、安全与事实。</p>
+          <div><h2>{{ selectedCourse?.title ?? '课程' }}学习工作台</h2><p>{{ next?.reason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
             <button v-else v-ripple @click="startBaseline">{{ Object.keys(diagnosticAnswers).length && !diagnosticResult ? '继续能力摸底' : '开始能力摸底' }}</button>
           </div>
           <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
         <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
-          <div><h3>不是再开一个聊天框，来真正上一节课。</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
-          <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button v-ripple @click="openClassroom">进入温暖的 Python 教室 <b>→</b></button></aside>
+          <div><h3>Python 互动课堂</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
+          <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button v-ripple @click="openClassroom">进入 Python 课堂 <b>→</b></button></aside>
         </section>
         <section v-else class="classroom-invitation" v-reveal>
           <div><h3>{{ courseId === 'c' ? '看清指针与内存里的每一次变化。' : '把算法拆成能观察、能验证的步骤。' }}</h3><p>按前置知识分段学习，通过交互演示预测结果，再用随堂题和代码测试检查理解。</p></div>
@@ -1251,8 +1305,8 @@ onBeforeUnmount(() => {
       </template>
 
       <template v-else-if="tab === 'projects'">
-        <section class="project-center-hero">
-          <div><span>{{ selectedCourse?.title ?? "课程" }} · 项目实战</span><h2>把课程能力组合成真正可运行的作品</h2><p>阶段项目对应刚完成的课程能力，综合项目把算法、文件处理与程序可靠性放进脱敏财经场景。核心考核始终是计算机能力。</p></div>
+        <section v-if="activity?.type !== 'project'" class="project-center-hero">
+          <div><span>{{ selectedCourse?.title ?? "课程" }} · 项目实战</span><h2>项目工作台</h2><p>阶段项目对应刚完成的课程能力，综合项目把算法、文件处理与程序可靠性放进脱敏财经场景。核心考核始终是计算机能力。</p></div>
           <aside><strong>{{ courseLoadError ? "—" : projectActivities.length }}</strong><span>{{ courseLoadError ? "项目索引未连接" : "个可浏览项目" }}</span><small>{{ courseLoadError ? "启动本地 API 后重新载入" : `${savedProjects.length} 个已加入“我的项目”` }}</small></aside>
         </section>
 
@@ -1260,18 +1314,18 @@ onBeforeUnmount(() => {
           <span>COURSE SERVICE OFFLINE</span><h2>项目目录暂未载入</h2><p>{{ courseLoadError }}</p><button class="secondary" @click="loadCourse(courseId)">重新载入课程</button>
         </section>
 
-        <section v-if="!courseLoadError" class="project-shelf" v-reveal>
+        <section v-if="!courseLoadError && activity?.type !== 'project'" class="project-shelf" v-reveal>
           <header><div><span>01</span><h3>阶段项目</h3><p>在关键阶段结束后进行一次稳定、可重复的综合验证。</p></div></header>
           <div><article v-for="item in stageProjects" :key="item.id" :data-ready="projectReadiness(item).ready" data-spotlight><header><span>{{ projectReadiness(item).ready ? '已解锁' : '可预览' }}</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">{{ projectReadiness(item).ready ? '开始项目' : '查看要求' }} →</button></footer></article></div>
           <p v-if="!stageProjects.length" class="empty compact">本课程暂无阶段项目，可继续下方综合项目。</p>
         </section>
 
-        <section v-if="!courseLoadError" class="project-shelf comprehensive">
-          <header><div><span>02</span><h3>综合项目</h3><p>财经内容只提供应用语境，评分聚焦当前课程的程序设计、算法、测试与可追溯性。</p></div></header>
+        <section v-if="!courseLoadError && activity?.type !== 'project'" class="project-shelf comprehensive">
+          <header><div><span>02</span><h3>综合项目</h3><p>财经内容只提供应用语境，练习聚焦程序设计、算法与测试。</p></div></header>
           <div><article v-for="item in comprehensiveProjects" :key="item.id" :data-ready="projectReadiness(item).ready" data-spotlight><header><span>脱敏合成场景</span><small>{{ projectReadiness(item).completed }}/{{ projectReadiness(item).total }} 项前置能力</small></header><h4>{{ item.title }}</h4><footer><small>{{ item.estimated_minutes }} 分钟 · {{ difficulty(item.difficulty) }}</small><button @click="openActivity(item.id, 'projects')">查看项目 →</button></footer></article></div>
         </section>
 
-        <section v-if="!courseLoadError" class="project-shelf mine">
+        <section v-if="!courseLoadError && activity?.type !== 'project'" class="project-shelf mine">
           <header><div><span>03</span><h3>我的项目</h3><p>草稿、仓库地址和测试记录保存在当前浏览器中，提交后写入学习证据。</p></div></header>
           <div v-if="savedProjects.length"><article v-for="item in savedProjects" :key="item.id"><header><span>已有本地进度</span><small>自动保存</small></header><h4>{{ item.title }}</h4><p>继续完善实现说明、代码链接与测试证据。</p><footer><small>本地草稿</small><button @click="openActivity(item.id, 'projects')">继续项目 →</button></footer></article></div>
           <p v-else class="empty compact">打开任一项目后，它会自动出现在这里。</p>
@@ -1280,12 +1334,19 @@ onBeforeUnmount(() => {
         <section v-if="!courseLoadError && activity?.type === 'project'" class="project-workspace panel" :aria-busy="activityLoading" :inert="activityLoading || submitting || projectSubmitting || projectGenerating">
           <header class="activity-title"><div><span>{{ activity.id.startsWith('PY-PROJ-STAGE-') ? '阶段项目' : '综合项目' }}</span><h2>{{ activity.title }}</h2></div><button class="secondary" :disabled="projectSubmitting || projectGenerating" @click="closeProjectWorkspace">收起工作区</button></header>
           <p class="prompt">{{ activity.summary }}</p>
-          <div class="project-brief"><section><b>你要完成</b><ol><li v-for="item in activity.requirements" :key="item">{{ item }}</li></ol></section><section><b>提交成果</b><ul><li v-for="item in activity.deliverables" :key="item">{{ item }}</li></ul></section></div>
-          <section class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
-          <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>不包含真实个人或业务数据</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span>来源已登记于课程资料库</span><small>{{ scenario.notice }}</small></footer></section>
-          <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" :disabled="activityLoading || projectGenerating" rows="3" maxlength="500" aria-label="项目变体重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>{{ generatedProject.degraded ? "固定课程任务" : "AI 生成内容" }}</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
-          <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" :disabled="activityLoading || projectSubmitting" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" :disabled="activityLoading || projectSubmitting" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" :disabled="activityLoading || projectSubmitting" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
-          <div v-if="projectSubmission" v-motion="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? '✓' : '!' }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
+          <ProjectStudio :key="activity.id" :project="activity" :activities="activities" :checks="projectChecks"
+            :resume-checks="resumeProjectChecks" @practice="openProjectExercise">
+            <template #brief>
+              <div class="project-brief"><section><b>你要完成</b><ol><li v-for="item in activity.requirements" :key="item">{{ item }}</li></ol></section><section><b>提交成果</b><ul><li v-for="item in activity.deliverables" :key="item">{{ item }}</li></ul></section></div>
+              <section class="project-objectives"><div><b>计算机能力目标</b><span v-for="item in activity.computer_science_objectives" :key="item">{{ item }}</span></div><div v-if="activity.business_context_objectives.length"><b>场景理解目标</b><span v-for="item in activity.business_context_objectives" :key="item">{{ item }}</span></div></section>
+              <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>不包含真实个人或业务数据</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span>来源已登记于课程资料库</span><small>{{ scenario.notice }}</small></footer></section>
+              <section v-if="activity.scenario_scope === 'post_course_finance_practice'" class="project-generator"><header><div><h3>让智能体按当前能力生成项目变体</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" :disabled="activityLoading || projectGenerating" rows="3" maxlength="500" aria-label="项目变体重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? '生成中…' : '生成我的项目变体' }}</button><article v-if="generatedProject"><header><div><small>{{ generatedProject.degraded ? '固定安全版本' : `${generatedProject.provider} · ${generatedProject.model}` }}</small><h3>{{ generatedProject.title }}</h3></div><b>{{ generatedProject.degraded ? "固定课程任务" : "AI 生成内容" }}</b></header><p>{{ generatedProject.scenario_context }}</p><div class="generated-columns"><section><strong>任务</strong><ol><li v-for="item in generatedProject.tasks" :key="item">{{ item }}</li></ol></section><section><strong>约束</strong><ul><li v-for="item in generatedProject.constraints" :key="item">{{ item }}</li></ul></section></div></article></section>
+            </template>
+            <template #submit>
+              <section class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" :disabled="activityLoading || projectSubmitting" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" :disabled="activityLoading || projectSubmitting" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" :disabled="activityLoading || projectSubmitting" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><div class="project-save-note">草稿自动保存到“我的项目”</div><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
+              <div v-if="projectSubmission" v-motion="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? '✓' : '!' }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
+            </template>
+          </ProjectStudio>
         </section>
       </template>
 
@@ -1303,7 +1364,7 @@ onBeforeUnmount(() => {
             <div class="adaptive-spec"><section><strong>约束</strong><ul><li v-for="item in adaptiveProblem.constraints" :key="item">{{ item }}</li></ul></section><section><strong>公开样例</strong><div v-for="(item, index) in adaptiveProblem.public_examples" :key="index"><code>输入：{{ item.input }}</code><code>输出：{{ item.expected_output }}</code></div></section></div>
             <div class="editor"><header><i></i><i></i><i></i><b>Python · 隐藏测试验证</b></header><textarea v-model="adaptiveCode" :disabled="adaptiveLoading" spellcheck="false" aria-label="Python 代码答案"></textarea></div>
             <footer class="adaptive-actions"><small>{{ adaptiveProblem.generation_notice }}</small><button class="primary" :disabled="adaptiveLoading || !adaptiveCode.trim()" @click="submitAdaptiveProblem">{{ adaptiveLoading ? "验证中…" : "运行并提交" }}</button></footer>
-            <div v-if="adaptiveSubmission" v-motion="adaptiveSubmission" class="verification" :data-pass="adaptiveSubmission.verification.accepted"><strong>{{ verificationUnavailable(adaptiveSubmission) ? "验证服务暂不可用" : adaptiveSubmission.verification.accepted ? "挑战通过，画像已更新" : "尚未通过隐藏测试" }}</strong><p>{{ adaptiveSubmission.feedback }}</p><small v-if="!verificationUnavailable(adaptiveSubmission)">通过 {{ adaptiveSubmission.verification.passed_tests }} / {{ adaptiveSubmission.verification.total_tests }} 个测试</small><button v-if="adaptiveSubmission.verification.accepted" class="primary" @click="generateAdaptiveProblem(true)">进入下一道变式题</button></div>
+            <div v-if="adaptiveSubmission" v-motion="adaptiveSubmission" class="verification" :data-pass="adaptiveSubmission.verification.accepted"><small v-if="adaptiveSubmittedSource !== adaptiveCode">上次提交 · 当前草稿待验证</small><strong>{{ verificationUnavailable(adaptiveSubmission) ? "验证服务暂不可用" : adaptiveSubmission.verification.accepted ? "挑战通过，画像已更新" : "尚未通过隐藏测试" }}</strong><p>{{ adaptiveSubmission.feedback }}</p><small v-if="!verificationUnavailable(adaptiveSubmission)">通过 {{ adaptiveSubmission.verification.passed_tests }} / {{ adaptiveSubmission.verification.total_tests }} 个测试</small><button v-if="adaptiveSubmission.verification.accepted" class="primary" @click="generateAdaptiveProblem(true)">进入下一道变式题</button></div>
           </template>
         </section>
         <section v-if="!courseLoadError" class="practice-compass panel">
@@ -1318,7 +1379,7 @@ onBeforeUnmount(() => {
             <div class="activity-filters"><button v-for="item in ([['all','全部'],['homework','课后'],['code','编程'],['debug','排错']] as const)" :key="item[0]" :class="{ active: activityFilter === item[0] }" :aria-pressed="activityFilter === item[0]" @click="activityFilter = item[0]">{{ item[1] }}</button></div>
             <div class="activity-scroll"><button v-for="item in filteredActivities" :key="item.id" :class="{ active: activity?.id === item.id }" @click="openActivity(item.id)"><span>{{ item.learning_stage === 'after_class' ? '课后练习' : activityType(item.type) }}</span><strong>{{ item.title }}</strong><small>{{ item.estimated_minutes }} 分钟</small></button><p v-if="!filteredActivities.length" class="empty compact">没有找到匹配练习，试试更短的关键词或清空筛选。</p></div>
           </aside>
-          <div class="panel activity-workspace" :aria-busy="activityLoading" :inert="activityLoading || submitting || projectSubmitting || projectGenerating"><template v-if="activity"><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
+          <div class="panel activity-workspace" :aria-busy="activityLoading" :inert="activityLoading || submitting || projectSubmitting || projectGenerating"><template v-if="activity"><button v-if="originProject" class="secondary" @click="openActivity(originProject.id, 'projects')">← 返回项目验证 · {{ originProject.title }}</button><div class="activity-title"><div><span>{{ activityType(activity.type) }}</span><h2>{{ activity.title }}</h2></div><b>{{ difficulty(activity.difficulty) }}</b></div><p class="prompt">{{ activity.prompt || activity.summary }}</p>
             <section v-if="activity.learning_stage === 'after_class'" class="beginner-task-brief"><header><div><small>本节知识 → 课后迁移</small><h3>先读懂任务，再开始写代码</h3></div><b>中文初学者版</b></header><div class="task-io"><article><span>输入是什么</span><p>{{ activity.input_format }}</p></article><article><span>需要输出</span><p>{{ activity.output_format }}</p></article></div><div v-if="activity.public_examples.length" class="task-examples"><b>先看一个公开样例</b><article v-for="(example, index) in activity.public_examples" :key="index"><div><code>输入\n{{ example.input }}</code><code>输出\n{{ example.expected_output }}</code></div><p>{{ example.explanation }}</p></article></div><ul class="task-constraints"><li v-for="item in activity.constraints" :key="item">{{ item }}</li></ul></section>
             <section v-if="scenario" class="scenario-card" :data-mode="scenario.mode"><header><div><span>固定合成场景</span><strong>经管背景只服务课程综合实践</strong></div><b>隐私安全</b></header><p>{{ scenario.context }}</p><ul><li v-for="item in scenario.constraints" :key="item">{{ item }}</li></ul><footer><span>来源已登记于课程资料库</span><small>{{ scenario.notice }}</small></footer></section>
             <section v-if="activity.type === 'project'" class="project-generator"><header><div><h3>按当前能力生成综合项目</h3></div><b>不发送身份信息</b></header><label>你希望重点提升什么？<textarea v-model="projectGoal" :disabled="activityLoading || projectGenerating" rows="3" maxlength="500" aria-label="综合项目重点提升目标"></textarea></label><button class="primary" :disabled="projectGenerating" @click="generatePersonalizedProject">{{ projectGenerating ? "生成中…" : "生成我的项目" }}</button>
@@ -1331,7 +1392,7 @@ onBeforeUnmount(() => {
             <section v-else-if="activity.type === 'project'" class="project-submit"><label>实现与验证说明<textarea v-model="projectSummary" :disabled="activityLoading || projectSubmitting" rows="6" maxlength="4000" placeholder="说明模块设计、关键算法、异常处理和测试结果（至少 30 字）"></textarea></label><label>代码仓库或制品链接（可选）<input v-model="projectRepository" :disabled="activityLoading || projectSubmitting" maxlength="1000" placeholder="https://gitee.com/..." /></label><label>测试证据（每行一条）<textarea v-model="projectTests" :disabled="activityLoading || projectSubmitting" rows="4" placeholder="pytest: 12 passed&#10;边界输入：空文件返回明确错误"></textarea></label><button class="primary" :disabled="projectSubmitting" @click="submitProject">{{ projectSubmitting ? "记录中…" : "记录项目证据" }}</button></section>
             <textarea v-else v-model="answer" :disabled="submitting || activityLoading" class="answer-box" rows="7" placeholder="输入你的回答…" aria-label="练习回答"></textarea><button v-if="activity.type !== 'project'" class="primary" :disabled="submitting" @click="submit">{{ submitting ? "验证中…" : "提交并验证" }}</button>
             <section class="hint-box"><button :disabled="hintLoading || activityLoading || hint?.level === 3" @click="requestHint">{{ hintLoading ? "正在生成提示…" : hint?.level === 3 ? "已展示全部提示" : hint ? `继续提示（${hintLevel}/3）` : "获取分层提示" }}</button><p v-if="hint"><b>第 {{ hint.level }} 层提示</b>{{ hint.hint }}</p></section>
-            <div v-if="submission" v-motion="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><strong>{{ verificationUnavailable(submission) ? "验证服务暂不可用" : submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification && !verificationUnavailable(submission)">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
+            <div v-if="submission" v-motion="submission" class="verification" :data-pass="submission.verification?.accepted ?? false"><small v-if="submission.submittedSource !== undefined && submission.submittedSource !== code">上次提交 · 当前草稿待验证</small><strong>{{ verificationUnavailable(submission) ? "验证服务暂不可用" : submission.verification?.accepted ? "验证通过" : "反馈已生成" }}</strong><p>{{ submission.feedback }}</p><small v-if="submission.verification && !verificationUnavailable(submission)">通过 {{ submission.verification.passed_tests }} / {{ submission.verification.total_tests }} 个测试</small></div>
             <section v-if="submission && activity.reflection_prompt" class="practice-reflection"><b>提交后复盘</b><p>{{ activity.reflection_prompt }}</p><span>先用一句话说明本次错误或通过的关键原因，再进入下一题。</span></section>
             <div v-if="projectSubmission" v-motion="projectSubmission" class="verification" data-pass="true"><strong>项目证据已记录</strong><p>{{ projectSubmission.feedback }}</p><ul><li v-for="item in projectSubmission.evidence_checklist" :key="item.item"><b>{{ item.present ? "✓" : "!" }} {{ item.item }}</b> — {{ item.detail }}</li></ul></div>
           </template><div v-else class="empty">从左侧选择一道练习，或按照学习路径进入推荐活动。</div></div>

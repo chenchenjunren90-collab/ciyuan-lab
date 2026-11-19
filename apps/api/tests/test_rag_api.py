@@ -70,3 +70,16 @@ def test_rejects_unknown_request_fields() -> None:
     )
 
     assert response.status_code == 422
+
+
+def test_experiment_question_uses_only_eligible_sources_for_that_concept() -> None:
+    request = {
+        "student_id": "rag-test", "course_id": "data_structures",
+        "knowledge_point_id": "DS-SEARCH-02",
+        "question": "二分查找首个位置，第 3 步。left=0，right=2，mid=2。命中后为什么收缩区间？",
+    }
+    result = client.post("/api/v1/qa", json=request).json()
+    assert result["status"] == "answered"
+    assert {item["source_id"] for item in result["citations"]} == {"SRC-DS-GUIDE-SORTSEARCH"}
+    request["course_id"] = "c"
+    assert client.post("/api/v1/qa", json=request).status_code == 404

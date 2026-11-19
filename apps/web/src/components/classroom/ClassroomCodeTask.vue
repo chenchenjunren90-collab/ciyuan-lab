@@ -3,12 +3,13 @@ import { motionDirective as vMotion } from "../../directives/motion";
 import { ref, watch } from "vue";
 
 import { verificationUnavailable } from "../../services/workspaceState";
-import type { ClassroomCodeTask, SubmissionResult } from "../../services/api";
+import type { ReviewedSubmission } from "../../services/submittedCode";
+import type { ClassroomCodeTask } from "../../services/api";
 
 const props = defineProps<{
   task: ClassroomCodeTask;
   modelValue: string;
-  result: SubmissionResult | null;
+  result: ReviewedSubmission | null;
   loading: boolean;
   hint: string;
   hintLoading: boolean;
@@ -73,7 +74,7 @@ function submitCode(): void {
       </section>
       <aside><b>公开样例</b><article v-for="(sample, index) in task.public_examples" :key="index"><small>样例 {{ index + 1 }}</small><div><span>输入</span><code>{{ sample.input.trim() || "（空）" }}</code></div><div><span>输出</span><code>{{ sample.expected_output.trim() || "（空行）" }}</code></div><p>{{ sample.explanation }}</p></article><button :disabled="hintLoading || hintExhausted" @click="emit('hint')">{{ hintLoading ? "助教正在分析…" : hintExhausted ? "已展示全部三级提示" : "向助教要一个提示" }}</button><article v-if="hint" v-motion="hint" class="hint-card" role="status" aria-live="polite"><small>助教提示</small><p>{{ hint }}</p></article></aside>
     </div>
-    <footer><div v-if="result" v-motion="result" class="task-result" :data-pass="result.verification?.accepted"><b>{{ verificationUnavailable(result) ? "验证服务暂不可用" : result.verification?.accepted ? "全部测试通过" : "请根据反馈继续调试" }}</b><span>{{ result.feedback }}</span><small v-if="result.verification && !verificationUnavailable(result)">{{ result.verification.passed_tests }} / {{ result.verification.total_tests }} 项测试通过</small></div><div v-if="codeNotice" class="task-notice" role="status" aria-live="polite">{{ codeNotice }}</div><button class="primary" :aria-busy="loading" @click="submitCode">{{ loading ? "正在隔离环境中验证…" : "运行并提交" }}</button></footer>
+    <footer><div v-if="result" v-motion="result" class="task-result" :data-pass="result.verification?.accepted"><small v-if="result.submittedSource !== modelValue">上次提交 · 当前草稿待验证</small><b>{{ verificationUnavailable(result) ? "验证服务暂不可用" : result.verification?.accepted ? "全部测试通过" : "请根据反馈继续调试" }}</b><span>{{ result.feedback }}</span><small v-if="result.verification && !verificationUnavailable(result)">{{ result.verification.passed_tests }} / {{ result.verification.total_tests }} 项测试通过</small></div><div v-if="codeNotice" class="task-notice" role="status" aria-live="polite">{{ codeNotice }}</div><button class="primary" :aria-busy="loading" @click="submitCode">{{ loading ? "正在隔离环境中验证…" : "运行并提交" }}</button></footer>
   </div>
 </template>
 

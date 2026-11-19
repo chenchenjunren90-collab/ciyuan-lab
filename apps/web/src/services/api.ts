@@ -27,6 +27,7 @@ export interface ActivitySummary {
   learning_stage: "diagnostic" | "in_class" | "after_class" | "challenge" | null;
 }
 export interface ActivityDetail extends ActivitySummary {
+  verification_exercise_ids?: string[];
   prompt: string | null; summary: string | null; requirements: string[]; deliverables: string[];
   evaluation: {
     mode: string;
@@ -353,8 +354,8 @@ export const api = {
       fetch,
       aiTimeoutMs
     ),
-  ask: (studentId: string, courseId: CourseId, question: string) => request<QaResponse>("/api/v1/qa", {
-    method: "POST", body: JSON.stringify({ student_id: studentId, course_id: courseId, question })
+  ask: (studentId: string, courseId: CourseId, question: string, knowledgePointId?: string) => request<QaResponse>("/api/v1/qa", {
+    method: "POST", body: JSON.stringify({ student_id: studentId, course_id: courseId, question, knowledge_point_id: knowledgePointId })
   }, fetch, aiTimeoutMs),
   classroomLesson: (lessonId: string) =>
     request<ClassroomLesson>(`/api/v1/classroom/lessons/${encodeURIComponent(lessonId)}`),

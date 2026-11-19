@@ -106,6 +106,7 @@ class ActivityExample(StrictModel):
 
 
 class ActivityDetail(ActivitySummary):
+    verification_exercise_ids: list[str] = Field(default_factory=list)
     prompt: str | None = None
     summary: str | None = None
     requirements: list[str] = Field(default_factory=list)

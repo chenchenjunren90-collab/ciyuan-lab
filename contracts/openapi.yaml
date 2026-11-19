@@ -908,6 +908,11 @@ components:
         - evaluation
         - status
       properties:
+        verification_exercise_ids:
+          type: array
+          description: 课程包列出的项目验证练习，按课程设计顺序排列
+          items:
+            type: string
         id:
           type: string
         title:
@@ -1643,6 +1648,11 @@ components:
       additionalProperties: false
       required: [student_id, course_id, question]
       properties:
+        knowledge_point_id:
+          type: [string, "null"]
+          minLength: 1
+          maxLength: 128
+          description: 实验追问限定到该课程知识点关联的可检索资料
         student_id:
           type: string
         course_id:
