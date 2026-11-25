@@ -1,11 +1,9 @@
 export const PALETTES = [
+  { id: "light", label: "极简白", background: "#ffffff", accent: "#213f86" },
   { id: "dusk", label: "暮紫沉蓝", background: "#042341", accent: "#ba5bb8" },
-  { id: "peach", label: "桃焰玄夜", background: "#1a1a1d", accent: "#e6397c" },
-  { id: "violet", label: "星绿堇夜", background: "#8a3bec", accent: "#b2fc06" },
-  { id: "dawn", label: "凝光橙晓", background: "#ffffcd", accent: "#ff8d10" },
 ] as const;
 export type PaletteId = typeof PALETTES[number]["id"];
-export type ThemeMode = PaletteId | "light" | "dark" | "system";
+export type ThemeMode = PaletteId | "dark" | "system";
 export type DeviceMode = "auto" | "mobile" | "desktop";
 
 export interface UiPreferences {
@@ -42,14 +40,16 @@ export const DEFAULT_UI_PREFERENCES: UiPreferences = {
   welcomeOnLaunch: false,
 };
 
-const THEMES: ThemeMode[] = ["light", "dark", "system", ...PALETTES.map((item) => item.id)];
+function normalizeTheme(value: unknown): ThemeMode | undefined {
+  if (value === "dawn") return "light";
+  if (value === "peach" || value === "violet") return "dusk";
+  if (value === "light" || value === "dark" || value === "system" || value === "dusk") return value;
+}
 const DEVICE_MODES: DeviceMode[] = ["auto", "mobile", "desktop"];
 
 export function loadUiPreferences(storage: KeyValueStorage, requestedTheme: string | null = null): UiPreferences {
   const preferences = readUiPreferences(storage);
-  return THEMES.includes(requestedTheme as ThemeMode)
-    ? { ...preferences, theme: requestedTheme as ThemeMode }
-    : preferences;
+  return { ...preferences, theme: normalizeTheme(requestedTheme) ?? preferences.theme };
 }
 
 function readUiPreferences(storage: KeyValueStorage): UiPreferences {
@@ -58,9 +58,7 @@ function readUiPreferences(storage: KeyValueStorage): UiPreferences {
     if (!raw) return { ...DEFAULT_UI_PREFERENCES };
     const candidate = JSON.parse(raw) as Partial<UiPreferences>;
     return {
-      theme: THEMES.includes(candidate.theme as ThemeMode)
-        ? candidate.theme as ThemeMode
-        : DEFAULT_UI_PREFERENCES.theme,
+      theme: normalizeTheme(candidate.theme) ?? DEFAULT_UI_PREFERENCES.theme,
       deviceMode: DEVICE_MODES.includes(candidate.deviceMode as DeviceMode)
         ? candidate.deviceMode as DeviceMode
         : DEFAULT_UI_PREFERENCES.deviceMode,
@@ -79,12 +77,11 @@ export function saveUiPreferences(storage: KeyValueStorage, preferences: UiPrefe
 }
 
 export function resolveTheme(theme: ThemeMode, prefersDark: boolean): "light" | "dark" {
-  return resolvePalette(theme, prefersDark) === "dawn" ? "light" : "dark";
+  return resolvePalette(theme, prefersDark) === "light" ? "light" : "dark";
 }
 
 export function resolvePalette(theme: ThemeMode, prefersDark = false): PaletteId {
-  if (theme === "system") return prefersDark ? "dusk" : "dawn";
-  if (theme === "light") return "dawn";
+  if (theme === "system") return prefersDark ? "dusk" : "light";
   if (theme === "dark") return "dusk";
   return theme;
 }

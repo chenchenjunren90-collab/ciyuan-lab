@@ -108,7 +108,7 @@ onBeforeUnmount(() => {
         </section>
 
         <section class="settings-section">
-          <div><b>配色方案</b><span>四种底色与主色搭配，同步应用于整个学习空间。</span></div>
+          <div><b>配色方案</b><span>极简白与暮紫沉蓝，同步应用于所有课程。</span></div>
           <ThemeToggle :theme="currentPalette" @select="emit('update', { theme: $event })" />
         </section>
 

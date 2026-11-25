@@ -131,7 +131,15 @@ describe("UI preferences", () => {
 });
 
 
-describe("four complete palettes", () => {
+describe("workspace themes", () => {
+  it("offers only white and the retained dark palette", () => {
+    expect(PALETTES.map(item => item.id)).toEqual(["light", "dusk"]);
+  });
+  it.each([["dawn", "light"], ["peach", "dusk"], ["violet", "dusk"]])("migrates %s in storage and shared links", (old, expected) => {
+    const storage = memoryStorage({ [UI_PREFERENCES_KEY]: JSON.stringify({ theme: old, reducedMotion: true }) });
+    expect(loadUiPreferences(storage)).toMatchObject({ theme: expected, reducedMotion: true });
+    expect(loadUiPreferences(memoryStorage(), old).theme).toBe(expected);
+  });
   it.each(PALETTES)("persists and applies $label across reloads and shared links", ({ id }) => {
     const storage = memoryStorage();
     const preferences = { ...DEFAULT_UI_PREFERENCES, theme: id, highContrast: true };
@@ -141,13 +149,13 @@ describe("four complete palettes", () => {
     const root = { dataset: {}, style: {} } as unknown as HTMLElement;
     applyUiPreferences(root, loadUiPreferences(storage), false);
     expect(root.dataset.palette).toBe(id);
-    expect(root.dataset.theme).toBe(id === "dawn" ? "light" : "dark");
+    expect(root.dataset.theme).toBe(id === "light" ? "light" : "dark");
     expect(root.dataset.contrast).toBe("high");
   });
   it("maps legacy light, dark and system preferences to complete palettes", () => {
-    expect(resolvePalette("light")).toBe("dawn");
+    expect(resolvePalette("light")).toBe("light");
     expect(resolvePalette("dark")).toBe("dusk");
     expect(resolvePalette("system", true)).toBe("dusk");
-    expect(resolvePalette("system", false)).toBe("dawn");
+    expect(resolvePalette("system", false)).toBe("light");
   });
 });

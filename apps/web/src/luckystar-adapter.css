@@ -1,5 +1,3 @@
-/* Compatibility only. The luckystar-2 styles/themes/typography remain authoritative.
-   Do not override its welcome page, palettes, dashboard or motion here. */
 .assessment-page-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 24px 0; }
 .assessment-page-heading p { margin: 0; color: var(--muted); font-size: var(--type-body); }
 .assessment-page-heading button { flex: 0 0 auto; }
@@ -66,4 +64,41 @@ html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-code-ex
   .assessment-page-heading { align-items: flex-start; flex-direction: column; }
   .assessment-page { padding: 20px 16px; }
   .assessment-page .diagnostic-actions { align-items: stretch; flex-direction: column; }
+}
+
+/* Navigation, content rules and trace highlighting match the welcome page. */
+html[data-palette] .study-shell .topbar {
+  background:var(--accent); color:var(--accent-contrast); border:0; border-radius:2px;
+  margin-block:0 22px; padding:14px clamp(14px,2vw,26px); min-height:68px;
+}
+html[data-palette] .study-shell .topbar :is(h1,.taskbar-title > span,.taskbar-user > span,.taskbar-status b,.taskbar-status small) { color:var(--accent-contrast); }
+/* The original topbar sets this caption color with !important. */
+html[data-palette] .study-shell .topbar .taskbar-title > span { color:var(--accent-contrast) !important; }
+html[data-palette] .trace-overview::after { content:none; }
+html[data-palette] .study-shell .topbar .taskbar-status { background:transparent; border:0; }
+html[data-palette] .study-shell .topbar :is(.settings-trigger,.theme-switch) {
+  color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); border-radius:2px; box-shadow:none;
+}
+html[data-palette] .study-shell .brand > span { border-radius:2px; box-shadow:none; animation:none; }
+html[data-palette] .study-shell :is(.panel,.hero-card,.project-center-hero,.project-shelf,.algorithm-lab,.study-tutor,.metrics article,.adaptive-lab,.practice-card,.knowledge-chapter) { border-radius:3px; box-shadow:none; }
+html[data-palette] .study-shell :is(.hero-card,.project-center-hero) {
+  padding:clamp(18px,3vw,46px); color:var(--ink); background:var(--surface); border:0; border-bottom:2px solid var(--ink);
+}
+html[data-palette] .study-shell .hero-card h2 { color:var(--ink); font:750 clamp(30px,3.6vw,56px)/1.08 system-ui,var(--font-body); letter-spacing:-.045em; }
+html[data-palette] .study-shell .hero-card p { color:var(--muted); }
+html[data-palette] .study-shell .hero-card button { border-radius:2px; color:var(--accent-contrast); background:var(--accent); box-shadow:none; }
+html[data-palette] .study-shell .metrics article { border:0; border-top:1px solid var(--line); padding-inline:8px; }
+html[data-palette] .study-shell :is(.course-nav button,.study-nav button,.secondary,.primary,.lab-detail,.trace-screen,.settings-trigger) { border-radius:3px; }
+html[data-palette] .study-shell .settings-trigger i { color:var(--accent-ink); background:var(--surface-muted); }
+html[data-palette] .study-shell .trace-overview { display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr); gap:16px 5%; align-items:center; }
+html[data-palette] .trace-overview .search-trace { grid-area:1 / 2 / 3 / 3; width:100%; }
+html[data-palette] .trace-overview .mastery-orbit { display:block; align-self:start; width:100%; height:auto; padding:0; background:none; box-shadow:none; }
+html[data-palette] .trace-overview .mastery-orbit > div { display:flex; align-items:baseline; justify-content:flex-start; gap:12px; width:100%; height:auto; text-align:left; background:none; }
+html[data-palette] .trace-overview .mastery-orbit strong { font-size:24px; color:var(--ink); }
+html[data-palette] .trace-overview .mastery-orbit span { color:var(--muted); }
+html[data-palette] .study-shell .algorithm-lab .cell.active { color:var(--trace-signal-ink); background:var(--trace-signal); border-color:var(--trace-signal); }
+html[data-palette] .study-shell [data-spotlight]::after { display:none; }
+@media(max-width:780px) {
+  html[data-palette] .study-shell .trace-overview { grid-template-columns:minmax(0,1fr); }
+  html[data-palette] .trace-overview .search-trace { grid-area:auto; }
 }

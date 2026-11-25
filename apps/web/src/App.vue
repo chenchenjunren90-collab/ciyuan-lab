@@ -23,10 +23,9 @@ import ThemeToggle from "./components/ThemeToggle.vue";
 import PythonFirstLesson from "./components/classroom/PythonFirstLesson.vue";
 import CourseClassroom from "./components/classroom/CourseClassroom.vue";
 import SettingsPanel from "./components/SettingsPanel.vue";
+import SearchTracePreview from "./components/SearchTracePreview.vue";
 import WelcomeExperience from "./components/WelcomeExperience.vue";
 import CountUp from "./components/CountUp.vue";
-import ParticleField from "./components/ParticleField.vue";
-import { useSpotlight } from "./composables/useSpotlight";
 import {
   DEFAULT_UI_PREFERENCES,
   DISPLAY_NAME_KEY,
@@ -1110,7 +1109,6 @@ onMounted(async () => {
   systemThemeQuery.addEventListener("change", syncSystemTheme);
   window.addEventListener("resize", syncViewport);
   window.addEventListener(ACCESS_CODE_REQUIRED_EVENT, onAccessCodeRequired);
-  useSpotlight();
   await loadCourse(courseId.value);
 });
 
@@ -1139,8 +1137,6 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="aurora" aria-hidden="true"></div>
-  <ParticleField :key="uiPreferences.reducedMotion ? 'reduced' : 'full'" />
   <div v-if="accessGateOpen" class="access-gate" role="dialog" aria-modal="true" aria-label="访问口令">
     <form class="access-gate-card" @submit.prevent="confirmAccessCode">
       <div class="access-gate-mark" aria-hidden="true">&lt;/&gt;</div>
@@ -1217,11 +1213,12 @@ onBeforeUnmount(() => {
       <div v-if="loading && !(tab === 'classroom' && activeClassroom)" class="loading" role="status" aria-live="polite"><i></i>正在同步课程与学情数据…</div>
 
       <template v-else-if="tab === 'overview'">
-        <section class="hero-card" data-spotlight v-reveal>
-          <div><h2>{{ selectedCourse?.title ?? '课程' }}学习工作台</h2><p>{{ next?.reason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
+        <section class="hero-card" :class="{ 'trace-overview': courseId === 'data_structures' }" v-reveal>
+          <div><h2>{{ selectedCourse?.title ?? '课程' }}<wbr>学习工作台</h2><p>{{ next?.reason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
             <button v-else v-ripple @click="startBaseline">{{ Object.keys(diagnosticAnswers).length && !diagnosticResult ? '继续能力摸底' : '开始能力摸底' }}</button>
           </div>
+          <SearchTracePreview v-if="courseId === 'data_structures'" />
           <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
         <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
