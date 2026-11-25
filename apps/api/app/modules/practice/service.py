@@ -97,7 +97,7 @@ class PracticeSubmissionService:
         )
         return SubmissionOutcome(
             verification=self._verification_model(verification),
-            feedback=self._feedback(activity, accepted, verification),
+            feedback=self._feedback(accepted, verification),
             profile=updated,
             next_activity=next_activity,
         )
@@ -198,14 +198,13 @@ class PracticeSubmissionService:
 
     @staticmethod
     def _feedback(
-        activity: PracticeActivityRecord,
         accepted: bool,
         verification: DomainVerificationResult | None,
     ) -> str:
         if verification is not None and not verification.evidence_available:
             return "验证服务暂不可用，本次未判定代码正确性，也未更新掌握度。请稍后重试。"
         if accepted:
-            return f"{activity.id} 已通过确定性判定。请回顾关键边界，并继续下一项活动。"
+            return "代码已通过本题测试。" if verification is not None else "回答正确。"
         if verification and verification.diagnostics:
             return "尚未通过。先根据验证事实逐项定位：" + "；".join(verification.diagnostics[:3])
         return "答案尚未通过。请重新核对题意、适用条件和边界，再提交一次。"

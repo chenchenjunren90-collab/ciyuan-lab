@@ -111,7 +111,8 @@ def test_public_wrong_answer_reports_bounded_expected_and_actual() -> None:
 
     assert result.accepted is False
     assert result.passed_tests == 0
-    assert "public-1" in result.diagnostics[0]
+    assert "公开样例 1 未通过" in result.diagnostics[0]
+    assert "public-1" not in result.diagnostics[0]
     assert "'4'" in result.diagnostics[0]
     assert "'5'" in result.diagnostics[0]
 

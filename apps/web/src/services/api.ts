@@ -262,6 +262,9 @@ async function request<T>(
           message = `参数不合法：${(payload.detail[0] as { msg: string }).msg}`;
         }
       } catch { /* Keep a stable message for non-JSON failures. */ }
+      if (response.status === 404 && /^(activity not found|course record not found)/i.test(message)) {
+        message = "这项学习内容暂时无法打开，请刷新课程目录后重试。";
+      }
       if (response.status === 403 && message === ACCESS_CODE_REQUIRED_DETAIL) {
         globalThis.dispatchEvent(new Event(ACCESS_CODE_REQUIRED_EVENT));
       }
@@ -418,10 +421,17 @@ export const api = {
   ) => request<ProjectSubmissionResponse>(`/api/v1/projects/${projectId}/submissions?course_id=${courseId}`, {
     method: "POST", body: JSON.stringify({ student_id: studentId, ...payload })
   }),
-  submit: (
+  submit: async (
     studentId: string, courseId: CourseId, exerciseId: string,
     payload: { response?: string; language?: "c" | "python"; source_code?: string }
-  ) => request<SubmissionResult>(`/api/v1/exercises/${exerciseId}/submissions?course_id=${courseId}`, {
-    method: "POST", body: JSON.stringify({ student_id: studentId, ...payload })
-  }, fetch, aiTimeoutMs)
+  ) => {
+    const result = await request<SubmissionResult>(`/api/v1/exercises/${exerciseId}/submissions?course_id=${courseId}`, {
+      method: "POST", body: JSON.stringify({ student_id: studentId, ...payload })
+    }, fetch, aiTimeoutMs);
+    // Older API builds prefix successful feedback with the internal exercise key.
+    if (result.feedback === `${exerciseId} 已通过确定性判定。请回顾关键边界，并继续下一项活动。`) {
+      result.feedback = result.verification ? "代码已通过本题测试。" : "回答正确。";
+    }
+    return result;
+  }
 };

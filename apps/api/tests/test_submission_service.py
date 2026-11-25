@@ -138,8 +138,26 @@ def test_objective_submission_updates_mastery() -> None:
     )
 
     assert result.verification is None
+    assert result.feedback == "回答正确。"
     assert result.profile.mastery[0].score == 0.75
     assert store.events[0].event_type == "practice.submitted"
+    assert store.events[0].payload["exercise_id"] == "C-BASE-01-Q1"
+
+
+def test_wrong_answer_feedback_explains_retry_without_exercise_id() -> None:
+    service, _ = build_service(LearnerProfile(student_id="s1", course_id="c"))
+    result = asyncio.run(
+        service.submit(
+            student_id="s1",
+            course_id="c",
+            exercise_id="C-BASE-01-Q1",
+            response="B",
+            language=None,
+            source_code=None,
+        )
+    )
+    assert "重新核对题意" in result.feedback
+    assert "C-BASE-01" not in result.feedback
 
 
 def test_code_submission_uses_all_hidden_tests_without_leaking_them() -> None:
@@ -160,6 +178,7 @@ def test_code_submission_uses_all_hidden_tests_without_leaking_them() -> None:
 
     assert result.verification is not None
     assert result.verification.accepted is True
+    assert result.feedback == "代码已通过本题测试。"
     assert result.verification.total_tests >= 2
     assert result.verification.diagnostics == []
     assert store.events[0].event_type == "code.verified"

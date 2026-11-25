@@ -1,6 +1,29 @@
 import { describe, expect, it, vi } from "vitest";
 
-import { ApiError, fetchApiHealth } from "./api";
+import { api, ApiError, fetchApiHealth } from "./api";
+
+describe("student-facing exercise feedback", () => {
+  it("reads a result from an older API without showing its exercise key", async () => {
+    const exercise = "C-BASE-01-Q1";
+    vi.stubGlobal("fetch", vi.fn(async () => Response.json({
+      feedback: exercise + " 已通过确定性判定。请回顾关键边界，并继续下一项活动。",
+      verification: null, mastery_updated: []
+    })));
+    try {
+      const result = await api.submit("test-learner", "c", exercise, { response: "A" });
+      expect(result.feedback).toBe("回答正确。");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("explains a missing course item without exposing its stored path", async () => {
+    const fetcher = async () => Response.json({detail: "course record not found: c/C-BASE-01"}, {status: 404});
+    await expect(fetchApiHealth(fetcher)).rejects.toMatchObject({
+      status: 404, message: "这项学习内容暂时无法打开，请刷新课程目录后重试。"
+    });
+  });
+});
 
 describe("fetchApiHealth", () => {
   it("returns the parsed health response", async () => {

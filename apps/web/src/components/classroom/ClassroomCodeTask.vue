@@ -61,7 +61,7 @@ function submitCode(): void {
 
 <template>
   <div class="code-task">
-    <header><div><p>{{ label }}</p><h3>{{ task.title }}</h3><small>{{ task.exercise_id }} · {{ { beginner: "入门", intermediate: "进阶", advanced: "挑战" }[task.difficulty] ?? task.difficulty }} · 约 {{ task.estimated_minutes }} 分钟</small></div><span>真实运行 + 隐藏测试</span></header>
+    <header><div><p>{{ label }}</p><h3>{{ task.title }}</h3><small>{{ { beginner: "入门", intermediate: "进阶", advanced: "挑战" }[task.difficulty] ?? task.difficulty }} · 约 {{ task.estimated_minutes }} 分钟</small></div><span>真实运行 + 隐藏测试</span></header>
     <section class="problem-statement">
       <h4>题目说明</h4><p>{{ task.prompt }}</p>
       <div class="io-format"><article><b>输入格式</b><span>{{ task.input_format }}</span></article><article><b>输出格式</b><span>{{ task.output_format }}</span></article></div>

@@ -46,8 +46,11 @@ class DeterministicCodeVerifier(CodeVerifier):
         normalized_limits = self._validate_inputs(language, source_code, tests, limits)
         passed_tests = 0
         diagnostics: list[str] = []
+        public_number = 0
 
         for test in tests:
+            if test.visibility == "public":
+                public_number += 1
             try:
                 outcome = await self._runner.run(
                     SandboxRequest(
@@ -92,7 +95,7 @@ class DeterministicCodeVerifier(CodeVerifier):
                 passed_tests += 1
                 continue
 
-            diagnostics.append(self._wrong_answer_diagnostic(test, outcome.stdout))
+            diagnostics.append(self._wrong_answer_diagnostic(test, outcome.stdout, public_number))
 
         total_tests = len(tests)
         return VerificationResult(
@@ -144,9 +147,11 @@ class DeterministicCodeVerifier(CodeVerifier):
         return f"：{compact[:_MAX_DIAGNOSTIC_CHARS]}"
 
     @classmethod
-    def _wrong_answer_diagnostic(cls, test: CodeTestCase, actual_output: str) -> str:
+    def _wrong_answer_diagnostic(
+        cls, test: CodeTestCase, actual_output: str, public_number: int
+    ) -> str:
         if test.visibility == "hidden":
             return "隐藏测试未通过（输入与期望输出已隐藏）"
         expected = cls._normalize_output(test.expected_output)[:120]
         actual = cls._normalize_output(actual_output)[:120]
-        return f"公开测试 {test.id} 未通过：期望 {expected!r}，实际 {actual!r}"
+        return f"公开样例 {public_number} 未通过：期望 {expected!r}，实际 {actual!r}"

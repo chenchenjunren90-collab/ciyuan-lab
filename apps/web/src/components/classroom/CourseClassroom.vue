@@ -55,7 +55,7 @@ const worked = computed(() => point.value?.lesson.worked_example);
 const traceKind = computed(() => traceForConcept(selected.value));
 const task = computed(() => activity.value ? asCodeTask(activity.value) : null);
 const mastered = computed(() => new Set(props.profile?.mastery.filter(item => item.evidence_count > 0 && item.score >= .6).map(item => item.knowledge_point_id)));
-const prerequisites = computed(() => (point.value?.prerequisites ?? []).map(id => ({ id, title: props.points.find(item => item.id === id)?.title ?? id, mastered: mastered.value.has(id) })));
+const prerequisites = computed(() => (point.value?.prerequisites ?? []).map(id => ({ id, title: props.points.find(item => item.id === id)?.title ?? "前置知识", mastered: mastered.value.has(id) })));
 const positionKey = () => `ciyuan-course-classroom:${props.studentId}:${props.courseId}`;
 const taskKey = () => `${positionKey()}:${activity.value?.id}:code`;
 function saveValue(key: string, value: string) { try { sessionStorage.setItem(key, value); } catch { /* Storage is optional; live work continues. */ } }
@@ -152,12 +152,12 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
           <strong>课程目录</strong><span>{{ syllabusExpanded ? '收起 −' : '展开 ＋' }}</span>
         </button>
         <div id="course-directory" ref="directoryBody" class="directory-body" :class="{ expanded: syllabusExpanded }">
-          <label><span class="search-label">查找知识点</span><input v-model="search" type="search" placeholder="搜索名称或编号" /></label>
+          <label><span class="search-label">查找知识点</span><input v-model="search" type="search" placeholder="搜索知识点名称" /></label>
           <button class="recommend" :disabled="busy || !recommended" @click="selectPoint(recommended)">从推荐起点继续 →</button>
           <p class="small">{{ profile?.mastery.some(item => item.evidence_count > 0) ? '依据已有测评与前置关系推荐' : '暂无测评，按前置顺序推荐' }}</p>
           <section v-for="group in groups" :key="group.title"><h3>{{ group.title }}</h3>
             <button v-for="item in group.points" :key="item.id" :disabled="busy" :class="{ selected: selected === item.id }" :aria-current="selected === item.id ? 'step' : undefined" @click="selectPoint(item.id)">
-              <span>{{ item.title }}</span><small>{{ mastered.has(item.id) ? '已掌握' : item.id }}</small>
+              <span>{{ item.title }}</span><small v-if="mastered.has(item.id)">已掌握</small>
             </button>
           </section>
           <p v-if="!groups.length">没有匹配的知识点。</p>
@@ -167,7 +167,7 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
         <p v-if="loading" role="status">正在读取课程讲解与练习…</p><div v-else-if="error" role="alert"><p>{{ error }}</p><button @click="selectPoint(selected)">重新加载</button></div>
         <template v-else-if="point">
           <header class="lesson-heading">
-            <div class="course-links"><span>{{ name }} · {{ point.id }}</span><div><button @click="emit('openAssessment')">能力摸底</button><button @click="emit('openProjects')">项目实践 ↗</button></div></div>
+            <div class="course-links"><span>{{ name }}</span><div><button @click="emit('openAssessment')">能力摸底</button><button @click="emit('openProjects')">项目实践 ↗</button></div></div>
             <h2>{{ point.title }}</h2>
             <small>约 {{ point.estimated_minutes }} 分钟 · {{ point.status === 'reviewed' ? '已审核' : '教学草稿，待教师审核' }}</small>
             <details class="lesson-goals" :open="view === 'learn'"><summary>学习目标与前置知识</summary>
@@ -182,7 +182,7 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
             <article v-else><h3>例子与解释</h3><SafeMarkdown v-for="example in point.lesson.examples" :key="example" :source="example" /></article>
             <article class="mistakes"><h3>容易出错的地方</h3><ul><li v-for="mistake in point.lesson.common_mistakes" :key="mistake">{{ mistake }}</li></ul></article>
             <label v-if="point.lesson.checkpoint" class="reflection">先说说你的理解：{{ point.lesson.checkpoint.prompt }}<textarea v-model="reflection" rows="3" placeholder="写下预测，再去实验或练习区验证。此处不计分。" /><small>{{ point.lesson.checkpoint.guidance }}</small></label>
-            <footer class="reading-footer"><span>讲解来源：{{ point.source_refs.join('、') }}</span><button @click="view = 'practice'">用练习检验理解 →</button></footer>
+            <footer class="reading-footer"><details v-if="point.source_refs.length"><summary>查看讲解来源（{{ point.source_refs.length }}）</summary><ul><li v-for="source in point.source_refs" :key="source">{{ source }}</li></ul></details><button @click="view = 'practice'">用练习检验理解 →</button></footer>
           </section>
           <section v-else-if="view === 'lab'"><p v-if="!traceKind" class="small">当前知识点暂无专属演示。你可以探索本课程的实验主题，再回到本节练习。</p><AlgorithmLab :key="selected" :student-id="studentId" :course-id="courseId" :initial-kind="traceKind ?? (courseId === 'c' ? 'array' : 'stack')" /></section>
           <section v-else-if="view === 'practice'" class="practice">

@@ -133,10 +133,7 @@ def select_by_rules(
         return PlannedActivity(
             activity_id=fallback.activity_id,
             activity_type=fallback.activity_type,
-            reason=(
-                f"当前课程尚无可用规划路径，从基础活动开始："
-                f"{fallback.title}（知识点 {fallback.activity_id}）"
-            ),
+            reason=f"建议从基础内容《{fallback.title}》开始学习。",
         )
 
     review = _first_legal_review(catalog, mastered)
@@ -170,24 +167,21 @@ def validate_model_choice(
 def build_reason(activity: CourseActivity, candidate: RecommendationCandidate | None) -> str:
     """Explainable reason built only from verifiable facts."""
     label = _ACTIVITY_LABELS.get(activity.activity_type, activity.activity_type)
-    knowledge_point_id = activity.knowledge_point_id or activity.concept_ids[0]
     if candidate is None:
-        return f"基于当前画像选择{label}：{activity.title}（知识点 {knowledge_point_id}）"
+        return f"根据目前的学习情况，推荐{label}《{activity.title}》。"
     if candidate.reason_code == "needs_reinforcement":
         return (
-            f"知识点 {knowledge_point_id} 掌握度 {candidate.score:.2f} 低于巩固阈值，"
+            f"这个知识点的掌握度为 {candidate.score:.2f}，建议再练一练，"
             f"安排{label}以巩固掌握"
         )
     if candidate.reason_code == "insufficient_evidence":
-        return f"知识点 {knowledge_point_id} 尚无学习证据，从{label}开始建立学习记录"
+        return f"这个知识点尚无学习证据，建议从{label}开始。"
     if candidate.reason_code == "continue_practice":
         return (
-            f"知识点 {knowledge_point_id} 已有部分掌握（证据 {candidate.evidence_count} 条），"
+            f"这个知识点已有 {candidate.evidence_count} 条学习记录，"
             f"继续{label}以加深理解"
         )
-    return (
-        f"知识点 {knowledge_point_id} 掌握度 {candidate.score:.2f} 且证据充分，进入{label}推进学习"
-    )
+    return f"前面的知识点掌握度已达 {candidate.score:.2f}，可以继续{label}。"
 
 
 def _plan(activity: CourseActivity, candidate: RecommendationCandidate) -> PlannedActivity:

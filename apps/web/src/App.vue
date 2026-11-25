@@ -453,7 +453,7 @@ const filteredActivities = computed(() => {
       || (activityFilter.value === "homework" && item.learning_stage === "after_class")
       || item.type === activityFilter.value;
     const matchesQuery = !query
-      || `${item.id} ${item.title} ${item.concept_ids.join(" ")}`.toLowerCase().includes(query);
+      || `${item.id} ${item.title} ${item.concept_ids.join(" ")} ${item.concept_ids.map(conceptTitle).join(" ")}`.toLowerCase().includes(query);
     return matchesFilter && matchesQuery;
   });
   if (activitySort.value === "shortest") {
@@ -734,12 +734,27 @@ function knowledgeStateLabel(item: KnowledgePoint): string {
   } as Record<KnowledgeState, string>)[knowledgeState(item)];
 }
 
+const courseTitles = computed(() => new Map(
+  [...knowledge.value, ...activities.value].map(item => [item.id, item.title])
+));
+const nextTitle = computed(() => next.value
+  ? courseTitles.value.get(next.value.activity_id) ?? activityType(next.value.activity_type)
+  : "等待规划");
+// Older plans can contain catalog keys in the explanation.
+const nextReason = computed(() => next.value?.reason.replace(
+  /\b(?:C|DS|PY)-[A-Z0-9]+(?:-[A-Z0-9]+)+\b/g,
+  id => courseTitles.value.get(id) ?? "本节内容"
+));
+function conceptTitle(id: string): string {
+  return courseTitles.value.get(id) ?? "相关知识点";
+}
+
 function knowledgeEvidenceText(item: KnowledgePoint): string {
   const score = masteryScore(item.id);
   if (score !== null) return `掌握度 ${Math.round(score * 100)}%`;
   if (!hasLearningEvidence(profile.value)) return "完成摸底后生成个性化状态";
   const missing = item.prerequisites.filter((id) => (masteryScore(id) ?? 0) < .6);
-  if (missing.length) return `建议先完成 ${missing.slice(0, 2).join("、")}${missing.length > 2 ? " 等" : ""}`;
+  if (missing.length) return `建议先完成 ${missing.slice(0, 2).map(conceptTitle).join("、")}${missing.length > 2 ? " 等" : ""}`;
   return item.prerequisites.length ? "前置知识已满足" : "可直接开始学习";
 }
 
@@ -1214,7 +1229,7 @@ onBeforeUnmount(() => {
 
       <template v-else-if="tab === 'overview'">
         <section class="hero-card" :class="{ 'trace-overview': courseId === 'data_structures' }" v-reveal>
-          <div><h2>{{ selectedCourse?.title ?? '课程' }}<wbr>学习工作台</h2><p>{{ next?.reason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
+          <div><h2>{{ selectedCourse?.title ?? '课程' }}<wbr>学习工作台</h2><p>{{ nextReason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
             <button v-else v-ripple @click="startBaseline">{{ Object.keys(diagnosticAnswers).length && !diagnosticResult ? '继续能力摸底' : '开始能力摸底' }}</button>
           </div>
@@ -1243,7 +1258,7 @@ onBeforeUnmount(() => {
             <article><strong>{{ courseLoadError ? "—" : knowledgeSubskillCount }}</strong><span>细分技能</span></article>
             <article><strong>{{ courseLoadError ? "—" : knowledgePrerequisiteCount }}</strong><span>前置关系</span></article>
           </div>
-          <div class="knowledge-toolbar"><label><span>⌕</span><input v-model="knowledgeQuery" :disabled="Boolean(courseLoadError)" placeholder="搜索节点、技能或 ID" aria-label="搜索知识节点或细分技能" /></label><small>{{ courseLoadError ? "课程索引未载入" : `显示 ${filteredKnowledge.length} / ${knowledge.length} 个核心节点` }}</small></div>
+          <div class="knowledge-toolbar"><label><span>⌕</span><input v-model="knowledgeQuery" :disabled="Boolean(courseLoadError)" placeholder="搜索知识点或技能" aria-label="搜索知识节点或细分技能" /></label><small>{{ courseLoadError ? "课程索引未载入" : `显示 ${filteredKnowledge.length} / ${knowledge.length} 个核心节点` }}</small></div>
           <div class="knowledge-legend" aria-label="知识节点状态说明">
             <span data-state="mastered">已掌握</span><span data-state="learning">学习中</span><span data-state="recommended">推荐下一步</span><span data-state="ready">可以开始</span><span data-state="locked">建议先学前置</span><span data-state="unassessed">等待评估</span>
           </div>
@@ -1286,7 +1301,7 @@ onBeforeUnmount(() => {
             <div v-if="stages.length" class="stage-list"><article v-for="(stage, index) in stages" :key="stage.stage"><em>{{ index + 1 }}</em><div><small>{{ stage.stage }}</small><h3>{{ stage.objective }}</h3><p>{{ stage.reason }}</p><b>涵盖 {{ stage.knowledge_point_ids.length }} 个知识点</b></div></article></div>
             <div v-else class="empty">当前路径来自实时下一任务推荐；重新建立能力基线可生成三阶段计划。</div>
           </div>
-          <aside class="next-card" data-spotlight><span>{{ activityType(next?.activity_type ?? "concept") }}</span><h2>{{ next?.activity_id ?? "等待规划" }}</h2><p>{{ next?.reason }}</p><button v-if="next" v-ripple @click="openNextActivity">进入学习活动</button></aside>
+          <aside class="next-card" data-spotlight><span>{{ activityType(next?.activity_type ?? "concept") }}</span><h2>{{ nextTitle }}</h2><p>{{ nextReason }}</p><button v-if="next" v-ripple @click="openNextActivity">进入学习活动</button></aside>
         </section>
         <section v-else class="panel empty">请先在课程概览完成快速能力基线。</section>
       </template>
@@ -1356,7 +1371,7 @@ onBeforeUnmount(() => {
           <div v-if="!hasLearningEvidence(profile)" class="adaptive-empty"><strong>先完成能力诊断</strong><span>建立初始画像后，系统才能选择你的薄弱知识点。</span><button class="primary" @click="tab = 'overview'">前往诊断</button></div>
           <div v-else-if="!adaptiveProblem" class="adaptive-empty"><strong>准备生成第一道个性化题目</strong><span>系统优先选择掌握度最低且已有可靠题型的知识点。</span><button class="primary" :disabled="adaptiveLoading" @click="generateAdaptiveProblem()">{{ adaptiveLoading ? "生成中…" : "生成我的新题" }}</button></div>
           <template v-else>
-            <div class="adaptive-heading"><div><span v-for="concept in adaptiveProblem.concept_ids" :key="concept">{{ concept }}</span><h3>{{ adaptiveProblem.title }}</h3></div><b>{{ difficulty(adaptiveProblem.difficulty) }}</b></div>
+            <div class="adaptive-heading"><div><span v-for="concept in adaptiveProblem.concept_ids" :key="concept">{{ conceptTitle(concept) }}</span><h3>{{ adaptiveProblem.title }}</h3></div><b>{{ difficulty(adaptiveProblem.difficulty) }}</b></div>
             <p class="prompt">{{ adaptiveProblem.prompt }}</p>
             <div class="adaptive-spec"><section><strong>约束</strong><ul><li v-for="item in adaptiveProblem.constraints" :key="item">{{ item }}</li></ul></section><section><strong>公开样例</strong><div v-for="(item, index) in adaptiveProblem.public_examples" :key="index"><code>输入：{{ item.input }}</code><code>输出：{{ item.expected_output }}</code></div></section></div>
             <div class="editor"><header><i></i><i></i><i></i><b>Python · 隐藏测试验证</b></header><textarea v-model="adaptiveCode" :disabled="adaptiveLoading" spellcheck="false" aria-label="Python 代码答案"></textarea></div>
@@ -1366,12 +1381,12 @@ onBeforeUnmount(() => {
         </section>
         <section v-if="!courseLoadError" class="practice-compass panel">
           <div v-if="lastActivity" class="continue-card" data-spotlight><span>继续上次</span><div><b>{{ lastActivity.title }}</b><small>{{ lastActivity.estimated_minutes }} 分钟 · {{ activityType(lastActivity.type) }}</small></div><button class="primary" v-ripple @click="openActivity(lastActivity.id)">继续作答 <b>→</b></button></div>
-          <div class="recommend-strip"><header><span>按当前画像推荐</span><small>优先薄弱知识、下一任务与适合难度</small></header><button v-for="(item, index) in recommendedActivities" :key="item.id" @click="openActivity(item.id)"><em>0{{ index + 1 }}</em><span><b>{{ item.title }}</b><small>{{ item.concept_ids.slice(0, 2).join(' · ') }} · {{ item.estimated_minutes }} 分钟</small></span></button></div>
+          <div class="recommend-strip"><header><span>按当前画像推荐</span><small>优先薄弱知识、下一任务与适合难度</small></header><button v-for="(item, index) in recommendedActivities" :key="item.id" @click="openActivity(item.id)"><em>0{{ index + 1 }}</em><span><b>{{ item.title }}</b><small>{{ item.concept_ids.slice(0, 2).map(conceptTitle).join(' · ') }} · {{ item.estimated_minutes }} 分钟</small></span></button></div>
         </section>
         <section v-if="!courseLoadError" class="practice-layout">
           <aside class="panel activity-list" v-reveal>
             <header><div><h2>练习工坊</h2><p>搜索题目，或按推荐顺序继续</p></div><small>{{ filteredActivities.length }} 项</small></header>
-            <label class="activity-search"><span>⌕</span><input v-model="activityQuery" type="search" placeholder="搜索题目、编号或知识点" aria-label="搜索练习" /><button v-if="activityQuery" aria-label="清空搜索" @click="activityQuery = ''">×</button></label>
+            <label class="activity-search"><span>⌕</span><input v-model="activityQuery" type="search" placeholder="搜索题目名称或知识点" aria-label="搜索练习" /><button v-if="activityQuery" aria-label="清空搜索" @click="activityQuery = ''">×</button></label>
             <div class="activity-sort"><button :class="{ active: activitySort === 'recommended' }" @click="activitySort = 'recommended'">为我推荐</button><button :class="{ active: activitySort === 'shortest' }" @click="activitySort = 'shortest'">用时较短</button><button :class="{ active: activitySort === 'catalog' }" @click="activitySort = 'catalog'">课程顺序</button></div>
             <div class="activity-filters"><button v-for="item in ([['all','全部'],['homework','课后'],['code','编程'],['debug','排错']] as const)" :key="item[0]" :class="{ active: activityFilter === item[0] }" :aria-pressed="activityFilter === item[0]" @click="activityFilter = item[0]">{{ item[1] }}</button></div>
             <div class="activity-scroll"><button v-for="item in filteredActivities" :key="item.id" :class="{ active: activity?.id === item.id }" @click="openActivity(item.id)"><span>{{ item.learning_stage === 'after_class' ? '课后练习' : activityType(item.type) }}</span><strong>{{ item.title }}</strong><small>{{ item.estimated_minutes }} 分钟</small></button><p v-if="!filteredActivities.length" class="empty compact">没有找到匹配练习，试试更短的关键词或清空筛选。</p></div>

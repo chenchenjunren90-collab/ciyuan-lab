@@ -10,8 +10,8 @@ const props = defineProps<{
 const emit = defineEmits<{ practice: [id: string] }>();
 const steps = ["项目任务", "分项验证", "提交与复盘"] as const;
 const step = ref(props.resumeChecks ? 1 : 0);
-const tasks = computed(() => (props.project.verification_exercise_ids ?? []).map(id => ({
-  id, title: props.activities.find(item => item.id === id)?.title ?? id, check: props.checks[id],
+const tasks = computed(() => (props.project.verification_exercise_ids ?? []).map((id, index) => ({
+  id, title: props.activities.find(item => item.id === id)?.title ?? `分项练习 ${index + 1}`, check: props.checks[id],
 })));
 const verifiedCount = computed(() => tasks.value.filter(task => task.check).length);
 </script>
@@ -30,7 +30,7 @@ const verifiedCount = computed(() => tasks.value.filter(task => task.check).leng
       <header class="check-heading"><h3>编程能力验证</h3><small v-if="tasks.length">{{ verifiedCount }} / {{ tasks.length }} 项有验证记录</small></header>
       <ol v-if="tasks.length" class="check-list">
         <li v-for="task in tasks" :key="task.id">
-          <div><h4>{{ task.title }}</h4><small>{{ task.id }}</small>
+          <div><h4>{{ task.title }}</h4>
             <span v-if="task.check">上次提交通过 {{ task.check.passed }} / {{ task.check.total }} 项测试 · {{ new Date(task.check.at).toLocaleString() }}</span>
             <span v-else>尚无验证记录</span></div>
           <button class="secondary" @click="emit('practice', task.id)">打开练习 →</button>
