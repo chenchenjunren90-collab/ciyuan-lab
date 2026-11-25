@@ -6,7 +6,6 @@ import { describe, expect, it } from "vitest";
 // Foundation files retained from luckystar-2 f731194. Current palettes are covered by workspaceVisual.
 const originals = [
   ["styles.css", "c5d9205059b4c83a0a29cb0d035fc4acb79848d4"],
-  ["typography.css", "294a3d0a00e4c792db93ab77ba6aec038068f273"],
   ["directives/motion.ts", "46cb216936918a0fdd17205aa7f8f5b0c38047fd"],
   ["components/ParticleField.vue", "18eb28d855e8da64074aa3d5435f824a1b6c41cc"],
   ["composables/useSpotlight.ts", "f250996813809b8b60b9b13250ab53de52450865"],

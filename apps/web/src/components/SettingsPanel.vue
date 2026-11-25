@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { version as productVersion } from "../../package.json";
 import { nextTick, onBeforeUnmount, ref, watch } from "vue";
 
 import ThemeToggle from "./ThemeToggle.vue";
@@ -114,7 +115,7 @@ onBeforeUnmount(() => {
 
         <section class="settings-section">
           <div><b>设备模式</b><span>选择移动端或电脑端布局；自动模式跟随屏幕宽度。</span></div>
-          <div class="theme-options"><button v-for="item in deviceModes" :key="item.id" :class="{ active: preferences.deviceMode === item.id }" :aria-pressed="preferences.deviceMode === item.id" @click="emit('update', { deviceMode: item.id })"><span>{{ item.label }}</span></button></div>
+          <div class="theme-options segment-rail"><button v-for="item in deviceModes" :key="item.id" :class="{ active: preferences.deviceMode === item.id }" :aria-pressed="preferences.deviceMode === item.id" @click="emit('update', { deviceMode: item.id })"><span>{{ item.label }}</span></button></div>
         </section>
 
         <section class="settings-section toggle-list">
@@ -123,7 +124,7 @@ onBeforeUnmount(() => {
           <button role="switch" :aria-checked="preferences.welcomeOnLaunch" @click="emit('update', { welcomeOnLaunch: !preferences.welcomeOnLaunch })"><span><b>每次打开显示欢迎页</b><small>适合演示；关闭后只在首次进入时显示。</small></span><i :class="{ on: preferences.welcomeOnLaunch }"><b></b></i></button>
         </section>
 
-        <footer><button class="reset-button" @click="emit('reset')">恢复默认外观</button><button class="replay-button" @click="emit('replay')">重新查看欢迎页</button><button class="done-button" @click="emit('close')">完成</button></footer>
+        <footer><small class="settings-version">词元研究所 v{{ productVersion }}</small><button class="reset-button" @click="emit('reset')">恢复默认外观</button><button class="replay-button" @click="emit('replay')">重新查看欢迎页</button><button class="done-button" @click="emit('close')">完成</button></footer>
       </aside>
     </div>
   </Transition>

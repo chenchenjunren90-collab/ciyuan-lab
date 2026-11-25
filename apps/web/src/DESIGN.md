@@ -2,14 +2,14 @@
 name: "词元研究所"
 description: "计算机课程、算法推演与代码验证工作台"
 colors:
-  light-background: "#ffffff"
-  light-accent: "#213f86"
-  trace-signal: "#f9c433"
+  light-background: "#fafafa"
+  light-accent: "#275e60"
+  trace-signal: "#326868"
   dusk-background: "#042341"
-  dusk-accent: "#ba5bb8"
+  dusk-accent: "#c7bfd5"
 typography:
   body:
-    fontFamily: "Ciyuan Sans, Noto Sans SC, PingFang SC, Microsoft YaHei, sans-serif"
+    fontFamily: "DM Sans, PingFang SC, DengXian, Microsoft YaHei, Ciyuan Sans, sans-serif"
     fontSize: "1rem"
     fontWeight: 400
     lineHeight: 1.6
@@ -25,7 +25,7 @@ typography:
 
 # 词元研究所界面
 
-前端 v0.2.0 参考 [Impeccable 官方图库](https://impeccable.style/gallery/) 的 Observability 白底版本。欢迎页使用钴蓝导航、粗黑标题和可操作的二分查找路径。切换目标值可观察实际比较次序。示例数据和学员掌握度分开呈现。
+v0.9.0 延续可操作的二分查找路径图。浅色版使用淡灰页面、白色选中项和灰色内凹轨道，深色使用同一控件结构。标题使用 Barlow Condensed Light 与系统中文轻字重，正文使用 DM Sans 和中文无衬线字体。颜色强调集中在路径细线、焦点和状态文字。
 
 新用户默认使用极简白。主题开关在极简白和暮紫沉蓝间切换。旧版浅色偏好迁移到极简白，旧版暗色偏好迁移到暮紫沉蓝。减少动态、高对比和设备模式继续使用原来的个人设置。
 

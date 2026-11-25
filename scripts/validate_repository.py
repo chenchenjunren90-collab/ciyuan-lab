@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import json
+import runpy
 import sys
+import tomllib
 from collections.abc import Mapping
 from pathlib import Path
 from typing import cast
@@ -131,9 +133,29 @@ def validate_compose() -> list[str]:
     return []
 
 
+def validate_release_versions() -> list[str]:
+    with (REPO_ROOT / "pyproject.toml").open("rb") as stream:
+        expected = tomllib.load(stream)["project"]["version"]
+    web = REPO_ROOT / "apps/web"
+    lock = require_mapping(load_json(web / "package-lock.json"), "package lock")
+    packages = require_mapping(lock["packages"], "locked packages")
+    api_path = REPO_ROOT / "apps/api/app/__init__.py"
+    spec = require_mapping(load_yaml(REPO_ROOT / "contracts/openapi.yaml"), "OpenAPI")
+    versions = {
+        "frontend": require_mapping(load_json(web / "package.json"), "package").get("version"),
+        "frontend lock": lock.get("version"),
+        "locked root": require_mapping(packages[""], "root package").get("version"),
+        "API runtime": runpy.run_path(str(api_path)).get("__version__"),
+        "OpenAPI": require_mapping(spec["info"], "API info").get("version"),
+    }
+    return [f"{name} version {actual!r} differs from {expected}"
+            for name, actual in versions.items() if actual != expected]
+
+
 def main() -> int:
     errors = [
         *validate_required_files(),
+        *validate_release_versions(),
         *validate_openapi(),
         *validate_learning_event_schema(),
         *validate_compose(),

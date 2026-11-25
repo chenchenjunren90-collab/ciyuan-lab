@@ -90,20 +90,24 @@ html[data-theme="light"] .settings-panel { background:var(--surface-raised); box
 
 /* Appearance shared by the workspace, welcome page and course tools. */
 html[data-palette="dusk"] {
-  --trace-signal:#ba5bb8; --trace-signal-ink:#180c22;
-  --surface:#042341; --surface-raised:#0c2e4c; --surface-muted:#153957;
-  --ink:#f7f1fa; --muted:#c5bdd2; --line:#49617a;
-  --accent:#ba5bb8; --accent-dark:#d790d5; --accent-bright:#e5a5e2;
-  --accent-ink:#f0b8ed; --accent-contrast:#180c22; --accent-soft:#393254; --accent-pale:#242e4d;
-  --code:#082038; --code-ink:#f4edf8; --code-muted:#c5bdd2; --code-line:#49617a;
+  --surface:#042341; --surface-raised:#17354e; --surface-muted:#102c42;
+  --ink:#f3f4f6; --muted:#b5c4cf; --line:#516578;
+  --accent:#c7bfd5; --accent-dark:#e1d9ed; --accent-bright:#e0d9ef;
+  --accent-ink:#dad5e2; --accent-contrast:#182434; --accent-soft:#263c50; --accent-pale:#1c3348;
+  --code:#102a40; --code-ink:#edf0f4; --code-muted:#bdc8d2; --code-line:#516578;
+  --trace-signal:#bfd7d4; --trace-signal-ink:#13282b;
+  --rail:#11293c; --thumb:#27445a; --rail-shadow:inset 0 2px 4px #0005;
+  --thumb-shadow:0 1px 3px #0008;
 }
 html[data-palette="light"] {
-  --surface:#ffffff; --surface-raised:#ffffff; --surface-muted:#f4f5f2;
-  --ink:#151819; --muted:#535b61; --line:#c5c9c7;
-  --accent:#213f86; --accent-dark:#162e68; --accent-bright:#3556a2;
-  --accent-ink:#193777; --accent-contrast:#ffffff; --accent-soft:#dee5f3; --accent-pale:#edf1f7;
-  --code:#171a1c; --code-ink:#fafaf7; --code-muted:#b7bfbe; --code-line:#4f5558;
-  --trace-signal:#f9c433; --trace-signal-ink:#151819;
+  --surface:#fafafa; --surface-raised:#ffffff; --surface-muted:#f3f3f2;
+  --ink:#202122; --muted:#56585a; --line:#d3d4d4;
+  --accent:#275e60; --accent-dark:#214d4e; --accent-bright:#437778;
+  --accent-ink:#25595a; --accent-contrast:#ffffff; --accent-soft:#ededec; --accent-pale:#f3f3f2;
+  --code:#f4f4f3; --code-ink:#222526; --code-muted:#555b5b; --code-line:#ccccca;
+  --trace-signal:#326868; --trace-signal-ink:#173e40;
+  --rail:#e9e9e8; --thumb:#ffffff; --rail-shadow:inset 0 2px 4px #0002;
+  --thumb-shadow:0 1px 3px #0003;
 }
 html[data-palette] {
   color:var(--ink); background:var(--surface);
@@ -113,7 +117,7 @@ html[data-palette] {
 html[data-theme][data-palette] body, html[data-theme][data-palette] .workspace { color:var(--ink); background:var(--surface); }
 html[data-palette] .immersive-lesson .smart-board { color:var(--ink); border-color:var(--line); background:var(--surface-raised); box-shadow:none; }
 html[data-palette] :is(.primary,.welcome-primary,.done-button,.talk-composer button),
-html[data-palette] .immersive-lesson .code-task .primary { color:var(--accent-contrast); background:var(--accent); box-shadow:none; }
+html[data-palette] .immersive-lesson .code-task .primary { color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); box-shadow:var(--thumb-shadow); }
 html[data-palette] ::selection { color:var(--accent-contrast); background:var(--accent); }
 html[data-palette][data-contrast="high"] { --muted:var(--ink); --line:var(--ink); }
 

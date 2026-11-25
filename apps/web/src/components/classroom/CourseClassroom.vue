@@ -175,7 +175,7 @@ onBeforeUnmount(() => { alive = false; ++scope; ++taskScope; });
               <div v-if="prerequisites.length" class="prerequisites"><span>前置知识</span><button v-for="item in prerequisites" :key="item.id" :disabled="busy" @click="selectPoint(item.id)">{{ item.title }} {{ item.mastered ? '✓' : '↗' }}</button></div>
             </details>
           </header>
-          <nav class="views" aria-label="课堂学习环节"><button v-for="[id, title] in [['learn','分段讲解'],['lab','交互实验'],['practice','随堂练习'],['ask','课程答疑']]" :key="id" :aria-pressed="view === id" @click="view = id">{{ title }}</button></nav>
+          <nav class="views segment-rail" aria-label="课堂学习环节"><button v-for="[id, title] in [['learn','分段讲解'],['lab','交互实验'],['practice','随堂练习'],['ask','课程答疑']]" :key="id" :aria-pressed="view === id" @click="view = id">{{ title }}</button></nav>
           <section v-if="view === 'learn'" class="reading">
             <div v-if="scene" class="scene"><small>讲解 {{ sceneIndex + 1 }} / {{ scenes.length }}</small><h3>{{ scene.title }}</h3><SafeMarkdown :source="scene.content" /><div class="controls"><button :disabled="sceneIndex === 0" @click="sceneIndex--">上一段</button><button :disabled="sceneIndex === scenes.length - 1" @click="sceneIndex++">下一段 →</button></div></div>
             <article v-if="worked" class="worked"><h3>跟着例题推演</h3><p>{{ worked.problem }}</p><pre><code>{{ worked.code }}</code></pre><ol><li v-for="step in worked.steps" :key="step">{{ step }}</li></ol><p>{{ worked.reflection }}</p></article>

@@ -66,39 +66,57 @@ html[data-theme][data-palette] .immersive-lesson .smart-board :is(.board-code-ex
   .assessment-page .diagnostic-actions { align-items: stretch; flex-direction: column; }
 }
 
-/* Navigation, content rules and trace highlighting match the welcome page. */
-html[data-palette] .study-shell .topbar {
-  background:var(--accent); color:var(--accent-contrast); border:0; border-radius:2px;
-  margin-block:0 22px; padding:14px clamp(14px,2vw,26px); min-height:68px;
-}
-html[data-palette] .study-shell .topbar :is(h1,.taskbar-title > span,.taskbar-user > span,.taskbar-status b,.taskbar-status small) { color:var(--accent-contrast); }
-/* The original topbar sets this caption color with !important. */
-html[data-palette] .study-shell .topbar .taskbar-title > span { color:var(--accent-contrast) !important; }
-html[data-palette] .trace-overview::after { content:none; }
-html[data-palette] .study-shell .topbar .taskbar-status { background:transparent; border:0; }
-html[data-palette] .study-shell .topbar :is(.settings-trigger,.theme-switch) {
-  color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); border-radius:2px; box-shadow:none;
-}
-html[data-palette] .study-shell .brand > span { border-radius:2px; box-shadow:none; animation:none; }
-html[data-palette] .study-shell :is(.panel,.hero-card,.project-center-hero,.project-shelf,.algorithm-lab,.study-tutor,.metrics article,.adaptive-lab,.practice-card,.knowledge-chapter) { border-radius:3px; box-shadow:none; }
-html[data-palette] .study-shell :is(.hero-card,.project-center-hero) {
-  padding:clamp(18px,3vw,46px); color:var(--ink); background:var(--surface); border:0; border-bottom:2px solid var(--ink);
-}
-html[data-palette] .study-shell .hero-card h2 { color:var(--ink); font:750 clamp(30px,3.6vw,56px)/1.08 system-ui,var(--font-body); letter-spacing:-.045em; }
-html[data-palette] .study-shell .hero-card p { color:var(--muted); }
-html[data-palette] .study-shell .hero-card button { border-radius:2px; color:var(--accent-contrast); background:var(--accent); box-shadow:none; }
-html[data-palette] .study-shell .metrics article { border:0; border-top:1px solid var(--line); padding-inline:8px; }
-html[data-palette] .study-shell :is(.course-nav button,.study-nav button,.secondary,.primary,.lab-detail,.trace-screen,.settings-trigger) { border-radius:3px; }
-html[data-palette] .study-shell .settings-trigger i { color:var(--accent-ink); background:var(--surface-muted); }
 html[data-palette] .study-shell .trace-overview { display:grid; grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr); gap:16px 5%; align-items:center; }
 html[data-palette] .trace-overview .search-trace { grid-area:1 / 2 / 3 / 3; width:100%; }
 html[data-palette] .trace-overview .mastery-orbit { display:block; align-self:start; width:100%; height:auto; padding:0; background:none; box-shadow:none; }
 html[data-palette] .trace-overview .mastery-orbit > div { display:flex; align-items:baseline; justify-content:flex-start; gap:12px; width:100%; height:auto; text-align:left; background:none; }
 html[data-palette] .trace-overview .mastery-orbit strong { font-size:24px; color:var(--ink); }
 html[data-palette] .trace-overview .mastery-orbit span { color:var(--muted); }
-html[data-palette] .study-shell .algorithm-lab .cell.active { color:var(--trace-signal-ink); background:var(--trace-signal); border-color:var(--trace-signal); }
 html[data-palette] .study-shell [data-spotlight]::after { display:none; }
 @media(max-width:780px) {
   html[data-palette] .study-shell .trace-overview { grid-template-columns:minmax(0,1fr); }
   html[data-palette] .trace-overview .search-trace { grid-area:auto; }
 }
+
+/* Flat reading surfaces with the inset track and raised selection from the gallery. */
+html[data-palette] .study-shell .topbar {
+  min-height:68px; margin-block:0 22px; padding:14px 0; border:0;
+  border-bottom:1px solid var(--line); color:var(--ink); background:transparent;
+}
+html[data-palette] .study-shell .topbar .taskbar-title > span { color:var(--muted) !important; }
+html[data-palette] .study-shell :is(.hero-card,.project-center-hero,.panel,.study-tutor,.algorithm-lab,.practice-card,.adaptive-lab,.project-shelf,.metrics article) {
+  color:var(--ink); background:var(--surface); border-color:var(--line); border-radius:9px; box-shadow:none;
+}
+html[data-palette] .study-shell .hero-card { padding:clamp(20px,3vw,44px); border:0; border-bottom:1px solid var(--line); }
+html[data-palette] .trace-overview::after { content:none; }
+html[data-palette] .study-shell .hero-card h2 { color:var(--ink); font:300 clamp(32px,3.5vw,54px)/1.18 var(--font-display); }
+html[data-palette] .study-shell .hero-card p { color:var(--muted); }
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) :is(.welcome-settings,.welcome-primary,.settings-trigger,.primary,.done-button,.secondary,.ask-button,.ask-frame,.hero-card button,.classroom-invitation button,.classroom-invitation i,.tutor-symbol,.stage-index,.course-nav button > b,.entry-actions button) {
+  color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); box-shadow:none; border-radius:999px;
+}
+html[data-palette] .study-shell .brand > span { color:var(--ink); background:none; box-shadow:none; animation:none; border:1px solid var(--line); }
+html[data-palette] .study-shell :is(.course-nav,.study-nav) button[aria-current="page"] { color:var(--ink); background:var(--thumb); box-shadow:var(--thumb-shadow); border-color:var(--line); }
+html[data-palette] .study-shell .trace-screen .cell.active { color:var(--ink); background:var(--thumb); border-color:var(--accent-ink); box-shadow:0 0 0 1px var(--accent-ink); }
+html[data-palette] .study-shell .trace-controls .ask-frame:hover { color:var(--ink); background:var(--rail); }
+html[data-palette] .study-shell [data-spotlight]::after { display:none; }
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .segment-rail {
+  display:inline-flex; width:fit-content; max-width:100%; padding:4px; gap:2px; align-items:stretch;
+  border:1px solid var(--line); border-radius:999px; background:var(--rail); box-shadow:var(--rail-shadow);
+}
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .segment-rail > button {
+  min-width:0; min-height:44px; height:auto; margin:0; padding:6px clamp(8px,1.1vw,17px); border:1px solid transparent; border-radius:999px;
+  font:400 14px/1.4 var(--font-body); color:var(--muted); background:transparent; box-shadow:none;
+}
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .segment-rail > button:is([aria-pressed=true],[aria-current=step],.active) {
+  background:var(--thumb); border-color:var(--line); box-shadow:var(--thumb-shadow); color:var(--ink);
+}
+html[data-palette] .segment-rail > button:focus-visible { outline:2px solid var(--accent-ink); outline-offset:-2px; }
+html[data-palette] .study-shell .project-studio .stage-index { color:var(--muted); background:none; border:0; }
+html[data-palette] .study-shell .project-studio nav button { flex-direction:row; }
+html[data-palette] .study-shell .segment-rail.views { flex-wrap:nowrap; }
+@media(max-width:420px) {
+  html[data-palette] .study-shell .segment-rail.views > button { padding-inline:6px; font-size:13px; }
+  html[data-palette] .study-shell .project-studio .stage-index { display:none; }
+  html[data-palette] .study-shell .project-studio nav button { font-size:13px; }
+}
+html[data-contrast="high"] .segment-rail > button:is([aria-pressed=true],[aria-current=step]) { outline:2px solid var(--ink); outline-offset:-2px; }

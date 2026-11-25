@@ -18,7 +18,7 @@ const verifiedCount = computed(() => tasks.value.filter(task => task.check).leng
 
 <template>
   <div class="project-studio">
-    <nav aria-label="项目学习阶段">
+    <nav class="segment-rail" aria-label="项目学习阶段">
       <button v-for="(label,i) in steps" :key="label" :aria-current="step === i ? 'step' : undefined" @click="step = i">
         <span class="stage-index" aria-hidden="true">{{ i + 1 }}</span><span>{{ label }}</span>
       </button>

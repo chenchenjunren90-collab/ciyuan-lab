@@ -53,9 +53,9 @@ figcaption strong { color:var(--ink); font-size:16px; } label { color:var(--mute
 select { margin-left:5px; min-height:40px; padding:3px 6px; color:var(--ink); border:1px solid var(--line); background:var(--surface-raised); font:inherit; }
 svg { display:block; width:100%; height:auto; }
 .rail,.signal { fill:none; stroke-linecap:round; stroke-linejoin:round; }
-.rail { stroke:var(--muted); stroke-width:1.6; } .traversed .rail { stroke:var(--ink); stroke-width:7; }
-.signal { stroke:var(--trace-signal); stroke-width:3; }
-circle { fill:var(--surface); stroke:var(--muted); stroke-width:2; } .traversed circle { fill:var(--trace-signal); stroke:var(--ink); stroke-width:3; }
+.rail { stroke:var(--muted); stroke-width:1.6; } .traversed .rail { stroke:var(--ink); stroke-width:3; }
+.signal { stroke:var(--trace-signal); stroke-width:2; }
+circle { fill:var(--surface); stroke:var(--muted); stroke-width:2; } .traversed circle { fill:var(--surface-raised); stroke:var(--trace-signal); stroke-width:3; }
 text { fill:var(--muted); font:14px Consolas,monospace; } .traversed text { fill:var(--ink); font-weight:700; }
 .trace-caption { border-top:1px solid var(--line); padding:12px 0; color:var(--muted); }
 .trace-caption b { color:var(--ink); font:600 15px Consolas,monospace; }

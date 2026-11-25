@@ -20,3 +20,8 @@ To refresh after significant curriculum/localization additions, download the
 two upstream TTFs and run `python apps/web/scripts/subset_fonts.py regular.ttf
 semibold.ttf` from the repository root. This optional asset-build step requires
 fontTools; the application and normal build have no new dependencies.
+
+Barlow Condensed Light supplies the narrow Latin display face. DM Sans supplies Latin reading and control text. Both Latin WOFF2 subsets are bundled locally from Google Fonts. Chinese headings prefer the platform light face and fall back to the existing CJK subset. Fonts are served by the application.
+
+- [Barlow Condensed](https://github.com/google/fonts/tree/main/ofl/barlowcondensed), license in barlow-condensed-light-OFL.txt
+- [DM Sans](https://github.com/google/fonts/tree/main/ofl/dmsans), license in dm-sans-OFL.txt

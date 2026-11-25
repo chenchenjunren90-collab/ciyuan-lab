@@ -36,8 +36,8 @@ function startLearning(): void {
     </header>
     <main class="welcome-main">
       <form class="welcome-copy" @submit.prevent="startLearning">
-        <h1 id="welcome-title">追踪代码，<br><em>看懂</em>每一步。</h1>
-        <p>从 C 语言、Python 到数据结构，跟着变量走一遍，用代码和测试验证你的理解。</p>
+        <h1 id="welcome-title">追踪代码，<br>看懂每一步。</h1>
+        <p class="lead"><span aria-hidden="true">›_</span>从 C 语言、Python 到数据结构，跟着变量走一遍，用代码和测试验证你的理解。</p>
         <label class="welcome-name">上课时希望怎么称呼你？
           <input v-model="name" maxlength="20" autocomplete="nickname" placeholder="新同学" />
         </label>
@@ -53,34 +53,34 @@ function startLearning(): void {
         <li><b>验证与复盘</b><span>根据测试结果更新掌握度</span></li></ol>
     </section>
     <footer class="welcome-footer">
-      <span>界面布局</span><button v-for="item in deviceModes" :key="item.id" type="button" :aria-pressed="deviceMode === item.id" @click="emit('update-device', item.id)">{{ item.label }}</button>
+      <span>界面布局</span><div class="segment-rail" role="group" aria-label="界面布局"><button v-for="item in deviceModes" :key="item.id" type="button" :aria-pressed="deviceMode === item.id" @click="emit('update-device', item.id)">{{ item.label }}</button></div>
     </footer>
   </section>
 </template>
 
 <style scoped>
 .welcome-experience { position:fixed; inset:0; overflow:auto; z-index:500; background:var(--surface); color:var(--ink); }
-.welcome-nav { padding:10px max(5vw,calc((100vw - 1250px)/2)); display:flex; align-items:center; justify-content:space-between; gap:12px; background:var(--accent); color:var(--accent-contrast); }
+.welcome-nav { padding:10px max(5vw,calc((100vw - 1250px)/2)); display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--line); background:var(--surface); color:var(--ink); }
 .welcome-brand,.welcome-appearance,.welcome-footer { display:flex; align-items:center; gap:12px; }
 .welcome-brand { white-space:nowrap; }.welcome-brand i { width:26px; height:4px; background:var(--trace-signal); position:relative; }
 .welcome-brand i::after { content:""; position:absolute; right:3px; top:-4px; width:9px; height:9px; border-radius:50%; border:2px solid var(--ink); background:var(--trace-signal); }
-.welcome-settings { color:inherit; background:transparent; border:1px solid currentColor; min-height:44px; padding:6px 12px; cursor:pointer; }
+.welcome-settings { color:inherit; background:transparent; border:1px solid var(--line); border-radius:999px; min-height:44px; padding:6px 12px; cursor:pointer; }
 .welcome-main,.welcome-route,.welcome-footer { width:min(90%,1250px); margin-inline:auto; }
 .welcome-main { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); align-items:center; gap:clamp(26px,7vw,100px); padding:clamp(40px,6vw,88px) 0; }
-html[data-theme] .welcome-experience .welcome-copy h1 { font-family:system-ui,var(--font-body); font-size:clamp(40px,5.3vw,80px); font-weight:800; letter-spacing:-.055em; line-height:1.09; margin:0; }
-h1 em { font-style:normal; text-decoration:underline; text-decoration-color:var(--trace-signal); text-decoration-thickness:.09em; text-underline-offset:.08em; }
+html[data-theme] .welcome-experience .welcome-copy h1 { font-family:var(--font-display); font-size:clamp(39px,4.4vw,68px); font-weight:300; letter-spacing:.015em; line-height:1.24; margin:0; }
 .welcome-copy p { margin:22px 0; max-width:32em; line-height:1.75; color:var(--muted); }
+.lead { display:flex; align-items:baseline; gap:14px; font-size:clamp(16px,1.5vw,20px); }.lead > span { color:var(--accent-ink); font-family:monospace; flex:none; }
 .welcome-name { display:grid; gap:6px; font-size:13px; color:var(--muted); }
 .welcome-name input { width:min(100%,310px); min-height:44px; color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:2px; padding:8px 12px; font:inherit; font-size:16px; }
 .welcome-primary { display:inline-flex; gap:25px; align-items:center; margin-top:14px; padding:12px 18px; min-height:44px; border:0; border-radius:2px; font:inherit; font-weight:600; cursor:pointer; }
-.welcome-route { border-top:2px solid var(--ink); padding-block:25px; }
+.welcome-route { border-top:1px solid var(--line); padding-block:25px; }
 .welcome-route h2 { margin:0 0 16px; font-size:25px; }
 .welcome-route ol { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:16px; padding:0; list-style:none; margin:0; }
 .welcome-route li { display:grid; gap:5px; padding-block:10px; border-top:1px solid var(--line); }
 .welcome-route li span,.welcome-footer { font-size:13px; color:var(--muted); }
 .welcome-footer { flex-wrap:wrap; padding:10px 0 20px; }
 .welcome-footer button { min-height:44px; background:none; border:0; border-bottom:2px solid transparent; color:var(--muted); font:inherit; cursor:pointer; }
-.welcome-footer button[aria-pressed=true] { color:var(--accent-ink); border-color:currentColor; }
+.welcome-footer button[aria-pressed=true] { color:var(--ink); }
 :is(input,button):focus-visible { outline:2px solid currentColor; outline-offset:2px; }
 @media(max-width:760px) {
   .welcome-main { grid-template-columns:1fr; gap:28px; padding-block:28px; }

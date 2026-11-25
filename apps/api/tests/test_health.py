@@ -2,6 +2,7 @@ import asyncio
 
 from httpx import ASGITransport, AsyncClient, Response
 
+from app import __version__
 from app.main import app
 
 
@@ -18,7 +19,7 @@ def test_root_health() -> None:
     assert response.json() == {
         "status": "ok",
         "service": "词元研究所",
-        "version": "0.1.0",
+        "version": __version__,
     }
 
 

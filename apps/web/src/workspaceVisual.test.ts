@@ -18,6 +18,15 @@ function contrast(a: string, b: string): number {
 }
 
 describe("workspace appearance", () => {
+  it("uses local heading and body fonts with a Chinese fallback", () => {
+    const css = readFileSync(new URL("./typography.css", import.meta.url), "utf8");
+    expect(css).toContain('--font-body: "DM Sans"');
+    expect(css).toContain('--font-display: "Barlow Condensed", "DengXian Light"');
+    for (const name of ["barlow-condensed-light", "dm-sans"]) {
+      const bytes = readFileSync(new URL("./assets/fonts/" + name + ".woff2", import.meta.url));
+      expect(bytes.toString("ascii", 0, 4)).toBe("wOF2");
+    }
+  });
   for (const palette of PALETTES) {
     it(`${palette.id} keeps text, controls and swatches in one accessible palette`, () => {
       const block = themes.match(new RegExp(`html\\[data-palette="${palette.id}"\\] \\{([^}]+)\\}`))![1]!;
@@ -29,10 +38,7 @@ describe("workspace appearance", () => {
         expect(contrast(token("muted"), token(surface)), `caption on ${surface}`).toBeGreaterThanOrEqual(4.5);
       }
       expect(contrast(token("accent-contrast"), token("accent")), "primary action").toBeGreaterThanOrEqual(4.5);
-      // Original buttons keep --accent on hover; --accent-dark is not their hover background.
-      // Check the real palette rule instead of assuming the retired workspace.css behavior.
-      expect(themes).toContain("{ color:var(--accent-contrast); background:var(--accent); box-shadow:none; }");
-      expect(contrast(token("accent-contrast"), token("accent")), "original hovered action").toBeGreaterThanOrEqual(4.5);
+      expect(contrast(token("ink"), token("surface-raised")), "raised action").toBeGreaterThanOrEqual(4.5);
       expect(contrast(token("accent-ink"), token("accent-pale")), "selected control").toBeGreaterThanOrEqual(4.5);
     });
   }
