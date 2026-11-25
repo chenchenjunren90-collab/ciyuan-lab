@@ -1,35 +1,11 @@
-@font-face {
-  font-family:"Barlow Condensed";
-  src:url("./assets/fonts/barlow-condensed-light.woff2") format("woff2");
-  font-weight:300;
-  font-display:swap;
-}
-@font-face {
-  font-family:"DM Sans";
-  src:url("./assets/fonts/dm-sans.woff2") format("woff2");
-  font-weight:100 900;
-  font-display:swap;
-}
-/* Reading roles live after the legacy component/theme styles. No layout scaling. */
-@font-face {
-  font-family: "Ciyuan Sans";
-  src: url("./assets/fonts/noto-sans-sc-400.woff") format("woff");
-  font-style: normal;
-  font-weight: 400;
-  font-display: swap;
-}
-
-@font-face {
-  font-family: "Ciyuan Sans";
-  src: url("./assets/fonts/noto-sans-sc-600.woff") format("woff");
-  font-style: normal;
-  font-weight: 600;
-  font-display: swap;
-}
+@import "@fontsource-variable/noto-serif-sc";
 
 :root {
-  --font-body: "DM Sans", "PingFang SC", "DengXian", "Microsoft YaHei", "Ciyuan Sans", sans-serif;
-  --font-display: "Barlow Condensed", "DengXian Light", "Microsoft YaHei Light", "PingFang SC", "Ciyuan Sans", sans-serif;
+  --font-body: "Noto Serif SC Variable", serif;
+  --font-display: var(--font-body);
+  --font-data: var(--font-body);
+  --font-code: ui-monospace, "Cascadia Mono", Consolas, var(--font-body);
+  --title-weight: 800;
   --type-caption: .8125rem;
   --type-label: .875rem;
   --type-body: 1rem;
@@ -41,14 +17,26 @@
   line-height: 1.6;
 }
 
-/* Two real font weights, with monospace reserved for code and numeric data. */
-html[data-theme] :is(button, input, select, textarea) {
+/* Inherit through legacy component shorthands, including native controls and SVG text. */
+#app { font-family: var(--font-body); }
+#app :where(*) { font-family: inherit; }
+#app :is(h1, h2, h3, h4, h5, h6, .welcome-brand b, .brand strong, .search-trace figcaption strong) {
+  font-family: var(--font-display);
+  font-weight: var(--title-weight);
+  letter-spacing: -.025em;
+}
+#app :is(pre, code, kbd, samp, .editor textarea, .code-editor textarea) {
+  font-family: var(--font-code);
+}
+#app .settings-panel {
+  --font-body: system-ui, sans-serif;
+  --font-display: var(--font-body);
   font-family: var(--font-body);
 }
 
 html[data-theme] :is(.workspace, .welcome-experience, .settings-panel) :is(h1, h2, h3, h4) {
   font-family: var(--font-display);
-  font-weight: 300;
+  font-weight: var(--title-weight);
   line-height: 1.4;
   letter-spacing: 0;
   text-wrap: pretty;
@@ -65,7 +53,7 @@ html[data-theme] .taskbar-title h1 {
 
 html[data-theme] :is(.hero-card h2, .project-center-hero h2) {
   font-size: var(--type-intro);
-  font-weight: 300;
+  font-weight: var(--title-weight);
   line-height: 1.4;
   letter-spacing: 0;
 }
@@ -73,7 +61,7 @@ html[data-theme] :is(.hero-card h2, .project-center-hero h2) {
 html[data-theme] .welcome-experience .welcome-copy h1 {
   max-width: none;
   font-size: clamp(1.875rem, 3vw, 2.75rem);
-  font-weight: 300;
+  font-weight: var(--title-weight);
   line-height: 1.4;
   letter-spacing: 0;
 }
@@ -87,7 +75,7 @@ html[data-theme] :is(.panel > header h2, .activity-title h2, .lesson-detail h2, 
 
 html[data-theme] .immersive-lesson :is(.assessment-welcome h1, .result-celebration h2, .returning-planner-gate > header h2) {
   font-size: var(--type-intro);
-  font-weight: 300;
+  font-weight: var(--title-weight);
   line-height: 1.4;
   letter-spacing: 0;
 }
@@ -193,7 +181,7 @@ html[data-theme] .workspace .mastery-orbit strong {
 }
 
 html[data-theme] :is(.editor textarea, .code-task .code-editor textarea, .safe-markdown pre code, .lesson-materials pre code, .board-code-example pre code, .worked-example pre code) {
-  font-family: var(--font-data);
+  font-family: var(--font-code);
   font-size: var(--type-label);
   font-weight: 400;
   line-height: 1.75;

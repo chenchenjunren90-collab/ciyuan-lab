@@ -89,7 +89,7 @@ html[data-palette] .study-shell :is(.hero-card,.project-center-hero,.panel,.stud
 }
 html[data-palette] .study-shell .hero-card { padding:clamp(20px,3vw,44px); border:0; border-bottom:1px solid var(--line); }
 html[data-palette] .trace-overview::after { content:none; }
-html[data-palette] .study-shell .hero-card h2 { color:var(--ink); font:300 clamp(32px,3.5vw,54px)/1.18 var(--font-display); }
+html[data-palette] .study-shell .hero-card h2 { color:var(--ink); font:var(--title-weight) clamp(32px,3.5vw,54px)/1.18 var(--font-display); }
 html[data-palette] .study-shell .hero-card p { color:var(--muted); }
 html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) :is(.welcome-settings,.welcome-primary,.settings-trigger,.primary,.done-button,.secondary,.ask-button,.ask-frame,.hero-card button,.classroom-invitation button,.classroom-invitation i,.tutor-symbol,.stage-index,.course-nav button > b,.entry-actions button) {
   color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); box-shadow:none; border-radius:999px;

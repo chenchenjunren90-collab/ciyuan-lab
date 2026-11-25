@@ -1,5 +1,14 @@
 # Local reading fonts
 
+The current interface uses Noto Serif SC Variable, pinned in `apps/web/package.json`.
+Vite bundles its Unicode-range WOFF2 files from `@fontsource-variable/noto-serif-sc`.
+Body text uses weight 400 and headings use weight 800. The license is shipped at
+`/licenses/noto-serif-sc.txt`. Font files are loaded from the application origin.
+
+- [Fontsource package](https://fontsource.org/fonts/noto-serif-sc)
+
+## Previous releases
+
 Noto Sans SC (400 regular and 600 semibold), distributed under the adjacent
 SIL Open Font License. The CSS family alias is `Ciyuan Sans`.
 

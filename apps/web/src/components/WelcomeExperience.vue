@@ -67,7 +67,7 @@ function startLearning(): void {
 .welcome-settings { color:inherit; background:transparent; border:1px solid var(--line); border-radius:999px; min-height:44px; padding:6px 12px; cursor:pointer; }
 .welcome-main,.welcome-route,.welcome-footer { width:min(90%,1250px); margin-inline:auto; }
 .welcome-main { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); align-items:center; gap:clamp(26px,7vw,100px); padding:clamp(40px,6vw,88px) 0; }
-html[data-theme] .welcome-experience .welcome-copy h1 { font-family:var(--font-display); font-size:clamp(39px,4.4vw,68px); font-weight:300; letter-spacing:.015em; line-height:1.24; margin:0; }
+html[data-theme] .welcome-experience .welcome-copy h1 { font-family:var(--font-display); font-size:clamp(39px,4.4vw,68px); font-weight:var(--title-weight); letter-spacing:-.025em; line-height:1.24; margin:0; }
 .welcome-copy p { margin:22px 0; max-width:32em; line-height:1.75; color:var(--muted); }
 .lead { display:flex; align-items:baseline; gap:14px; font-size:clamp(16px,1.5vw,20px); }.lead > span { color:var(--accent-ink); font-family:monospace; flex:none; }
 .welcome-name { display:grid; gap:6px; font-size:13px; color:var(--muted); }

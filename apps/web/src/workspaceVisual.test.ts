@@ -18,14 +18,11 @@ function contrast(a: string, b: string): number {
 }
 
 describe("workspace appearance", () => {
-  it("uses local heading and body fonts with a Chinese fallback", () => {
+  it("uses the bundled Song face for reading and its heavy weight for titles", () => {
     const css = readFileSync(new URL("./typography.css", import.meta.url), "utf8");
-    expect(css).toContain('--font-body: "DM Sans"');
-    expect(css).toContain('--font-display: "Barlow Condensed", "DengXian Light"');
-    for (const name of ["barlow-condensed-light", "dm-sans"]) {
-      const bytes = readFileSync(new URL("./assets/fonts/" + name + ".woff2", import.meta.url));
-      expect(bytes.toString("ascii", 0, 4)).toBe("wOF2");
-    }
+    expect(css).toContain('--font-body: "Noto Serif SC Variable", serif');
+    expect(css).toContain("--font-display: var(--font-body)");
+    expect(css).toContain("--title-weight: 800");
   });
   for (const palette of PALETTES) {
     it(`${palette.id} keeps text, controls and swatches in one accessible palette`, () => {
