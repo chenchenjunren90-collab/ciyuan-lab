@@ -1,6 +1,6 @@
 # 产品版本记录
 
-当前产品版本为 **v0.10.1**。前端、后端包、健康接口与 OpenAPI 的 `info.version` 共同标识这次产品构建；接口路径 `/api/v1`、课程包和事件 Schema 各自独立演进。
+当前产品版本为 **v0.10.2**。前端、后端包、健康接口与 OpenAPI 的 `info.version` 共同标识这次产品构建；接口路径 `/api/v1`、课程包和事件 Schema 各自独立演进。
 
 ## 历史版本对照
 
@@ -23,6 +23,7 @@
 | [v0.9.0](https://github.com/chenchenjunren90-collab/ciyuan-lab/tree/v0.9.0) | 2026-11-25 | 见版本标签 | 新字体、灰轨分段控件、统一版本展示与一致性校验 |
 | [v0.10.0](https://github.com/chenchenjunren90-collab/ciyuan-lab/tree/v0.10.0) | 2026-11-25 | 见版本标签 | 自托管宋体、粗宋标题与可单步查看的二分查找分支 |
 | [v0.10.1](https://github.com/chenchenjunren90-collab/ciyuan-lab/tree/v0.10.1) | 2026-11-26 | 见版本标签 | 练习反馈、课堂目录和学习推荐使用学生可读的名称 |
+| [v0.10.2](https://github.com/chenchenjunren90-collab/ciyuan-lab/tree/v0.10.2) | 2026-11-28 | 见版本标签 | 总览突出学习成果，改善说明文字对比度、导航间距和阶段进度显示 |
 
 10 月 8 日的服务器恢复有独立验收记录。该记录给出上游视觉来源和镜像标识，未给出完整部署树对应的本仓库提交，因此归档于 10 月的同步里程碑。详见[服务器发布记录](audits/server-web-release-20261008.md)。
 

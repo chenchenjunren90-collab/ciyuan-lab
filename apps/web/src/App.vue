@@ -68,7 +68,7 @@ const PYTHON_KNOWLEDGE_CHAPTERS = [
 ] as const;
 const navigation = createWorkspaceNavigation(window);
 const initialRoute = navigation.read();
-const PAGE_TITLES: Record<Tab, string> = { overview: "学习任务台", assessment: "能力摸底", classroom: "沉浸课堂", path: "个性路径", tutor: "课程辅导", practice: "练习工坊", projects: "项目实战" };
+const PAGE_TITLES: Record<Tab, string> = { overview: "学习总览", assessment: "能力摸底", classroom: "沉浸课堂", path: "个性路径", tutor: "课程辅导", practice: "练习工坊", projects: "项目实战" };
 const systemThemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
 const workspacePreview = import.meta.env.DEV
   && new URLSearchParams(window.location.search).get("preview") === "workspace";
@@ -1229,7 +1229,7 @@ onBeforeUnmount(() => {
 
       <template v-else-if="tab === 'overview'">
         <section class="hero-card" :class="{ 'trace-overview': courseId === 'data_structures' }" v-reveal>
-          <div><h2>{{ selectedCourse?.title ?? '课程' }}<wbr>学习工作台</h2><p>{{ nextReason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
+          <div><h2>{{ next ? "下一步学习" : "从能力摸底开始" }}</h2><p>{{ nextReason || '先完成能力摸底，查看当前起点和推荐任务。' }}</p>
             <button v-if="next" v-ripple @click="openNextActivity">继续下一项学习</button>
             <button v-else v-ripple @click="startBaseline">{{ Object.keys(diagnosticAnswers).length && !diagnosticResult ? '继续能力摸底' : '开始能力摸底' }}</button>
           </div>
@@ -1237,21 +1237,24 @@ onBeforeUnmount(() => {
           <div class="mastery-orbit" :style="{ '--mastery': `${courseLoadError ? 0 : averageMastery * 3.6}deg` }"><div><strong>{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "—" : "" }}<CountUp v-if="!courseLoadError && !learningLoadError && hasLearningEvidence(profile)" :value="averageMastery" />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "" : "%" }}</strong><span>{{ (courseLoadError || learningLoadError) ? "画像服务未连接" : !hasLearningEvidence(profile) ? "尚无客观测评" : "当前已测知识" }}<br />{{ (courseLoadError || learningLoadError || !hasLearningEvidence(profile)) ? "等待学习证据" : "平均掌握度" }}</span></div></div>
         </section>
         <section v-if="courseId === 'python'" class="classroom-invitation" v-reveal>
-          <div><h3>Python 互动课堂</h3><p>林老师会分段讲解并停下来等你；三位同学会和你一起提问、试错和总结，最后用隐藏测试证明掌握。</p></div>
-          <aside><i>林</i><i>禾</i><i>拓</i><i>宁</i><button v-ripple @click="openClassroom">进入 Python 课堂 <b>→</b></button></aside>
+          <div class="invitation-copy">
+            <div class="invitation-heading"><h3>互动课堂</h3><span class="classroom-cast" aria-hidden="true"><i>林</i><i>禾</i><i>拓</i><i>宁</i></span></div>
+            <p>跟林老师分段学 Python，和三位同学推演代码，再用随堂练习检验理解。</p>
+          </div>
+          <aside><button v-ripple @click="openClassroom">进入课堂 <b aria-hidden="true">→</b></button></aside>
         </section>
         <section v-else class="classroom-invitation" v-reveal>
           <div><h3>{{ courseId === 'c' ? '看清指针与内存里的每一次变化。' : '把算法拆成能观察、能验证的步骤。' }}</h3><p>按前置知识分段学习，通过交互演示预测结果，再用随堂题和代码测试检查理解。</p></div>
           <aside><button v-ripple @click="openClassroom">进入{{ courseId === 'c' ? ' C 语言' : '数据结构' }}课堂 <b>→</b></button></aside>
         </section>
-        <section class="metrics" v-reveal>
-          <article data-spotlight><span>课程知识点</span><strong><CountUp :value="courseLoadError ? '—' : knowledge.length" /></strong><small>{{ courseLoadError ? "课程索引未载入" : "统一课程包" }}</small></article>
-          <article data-spotlight><span>已有证据</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : measuredMastery(profile).length" /></strong><small>{{ courseLoadError ? "画像服务未连接" : "测评与练习记录" }}</small></article>
-          <article data-spotlight><span>达到掌握</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : masteredCount" /></strong><small>{{ courseLoadError ? "等待可靠数据" : "分数 ≥ 60%" }}</small></article>
-          <article data-spotlight><span>实践活动</span><strong><CountUp :value="courseLoadError ? '—' : activities.length" /></strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
+        <section class="metrics" aria-label="学习成果与课程规模" v-reveal>
+          <article class="learning-metric"><span>已掌握知识点</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : masteredCount" /></strong><small>{{ (courseLoadError || learningLoadError) ? "进度暂不可用" : "掌握度达到 60%" }}</small></article>
+          <article class="learning-metric"><span>已有学习证据</span><strong><CountUp :value="(courseLoadError || learningLoadError) ? '—' : measuredMastery(profile).length" /></strong><small>{{ (courseLoadError || learningLoadError) ? "进度暂不可用" : "有测评或练习记录的知识点" }}</small></article>
+          <article><span>课程知识点</span><strong><CountUp :value="courseLoadError ? '—' : knowledge.length" /></strong><small>{{ courseLoadError ? "课程索引未载入" : "本课程覆盖的知识点" }}</small></article>
+          <article><span>实践活动</span><strong><CountUp :value="courseLoadError ? '—' : activities.length" /></strong><small>{{ courseLoadError ? "练习目录未载入" : "练习与综合项目" }}</small></article>
         </section>
-        <section ref="knowledgeMapSection" class="panel knowledge-map-target" v-reveal>
-          <header><div><span class="eyebrow">COURSE LEARNING ROADMAP</span><h2>{{ selectedCourse?.title ?? "课程" }} · 知识路线</h2></div><p>先看全局，再按前置关系逐步推进；每个节点都连接讲解、练习与学习证据。</p></header>
+        <section ref="knowledgeMapSection" class="panel knowledge-map-target">
+          <header><div><h2>知识路线</h2></div><p>按前置关系分阶段学习，选择知识点可查看讲解与练习。</p></header>
           <div class="knowledge-map-summary">
             <article><strong>{{ courseLoadError ? "—" : knowledgeChapterCount }}</strong><span>学习阶段</span></article>
             <article><strong>{{ courseLoadError ? "—" : knowledge.length }}</strong><span>核心节点</span></article>
@@ -1267,7 +1270,13 @@ onBeforeUnmount(() => {
               <header>
                 <em>{{ chapter.order }}</em>
                 <div><small>阶段 {{ chapter.order }} · {{ chapter.subskills }} 项细分技能</small><h3>{{ chapter.title }}</h3><p>{{ chapter.description }}</p></div>
-                <aside><strong>{{ chapter.mastered }}/{{ chapter.total }}</strong><span>核心节点已掌握</span><i><b :style="{ width: `${chapter.total ? chapter.mastered / chapter.total * 100 : 0}%` }"></b></i></aside>
+                <aside class="chapter-progress">
+                  <span v-if="learningLoadError">进度暂不可用</span>
+                  <template v-else>
+                    <strong>{{ chapter.mastered }} / {{ chapter.total }}</strong><span>已掌握</span>
+                    <progress :value="chapter.mastered" :max="chapter.total" :aria-label="chapter.title + '掌握进度'" :aria-valuetext="`已掌握 ${chapter.mastered} 个，共 ${chapter.total} 个知识点`"></progress>
+                  </template>
+                </aside>
               </header>
               <div class="knowledge-lane">
                 <article v-for="item in chapter.items" :key="item.id" :class="[`state-${knowledgeState(item)}`, { selected: selectedKnowledge?.id === item.id }]" data-spotlight>

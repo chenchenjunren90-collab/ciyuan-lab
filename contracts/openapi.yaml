@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: 词元研究所 API
-  version: 0.10.1
+  version: 0.10.2
   description: >-
     三周 MVP 的最小学习闭环公共契约（ARCH-01 已冻结）。
 
