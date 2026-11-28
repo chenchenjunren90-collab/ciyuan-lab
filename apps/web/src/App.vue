@@ -1197,7 +1197,7 @@ onBeforeUnmount(() => {
   />
   <div v-if="!welcomeOpen" class="app-shell study-shell" :inert="settingsOpen || assessmentWarningOpen" :class="{ 'classroom-focus': classroomFocusMode, 'device-mobile': resolvedDevice === 'mobile' }">
     <aside v-if="!classroomFocusMode" class="sidebar">
-      <div class="brand"><span aria-hidden="true">&lt;/&gt;</span><div><strong>词元研究所</strong><small>LEARNING CORE</small></div></div>
+      <div class="brand" role="img" aria-label="词元研究所"><i class="brand-mark" aria-hidden="true"></i><div><strong>词元研究所</strong><small>LEARNING CORE</small></div></div>
       <nav class="course-nav" aria-label="选择课程">
         <p>课程索引</p>
         <button v-for="item in courses" :key="item.id" :disabled="workspaceBusy" :class="{ active: courseId === item.id }" :aria-current="courseId === item.id ? 'page' : undefined" :title="item.title" @click="loadCourse(item.id)">

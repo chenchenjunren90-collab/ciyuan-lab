@@ -1,4 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <rect width="64" height="64" rx="15" fill="#bf1733"/>
-  <path d="M25 17c-5 0-7 3-7 8v3c0 3-1 4-4 4 3 0 4 1 4 4v3c0 5 2 8 7 8M39 17c5 0 7 3 7 8v3c0 3 1 4 4 4-3 0-4 1-4 4v3c0 5-2 8-7 8" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="176 176 536 536">
+  <style>
+    path { fill: #202020; }
+    @media (prefers-color-scheme: dark) { path { fill: #f2f2f2; } }
+  </style>
+  <path fill-rule="evenodd" d="M193 257 422 360 444 381 466 360 695 257V567L502 627 452 598V380L444 388 436 380V598L386 627 193 567Z
+    M251 346V522L422 592V408Z M637 346 466 408V592L637 522Z"/>
 </svg>

@@ -13,7 +13,10 @@ const emit = defineEmits<{ select: [theme: PaletteId] }>();
 
 <style scoped>
 .theme-switch { flex:none; }
-.theme-switch button { display:inline-flex; align-items:center; justify-content:center; gap:6px; }
-.theme-switch span { font:18px/1 system-ui,sans-serif; }
+.theme-switch button { position:relative; display:inline-flex; align-items:center; justify-content:center; gap:4px; }
+.theme-switch span { font-size:.875rem; line-height:1; }
+@media (pointer:coarse) {
+  .theme-switch button::before { content:""; position:absolute; inset:-6px 0; }
+}
 @media(max-width:420px) { .theme-switch span { display:none; } }
 </style>

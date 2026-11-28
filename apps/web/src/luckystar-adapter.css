@@ -94,7 +94,13 @@ html[data-palette] .study-shell .hero-card p { color:var(--muted); }
 html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) :is(.welcome-settings,.welcome-primary,.settings-trigger,.primary,.done-button,.secondary,.ask-button,.ask-frame,.hero-card button,.classroom-invitation button,.classroom-invitation i,.tutor-symbol,.stage-index,.course-nav button > b,.entry-actions button) {
   color:var(--ink); background:var(--surface-raised); border:1px solid var(--line); box-shadow:none; border-radius:999px;
 }
-html[data-palette] .study-shell .brand > span { color:var(--ink); background:none; box-shadow:none; animation:none; border:1px solid var(--line); }
+.brand-mark {
+  display:inline-block; flex:none; width:32px; height:32px; background:var(--ink);
+  mask:url("/favicon.svg?folded-book") center / contain no-repeat;
+}
+@media (forced-colors: active) {
+  .brand-mark { forced-color-adjust:none; background:CanvasText; }
+}
 html[data-palette] .study-shell :is(.course-nav,.study-nav) button[aria-current="page"] { color:var(--ink); background:var(--thumb); box-shadow:var(--thumb-shadow); border-color:var(--line); }
 html[data-palette] .study-shell .trace-screen .cell.active { color:var(--ink); background:var(--thumb); border-color:var(--accent-ink); box-shadow:0 0 0 1px var(--accent-ink); }
 html[data-palette] .study-shell .trace-controls .ask-frame:hover { color:var(--ink); background:var(--rail); }
@@ -111,6 +117,12 @@ html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .segmen
   background:var(--thumb); border-color:var(--line); box-shadow:var(--thumb-shadow); color:var(--ink);
 }
 html[data-palette] .segment-rail > button:focus-visible { outline:2px solid var(--accent-ink); outline-offset:-2px; }
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .segment-rail.theme-switch {
+  padding:2px; gap:1px;
+}
+html[data-palette] :is(.welcome-experience,.study-shell,.settings-panel) .theme-switch > button {
+  min-width:44px; min-height:32px; padding:3px 10px; font-size:.8125rem;
+}
 html[data-palette] .study-shell .project-studio .stage-index { color:var(--muted); background:none; border:0; }
 html[data-palette] .study-shell .project-studio nav button { flex-direction:row; }
 html[data-palette] .study-shell .segment-rail.views { flex-wrap:nowrap; }

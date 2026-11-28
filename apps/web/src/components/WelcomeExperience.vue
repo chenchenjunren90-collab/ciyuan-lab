@@ -29,7 +29,7 @@ function startLearning(): void {
 <template>
   <section class="welcome-experience" aria-labelledby="welcome-title">
     <header class="welcome-nav">
-      <div class="welcome-brand"><i aria-hidden="true"></i><b>词元研究所</b></div>
+      <div class="welcome-brand"><i class="brand-mark" aria-hidden="true"></i><b>词元研究所</b></div>
       <div class="welcome-appearance"><ThemeToggle :theme="theme" @select="emit('toggle-theme', $event)" />
         <button class="welcome-settings" @click="emit('settings')">界面设置</button>
       </div>
@@ -62,8 +62,7 @@ function startLearning(): void {
 .welcome-experience { position:fixed; inset:0; overflow:auto; z-index:500; background:var(--surface); color:var(--ink); }
 .welcome-nav { padding:10px max(5vw,calc((100vw - 1250px)/2)); display:flex; align-items:center; justify-content:space-between; gap:12px; border-bottom:1px solid var(--line); background:var(--surface); color:var(--ink); }
 .welcome-brand,.welcome-appearance,.welcome-footer { display:flex; align-items:center; gap:12px; }
-.welcome-brand { white-space:nowrap; }.welcome-brand i { width:26px; height:4px; background:var(--trace-signal); position:relative; }
-.welcome-brand i::after { content:""; position:absolute; right:3px; top:-4px; width:9px; height:9px; border-radius:50%; border:2px solid var(--ink); background:var(--trace-signal); }
+.welcome-brand { white-space:nowrap; }
 .welcome-settings { color:inherit; background:transparent; border:1px solid var(--line); border-radius:999px; min-height:44px; padding:6px 12px; cursor:pointer; }
 .welcome-main,.welcome-route,.welcome-footer { width:min(90%,1250px); margin-inline:auto; }
 .welcome-main { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); align-items:center; gap:clamp(26px,7vw,100px); padding:clamp(40px,6vw,88px) 0; }
