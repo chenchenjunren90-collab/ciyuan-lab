@@ -30,6 +30,12 @@ describe("workspace appearance", () => {
       const token = (name: string) => block.match(new RegExp(`--${name}:(#[\\da-f]{6});`, "i"))![1]!;
       expect(token("surface")).toBe(palette.background);
       expect(token("accent")).toBe(palette.accent);
+      if (palette.id === "dusk") {
+        for (const name of ["surface", "surface-raised", "surface-muted", "accent", "ink", "muted", "code", "trace-signal", "rail", "thumb"]) {
+          const rgb = token(name).slice(1).match(/../g)!;
+          expect(new Set(rgb).size, name).toBe(1);
+        }
+      }
       for (const surface of ["surface", "surface-raised", "surface-muted"]) {
         expect(contrast(token("ink"), token(surface)), `body on ${surface}`).toBeGreaterThanOrEqual(4.5);
         expect(contrast(token("muted"), token(surface)), `caption on ${surface}`).toBeGreaterThanOrEqual(4.5);

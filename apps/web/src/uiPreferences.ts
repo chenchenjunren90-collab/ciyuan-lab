@@ -1,6 +1,6 @@
 export const PALETTES = [
   { id: "light", label: "极简白", background: "#fafafa", accent: "#275e60" },
-  { id: "dusk", label: "暮紫沉蓝", background: "#042341", accent: "#c7bfd5" },
+  { id: "dusk", label: "炭黑", background: "#141414", accent: "#dedede" },
 ] as const;
 export type PaletteId = typeof PALETTES[number]["id"];
 export type ThemeMode = PaletteId | "dark" | "system";
